@@ -12,7 +12,9 @@
   z-index: 30;
   display: flex;
   width: var(--dashboard-rail-width);
-  min-height: 100svh;
+  height: 100dvh;
+  min-height: 0;
+  align-self: start;
   flex-direction: column;
   border-right: 1px solid var(--dashboard-border);
   background: var(--dashboard-sidebar);

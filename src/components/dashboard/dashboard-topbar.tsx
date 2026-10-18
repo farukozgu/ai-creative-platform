@@ -3,7 +3,6 @@ import { getTranslations } from "next-intl/server";
 import { DashboardMobileNav } from "@/components/dashboard/dashboard-mobile-nav";
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
 import { WorkspaceCreateAction } from "@/components/dashboard/workspace-create-action";
-import { DashboardAccountMenu } from "@/components/dashboard/dashboard-account-menu";
 import { NotificationCenter } from "@/components/dashboard/notification-center";
 import type { NotificationItem } from "@/lib/notifications/types";
 
@@ -21,7 +20,6 @@ export async function DashboardTopbar({ displayName, notifications, notification
           <WorkspaceCreateAction label={t("newProject")} />
           <NotificationCenter key={notificationStateKey} initialItems={notifications} loadFailed={notificationsLoadFailed} renderedAt={notificationsRenderedAt} />
           <LanguageSwitcher variant="dashboard" />
-          <DashboardAccountMenu displayName={displayName} compact />
         </div>
       </div>
     </header>
