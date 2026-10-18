@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
 import { resolveDashboardSidebarCollapsed } from "@/components/dashboard/dashboard-sidebar-state";
 import styles from "@/components/dashboard/dashboard-sidebar.module.css";
+import { usePathname } from "@/i18n/navigation";
+import creationStyles from "@/features/generation/creation-workspace.module.css";
 
 const storageKey = "klay-dashboard-sidebar-collapsed";
 const sidebarChangeEvent = "klay-dashboard-sidebar-change";
@@ -28,6 +30,10 @@ function getCollapsed() {
 
 export function DashboardFrame({ children, topbar, displayName }: { children: React.ReactNode; topbar: React.ReactNode; displayName?: string | null }) {
   const collapsed = useSyncExternalStore(subscribe, getCollapsed, () => false);
+  const pathname = usePathname();
+  const isCreation = pathname === "/dashboard/create";
+  const [expandedAt, setExpandedAt] = useState<string | null>(null);
+  const creationExpanded = isCreation && expandedAt === pathname;
 
   useEffect(() => {
     if (process.env.NODE_ENV !== "development") return;
@@ -49,8 +55,11 @@ export function DashboardFrame({ children, topbar, displayName }: { children: Re
     window.dispatchEvent(new Event(sidebarChangeEvent));
   }
 
-  return <div className={`dashboard-shell ${styles.frame}`} data-collapsed={collapsed || undefined}>
-    <DashboardSidebar displayName={displayName} collapsed={collapsed} onToggle={toggleSidebar} />
-    <div className="dashboard-workspace-shell">{topbar}{children}</div>
+  const effectiveCollapsed = isCreation ? !creationExpanded : collapsed;
+  return <div className={`dashboard-shell ${styles.frame} ${isCreation ? creationStyles.editorFrame : ""}`} data-collapsed={effectiveCollapsed || undefined} data-creation-expanded={creationExpanded || undefined} onKeyDown={(event) => {
+    if (event.key === "Escape" && creationExpanded) setExpandedAt(null);
+  }}>
+    <DashboardSidebar displayName={displayName} collapsed={effectiveCollapsed} onToggle={isCreation ? () => setExpandedAt(creationExpanded ? null : pathname) : toggleSidebar} />
+    <div className={`dashboard-workspace-shell ${isCreation ? creationStyles.editorContent : ""}`}>{topbar}{children}</div>
   </div>;
 }

@@ -9,6 +9,8 @@ import type { SupportedVertical } from "@/lib/verticals/supported-verticals";
 import type { AppLocale } from "@/i18n/routing";
 import { cn } from "@/lib/cn";
 import { PresetCategoryFilter, type PresetCategoryFilterValue } from "@/components/dashboard/preset-category-filter";
+import { Button } from "@/components/ui/button";
+import { creationHref } from "@/features/generation/creation-entry";
 
 const presetCategoryConfig = [
   { value: "all", labelKey: "all", icon: "allCategories" },
@@ -30,6 +32,7 @@ const COLLAPSED_PRESET_COUNT = 6;
 
 export function CreativePresetRail({ vertical }: { vertical?: SupportedVertical | null }) {
   const t = useTranslations("Dashboard.presets");
+  const workspaceT = useTranslations("Dashboard.creationWorkspace");
   const locale = useLocale() as AppLocale;
   const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
   const [selectedPresentationMode, setSelectedPresentationMode] = useState<string | null>(null);
@@ -123,6 +126,7 @@ export function CreativePresetRail({ vertical }: { vertical?: SupportedVertical 
         ))}
       </div>
       {selectedPreset ? <section className="preset-presentation-selector" aria-labelledby="preset-presentation-heading">
+        <Button href={creationHref({ presetId: selectedPresetId, presentationMode: selectedPresentationMode })}>{workspaceT("open")}</Button>
         <div className="preset-presentation-heading">
           <div><h3 id="preset-presentation-heading">{t("presentationHeading")}</h3><p>{t("presentationDescription")}</p></div>
         <span>{t("presentationFor", { title: selectedPreset.localizedTitle[locale] })}</span>

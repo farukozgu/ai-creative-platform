@@ -8,7 +8,7 @@ export type DashboardNavigationItem = {
 
 export const dashboardPrimaryNavigation: DashboardNavigationItem[] = [
   { key: "home", icon: "home", href: "/dashboard" },
-  { key: "create", icon: "spark", href: "/dashboard#composer" },
+  { key: "create", icon: "spark", href: "/dashboard/create" },
   { key: "projects", icon: "projects", href: "/dashboard/projects" },
 ];
 
@@ -22,7 +22,7 @@ export function isDashboardNavigationItemActive(
   hash: string,
 ) {
   if (item.key === "home") return pathname === "/dashboard" && hash !== "#composer";
-  if (item.key === "create") return pathname === "/dashboard" && hash === "#composer";
+  if (item.key === "create") return pathname === "/dashboard/create" || (pathname === "/dashboard" && hash === "#composer");
   if (item.key === "projects") return pathname.startsWith("/dashboard/projects");
   return pathname === item.href;
 }

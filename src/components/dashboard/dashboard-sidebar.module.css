@@ -6,6 +6,12 @@
   --dashboard-rail-width: 4.25rem;
 }
 
+.frame[data-creation-expanded] .sidebar {
+  position: absolute;
+  width: 15rem;
+  z-index: 40;
+}
+
 .sidebar {
   position: sticky;
   top: 0;

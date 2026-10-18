@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { CreativeComposer } from "@/components/dashboard/creative-composer";
+import { CreationHomeEntry } from "@/features/generation/creation-home-entry";
 import { DashboardHomeHero } from "@/components/dashboard/dashboard-home-hero";
 import { WorkspaceOverview } from "@/components/dashboard/workspace-overview";
 import { RecentGenerations } from "@/components/dashboard/recent-generations";
@@ -44,7 +44,7 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
       <div className="dashboard-main-inner dashboard-container dashboard-home-inner">
         <DashboardHomeHero />
         <div className="dashboard-home-create">
-          <CreativeComposer locale={locale} userId={userId} />
+          <CreationHomeEntry />
         </div>
         <TemplateRail />
         <RecentGenerations generations={dashboardData.generations} />

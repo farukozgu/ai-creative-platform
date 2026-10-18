@@ -523,6 +523,15 @@
     "visualDescription": "Pilot kullanım, iş birliği veya ürün hakkında konuşmak için ekibimizle iletişime geçin."
   },
   "Dashboard": {
+    "creationWorkspace": {
+      "title": "Görsel oluştur",
+      "open": "Oluşturma alanını aç",
+      "viewLabel": "Çalışma alanı görünümü",
+      "controls": "Kontroller",
+      "preview": "Önizleme",
+      "emptyTitle": "Görsel çalışma alanınız",
+      "emptyDescription": "Kontrolleri kullanarak görselinizi hazırlayın. Henüz üretilmiş bir görsel yok."
+    },
     "backgroundJobs": { "active": "Görsel hazırlanıyor" },
     "metadataTitle": "Yaratıcı Çalışma Alanı",
     "metadataDescription": "Klay.ai çalışma alanında kampanyaya hazır ürün görselleri oluşturun ve yaratıcı yönleri keşfedin.",

@@ -523,6 +523,15 @@
     "visualDescription": "Talk to our team about pilot access, partnerships or anything you would like to know about the product."
   },
   "Dashboard": {
+    "creationWorkspace": {
+      "title": "Create image",
+      "open": "Open creation workspace",
+      "viewLabel": "Workspace view",
+      "controls": "Controls",
+      "preview": "Preview",
+      "emptyTitle": "Your creative workspace",
+      "emptyDescription": "Configure your image using the controls. No generated image yet."
+    },
     "backgroundJobs": { "active": "Creating image" },
     "metadataTitle": "Creative Workspace",
     "metadataDescription": "Create campaign-ready product visuals and explore creative directions in the Klay.ai workspace.",

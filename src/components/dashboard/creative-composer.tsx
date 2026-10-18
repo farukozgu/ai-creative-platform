@@ -50,6 +50,7 @@ import {
 } from "@/lib/verticals/supported-verticals";
 import { useRouter } from "@/i18n/navigation";
 import type { AppLocale } from "@/i18n/routing";
+import type { CreationEntry } from "@/features/generation/creation-entry";
 
 type FilePreview = { file: File; previewUrl: string };
 type FlowStep =
@@ -96,9 +97,11 @@ function ComposerStepHeader({
 export function CreativeComposer({
   locale,
   userId,
+  initialEntry,
 }: {
   locale: AppLocale;
   userId: string | null;
+  initialEntry?: CreationEntry;
 }) {
   const t = useTranslations("Dashboard.composer");
   const presetT = useTranslations("Dashboard.presets");
@@ -109,7 +112,7 @@ export function CreativeComposer({
   const productPreviews = useRef<FilePreview[]>([]);
   const referencePreviews = useRef<FilePreview[]>([]);
   const locked = useRef(false);
-  const [step, setStep] = useState<FlowStep>("type");
+  const [step, setStep] = useState<FlowStep>(initialEntry?.presetId ? "name" : "type");
   const [projectName, setProjectName] = useState("");
   const [products, setProducts] = useState<FilePreview[]>([]);
   const [references, setReferences] = useState<FilePreview[]>([]);
@@ -118,11 +121,11 @@ export function CreativeComposer({
   const [creationMode, setCreationMode] = useState<"preset" | "custom">(
     "preset",
   );
-  const [presetId, setPresetId] = useState<string | null>(null);
+  const [presetId, setPresetId] = useState<string | null>(initialEntry?.presetId ?? null);
   const [presetVertical, setPresetVertical] =
-    useState<SupportedVertical | null>(null);
+    useState<SupportedVertical | null>(getCreativePreset(initialEntry?.presetId)?.vertical ?? null);
   const [presentationMode, setPresentationMode] = useState<string | null>(
-    null,
+    initialEntry?.presentationMode ?? null,
   );
   const [direction, setDirection] = useState("");
   const [error, setError] = useState("");
@@ -1020,7 +1023,7 @@ export function CreativeComposer({
             </Button>
           )}
         </footer>
-      ) : null}
+      ) : <footer className="creation-actions" />}
     </section>
   );
 }

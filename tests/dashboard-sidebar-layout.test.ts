@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import test from "node:test";
+import { creationHref, resolveCreationEntry } from "../src/features/generation/creation-entry";
+import { getRecommendedFamilyPresets, getPresetPresentationModes } from "../src/lib/creative-presets/creative-presets";
 
 import { resolveDashboardSidebarCollapsed } from "../src/components/dashboard/dashboard-sidebar-state";
 import {
@@ -37,6 +39,8 @@ test("sidebar resolves Home, Create and Projects active destinations", () => {
   assert.equal(isDashboardNavigationItemActive(home, "/dashboard", ""), true);
   assert.equal(isDashboardNavigationItemActive(home, "/dashboard", "#composer"), false);
   assert.equal(isDashboardNavigationItemActive(create, "/dashboard", "#composer"), true);
+  assert.equal(isDashboardNavigationItemActive(create, "/dashboard/create", ""), true);
+  assert.equal(isDashboardNavigationItemActive(home, "/dashboard/create", ""), false);
   assert.equal(isDashboardNavigationItemActive(projects, "/dashboard/projects/example", ""), true);
 });
 
@@ -75,12 +79,16 @@ test("dashboard topbar greets the signed-in user in both locales", () => {
   }
 });
 
-test("dashboard home keeps the composer before preset discovery", () => {
+test("dashboard home retains discovery with an entry to the single route-owned composer", () => {
   const page = read("src/app/[locale]/dashboard/page.tsx");
   const composer = read("src/components/dashboard/creative-composer.tsx");
   const hero = read("src/components/dashboard/dashboard-home-hero.tsx");
 
-  assert.match(page, /DashboardHomeHero[\s\S]*CreativeComposer[\s\S]*TemplateRail[\s\S]*RecentGenerations[\s\S]*WorkspaceOverview/);
+  assert.match(page, /DashboardHomeHero[\s\S]*CreationHomeEntry[\s\S]*TemplateRail[\s\S]*RecentGenerations[\s\S]*WorkspaceOverview/);
+  assert.doesNotMatch(page, /<CreativeComposer/);
+  const createPage = read("src/app/[locale]/dashboard/create/page.tsx");
+  assert.equal(createPage.match(/<CreativeComposer\b/g)?.length, 1);
+  assert.doesNotMatch(createPage, /DashboardShell|DashboardSidebar|DashboardHomeHero/);
   assert.doesNotMatch(hero, /next\/image/);
   assert.match(hero, /dashboard-home-hero-copy/);
   assert.match(composer, /DASHBOARD_PRESET_EVENT/);
@@ -93,6 +101,20 @@ test("dashboard home keeps the composer before preset discovery", () => {
     assert.ok(messages.Dashboard.generations.viewAll);
     assert.ok(messages.Dashboard.overview.openProjects);
   }
+});
+
+test("creation entry validates preset and compatible presentation without carrying draft data", () => {
+  assert.deepEqual(resolveCreationEntry("not-a-preset", "unknown"), { presetId: null, presentationMode: null });
+  assert.deepEqual(resolveCreationEntry(["apparel"], null), { presetId: null, presentationMode: null });
+  const preset = getRecommendedFamilyPresets({ vertical: null })[0]!;
+  const mode = getPresetPresentationModes(preset.id)[0]!;
+  assert.deepEqual(resolveCreationEntry(preset.id, mode.id), { presetId: preset.id, presentationMode: mode.id });
+  assert.equal(resolveCreationEntry(preset.id, "invalid-mode").presentationMode, null);
+  const href = new URL(creationHref({ presetId: preset.id, presentationMode: mode.id }), "https://example.test");
+  assert.equal(href.pathname, "/dashboard/create");
+  assert.equal(href.searchParams.get("preset"), preset.id);
+  assert.equal(href.searchParams.get("presentation"), mode.id);
+  assert.equal(creationHref({ presetId: null, presentationMode: mode.id }), "/dashboard/create");
 });
 
 test("creative composer presents exactly one step from the guided sequence", () => {
