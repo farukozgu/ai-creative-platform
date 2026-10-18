@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { type CSSProperties, useEffect, useState, useSyncExternalStore } from "react";
 import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
 import { resolveDashboardSidebarCollapsed } from "@/components/dashboard/dashboard-sidebar-state";
 import styles from "@/components/dashboard/dashboard-sidebar.module.css";
@@ -56,7 +56,10 @@ export function DashboardFrame({ children, topbar, displayName }: { children: Re
   }
 
   const effectiveCollapsed = isCreation ? !creationExpanded : collapsed;
-  return <div className={`dashboard-shell ${styles.frame} ${isCreation ? creationStyles.editorFrame : ""}`} data-collapsed={effectiveCollapsed || undefined} data-creation-expanded={creationExpanded || undefined} onKeyDown={(event) => {
+  const creationRailStyle = isCreation
+    ? ({ "--dashboard-rail-width": creationExpanded ? "15rem" : "4.25rem" } as CSSProperties)
+    : undefined;
+  return <div className={`dashboard-shell ${styles.frame} ${isCreation ? creationStyles.editorFrame : ""}`} style={creationRailStyle} data-collapsed={effectiveCollapsed || undefined} data-creation-expanded={creationExpanded || undefined} onKeyDown={(event) => {
     if (event.key === "Escape" && creationExpanded) setExpandedAt(null);
   }}>
     <DashboardSidebar displayName={displayName} collapsed={effectiveCollapsed} onToggle={isCreation ? () => setExpandedAt(creationExpanded ? null : pathname) : toggleSidebar} />
