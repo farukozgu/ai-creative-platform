@@ -523,7 +523,14 @@
     "visualDescription": "Pilot kullanım, iş birliği veya ürün hakkında konuşmak için ekibimizle iletişime geçin."
   },
   "Dashboard": {
-    "creationCanvas": {"sourcePreview":"Kaynak önizlemesi","untitled":"İsimsiz proje","emptyDescription":"Ürün görseli eklediğinizde önizleme burada görünür.","category":"Kategori","preset":"Şablon","presetInspiration":"Şablon ilhamı","missing":"Seçilmedi","missingOptional":"Eklenmedi (isteğe bağlı)"},
+    "creationCanvas": {
+      "eyebrow": "KLAY AI / YARATICI SÜREÇ",
+      "heading": "Klay nasıl çalışır?",
+      "exampleNotice": "Klay örnek ürünüyle hazırlanmış temsili süreç.",
+      "upload": {"title":"Ürününü yükle","description":"Net bir ürün fotoğrafıyla başla. Klay, ürününün kimliğini merkeze alır.","alt":"Sıcak gri stüdyoda önden fotoğraflanmış kalın kumaşlı kömür siyahı tişört"},
+      "direction": {"title":"Yaratıcı yönünü belirle","description":"Kampanyanı şekillendirmek için sahne, stil ve format seç.","alt":"Kömür siyahı tişörtün özgün stüdyo fotoğrafı, üzerinde örnek yaratıcı yön ayarları","panelTitle":"Yaratıcı Yön","styleLabel":"Stil","styleValue":"Editoryal","environmentLabel":"Ortam","environmentValue":"Kent Sokağı","lightingLabel":"Işık","lightingValue":"Doğal Gün Işığı","aspectRatioLabel":"En Boy Oranı","aspectRatioValue":"4:5"},
+      "create": {"title":"Kampanya görselini oluştur","description":"Ürününü kullanıma hazır, özenli bir kampanya görseline dönüştür.","alt":"Avrupa kent sokağında aynı kömür siyahı tişörtü giyen model"}
+    },
     "creationWorkspace": {
       "title": "Görsel oluştur",
       "open": "Oluşturma alanını aç",

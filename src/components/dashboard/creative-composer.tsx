@@ -51,9 +51,6 @@ import {
 import { useRouter } from "@/i18n/navigation";
 import type { AppLocale } from "@/i18n/routing";
 import type { CreationEntry } from "@/features/generation/creation-entry";
-import { CreationWorkspace } from "@/features/generation/creation-workspace";
-import { CreationCanvas } from "@/features/generation/creation-canvas";
-import type { CanvasInput } from "@/features/generation/creation-canvas-model";
 
 type FilePreview = { file: File; previewUrl: string };
 type FlowStep =
@@ -429,22 +426,8 @@ export function CreativeComposer({
     current: currentIndex + 1,
     total: steps.length,
   });
-  const canvasInput: CanvasInput = {
-    step, projectName, aspectRatio, creationMode, presentationMode, direction,
-    products: products.map(({ file, previewUrl }) => ({ name: file.name, previewUrl })),
-    references: references.map(({ file, previewUrl }) => ({ name: file.name, previewUrl })),
-    preset: selectedPreset ? {
-      title: getPresetFamily(selectedPreset.id)?.title[locale] ?? selectedPreset.title,
-      category: selectedPreset.vertical,
-      thumbnail: selectedPreset.thumbnail,
-    } : null,
-    category: presetVertical,
-  };
-  const canvas = <CreationCanvas input={canvasInput} />;
-
   if (step === "generating") {
     return (
-      <CreationWorkspace canvas={canvas}>
       <section
         className="creation-flow creation-generation"
         aria-labelledby="creation-generating-title"
@@ -478,13 +461,11 @@ export function CreativeComposer({
           })}
         </ol>
       </section>
-      </CreationWorkspace>
     );
   }
 
   if (step === "failed") {
     return (
-      <CreationWorkspace canvas={canvas}>
       <section
         className="creation-flow creation-failure"
         aria-labelledby="creation-failure-title"
@@ -495,12 +476,10 @@ export function CreativeComposer({
         <p role="alert">{error}</p>
         <Button onClick={() => setStep("review")}>{t("flow.tryAgain")}</Button>
       </section>
-      </CreationWorkspace>
     );
   }
 
   return (
-    <CreationWorkspace canvas={canvas}>
     <section
       id="composer"
       className={`creation-flow ${step === "type" ? "is-intro" : "is-guided"}`}
@@ -1045,6 +1024,5 @@ export function CreativeComposer({
         </footer>
       ) : <footer className="creation-actions" />}
     </section>
-    </CreationWorkspace>
   );
 }

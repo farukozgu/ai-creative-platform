@@ -159,7 +159,7 @@
   min-width: 0;
   min-height: 0;
   margin-top: var(--creation-header-height);
-  padding: 1.5rem;
+  padding: 0;
   overflow-y: auto;
   overscroll-behavior-y: contain;
 }
@@ -182,7 +182,7 @@
   .viewSwitch button { flex: 1; min-height: 2.75rem; padding: 0.5rem; color: var(--dashboard-muted); cursor: pointer; }
   .viewSwitch button[aria-pressed="true"] { color: var(--dashboard-foreground); background: var(--dashboard-accent-surface); }
   .inspector { grid-row: 2; grid-column: 1; border-right: 0; }
-  .canvas { grid-row: 2; grid-column: 1; margin-top: 0; margin-bottom: calc(var(--creation-footer-height) + env(safe-area-inset-bottom)); padding: 1rem; background: var(--dashboard-background); }
+  .canvas { grid-row: 2; grid-column: 1; margin-top: 0; margin-bottom: calc(var(--creation-footer-height) + env(safe-area-inset-bottom)); padding: 0; background: var(--dashboard-background); }
   .workspace[data-view="controls"] .canvas { visibility: hidden; pointer-events: none; }
   .workspace[data-view="preview"] .inspector { visibility: hidden; }
   .workspace[data-view="preview"] .inspector :global(.creation-actions) { visibility: visible; }

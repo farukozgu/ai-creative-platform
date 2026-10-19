@@ -523,7 +523,14 @@
     "visualDescription": "Talk to our team about pilot access, partnerships or anything you would like to know about the product."
   },
   "Dashboard": {
-    "creationCanvas": {"sourcePreview":"Source preview","untitled":"Untitled project","emptyDescription":"Your product preview will appear here after you add an image.","category":"Category","preset":"Preset","presetInspiration":"Preset inspiration","missing":"Not selected","missingOptional":"Not provided (optional)"},
+    "creationCanvas": {
+      "eyebrow": "KLAY AI / CREATIVE WORKFLOW",
+      "heading": "How Klay works",
+      "exampleNotice": "Illustrative workflow using a Klay sample product.",
+      "upload": {"title":"Upload your product","description":"Start with a clear product photo. Klay keeps its identity at the center.","alt":"Front-facing heavyweight charcoal T-shirt in a warm-gray studio photograph"},
+      "direction": {"title":"Define your creative direction","description":"Choose a scene, visual style and format to shape your campaign.","alt":"The original studio photo of the charcoal T-shirt, with illustrative creative direction settings overlaid","panelTitle":"Creative Direction","styleLabel":"Style","styleValue":"Editorial","environmentLabel":"Environment","environmentValue":"Urban Street","lightingLabel":"Lighting","lightingValue":"Natural Daylight","aspectRatioLabel":"Aspect Ratio","aspectRatioValue":"4:5"},
+      "create": {"title":"Create your campaign image","description":"Turn your product into a polished, campaign-ready visual.","alt":"Model wearing the same charcoal T-shirt on a European city street"}
+    },
     "creationWorkspace": {
       "title": "Create image",
       "open": "Open creation workspace",

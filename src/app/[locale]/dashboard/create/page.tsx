@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { CreativeComposer } from "@/components/dashboard/creative-composer";
+import { CreationWorkspace } from "@/features/generation/creation-workspace";
+import { CreationCanvas } from "@/features/generation/creation-canvas";
 import { resolveCreationEntry } from "@/features/generation/creation-entry";
 import { isSupportedLocale } from "@/i18n/routing";
 import { getAuthenticatedUserId } from "@/lib/auth/require-user";
@@ -24,6 +26,8 @@ export default async function CreatePage({ params, searchParams }: Props) {
   const [userId, query] = await Promise.all([getAuthenticatedUserId(), searchParams]);
   const entry = resolveCreationEntry(query.preset, query.presentation);
   return (
-    <CreativeComposer locale={locale} userId={userId} initialEntry={entry} />
+    <CreationWorkspace canvas={<CreationCanvas />}>
+      <CreativeComposer locale={locale} userId={userId} initialEntry={entry} />
+    </CreationWorkspace>
   );
 }
