@@ -66,7 +66,8 @@ test("Dashboard Home motion remains scoped, pointer-aware, and reduced-motion sa
   assert.match(styles, /@media \(hover: hover\) and \(pointer: fine\)/);
   assert.match(styles, /\.workflowCard:hover \{[^}]*translateY\(-3px\)/);
   assert.match(styles, /\.workflowCard:hover \.workflowMedia img \{ transform: scale\(1\.035\)/);
-  assert.match(styles, /\.launchRow:hover \.launchArrow \{[^}]*translateX\(4px\)/);
+  assert.match(styles, /\.workflowCard:hover \.workflowCopy svg \{[^}]*translate\(3px, -3px\) rotate\(-45deg\)/);
+  assert.match(styles, /\.launchRow:hover \.launchArrow \{[^}]*translate\(3px, -3px\) rotate\(-45deg\)/);
   assert.match(styles, /dashboard-generation-media::after/);
   assert.match(styles, /workflowMedia::after/);
   assert.match(styles, /workflowAction/);

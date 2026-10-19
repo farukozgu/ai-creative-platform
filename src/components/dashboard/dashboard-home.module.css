@@ -31,7 +31,8 @@
 .workflowAction { position: absolute; z-index: 2; right: 0.75rem; bottom: 0.75rem; border: 1px solid rgb(255 255 255 / 42%); border-radius: var(--radius); background: rgb(18 18 18 / 58%); padding: 0.35rem 0.55rem; color: white; font-size: 0.6875rem; font-weight: 650; opacity: 0; pointer-events: none; transform: translateY(0.25rem); transition: opacity var(--home-motion-fast) var(--ease-standard), transform var(--home-motion-fast) var(--ease-standard); }
 .workflowCopy strong { font-size: 1rem; font-weight: 650; line-height: 1.3; transition: transform var(--home-motion-fast) var(--ease-standard), color var(--home-motion-fast) var(--ease-standard); }
 .workflowCopy > span { grid-row: 2; color: var(--dashboard-muted); font-size: 0.8125rem; line-height: 1.4; }
-.workflowCopy svg { grid-column: 2; grid-row: 1 / 3; align-self: center; width: 1rem; height: 1rem; color: var(--dashboard-icon-secondary); transition: transform var(--home-motion-fast) var(--ease-standard), color var(--home-motion-fast) var(--ease-standard); }
+.workflowCopy svg { grid-column: 2; grid-row: 1 / 3; align-self: center; width: 1rem; height: 1rem; color: var(--dashboard-icon-secondary); transition: transform var(--home-motion-standard) var(--ease-standard), color var(--home-motion-standard) var(--ease-standard); }
+.workflowCard:focus-visible .workflowCopy svg { color: var(--dashboard-icon-primary); transform: translate(3px, -3px) rotate(-45deg); }
 
 .sectionHeading { display: grid; gap: 0.4rem; margin-bottom: 1.25rem; }
 .sectionHeading h2 { font-size: clamp(1.5rem, 2.2vw, 2.25rem); font-weight: 600; line-height: 1.15; letter-spacing: -0.035em; }
@@ -45,7 +46,8 @@
 .launchCopy { display: grid; gap: 0.25rem; min-width: 0; }
 .launchCopy strong { font-size: 0.9375rem; font-weight: 650; line-height: 1.25; transition: color var(--home-motion-fast) var(--ease-standard); }
 .launchCopy > span { color: var(--dashboard-muted); font-size: 0.8125rem; line-height: 1.35; }
-.launchArrow { width: 1rem; height: 1rem; color: var(--dashboard-icon-secondary); transition: transform var(--home-motion-fast) var(--ease-standard), color var(--home-motion-fast) var(--ease-standard); }
+.launchArrow { width: 1rem; height: 1rem; color: var(--dashboard-icon-secondary); transition: transform var(--home-motion-standard) var(--ease-standard), color var(--home-motion-standard) var(--ease-standard); }
+.launchRow:focus-visible .launchArrow { color: var(--dashboard-icon-primary); transform: translate(3px, -3px) rotate(-45deg); }
 
 .home :global(.dashboard-gallery-heading) { display: flex; align-items: end; justify-content: space-between; gap: 1rem; }
 .home :global(.dashboard-gallery-heading h2) { font-size: clamp(1.5rem, 2.2vw, 2.25rem); }
@@ -69,12 +71,12 @@
   .workflowCard:hover .workflowMedia::after { opacity: 1; }
   .workflowCard:hover .workflowAction { opacity: 1; transform: translateY(0); }
   .workflowCard:hover .workflowCopy strong { color: var(--dashboard-accent); transform: translateX(2px); }
-  .workflowCard:hover .workflowCopy svg { color: var(--dashboard-icon-primary); transform: translate(3px, -3px); }
+  .workflowCard:hover .workflowCopy svg { color: var(--dashboard-icon-primary); transform: translate(3px, -3px) rotate(-45deg); }
   .launchRow:hover { background: var(--dashboard-surface-raised); color: var(--dashboard-foreground); }
   .launchRow:hover .launchCopy strong { color: var(--dashboard-accent); }
   .launchRow:hover :is(.launchIcon, .launchImage) { border-color: var(--dashboard-border-strong); background: var(--dashboard-surface); transform: translateX(2px); }
   .launchRow:hover .launchImage img { transform: scale(1.025); }
-  .launchRow:hover .launchArrow { color: var(--dashboard-icon-primary); transform: translateX(4px); }
+  .launchRow:hover .launchArrow { color: var(--dashboard-icon-primary); transform: translate(3px, -3px) rotate(-45deg); }
   .home :global(.dashboard-generation-item:hover .dashboard-generation-card) { border-color: var(--dashboard-border-strong); box-shadow: 0 0.5rem 1.25rem color-mix(in srgb, var(--dashboard-foreground) 8%, transparent); transform: translateY(-2px); }
   .home :global(.dashboard-generation-item:hover .dashboard-generation-media img) { filter: none; transform: scale(1.025); }
   .home :global(.dashboard-generation-item:hover .dashboard-generation-media::after) { opacity: 1; }
@@ -106,6 +108,6 @@
   .workflowCard:hover, .home :global(.dashboard-generation-item:hover .dashboard-generation-card) { transform: none; }
   .workflowCard:hover .workflowMedia img, .launchRow:hover .launchImage img, .home :global(.dashboard-generation-item:hover .dashboard-generation-media img) { transform: none; }
   .workflowCard:hover .workflowAction { opacity: 0; }
-  .workflowCard:hover .workflowCopy svg, .launchRow:hover .launchArrow, .railControls button:not(:first-child):not(:disabled):hover svg { transform: none; }
+  .workflowCard:focus-visible .workflowCopy svg, .launchRow:focus-visible .launchArrow, .workflowCard:hover .workflowCopy svg, .launchRow:hover .launchArrow, .railControls button:not(:first-child):not(:disabled):hover svg { transform: none; }
   .railControls button:first-child:not(:disabled):hover svg { transform: rotate(180deg); }
 }
