@@ -97,7 +97,7 @@ export function LanguageSwitcher({
         aria-haspopup="menu"
         aria-label={t("label")}
         className={cn(
-          "language-switcher-trigger inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 text-[13px] font-medium text-[var(--foreground)] transition-colors duration-(--transition-fast) hover:bg-[var(--surface-soft)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--focus-ring)]",
+          "language-switcher-trigger inline-flex min-h-10 items-center justify-center gap-2 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface)] px-3 text-[13px] font-medium text-[var(--foreground)] transition-colors duration-(--transition-fast) hover:bg-[var(--surface-soft)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--focus-ring)]",
           variant === "mobile" && "w-full justify-between normal-case tracking-normal",
         )}
         onClick={toggle}

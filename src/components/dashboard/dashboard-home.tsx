@@ -30,6 +30,7 @@ export async function DashboardHome() {
                 <span className={styles.workflowMedia}>
                   <Image src={preset.thumbnail} alt="" fill sizes="(max-width: 640px) 76vw, (max-width: 1024px) 40vw, 24vw" loading="lazy" style={{ objectPosition: preset.objectPosition }} />
                   <span className={styles.workflowCategory}>{t(`workflows.${key}.category`)}</span>
+                  <span className={styles.workflowAction} aria-hidden="true">{t("workflowAction")}</span>
                 </span>
                 <span className={styles.workflowCopy}>
                   <strong>{t(`workflows.${key}.title`)}</strong>

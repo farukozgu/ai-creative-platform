@@ -550,6 +550,7 @@
       "discoveryLabel": "Yaratıcı iş akışlarını keşfet",
       "previousWorkflow": "Önceki iş akışlarına kaydır",
       "nextWorkflow": "Sonraki iş akışlarına kaydır",
+      "workflowAction": "Keşfet",
       "workflows": {
         "fashion": {"category":"Moda","title":"Model üzerinde moda","description":"Giysini doğal bir kent kampanyasında göster."},
         "studio": {"category":"Kozmetik","title":"Stüdyo ürün çekimi","description":"Ambalajı kontrollü stüdyo ışığında göster."},

@@ -250,12 +250,12 @@ export function WorkspaceCanvas({
                   sizes="(min-width: 1280px) 30vw, (min-width: 768px) 38vw, 70vw"
                 />
 
-                <span className="absolute bottom-2 left-2 z-10 max-w-[calc(100%-1rem)] truncate rounded-[calc(var(--radius-sm)-0.25rem)] bg-[var(--workspace-label)] px-2 py-1 text-[0.625rem] font-medium text-[var(--workspace-text)]">
+                <span className="absolute bottom-2 left-2 z-10 max-w-[calc(100%-1rem)] truncate rounded-[var(--radius)] bg-[var(--workspace-label)] px-2 py-1 text-[0.625rem] font-medium text-[var(--workspace-text)]">
                   {t(asset.labelKey)}
                 </span>
 
                 {isSelected ? (
-                  <span className="absolute left-2 top-2 z-10 rounded-[calc(var(--radius-sm)-0.25rem)] bg-[var(--accent)] px-2 py-1 text-[0.625rem] font-semibold text-[var(--surface)]">
+                  <span className="absolute left-2 top-2 z-10 rounded-[var(--radius)] bg-[var(--accent)] px-2 py-1 text-[0.625rem] font-semibold text-[var(--surface)]">
                     {assetTypeLabels[asset.type]}
                   </span>
                 ) : null}
@@ -293,10 +293,10 @@ export function WorkspaceCanvas({
             sizes="(max-width: 767px) calc(100vw - 3.5rem), 50vw"
           />
 
-          <span className="absolute left-3 top-3 z-10 rounded-[calc(var(--radius-sm)-0.25rem)] bg-[var(--accent)] px-2 py-1 text-[0.625rem] font-semibold text-[var(--surface)]">
+          <span className="absolute left-3 top-3 z-10 rounded-[var(--radius)] bg-[var(--accent)] px-2 py-1 text-[0.625rem] font-semibold text-[var(--surface)]">
             {assetTypeLabels[selectedAsset.type]}
           </span>
-          <span className="absolute bottom-3 left-3 z-10 max-w-[calc(100%-1.5rem)] truncate rounded-[calc(var(--radius-sm)-0.25rem)] bg-[var(--workspace-label)] px-2 py-1 text-xs font-medium text-[var(--workspace-text)]">
+          <span className="absolute bottom-3 left-3 z-10 max-w-[calc(100%-1.5rem)] truncate rounded-[var(--radius)] bg-[var(--workspace-label)] px-2 py-1 text-xs font-medium text-[var(--workspace-text)]">
             {t(selectedAsset.labelKey)}
           </span>
         </div>

@@ -139,7 +139,7 @@ export function WorkspaceProjectSelector({
                 role="menuitemradio"
                 aria-checked={isActive}
                 className={cn(
-                  "flex min-h-10 w-full items-center justify-between gap-3 rounded-[calc(var(--radius-sm)-0.25rem)] px-3 py-2 text-left text-xs text-[var(--workspace-muted)] transition-colors duration-(--transition-fast) hover:bg-[var(--workspace-control)] hover:text-[var(--workspace-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] sm:text-sm",
+                  "flex min-h-10 w-full items-center justify-between gap-3 rounded-[var(--radius)] px-3 py-2 text-left text-xs text-[var(--workspace-muted)] transition-colors duration-(--transition-fast) hover:bg-[var(--workspace-control)] hover:text-[var(--workspace-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] sm:text-sm",
                   isActive &&
                     "bg-[var(--workspace-control)] text-[var(--workspace-text)]",
                 )}

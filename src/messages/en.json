@@ -550,6 +550,7 @@
       "discoveryLabel": "Explore creative workflows",
       "previousWorkflow": "Scroll to previous workflows",
       "nextWorkflow": "Scroll to next workflows",
+      "workflowAction": "Explore",
       "workflows": {
         "fashion": {"category":"Fashion","title":"On-model fashion","description":"Put apparel in a natural city campaign."},
         "studio": {"category":"Beauty","title":"Studio product photography","description":"Show packaging in controlled studio light."},

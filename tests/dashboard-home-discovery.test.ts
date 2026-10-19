@@ -46,7 +46,7 @@ test("recent creations retain actions and empty state opens locale-aware Create"
 test("Home workflow and launcher messages exist in both locales", () => {
   for (const locale of ["tr", "en"]) {
     const messages = JSON.parse(read(`src/messages/${locale}.json`)).Dashboard.home;
-    for (const key of ["discoveryHeading", "discoveryDescription", "discoveryLabel", "previousWorkflow", "nextWorkflow", "launcherHeading", "launcherDescription"]) {
+    for (const key of ["discoveryHeading", "discoveryDescription", "discoveryLabel", "previousWorkflow", "nextWorkflow", "workflowAction", "launcherHeading", "launcherDescription"]) {
       assert.ok(messages[key]);
     }
     for (const { key } of dashboardDiscoveryWorkflows) {
@@ -59,4 +59,17 @@ test("Home workflow and launcher messages exist in both locales", () => {
       assert.ok(messages.launchers[key].description);
     }
   }
+});
+
+test("Dashboard Home motion remains scoped, pointer-aware, and reduced-motion safe", () => {
+  const styles = read("src/components/dashboard/dashboard-home.module.css");
+  assert.match(styles, /@media \(hover: hover\) and \(pointer: fine\)/);
+  assert.match(styles, /\.workflowCard:hover \{[^}]*translateY\(-3px\)/);
+  assert.match(styles, /\.workflowCard:hover \.workflowMedia img \{ transform: scale\(1\.035\)/);
+  assert.match(styles, /\.launchRow:hover \.launchArrow \{[^}]*translateX\(4px\)/);
+  assert.match(styles, /dashboard-generation-media::after/);
+  assert.match(styles, /workflowMedia::after/);
+  assert.match(styles, /workflowAction/);
+  assert.match(styles, /dashboard-generation-copy\) \{[^}]*translateY\(-3px\)/);
+  assert.match(styles, /@media \(prefers-reduced-motion: reduce\)/);
 });

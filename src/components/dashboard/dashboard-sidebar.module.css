@@ -54,7 +54,7 @@
   flex: 0 0 1.75rem;
   place-items: center;
   border: 1px solid var(--dashboard-border-strong);
-  border-radius: calc(var(--radius-sm) - 0.125rem);
+  border-radius: var(--radius);
   background: var(--dashboard-surface);
   font-size: 0.75rem;
   font-weight: 780;
@@ -195,7 +195,7 @@
   left: -0.75rem;
   width: 0.1875rem;
   height: 1.25rem;
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  border-radius: var(--radius);
   background: var(--dashboard-accent);
   content: "";
 }
