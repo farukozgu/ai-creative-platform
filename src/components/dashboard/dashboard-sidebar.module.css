@@ -122,7 +122,7 @@
   align-items: center;
   gap: 0.75rem;
   margin-top: 1.25rem;
-  border: 1px solid color-mix(in srgb, var(--dashboard-accent) 30%, var(--dashboard-border));
+  border: 1px solid var(--dashboard-border);
   border-radius: var(--radius-sm);
   background: var(--dashboard-accent-surface);
   padding: 0 0.75rem;
@@ -134,8 +134,8 @@
 }
 
 .primaryAction:hover {
-  border-color: color-mix(in srgb, var(--dashboard-accent) 55%, var(--dashboard-border));
-  background: color-mix(in srgb, var(--dashboard-accent) 20%, var(--dashboard-sidebar));
+  border-color: var(--dashboard-border-strong);
+  background: var(--dashboard-surface-hover);
 }
 
 .primaryAction .icon {
@@ -172,7 +172,7 @@
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
   padding: 0 0.625rem;
-  color: var(--dashboard-muted);
+  color: var(--dashboard-icon-secondary);
   font-size: 0.8125rem;
   font-weight: 580;
   text-decoration: none;
@@ -201,7 +201,7 @@
 }
 
 .navItem[data-active="true"] .icon {
-  color: var(--dashboard-accent);
+  color: var(--dashboard-icon-primary);
 }
 
 .label {
@@ -223,7 +223,7 @@
 }
 
 .utilityItem {
-  color: var(--dashboard-muted-soft);
+  color: var(--dashboard-icon-muted);
 }
 
 .tooltip {

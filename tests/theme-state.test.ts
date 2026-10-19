@@ -70,7 +70,7 @@ test("refresh initialization restores preference before paint", () => {
 
 test("dashboard follows the resolved root theme from the first paint", () => {
   const css = source("src/app/globals.css");
-  assert.match(css, /\.dashboard-shell \{[\s\S]*?--dashboard-background: #09090b;/);
+  assert.match(css, /\.dashboard-shell \{[\s\S]*?--dashboard-background: #090909;/);
   assert.match(css, /:root\[data-theme="light"\] \.dashboard-shell \{[\s\S]*?--dashboard-background: #f2f1f5;/);
   assert.doesNotMatch(css, /data-theme-preference-source="stored"/);
 });

@@ -129,21 +129,21 @@
 
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --bg: #111111;
-  --theme-surface: #151515;
-  --surface-subtle: #1d1d1d;
-  --surface-elevated: #202020;
+  --bg: #090909;
+  --theme-surface: #1a1a1a;
+  --surface-subtle: #242424;
+  --surface-elevated: #2d2d2d;
   --text: #f5f5f5;
-  --text-muted: #a3a3a3;
+  --text-muted: #b4b4b4;
   --text-subtle: #858585;
-  --theme-border: #2a2a2a;
-  --theme-border-strong: #383838;
+  --theme-border: #333333;
+  --theme-border-strong: #444444;
   --button-primary-bg: #f5f5f5;
-  --button-primary-text: #111111;
-  --button-secondary-bg: #1d1d1d;
+  --button-primary-text: #090909;
+  --button-secondary-bg: #242424;
   --button-secondary-text: #f5f5f5;
-  --input-bg: #151515;
-  --input-border: #383838;
+  --input-bg: #2d2d2d;
+  --input-border: #444444;
   --overlay: rgba(0, 0, 0, 0.68);
   --shadow: 0 16px 40px rgba(0, 0, 0, 0.32);
   --success: #75c99a;
@@ -153,11 +153,11 @@
   --surface-soft: var(--surface-subtle);
   --foreground: var(--text);
   --foreground-muted: var(--text-muted);
-  --accent: #f5f5f5;
-  --accent-soft: #2b2b2b;
-  --theme-focus-ring: rgba(245, 245, 245, 0.32);
+  --accent: #a78bfa;
+  --accent-soft: #242424;
+  --theme-focus-ring: rgba(167, 139, 250, 0.72);
   --focus-ring: var(--theme-focus-ring);
-  --public-band: #101010;
+  --public-band: #111111;
   --public-band-text: #f5f5f5;
   --public-band-button: #ffffff;
   --public-band-button-text: #171717;
@@ -4644,7 +4644,7 @@ html[data-motion="ready"] .signup-form-wrap {
 .dashboard-generation-menu-trigger, .dashboard-generation-mobile-menu { display: none; }
 .dashboard-generation-menu-trigger { position: absolute; z-index: 2; inset: 0.5rem 0.5rem auto auto; width: 2.5rem; height: 2.5rem; place-items: center; border: 1px solid rgb(255 255 255 / 36%); border-radius: 50%; color: white; background: rgb(20 20 20 / 68%); }
 .dashboard-generation-menu-trigger svg { width: 1.25rem; height: 1.25rem; }
-.favorite-button { display: inline-grid; place-items: center; border: 1px solid var(--dashboard-border); border-radius: var(--radius-sm); background: var(--dashboard-surface); color: var(--dashboard-muted); cursor: pointer; transition: border-color var(--transition-fast) ease, background-color var(--transition-fast) ease, color var(--transition-fast) ease, opacity var(--transition-fast) ease; }
+.favorite-button { display: inline-grid; place-items: center; border: 1px solid var(--dashboard-border); border-radius: var(--radius-sm); background: var(--dashboard-surface); color: var(--dashboard-icon-secondary); cursor: pointer; transition: border-color var(--transition-fast) ease, background-color var(--transition-fast) ease, color var(--transition-fast) ease, opacity var(--transition-fast) ease; }
 .favorite-button svg { width: 1rem; height: 1rem; fill: none; stroke: currentColor; stroke-linejoin: round; stroke-width: 1.7; }
 .favorite-button.is-active { border-color: color-mix(in srgb, var(--dashboard-accent) 45%, var(--dashboard-border)); background: var(--dashboard-accent-surface); color: var(--dashboard-accent); }
 .favorite-button.is-active svg { fill: currentColor; }
@@ -4679,18 +4679,18 @@ html[data-motion="ready"] .signup-form-wrap {
 .dashboard-settings-layout { display: grid; grid-template-columns: minmax(10rem, 12rem) minmax(0, 1fr); align-items: start; gap: clamp(1.25rem, 3vw, 2.25rem); }
 .dashboard-settings-nav { position: sticky; top: calc(var(--dashboard-topbar-height) + 1rem); display: grid; gap: 0.2rem; }
 .dashboard-settings-nav > p { margin: 0 0 0.55rem 0.75rem; color: var(--dashboard-muted-soft); }
-.dashboard-settings-nav a { display: grid; grid-template-columns: 1.75rem minmax(0, 1fr); align-items: center; gap: 0.5rem; border: 1px solid transparent; border-radius: var(--radius-sm); padding: 0.55rem 0.6rem; color: var(--dashboard-muted); text-decoration: none; transition: border-color var(--transition-fast) ease, background-color var(--transition-fast) ease, color var(--transition-fast) ease; }
+.dashboard-settings-nav a { display: grid; grid-template-columns: 1.75rem minmax(0, 1fr); align-items: center; gap: 0.5rem; border: 1px solid transparent; border-radius: var(--radius-sm); padding: 0.55rem 0.6rem; color: var(--dashboard-icon-secondary); text-decoration: none; transition: border-color var(--transition-fast) ease, background-color var(--transition-fast) ease, color var(--transition-fast) ease; }
 .dashboard-settings-nav a > svg { width: 1rem; height: 1rem; justify-self: center; }
 .dashboard-settings-nav a span { display: grid; gap: 0.15rem; }
 .dashboard-settings-nav a strong { color: inherit; font-size: 0.8125rem; font-weight: 650; }
 .dashboard-settings-nav a small { color: var(--dashboard-muted-soft); font-size: 0.6875rem; }
-.dashboard-settings-nav a[aria-current="page"] { border-color: var(--dashboard-border); background: var(--dashboard-accent-surface); color: var(--dashboard-accent); box-shadow: var(--shadow-subtle); }
+.dashboard-settings-nav a[aria-current="page"] { border-color: var(--dashboard-border); background: var(--dashboard-accent-surface); color: var(--dashboard-icon-primary); box-shadow: var(--shadow-subtle); }
 .dashboard-settings-nav a:is(:hover, :focus-visible) { border-color: var(--dashboard-border-strong); color: var(--dashboard-foreground); outline: none; }
 .dashboard-settings-content { display: grid; min-width: 0; gap: 1rem; }
 .dashboard-settings-primary-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
 .dashboard-settings-card { display: grid; min-width: 0; scroll-margin-top: calc(var(--dashboard-topbar-height) + 1.5rem); gap: 1.25rem; border: 1px solid var(--dashboard-border); border-radius: var(--radius-md); background: var(--dashboard-surface); padding: 1.25rem; box-shadow: var(--shadow-subtle); }
 .account-section-header { display: grid; grid-template-columns: 2.25rem minmax(0, 1fr); align-items: start; gap: 0.75rem; }
-.account-section-icon, .security-action-icon { display: grid; width: 2.25rem; height: 2.25rem; place-items: center; border: 1px solid var(--dashboard-border); border-radius: var(--radius-sm); background: var(--dashboard-accent-surface); color: var(--dashboard-accent); }
+.account-section-icon, .security-action-icon { display: grid; width: 2.25rem; height: 2.25rem; place-items: center; border: 1px solid var(--dashboard-icon-container-border); border-radius: var(--radius-sm); background: var(--dashboard-icon-container); color: var(--dashboard-icon-primary); }
 .account-section-icon svg, .security-action-icon svg { width: 1.05rem; height: 1.05rem; }
 .account-section-header > div { display: grid; gap: 0.2rem; }
 .account-section-header h2 { font-size: 1rem; font-weight: 650; letter-spacing: -0.02em; }
@@ -4703,7 +4703,7 @@ html[data-motion="ready"] .signup-form-wrap {
 .account-profile-copy span, .account-profile-field p { color: var(--dashboard-muted); font-size: 0.75rem; line-height: 1.5; }
 .account-profile-field { display: grid; gap: 0.5rem; }
 .account-profile-field label { font-size: 0.8125rem; font-weight: 650; }
-.account-profile-input { width: 100%; min-height: 2.75rem; border: 1px solid var(--dashboard-border-strong); border-radius: var(--radius-sm); background: var(--dashboard-background); padding: 0 0.8rem; color: var(--dashboard-foreground); font: inherit; font-size: 0.875rem; outline: none; transition: border-color var(--transition-fast) ease, box-shadow var(--transition-fast) ease; }
+.account-profile-input { width: 100%; min-height: 2.75rem; border: 1px solid var(--dashboard-border-strong); border-radius: var(--radius-sm); background: var(--dashboard-surface-hover); padding: 0 0.8rem; color: var(--dashboard-foreground); font: inherit; font-size: 0.875rem; outline: none; transition: border-color var(--transition-fast) ease, box-shadow var(--transition-fast) ease; }
 .account-profile-input:focus-visible { border-color: var(--dashboard-accent); box-shadow: 0 0 0 3px var(--dashboard-focus); }
 .account-profile-actions { display: flex; justify-content: flex-end; border-top: 1px solid var(--dashboard-border); padding-top: 0.875rem; }
 .account-profile-form > [role="alert"], .account-profile-form > [role="status"] { font-size: 0.8125rem; }
@@ -4715,7 +4715,7 @@ html[data-motion="ready"] .signup-form-wrap {
 .session-current, .session-action-row, .session-danger-zone { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
 .session-current { border-bottom: 1px solid var(--dashboard-border); padding: 0 0 0.875rem; }
 .session-current-copy { display: flex; align-items: center; gap: 0.85rem; }
-.session-current-icon { display: grid; width: 2.5rem; height: 2.5rem; place-items: center; border: 1px solid var(--dashboard-border); border-radius: var(--radius-sm); background: var(--dashboard-accent-surface); color: var(--dashboard-accent); }
+.session-current-icon { display: grid; width: 2.5rem; height: 2.5rem; place-items: center; border: 1px solid var(--dashboard-icon-container-border); border-radius: var(--radius-sm); background: var(--dashboard-icon-container); color: var(--dashboard-icon-primary); }
 .session-current-icon svg { width: 1.125rem; height: 1.125rem; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.6; }
 .session-current h3, .session-action-row h3, .session-danger-zone h3 { font-size: 0.8125rem; font-weight: 650; }
 .session-current-copy p, .session-action-row p, .session-danger-zone p { margin-top: 0.2rem; color: var(--dashboard-muted); font-size: 0.75rem; line-height: 1.45; }
@@ -5167,19 +5167,24 @@ html[data-motion="ready"] .signup-form-wrap {
 }
 
 :root[data-theme="dark"] .dashboard-shell {
-  --dashboard-background: #111318;
-  --dashboard-sidebar: #171a21;
-  --dashboard-surface: #191c23;
-  --dashboard-surface-raised: #222630;
-  --dashboard-surface-hover: #2a303b;
-  --dashboard-border: #2d333f;
-  --dashboard-border-strong: #414958;
-  --dashboard-foreground: #f3f5f8;
-  --dashboard-muted: #b1b8c4;
-  --dashboard-muted-soft: #969fad;
-  --dashboard-accent: #7890ff;
-  --dashboard-accent-hover: #91a4ff;
-  --dashboard-accent-surface: #222b4b;
+  --dashboard-background: #090909;
+  --dashboard-sidebar: #111111;
+  --dashboard-surface: #1a1a1a;
+  --dashboard-surface-raised: #242424;
+  --dashboard-surface-hover: #2d2d2d;
+  --dashboard-border: #333333;
+  --dashboard-border-strong: #444444;
+  --dashboard-foreground: #f5f5f5;
+  --dashboard-muted: #b4b4b4;
+  --dashboard-muted-soft: #858585;
+  --dashboard-accent: #b8a4ff;
+  --dashboard-accent-hover: #c6b7ff;
+  --dashboard-accent-surface: #242424;
+  --dashboard-icon-primary: #f5f5f5;
+  --dashboard-icon-secondary: #b4b4b4;
+  --dashboard-icon-muted: #858585;
+  --dashboard-icon-container: #242424;
+  --dashboard-icon-container-border: #333333;
   --dashboard-focus: color-mix(in srgb, var(--dashboard-accent) 42%, transparent);
   --dashboard-status-success: #82b18a;
   --dashboard-status-error: #e27f83;
@@ -5207,7 +5212,7 @@ html[data-motion="ready"] .signup-form-wrap {
 .dashboard-shell .dashboard-nav-item[data-active="true"] {
   border-radius: var(--radius-sm);
   background: var(--dashboard-accent-surface);
-  color: var(--dashboard-accent);
+  color: var(--dashboard-foreground);
 }
 
 .dashboard-shell .creative-composer,
@@ -6531,22 +6536,27 @@ html[data-motion="ready"] .signup-form-wrap {
    The shell stays deliberately quiet so the creative workspace, rather than
    dashboard chrome, owns the visual hierarchy. */
 .dashboard-shell {
-  --dashboard-background: #09090b;
-  --dashboard-sidebar: #0c0c0f;
-  --dashboard-topbar: color-mix(in srgb, #09090b 92%, transparent);
-  --dashboard-surface: #101014;
-  --dashboard-surface-raised: #17171d;
-  --dashboard-surface-hover: #1b1a20;
-  --dashboard-border: rgb(255 255 255 / 8%);
-  --dashboard-border-strong: rgb(255 255 255 / 15%);
-  --dashboard-foreground: #f5f2fa;
-  --dashboard-muted: #a29da9;
-  --dashboard-muted-soft: #716c78;
-  --dashboard-accent: #a68af7;
-  --dashboard-accent-hover: #b89fff;
-  --dashboard-accent-surface: rgb(166 138 247 / 14%);
-  --dashboard-accent-contrast: #0b0910;
-  --dashboard-avatar-surface: #292333;
+  --dashboard-background: #090909;
+  --dashboard-sidebar: #111111;
+  --dashboard-topbar: color-mix(in srgb, #090909 92%, transparent);
+  --dashboard-surface: #1a1a1a;
+  --dashboard-surface-raised: #242424;
+  --dashboard-surface-hover: #2d2d2d;
+  --dashboard-border: #333333;
+  --dashboard-border-strong: #444444;
+  --dashboard-foreground: #f5f5f5;
+  --dashboard-muted: #b4b4b4;
+  --dashboard-muted-soft: #858585;
+  --dashboard-accent: #b8a4ff;
+  --dashboard-accent-hover: #c6b7ff;
+  --dashboard-accent-surface: #242424;
+  --dashboard-icon-primary: #f5f5f5;
+  --dashboard-icon-secondary: #b4b4b4;
+  --dashboard-icon-muted: #858585;
+  --dashboard-icon-container: #242424;
+  --dashboard-icon-container-border: #333333;
+  --dashboard-accent-contrast: #090909;
+  --dashboard-avatar-surface: #242424;
   --dashboard-focus: #b59cff;
   --dashboard-overlay: rgb(0 0 0 / 78%);
   --dashboard-status-success: #7fb794;
@@ -6580,6 +6590,11 @@ html[data-motion="ready"] .signup-form-wrap {
   --dashboard-accent: #7255d9;
   --dashboard-accent-hover: #5d42c2;
   --dashboard-accent-surface: #e8e1ff;
+  --dashboard-icon-primary: #18151f;
+  --dashboard-icon-secondary: #625d6d;
+  --dashboard-icon-muted: #827b8f;
+  --dashboard-icon-container: #efedf3;
+  --dashboard-icon-container-border: rgb(31 26 42 / 10%);
   --dashboard-accent-contrast: #0b0910;
   --dashboard-avatar-surface: #ddd6f3;
   --dashboard-focus: #8066e8;
