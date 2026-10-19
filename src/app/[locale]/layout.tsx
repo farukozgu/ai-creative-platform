@@ -10,16 +10,31 @@ import { ThemeProviderBoundary } from "@/components/theme/theme-provider-boundar
 
 import "../globals.css";
 
-const googleSans = localFont({
+const inter = localFont({
   src: [
     {
-      path: "../../../public/Google_Sans/GoogleSans-VariableFont_GRAD,opsz,wght.ttf",
-      weight: "400 700",
+      path: "../../../public/ttf/InterDisplay-Regular.ttf",
+      weight: "400",
       style: "normal",
     },
     {
-      path: "../../../public/Google_Sans/GoogleSans-Italic-VariableFont_GRAD,opsz,wght.ttf",
-      weight: "400 700",
+      path: "../../../public/ttf/InterDisplay-Medium.ttf",
+      weight: "500",
+      style: "normal",
+    },
+    {
+      path: "../../../public/ttf/InterDisplay-SemiBold.ttf",
+      weight: "600",
+      style: "normal",
+    },
+    {
+      path: "../../../public/ttf/InterDisplay-Bold.ttf",
+      weight: "700",
+      style: "normal",
+    },
+    {
+      path: "../../../public/ttf/InterDisplay-Italic.ttf",
+      weight: "400",
       style: "italic",
     },
   ],
@@ -90,7 +105,7 @@ export default async function LocaleLayout({
       suppressHydrationWarning
     >
       <head><ThemeInitScript /></head>
-      <body className={googleSans.variable}>
+      <body className={inter.variable}>
         <ThemeProviderBoundary><NextIntlClientProvider>{children}</NextIntlClientProvider></ThemeProviderBoundary>
       </body>
     </html>
