@@ -6565,8 +6565,7 @@ html[data-motion="ready"] .signup-form-wrap {
   transition: grid-template-columns var(--motion-base) var(--ease-standard);
 }
 
-:root[data-theme-preference="light"] .dashboard-shell,
-:root[data-theme-preference="system"][data-theme-preference-source="stored"][data-theme="light"] .dashboard-shell {
+:root[data-theme="light"] .dashboard-shell {
   --dashboard-background: #f2f1f5;
   --dashboard-sidebar: #eae9ef;
   --dashboard-topbar: color-mix(in srgb, #f2f1f5 88%, transparent);

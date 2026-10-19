@@ -89,8 +89,8 @@ export default async function LocaleLayout({
       data-theme-preference-source="default"
       suppressHydrationWarning
     >
+      <head><ThemeInitScript /></head>
       <body className={googleSans.variable}>
-        <ThemeInitScript />
         <ThemeProviderBoundary><NextIntlClientProvider>{children}</NextIntlClientProvider></ThemeProviderBoundary>
       </body>
     </html>

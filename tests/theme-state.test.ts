@@ -1,10 +1,34 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { runInNewContext } from "node:vm";
 import test from "node:test";
 
 import { isThemePreference, resolveTheme } from "../src/components/theme/theme-state";
 
 const source = (path: string) => readFileSync(path, "utf8");
+
+function runInitializer(saved: string | null, systemPrefersDark: boolean, storageUnavailable = false) {
+  const initializer = source("src/components/theme/theme-init-script.tsx");
+  const script = initializer.match(/const script = `([^`]+)`;/)?.[1];
+  assert.ok(script);
+  const dataset: Record<string, string> = {};
+  let reads = 0;
+  runInNewContext(script, {
+    document: { documentElement: { dataset } },
+    localStorage: { getItem(key: string) {
+      assert.equal(key, "klay-theme-preference");
+      reads += 1;
+      if (storageUnavailable) throw new Error("Storage unavailable");
+      return saved;
+    } },
+    matchMedia(query: string) {
+      assert.equal(query, "(prefers-color-scheme: dark)");
+      return { matches: systemPrefersDark };
+    },
+  });
+  assert.equal(reads, 1);
+  return dataset;
+}
 
 test("theme preference defaults to system and follows a light or dark OS", () => {
   const saved: string | null = null;
@@ -36,18 +60,36 @@ test("preference persists in local storage", () => {
 
 test("refresh initialization restores preference before paint", () => {
   const initializer = source("src/components/theme/theme-init-script.tsx");
-  assert.match(initializer, /localStorage\.getItem\(k\)/);
+  assert.match(initializer, /localStorage\.getItem\("klay-theme-preference"\)/);
   assert.match(initializer, /dataset\.theme=d/);
   assert.match(initializer, /dangerouslySetInnerHTML/);
   assert.match(initializer, /themePreferenceSource/);
-  assert.match(source("src/app/[locale]/layout.tsx"), /<ThemeInitScript \/>/);
+  assert.match(source("src/app/[locale]/layout.tsx"), /<head><ThemeInitScript \/><\/head>[\s\S]*?<body/);
+  assert.doesNotMatch(initializer, /next\/script|beforeInteractive/);
 });
 
-test("dashboard defaults dark while stored light and system preferences remain supported", () => {
+test("dashboard follows the resolved root theme from the first paint", () => {
   const css = source("src/app/globals.css");
   assert.match(css, /\.dashboard-shell \{[\s\S]*?--dashboard-background: #09090b;/);
-  assert.match(css, /data-theme-preference="light"[\s\S]*?--dashboard-background: #f2f1f5;/);
-  assert.match(css, /data-theme-preference-source="stored"/);
+  assert.match(css, /:root\[data-theme="light"\] \.dashboard-shell \{[\s\S]*?--dashboard-background: #f2f1f5;/);
+  assert.doesNotMatch(css, /data-theme-preference-source="stored"/);
+});
+
+test("initializer and provider agree for stored light, dark, system, and absent preferences", () => {
+  for (const saved of ["light", "dark", "system", null]) {
+    for (const systemPrefersDark of [false, true]) {
+      const preference = isThemePreference(saved) ? saved : "system";
+      const actual = runInitializer(saved, systemPrefersDark);
+      assert.equal(actual.theme, resolveTheme(preference, systemPrefersDark));
+      assert.equal(actual.themePreference, preference);
+      assert.equal(actual.themePreferenceSource, saved === null ? "default" : "stored");
+    }
+  }
+});
+
+test("initializer uses system default when storage cannot be read", () => {
+  assert.equal(runInitializer(null, true, true).theme, "dark");
+  assert.equal(runInitializer(null, false, true).theme, "light");
 });
 
 test("system mode subscribes to live OS preference changes", () => {
