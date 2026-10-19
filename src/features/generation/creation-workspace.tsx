@@ -2,10 +2,9 @@
 
 import { useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
-import { DashboardIcon } from "@/components/dashboard/dashboard-icons";
 import styles from "./creation-workspace.module.css";
 
-export function CreationWorkspace({ children }: { children: ReactNode }) {
+export function CreationWorkspace({ children, canvas }: { children: ReactNode; canvas: ReactNode }) {
   const t = useTranslations("Dashboard.creationWorkspace");
   const [view, setView] = useState<"controls" | "preview">("controls");
   return (
@@ -20,11 +19,7 @@ export function CreationWorkspace({ children }: { children: ReactNode }) {
         {children}
       </div>
       <section id="creation-canvas" className={styles.canvas} aria-label={t("preview")}>
-        <div className={styles.empty}>
-          <DashboardIcon name="image" />
-          <h2>{t("emptyTitle")}</h2>
-          <p>{t("emptyDescription")}</p>
-        </div>
+        {canvas}
       </section>
     </main>
   );

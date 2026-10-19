@@ -523,6 +523,7 @@
     "visualDescription": "Pilot kullanım, iş birliği veya ürün hakkında konuşmak için ekibimizle iletişime geçin."
   },
   "Dashboard": {
+    "creationCanvas": {"sourcePreview":"Kaynak önizlemesi","untitled":"İsimsiz proje","emptyDescription":"Ürün görseli eklediğinizde önizleme burada görünür.","category":"Kategori","preset":"Şablon","presetInspiration":"Şablon ilhamı","missing":"Seçilmedi","missingOptional":"Eklenmedi (isteğe bağlı)"},
     "creationWorkspace": {
       "title": "Görsel oluştur",
       "open": "Oluşturma alanını aç",

@@ -523,6 +523,7 @@
     "visualDescription": "Talk to our team about pilot access, partnerships or anything you would like to know about the product."
   },
   "Dashboard": {
+    "creationCanvas": {"sourcePreview":"Source preview","untitled":"Untitled project","emptyDescription":"Your product preview will appear here after you add an image.","category":"Category","preset":"Preset","presetInspiration":"Preset inspiration","missing":"Not selected","missingOptional":"Not provided (optional)"},
     "creationWorkspace": {
       "title": "Create image",
       "open": "Open creation workspace",
