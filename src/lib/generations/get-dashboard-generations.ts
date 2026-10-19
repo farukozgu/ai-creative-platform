@@ -26,23 +26,18 @@ export async function getDashboardGenerations(userId: string) {
     throw new Error("Unable to load dashboard projects.");
   }
   const projects = ownedProjects ?? [];
-  if (projects.length === 0) return { projectCount: 0, completedCount: 0, activeCount: 0, generations: [] as DashboardGeneration[] };
+  if (projects.length === 0) return { generations: [] as DashboardGeneration[] };
 
   const projectIds = projects.map((project) => project.id);
-  const [generationResult, { count: completedCount, error: completedError }, { count: queuedCount, error: queuedError }, { count: processingCount, error: processingError }] = await Promise.all([
-    supabase.from("generations").select("id, project_id, generation_type, status, created_at, aspect_ratio, output_bucket_id, output_object_path, is_favorite").in("project_id", projectIds).order("created_at", { ascending: false }).limit(6),
-    supabase.from("generations").select("id", { count: "exact", head: true }).in("project_id", projectIds).eq("generation_type", "image").eq("status", "succeeded"),
-    supabase.from("generations").select("id", { count: "exact", head: true }).in("project_id", projectIds).eq("status", "queued"),
-    supabase.from("generations").select("id", { count: "exact", head: true }).in("project_id", projectIds).eq("status", "processing"),
-  ]);
+  const generationResult = await supabase.from("generations").select("id, project_id, generation_type, status, created_at, aspect_ratio, output_bucket_id, output_object_path, is_favorite").in("project_id", projectIds).eq("generation_type", "image").eq("status", "succeeded").order("created_at", { ascending: false }).limit(6);
   let { data: rows, error } = generationResult;
   if (isMissingFavoriteColumnError(error)) {
     if (process.env.NODE_ENV === "development") console.warn("[generation-favorites] migration_pending", { migration: "20261007010000_add_generation_favorites.sql" });
-    const fallback = await supabase.from("generations").select("id, project_id, generation_type, status, created_at, aspect_ratio, output_bucket_id, output_object_path").in("project_id", projectIds).order("created_at", { ascending: false }).limit(6);
+    const fallback = await supabase.from("generations").select("id, project_id, generation_type, status, created_at, aspect_ratio, output_bucket_id, output_object_path").in("project_id", projectIds).eq("generation_type", "image").eq("status", "succeeded").order("created_at", { ascending: false }).limit(6);
     rows = fallback.data?.map((generation) => ({ ...generation, is_favorite: false })) ?? null;
     error = fallback.error;
   }
-  if (error || completedError || queuedError || processingError) throw new Error("Unable to load dashboard generations.");
+  if (error) throw new Error("Unable to load dashboard generations.");
   const titleById = new Map(projects.map((project) => [project.id, project.title]));
   const generations = await Promise.all((rows ?? []).map(async (row) => {
     let previewUrl: string | null = null;
@@ -52,5 +47,5 @@ export async function getDashboardGenerations(userId: string) {
     }
     return { id: row.id, projectId: row.project_id, projectTitle: titleById.get(row.project_id) ?? null, status: row.status as GenerationStatus, type: row.generation_type as "image" | "video", createdAt: row.created_at, previewUrl, aspectRatio: row.aspect_ratio, isFavorite: row.is_favorite };
   }));
-  return { projectCount: projects.length, completedCount: completedCount ?? 0, activeCount: (queuedCount ?? 0) + (processingCount ?? 0), generations };
+  return { generations };
 }

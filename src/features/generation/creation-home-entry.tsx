@@ -1,14 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
-import { Button } from "@/components/ui/button";
+import { useEffect, useState, type ReactNode } from "react";
 import { DASHBOARD_PRESET_EVENT, type DashboardPresetSelection } from "@/components/dashboard/creative-preset-rail";
-import { useRouter } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { creationHref, resolveCreationEntry, type CreationEntry } from "./creation-entry";
 
-export function CreationHomeEntry() {
-  const t = useTranslations("Dashboard.creationWorkspace");
+export function CreationHomeEntry({ children, className }: { children: ReactNode; className: string }) {
   const router = useRouter();
   const [entry, setEntry] = useState<CreationEntry>({ presetId: null, presentationMode: null });
   useEffect(() => {
@@ -27,5 +24,5 @@ export function CreationHomeEntry() {
       window.removeEventListener(DASHBOARD_PRESET_EVENT, handoff);
     };
   }, [router]);
-  return <Button href={creationHref(entry)}>{t("open")}</Button>;
+  return <Link href={creationHref(entry)} className={className}>{children}</Link>;
 }

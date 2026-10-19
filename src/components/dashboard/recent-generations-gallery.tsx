@@ -62,7 +62,7 @@ export function RecentGenerationsGallery({ generations, messages, locale, favori
   return <section className="dashboard-content-section" aria-labelledby="recent-generations-title">
     <div className="dashboard-section-heading dashboard-gallery-heading"><h2 id="recent-generations-title">{messages.heading}</h2><Link href="/dashboard/projects">{messages.viewAll}<DashboardIcon name="arrow" /></Link></div>
     {favoriteError ? <p className="favorite-feedback" role="alert">{messages.favoriteError}</p> : null}
-    {completed.length === 0 ? <div className="dashboard-empty-state"><div className="dashboard-empty-mark" aria-hidden="true"><DashboardIcon name="assets" /></div><div><h3>{messages.emptyHeading}</h3><p>{messages.emptyDescription}</p></div><a href="#composer" className="dashboard-view-all-button">{messages.start}</a></div> :
+    {completed.length === 0 ? <div className="dashboard-empty-state"><div className="dashboard-empty-mark" aria-hidden="true"><DashboardIcon name="assets" /></div><div><h3>{messages.emptyHeading}</h3><p>{messages.emptyDescription}</p></div><Link href="/dashboard/create" className="dashboard-view-all-button">{messages.start}</Link></div> :
       <ul className="dashboard-generation-grid" data-count={Math.min(completed.length, 6)} aria-label={messages.galleryLabel}>{completed.map((generation) => {
         const title = generation.projectTitle?.trim() || messages.untitled;
         const alt = messages.previewAlt.replace("{title}", title);

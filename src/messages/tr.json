@@ -545,6 +545,27 @@
     "metadataDescription": "Klay.ai çalışma alanında kampanyaya hazır ürün görselleri oluşturun ve yaratıcı yönleri keşfedin.",
     "home": {
       "eyebrow": "KLAY CREATIVE STUDIO",
+      "discoveryHeading": "Bugün ne üreteceksin?",
+      "discoveryDescription": "Ürünlerini kampanyaya hazır görsellere dönüştür.",
+      "discoveryLabel": "Yaratıcı iş akışlarını keşfet",
+      "previousWorkflow": "Önceki iş akışlarına kaydır",
+      "nextWorkflow": "Sonraki iş akışlarına kaydır",
+      "workflows": {
+        "fashion": {"category":"Moda","title":"Model üzerinde moda","description":"Giysini doğal bir kent kampanyasında göster."},
+        "studio": {"category":"Kozmetik","title":"Stüdyo ürün çekimi","description":"Ambalajı kontrollü stüdyo ışığında göster."},
+        "jewelry": {"category":"Takı","title":"Model üzerinde takı","description":"Takıyı doğal vücut temasıyla sun."},
+        "watches": {"category":"Saat","title":"Bilekte saat","description":"Saati gerçekçi bir kullanım sahnesinde göster."},
+        "lifestyle": {"category":"Aksesuar","title":"Yaşam tarzı kampanyası","description":"Çantayı özenli günlük sahnelere taşı."},
+        "footwear": {"category":"Ayakkabı","title":"Sokakta ayakkabı","description":"Ayakkabını öne çıkaran kent görseli oluştur."}
+      },
+      "launcherHeading": "Klay ile başla",
+      "launcherDescription": "Yeni görselin için bir başlangıç noktası seç.",
+      "launchers": {
+        "create": {"title":"Ürün görseli oluştur","description":"Ürününle rehberli çalışma alanında başla."},
+        "fashion": {"title":"Moda kampanyası","description":"Model üzerinde sokak çekimiyle başla."},
+        "studio": {"title":"Kozmetik stüdyo çekimi","description":"Ürün odaklı stüdyo düzeniyle başla."},
+        "projects": {"title":"Projelerim","description":"Kampanyalarını ve geçmiş görsellerini aç."}
+      },
       "title": "Ürün fotoğrafından\nkampanya dünyasına.",
       "description": "Ürününüzü merkeze alan gerçekçi, yaratıcı ve kullanıma hazır kampanya görselleri üretin.",
       "jumpLabel": "Ana sayfa bölümleri",
@@ -721,7 +742,7 @@
       "activeDescription": "Sıradaki ve işlenen üretimler"
     },
     "generations": {
-      "heading": "Son üretimler",
+      "heading": "Son görseller",
       "viewAll": "Tüm projeler",
       "emptyHeading": "Henüz bir üretiminiz yok.",
       "emptyDescription": "İlk görselinizi oluşturduğunuzda burada görünecek.",

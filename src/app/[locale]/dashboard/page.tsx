@@ -2,14 +2,12 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { CreationHomeEntry } from "@/features/generation/creation-home-entry";
-import { DashboardHomeHero } from "@/components/dashboard/dashboard-home-hero";
-import { WorkspaceOverview } from "@/components/dashboard/workspace-overview";
+import { DashboardHome } from "@/components/dashboard/dashboard-home";
 import { RecentGenerations } from "@/components/dashboard/recent-generations";
-import { TemplateRail } from "@/components/dashboard/template-rail";
 import { getAuthenticatedUserId } from "@/lib/auth/require-user";
 import { getDashboardGenerations } from "@/lib/generations/get-dashboard-generations";
 import { isSupportedLocale } from "@/i18n/routing";
+import styles from "@/components/dashboard/dashboard-home.module.css";
 
 type DashboardPageProps = {
   params: Promise<{ locale: string }>;
@@ -37,18 +35,13 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
   setRequestLocale(locale);
 
   const userId = await getAuthenticatedUserId();
-  const dashboardData = userId ? await getDashboardGenerations(userId) : { projectCount: 0, completedCount: 0, activeCount: 0, generations: [] };
+  const dashboardData = userId ? await getDashboardGenerations(userId) : { generations: [] };
 
   return (
     <main className="dashboard-main">
-      <div className="dashboard-main-inner dashboard-container dashboard-home-inner">
-        <DashboardHomeHero />
-        <div className="dashboard-home-create">
-          <CreationHomeEntry />
-        </div>
-        <TemplateRail />
+      <div className={`dashboard-main-inner dashboard-container ${styles.home}`}>
+        <DashboardHome />
         <RecentGenerations generations={dashboardData.generations} />
-        <WorkspaceOverview projectCount={dashboardData.projectCount} completedCount={dashboardData.completedCount} activeCount={dashboardData.activeCount} />
       </div>
     </main>
   );

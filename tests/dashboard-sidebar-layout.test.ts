@@ -82,15 +82,14 @@ test("dashboard topbar greets the signed-in user in both locales", () => {
 test("dashboard home retains discovery with an entry to the single route-owned composer", () => {
   const page = read("src/app/[locale]/dashboard/page.tsx");
   const composer = read("src/components/dashboard/creative-composer.tsx");
-  const hero = read("src/components/dashboard/dashboard-home-hero.tsx");
 
-  assert.match(page, /DashboardHomeHero[\s\S]*CreationHomeEntry[\s\S]*TemplateRail[\s\S]*RecentGenerations[\s\S]*WorkspaceOverview/);
+  assert.match(page, /DashboardHome[\s\S]*RecentGenerations/);
+  assert.doesNotMatch(page, /TemplateRail|WorkspaceOverview/);
   assert.doesNotMatch(page, /<CreativeComposer/);
   const createPage = read("src/app/[locale]/dashboard/create/page.tsx");
   assert.equal(createPage.match(/<CreativeComposer\b/g)?.length, 1);
   assert.doesNotMatch(createPage, /DashboardShell|DashboardSidebar|DashboardHomeHero/);
-  assert.doesNotMatch(hero, /next\/image/);
-  assert.match(hero, /dashboard-home-hero-copy/);
+  assert.match(read("src/components/dashboard/dashboard-home.tsx"), /CreationHomeEntry/);
   assert.match(composer, /DASHBOARD_PRESET_EVENT/);
   assert.match(composer, /creation-flow/);
 

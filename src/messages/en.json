@@ -545,6 +545,27 @@
     "metadataDescription": "Create campaign-ready product visuals and explore creative directions in the Klay.ai workspace.",
     "home": {
       "eyebrow": "KLAY CREATIVE STUDIO",
+      "discoveryHeading": "What will you create?",
+      "discoveryDescription": "Turn your products into campaign-ready visuals.",
+      "discoveryLabel": "Explore creative workflows",
+      "previousWorkflow": "Scroll to previous workflows",
+      "nextWorkflow": "Scroll to next workflows",
+      "workflows": {
+        "fashion": {"category":"Fashion","title":"On-model fashion","description":"Put apparel in a natural city campaign."},
+        "studio": {"category":"Beauty","title":"Studio product photography","description":"Show packaging in controlled studio light."},
+        "jewelry": {"category":"Jewelry","title":"Jewelry on model","description":"Present jewelry with natural body contact."},
+        "watches": {"category":"Watches","title":"Watches on wrist","description":"Show the watch in a believable worn setting."},
+        "lifestyle": {"category":"Accessories","title":"Lifestyle campaigns","description":"Place bags in refined everyday scenes."},
+        "footwear": {"category":"Footwear","title":"Street footwear","description":"Create a footwear-led city image."}
+      },
+      "launcherHeading": "Get started with Klay",
+      "launcherDescription": "Choose a starting point for your next image.",
+      "launchers": {
+        "create": {"title":"Create product image","description":"Start with your product in the guided workspace."},
+        "fashion": {"title":"Fashion campaign","description":"Begin with the on-model street workflow."},
+        "studio": {"title":"Beauty studio shot","description":"Begin with a product-focused studio setup."},
+        "projects": {"title":"My projects","description":"Open your campaigns and past creations."}
+      },
       "title": "From product photo\nto campaign world.",
       "description": "Create realistic, distinctive, campaign-ready imagery with your product kept at the center.",
       "jumpLabel": "Dashboard sections",
@@ -721,7 +742,7 @@
       "activeDescription": "Queued and processing generations"
     },
     "generations": {
-      "heading": "Recent generations",
+      "heading": "Recent creations",
       "viewAll": "All projects",
       "emptyHeading": "You don’t have a generation yet.",
       "emptyDescription": "Your first image will appear here when it’s ready.",
