@@ -37,6 +37,7 @@ export function GenerateImageForm({ action, messages }: GenerateImageFormProps) 
   const [message, setMessage] = useState<string | null>(null);
   const [aspectRatio, setAspectRatio] = useState<GenerationAspectRatio>(DEFAULT_GENERATION_ASPECT_RATIO);
   const pendingRef = useRef(false);
+  const submissionIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     const generationId = new URLSearchParams(window.location.search).get("generation");
@@ -47,7 +48,7 @@ export function GenerateImageForm({ action, messages }: GenerateImageFormProps) 
       const [generation] = await getActiveGenerationStatuses([generationId]);
       if (cancelled || !generation) return;
       setGenerationState(generation.status);
-      if (generation.status === "succeeded" || generation.status === "failed") {
+      if (generation.status === "succeeded" || generation.status === "failed" || generation.status === "reconciliation_required") {
         pendingRef.current = false;
         setModalOpen(false);
         router.refresh();
@@ -63,12 +64,15 @@ export function GenerateImageForm({ action, messages }: GenerateImageFormProps) 
     if (pendingRef.current) return;
     pendingRef.current = true;
     const formData = new FormData(event.currentTarget);
+    // Keep this identifier through a transport retry; a new click gets a new job.
+    submissionIdRef.current ??= crypto.randomUUID();
+    formData.set("client_submission_id", submissionIdRef.current);
     setMessage(null);
     setGenerationState("queued");
     setModalOpen(true);
     try {
       const queued = await action(null, formData);
-      if (!queued.ok) { setGenerationState("failed"); setMessage(messages[queued.message]); pendingRef.current = false; return; }
+      if (!queued.ok) { setGenerationState("failed"); setMessage(messages[queued.message]); pendingRef.current = false; submissionIdRef.current = null; return; }
       setGenerationState("queued");
       router.replace(`?generation=${encodeURIComponent(queued.generationId)}`);
       router.refresh();

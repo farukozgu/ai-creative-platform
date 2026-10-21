@@ -16,7 +16,7 @@ test("explicit sexual evidence routes to sensitive handling", () => { const resu
 test("commercial and editorial apparel preserve non-explicit prompt context", () => { for (const direction of ["commercial apparel campaign", "editorial fashion lookbook"]) { const result = classify(direction); assert.equal(result.klayClassification, "adult_editorial_fashion"); assert.match(result.promptContext, /non-explicit|editorial fashion/i); } });
 test("provider moderation remains terminal and independently classified", () => { assert.equal(isProviderModerationBlocked({ cause: { code: "moderation_blocked" } }), true); assert.equal(isProviderModerationBlocked({ cause: { code: "invalid_image" } }), false); });
 test("provider moderation has no retry and persists separately from Klay classification", async () => {
-  const source = await readFile("src/app/[locale]/dashboard/projects/[projectId]/generation-actions.ts", "utf8");
+  const source = await readFile("src/lib/generation/image-worker-service.ts", "utf8");
   assert.match(source, /failureCategory = providerModerationBlocked \? "provider_moderation_blocked"/);
   assert.match(source, /providerFalsePositiveCandidate: providerModerationBlocked/);
   assert.match(source, /retryable: providerModerationBlocked \? false : retryable/);

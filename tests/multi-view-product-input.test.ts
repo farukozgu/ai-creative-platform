@@ -47,7 +47,7 @@ test("migration and actions enforce limits, reassignment, minimum, and ownership
 });
 
 test("generation snapshots product views separately from references and validates all views", () => {
-  const source = readFileSync("src/app/[locale]/dashboard/projects/[projectId]/generation-actions.ts", "utf8");
+  const source = readFileSync("src/lib/generation/image-worker-service.ts", "utf8");
   assert.match(source, /product_images:[\s\S]*asset_ids:[\s\S]*supporting_asset_ids/); assert.match(source, /references:[\s\S]*referenceGuidance/); assert.match(source, /supportingProducts: usableProductImages/);
 });
 

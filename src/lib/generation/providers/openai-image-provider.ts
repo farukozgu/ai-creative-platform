@@ -121,7 +121,7 @@ export class OpenAIImageProvider implements ImageGenerationProviderClient {
           prompt: request.prompt,
           size: size.value,
           quality,
-        }) as ImageEditParamsNonStreaming);
+        }) as ImageEditParamsNonStreaming, { timeout: 300_000, maxRetries: 0 });
       const imageBase64 = response.data?.[0]?.b64_json;
 
       if (typeof imageBase64 !== "string" || imageBase64.length === 0) {

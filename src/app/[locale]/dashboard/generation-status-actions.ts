@@ -6,7 +6,7 @@ import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 export type ActiveGeneration = {
   id: string;
   projectId: string;
-  status: "queued" | "processing" | "succeeded" | "failed";
+  status: "queued" | "processing" | "succeeded" | "failed" | "reconciliation_required";
 };
 
 export async function getActiveGenerationStatuses(generationIds?: string[]): Promise<ActiveGeneration[]> {

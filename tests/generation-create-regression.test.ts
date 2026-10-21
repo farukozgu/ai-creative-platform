@@ -4,16 +4,16 @@ import test from "node:test";
 
 import { resolveCreativeDirectionSnapshot, resolveGenerationInsertResult, serializeGenerationMetadata, toSafeGenerationInsertError } from "../src/lib/generation/generation-create-boundary";
 
-test("successful generation insert resolves a row and creation continues to synchronous dispatch", async () => {
+test("successful generation insert accepts a durable queued job without synchronous dispatch", async () => {
   assert.deepEqual(resolveGenerationInsertResult({ data: { id: "generation-1" }, error: null }), { ok: true, generation: { id: "generation-1" } });
-  const source = await readFile("src/app/[locale]/dashboard/projects/[projectId]/generation-actions.ts", "utf8");
+  const source = await readFile("src/lib/generation/image-worker-service.ts", "utf8");
   const success = source.indexOf('safeGenerationEvent("create", "insert_success"');
   const queued = source.indexOf('safeGenerationEvent("queue", "created"');
-  const dispatch = source.indexOf("await dispatchQueuedGeneration(generation.id)");
-  assert.ok(success > 0 && queued > success && dispatch > queued);
+  assert.ok(success > 0 && queued > success);
+  assert.doesNotMatch(source, /await dispatchQueuedGeneration\(generation\.id\)/);
 });
 
-test("insert failure is explicit, safely logged, returned as failure, and cannot dispatch", async () => {
+test("insert failure is explicit, safely logged, and duplicate submission resolves its existing job", async () => {
   const logs: Array<{ message: string; fields: unknown }> = [];
   const result = resolveGenerationInsertResult(
     { data: null, error: { code: "23514", message: "constraint failed sk-secret", details: "Bearer token-value", hint: "check payload" } },
@@ -23,9 +23,10 @@ test("insert failure is explicit, safely logged, returned as failure, and cannot
   assert.equal(logs.length, 1);
   assert.equal(logs[0]?.message, "[generation-create] insert_failed");
   assert.doesNotMatch(JSON.stringify(logs), /sk-secret|token-value/);
-  const source = await readFile("src/app/[locale]/dashboard/projects/[projectId]/generation-actions.ts", "utf8");
-  assert.match(source, /if \(!resolvedInsert\.ok\) \{\s*return \{ ok: false, message: "creationFailed" \};\s*\}/);
-  assert.match(source, /const generation = resolvedInsert\.generation;[\s\S]*insert_success[\s\S]*await dispatchQueuedGeneration/);
+  const source = await readFile("src/lib/generation/image-worker-service.ts", "utf8");
+  assert.match(source, /if \(insertResult\.error\?\.code === "23505"\)/);
+  assert.match(source, /eq\("client_submission_id", submissionId\)/);
+  assert.doesNotMatch(source, /await dispatchQueuedGeneration/);
 });
 
 test("missing insert data is treated as a logged database failure", () => {
@@ -65,7 +66,7 @@ test("generation insert diagnostics expose only bounded database fields", () => 
 });
 
 test("no branch after insert_start can silently return before insert resolution", async () => {
-  const source = await readFile("src/app/[locale]/dashboard/projects/[projectId]/generation-actions.ts", "utf8");
+  const source = await readFile("src/lib/generation/image-worker-service.ts", "utf8");
   const start = source.indexOf('safeGenerationEvent("create", "insert_start"');
   const success = source.indexOf('safeGenerationEvent("create", "insert_success"');
   const section = source.slice(start, success);

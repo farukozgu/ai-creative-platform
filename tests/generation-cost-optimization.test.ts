@@ -74,7 +74,7 @@ test("multi-view registration analyzes only the primary product", async () => {
 });
 
 test("validation-unavailable Image Edit is retained as unverified", async () => {
-  const source = await readFile("src/app/[locale]/dashboard/projects/[projectId]/generation-actions.ts", "utf8");
+  const source = await readFile("src/lib/generation/image-worker-service.ts", "utf8");
   assert.match(source, /validateImageEditBestEffort/);
   assert.match(source, /validation\.status === "validation_unavailable" \? "unverified"/);
 });

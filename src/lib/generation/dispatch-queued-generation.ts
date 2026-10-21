@@ -8,7 +8,8 @@ export async function dispatchQueuedGeneration(
   runPipeline?: PipelineRunner,
   finalizeQueuedFailure?: QueuedFailureFinalizer,
 ): Promise<boolean> {
-  const runner = runPipeline ?? (await import("@/app/[locale]/dashboard/projects/[projectId]/generation-actions")).runQueuedImageGeneration;
+  if (!runPipeline) throw new Error("Direct image dispatch is disabled; use the fenced image worker.");
+  const runner = runPipeline;
   const succeeded = await awaitGenerationPipeline(generationId, runner);
   if (succeeded) return true;
 

@@ -47,7 +47,7 @@ test("migration restricts browser access and deduplicates each user event", () =
 });
 
 test("generation and image-edit final states create all four notification variants", () => {
-  const source = readFileSync("src/app/[locale]/dashboard/projects/[projectId]/generation-actions.ts", "utf8");
+  const source = readFileSync("src/lib/generation/image-worker-service.ts", "utf8");
   for (const type of notificationTypes) assert.match(source, new RegExp(`type: [\"']${type}[\"']`));
 });
 

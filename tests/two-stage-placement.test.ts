@@ -12,7 +12,7 @@ import type { ProductProfile } from "../src/lib/product-understanding/product-pr
 import type { FidelityValidationResult } from "../src/lib/fidelity-validation/types";
 
 const root = process.cwd();
-const generationAction = readFileSync(join(root, "src/app/[locale]/dashboard/projects/[projectId]/generation-actions.ts"), "utf8");
+const generationAction = readFileSync(join(root, "src/lib/generation/image-worker-service.ts"), "utf8");
 const provider = readFileSync(join(root, "src/lib/generation/providers/openai-image-provider.ts"), "utf8");
 function watchProfile(): ProductProfile {
   return {
@@ -37,7 +37,7 @@ test("production generation calls the final provider directly with source-first 
   assert.match(generationAction, /getImageGenerationProvider\(queuedGeneration\.provider\)\.generate\(\{/);
   assert.match(generationAction, /images: generationImages/);
   assert.match(generationAction, /quality: executionPolicy\.quality/);
-  assert.ok(generationAction.indexOf("const result = await performance.measure(\"provider_initial\"") < generationAction.indexOf("validateGeneratedImageBestEffort({"));
+  assert.ok(generationAction.indexOf("const result = await withImageLeaseHeartbeat(claim") < generationAction.indexOf("validateGeneratedImageBestEffort({"));
   assert.doesNotMatch(provider, /scene_preparation|identity_placement/);
 
   const ordered = orderGenerationImages(
@@ -71,7 +71,7 @@ test("actual final image is fidelity-validated and repair remains limited to one
   assert.match(generationAction, /validateGeneratedImageBestEffort\(/);
   assert.match(generationAction, /if \(repairPlan\.shouldRetry\)/);
   assert.match(generationAction, /executionCounts\.repairCalls = 1/);
-  assert.equal((generationAction.match(/performance\.measure\("provider_repair"/g) ?? []).length, 1);
+  assert.equal((generationAction.match(/performance!?\.measure\("provider_repair"/g) ?? []).length, 1);
   const validation: FidelityValidationResult = { version: "test", status: "fail", retryRecommended: true, commerciallyUsable: false, summary: "identity issue", checks: [], severity: "critical", issues: [{ code: "watch_dial_structure_changed", category: "product_identity", severity: "critical", finding: "wrong dial", expected: "source dial", sourceAuthoritative: true }] };
   assert.equal(resolveRepairPlan(validation).shouldRetry, true);
 });

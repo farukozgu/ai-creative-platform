@@ -9,30 +9,30 @@ import { awaitGenerationPipeline } from "../src/lib/generation/await-generation-
 import { dispatchQueuedGeneration } from "../src/lib/generation/dispatch-queued-generation";
 
 test("creation persists Sunburst and xhigh defaults with environment override", async () => {
-  const source = await readFile("src/app/[locale]/dashboard/projects/[projectId]/generation-actions.ts", "utf8");
+  const source = await readFile("src/lib/generation/image-worker-service.ts", "utf8");
   assert.match(source, /OPENAI_IMAGE_MODEL\?\.trim\(\) \|\| "gpt-image-2\.5-sunburst"/);
   assert.match(source, /quality: "xhigh"/);
 });
 
-test("server action awaits the canonical synchronous runner and runner has atomic queued guard", async () => {
-  const source = await readFile("src/app/[locale]/dashboard/projects/[projectId]/generation-actions.ts", "utf8");
+test("server action accepts a durable queued job while the legacy runner retains its queued guard", async () => {
+  const source = await readFile("src/lib/generation/image-worker-service.ts", "utf8");
   const dispatch = await readFile("src/lib/generation/dispatch-queued-generation.ts", "utf8");
   const awaitPipeline = await readFile("src/lib/generation/await-generation-pipeline.ts", "utf8");
-  assert.match(source, /\.insert\([\s\S]+dispatchQueuedGeneration\(generation\.id\)/);
+  assert.match(source, /\.insert\([\s\S]+client_submission_id: submissionId/);
   assert.match(dispatch, /await awaitGenerationPipeline\(generationId, runner\)/);
   assert.match(dispatch, /finalizer\(generationId, "dispatch_failed"\)/);
   assert.match(awaitPipeline, /const result = await runner\(generationId\)/);
-  assert.match(source, /await dispatchQueuedGeneration\(generation\.id\)/);
+  assert.doesNotMatch(source, /await dispatchQueuedGeneration\(generation\.id\)/);
   assert.match(source, /safeGenerationEvent\("create", "insert_success"/);
   assert.match(source, /safeGenerationEvent\("dispatch", "pipeline_entered"/);
-  assert.match(source, /\.eq\("status", "queued"\)\s*\.select\("id"\)/);
+  assert.match(source, /\.in\("status", \["queued", "processing"\]\)[\s\S]{0,240}execution_lease_token/);
   assert.match(source, /\.eq\("id", generationId\)[\s\S]*\.in\("status", \["queued", "processing"\]\)/);
   assert.match(source, /type: "generation_completed"/);
   assert.match(source, /type: "generation_failed"/);
   assert.match(awaitPipeline, /result\.ok/);
   assert.doesNotMatch(dispatch + awaitPipeline, /trigger\.dev|tasks\.trigger|setTimeout|void\s+runQueued/);
   assert.match(source, /safeGenerationEvent\("provider", "request_start"/);
-  assert.match(source, /\.eq\("id", queuedGeneration\.id\)[\s\S]{0,120}\.eq\("status", "queued"\)/);
+  assert.match(source, /\.eq\("id", queuedGeneration\.id\)[\s\S]{0,180}\.in\("status", \["queued", "processing"\]\)/);
 });
 
 test("dispatch waits for the pipeline result before reporting completion", async () => {
@@ -89,11 +89,10 @@ test("a successful pipeline does not run failure finalization", async () => {
   assert.equal(finalized, false);
 });
 
-test("dispatch failure marks a still-queued record failed and notifies once", async () => {
-  const source = await readFile("src/app/[locale]/dashboard/projects/[projectId]/generation-actions.ts", "utf8");
-  assert.match(source, /error_message: "dispatch_failed"/);
-  assert.match(source, /\.eq\("id", generation\.id\)\.eq\("status", "queued"\)\.select\("id"\)\.maybeSingle\(\)/);
-  assert.match(source, /else if \(failedGeneration\)[\s\S]*type: "generation_failed"/);
+test("submission does not convert an undispatched durable record into a failure", async () => {
+  const source = await readFile("src/lib/generation/image-worker-service.ts", "utf8");
+  assert.doesNotMatch(source, /error_message: "dispatch_failed"/);
+  assert.doesNotMatch(source, /await dispatchQueuedGeneration\(generation\.id\)/);
 });
 
 test("Trigger.dev dependencies and configuration are removed", async () => {
@@ -129,7 +128,7 @@ test("at most one automatic repair attempt is selected", () => {
 });
 
 test("quality-rejected final candidates fail before output upload and completion notification", async () => {
-  const source = await readFile("src/app/[locale]/dashboard/projects/[projectId]/generation-actions.ts", "utf8");
+  const source = await readFile("src/lib/generation/image-worker-service.ts", "utf8");
   const rejection = source.indexOf('logDevelopmentGenerationEvent("quality_gate_rejected_terminal"');
   const upload = source.indexOf('.upload(outputObjectPath');
   const successNotification = source.indexOf('type: "generation_completed"');
@@ -141,7 +140,7 @@ test("quality-rejected final candidates fail before output upload and completion
 });
 
 test("unavailable validation is persisted as unverified and reaches the existing success notification path", async () => {
-  const source = await readFile("src/app/[locale]/dashboard/projects/[projectId]/generation-actions.ts", "utf8");
+  const source = await readFile("src/lib/generation/image-worker-service.ts", "utf8");
   const page = await readFile("src/app/[locale]/dashboard/projects/[projectId]/page.tsx", "utf8");
   const gallery = await readFile("src/components/projects/generation-gallery.tsx", "utf8");
   const english = JSON.parse(await readFile("src/messages/en.json", "utf8")) as { Dashboard: { project: { outputs: { validationUnverified: string } } } };
@@ -174,7 +173,7 @@ test("unavailable validation is persisted as unverified and reaches the existing
 });
 
 test("post-storage persistence exposes its exact failure and committed success is authoritative", async () => {
-  const source = await readFile("src/app/[locale]/dashboard/projects/[projectId]/generation-actions.ts", "utf8");
+  const source = await readFile("src/lib/generation/image-worker-service.ts", "utf8");
   assert.match(source, /let outputStored = false/);
   assert.match(source, /let terminalSuccessPersisted = false/);
   assert.match(source, /postStorageStep = "persist_terminal_state"[\s\S]*step_start/);
@@ -190,7 +189,7 @@ test("post-storage persistence exposes its exact failure and committed success i
 });
 
 test("terminal persistence retains the compact input snapshot and never rewrites it with the compiled provider prompt", async () => {
-  const source = await readFile("src/app/[locale]/dashboard/projects/[projectId]/generation-actions.ts", "utf8");
+  const source = await readFile("src/lib/generation/image-worker-service.ts", "utf8");
   const terminalUpdate = source.slice(source.indexOf('postStorageStep = "persist_terminal_state"'), source.indexOf(".eq(\"id\", queuedGeneration.id)", source.indexOf('postStorageStep = "persist_terminal_state"')));
   assert.doesNotMatch(terminalUpdate, /creative_direction_snapshot/);
   assert.match(source, /resolveCreativeDirectionSnapshot\([\s\S]*userCreativeDirection \|\| `Preset: \$\{preset\?\.title/);
@@ -214,7 +213,7 @@ test("general dashboard actions and project actions do not import the generation
 });
 
 test("hybrid projection and Sharp remain dynamically imported behind the eligible generation branch", async () => {
-  const generation = await readFile("src/app/[locale]/dashboard/projects/[projectId]/generation-actions.ts", "utf8");
+  const generation = await readFile("src/lib/generation/image-worker-service.ts", "utf8");
   const projection = await readFile("src/lib/apparel-projection/project-artwork.ts", "utf8");
   const localization = await readFile("src/lib/product-identity/apparel-artwork-localization.ts", "utf8");
   assert.match(generation, /await import\("@\/lib\/apparel-projection\/project-artwork"\)/);

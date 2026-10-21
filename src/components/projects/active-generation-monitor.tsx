@@ -18,7 +18,7 @@ export function ActiveGenerationMonitor({ initial, label }: { initial: ActiveGen
       const latest = await getActiveGenerationStatuses(active.map(({ id }) => id));
       if (cancelled) return;
       setJobs(latest);
-      if (latest.some(({ status }) => status === "succeeded" || status === "failed")) router.refresh();
+      if (latest.some(({ status }) => status === "succeeded" || status === "failed" || status === "reconciliation_required")) router.refresh();
     };
     const interval = window.setInterval(() => void poll(), 2500);
     return () => { cancelled = true; window.clearInterval(interval); };
