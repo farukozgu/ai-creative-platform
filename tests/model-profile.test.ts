@@ -1,0 +1,4 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import { emptyModelAppearanceDraft, validateModelAppearanceDraft } from "@/features/models/model-profile";
+test("model appearance profiles require an adult age range and all identity fields", () => { assert.equal(validateModelAppearanceDraft(emptyModelAppearanceDraft), false); assert.equal(validateModelAppearanceDraft({ ...emptyModelAppearanceDraft, name: "Studio 01", presentation: "Feminine", ageRange: "18–24", skinTone: "Medium", hairColor: "Brown", hairstyle: "Long", eyeColor: "Brown", silhouette: "Balanced", visualStyle: "Natural editorial" }), true); assert.equal(validateModelAppearanceDraft({ ...emptyModelAppearanceDraft, name: "Studio 01", presentation: "Feminine", ageRange: "", skinTone: "Medium", hairColor: "Brown", hairstyle: "Long", eyeColor: "Brown", silhouette: "Balanced", visualStyle: "Natural editorial" }), false); });

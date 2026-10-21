@@ -73,6 +73,8 @@ export function DashboardIcon({ name, ...props }: DashboardIconProps) {
       return <svg {...commonProps}><rect x="3" y="6" width="13" height="12" rx="2" /><path d="m16 10 5-3v10l-5-3" /></svg>;
     case "videoLibrary":
       return <svg {...commonProps}><rect x="4" y="4" width="16" height="16" rx="2" /><path d="M8 4v16M16 4v16M4 9h4m8 0h4M4 15h4m8 0h4" /><path d="m11 10 3 2-3 2v-4Z" /></svg>;
+    case "models":
+      return <svg {...commonProps}><circle cx="12" cy="8" r="3" /><path d="M5.5 20a6.5 6.5 0 0 1 13 0" /><path d="M18.5 5.5 20 7l-1.5 1.5L17 7l1.5-1.5Z" /></svg>;
     case "search":
       return <svg {...commonProps}><circle cx="10.5" cy="10.5" r="6.5" /><path d="m15.5 15.5 4 4" /></svg>;
     case "lock":

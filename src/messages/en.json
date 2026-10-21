@@ -685,6 +685,14 @@
         "action": "Clear filters"
       }
     },
+    "modelStudio": {
+      "metadataTitle": "AI Model Studio",
+      "metadataDescription": "Define and prepare fictional adult model identities for future campaigns.",
+      "library": { "eyebrow": "MODEL LIBRARY", "title": "AI Model Studio", "description": "Define fictional adult model identities for future campaigns. Approved references and reusable identities will appear here.", "create": "Create model", "toolbarLabel": "Model library controls", "searchLabel": "Search models", "searchPlaceholder": "Search model names", "empty": { "title": "No models yet", "description": "Your approved fictional model identities will appear here. Start by defining an appearance profile.", "action": "Create a model" } },
+      "create": {
+        "eyebrow": "FICTIONAL ADULT MODEL", "title": "Define a model profile", "description": "Set the identity traits that should remain stable across future campaigns. Nothing is generated or saved in this phase.", "stepsLabel": "Model creation stages", "steps": { "define": "Define appearance", "review": "Review profile", "generate": "Generate candidates", "select": "Select candidate", "approve": "Approve identity" }, "identityLegend": "Appearance profile", "identityHelper": "These traits describe a future persistent fictional identity. All profiles represent adults.", "choose": "Choose", "notesLegend": "Creative notes", "notesHelper": "Optional notes help guide a future identity brief. Do not add a real person's likeness.", "fields": { "name": { "label": "Working name", "placeholder": "For example, Studio model 01" }, "presentation": { "label": "Presentation", "options": ["Feminine", "Masculine", "Androgynous"] }, "ageRange": { "label": "Adult age range", "options": ["18–24", "25–34", "35–44", "45–54", "55+"] }, "skinTone": { "label": "Skin tone", "options": ["Light", "Medium", "Deep"] }, "hairColor": { "label": "Hair color", "options": ["Black", "Brown", "Blonde", "Red", "Gray"] }, "hairstyle": { "label": "Hairstyle", "options": ["Short", "Medium length", "Long", "Curly", "Coily"] }, "eyeColor": { "label": "Eye color", "options": ["Brown", "Blue", "Green", "Hazel", "Gray"] }, "silhouette": { "label": "Build / silhouette", "options": ["Petite", "Balanced", "Athletic", "Tall"] }, "visualStyle": { "label": "Visual style", "options": ["Natural editorial", "Refined studio", "Contemporary campaign"] }, "notes": { "label": "Optional creative notes", "placeholder": "Describe only lasting appearance details that matter to the identity." } }, "guidance": { "title": "Keep identity separate", "identity": { "title": "Identity profile", "description": "Appearance traits and approved references define a future model identity." }, "scene": { "title": "Campaign styling", "description": "Clothing, pose, lighting and background belong to each individual shoot and will not redefine the identity." } }, "safety": "Fictional adult models only. Real-person likenesses, uploads and celebrity impersonation are not available.", "reviewTitle": "Generation is not connected", "reviewReady": "Your profile is complete and can be reviewed when the next phase is available.", "reviewIncomplete": "Complete the required appearance fields to prepare the profile for review.", "generationUnavailable": "Candidate generation planned", "unavailableHelper": "Candidate generation, approval and saving are intentionally unavailable in Phase 6A." }
+    },
+    "modelStudioDraft": { "resultLabel": "Saved model profiles", "updated": "Updated {date}", "draft": "Draft profile", "archived": "Archived", "archive": "Archive draft", "save": "Save draft", "saving": "Saving…", "saveError": "The draft could not be saved. Try again." },
     "videoDetail": {
       "metadataTitle": "Video details",
       "metadataDescription": "Review a video and its available generation details.",
@@ -786,6 +794,7 @@
         "create": "Image Studio",
         "video": "Video Studio",
         "videos": "Video Library",
+        "models": "AI Model Studio",
         "projects": "Projects",
         "templates": "Templates",
         "assets": "Assets",

@@ -1,0 +1,2 @@
+import { Skeleton } from "@/components/ui/skeleton";
+export default function ModelsLoading() { return <main className="dashboard-main" aria-busy="true"><div className="dashboard-main-inner dashboard-container" aria-hidden="true"><div style={{ display: "grid", gap: "1rem", paddingBlock: "2rem" }}><Skeleton style={{ width: "10rem", height: "1rem" }} /><Skeleton style={{ width: "18rem", height: "2.25rem" }} /><Skeleton style={{ height: "2.5rem" }} /><Skeleton style={{ height: "20rem" }} /></div></div></main>; }

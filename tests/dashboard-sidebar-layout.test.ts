@@ -36,9 +36,10 @@ test("sidebar orders both studios and resolves their distinct active destination
   const create = dashboardPrimaryNavigation.find((item) => item.key === "create")!;
   const video = dashboardPrimaryNavigation.find((item) => item.key === "video")!;
   const videos = dashboardPrimaryNavigation.find((item) => item.key === "videos")!;
+  const models = dashboardPrimaryNavigation.find((item) => item.key === "models")!;
   const projects = dashboardPrimaryNavigation.find((item) => item.key === "projects")!;
 
-  assert.deepEqual(dashboardPrimaryNavigation.map(({ key }) => key), ["home", "create", "video", "videos", "projects"]);
+  assert.deepEqual(dashboardPrimaryNavigation.map(({ key }) => key), ["home", "create", "video", "videos", "models", "projects"]);
   assert.equal(create.icon, "image");
   assert.equal(isDashboardNavigationItemActive(home, "/dashboard", ""), true);
   assert.equal(isDashboardNavigationItemActive(home, "/dashboard", "#composer"), false);
@@ -48,6 +49,8 @@ test("sidebar orders both studios and resolves their distinct active destination
   assert.equal(isDashboardNavigationItemActive(video, "/dashboard/videos", ""), false);
   assert.equal(isDashboardNavigationItemActive(videos, "/dashboard/videos", ""), true);
   assert.equal(isDashboardNavigationItemActive(videos, "/dashboard/videos/example", ""), true);
+  assert.equal(isDashboardNavigationItemActive(models, "/dashboard/models", ""), true);
+  assert.equal(isDashboardNavigationItemActive(models, "/dashboard/models/create", ""), true);
   assert.equal(isDashboardNavigationItemActive(home, "/dashboard/create", ""), false);
   assert.equal(isDashboardNavigationItemActive(projects, "/dashboard/projects/example", ""), true);
 });
