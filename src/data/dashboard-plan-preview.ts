@@ -1,5 +1,4 @@
 export const dashboardPlanPreview = {
   planName: "Starter",
-  creditsRemaining: 120,
-  creditsTotal: 200,
+  isDemo: true,
 } as const;

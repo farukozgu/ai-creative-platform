@@ -38,6 +38,14 @@ export interface FencedVideoBillingPolicy extends VideoBillingPolicy {
   finalizeClaimed(reservationId: string, actualProviderCostUsd: number | null, claim: VideoReconciliationClaim): Promise<void>;
 }
 
+export type ConfirmedRefundReason = "confirmed_provider_failure" | "delivery_failure" | "internal_failure" | "confirmed_cancellation";
+
+/** Reserved for confirmed non-delivery; ambiguous outcomes must remain in reconciliation. */
+export interface SourceAwareVideoBillingPolicy extends FencedVideoBillingPolicy {
+  refundConfirmed(reservationId: string, idempotencyKey: string, reason: ConfirmedRefundReason): Promise<void>;
+  refundConfirmedClaimed(reservationId: string, idempotencyKey: string, reason: ConfirmedRefundReason, claim: VideoReconciliationClaim): Promise<void>;
+}
+
 /** Safe default until Klay has an approved, atomic customer-credit ledger. */
 export class DisabledVideoBillingPolicy implements VideoBillingPolicy {
   async reserve(): Promise<VideoBillingDecision> { return { ok: false, code: "billing_unavailable" }; }

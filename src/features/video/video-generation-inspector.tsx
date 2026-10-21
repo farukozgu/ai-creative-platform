@@ -19,6 +19,7 @@ type Option<T extends string | number> = {
   value: T;
   label: string;
   description?: string;
+  disabled?: boolean;
 };
 
 export type VideoInspectorCopy = {
@@ -182,12 +183,13 @@ export function VideoGenerationInspector({
           <legend>{copy.qualityHeading}</legend>
           <div className={styles.qualityOptions}>
             {qualityOptions.map((option) => (
-              <label key={option.value}>
+              <label key={option.value} aria-disabled={option.disabled || undefined} title={option.disabled ? option.description : undefined}>
                 <input
                   type="radio"
                   name="video-quality"
                   value={option.value}
                   checked={quality === option.value}
+                  disabled={option.disabled}
                   onChange={() => onQualityChange(option.value)}
                 />
                 <span>

@@ -16,7 +16,8 @@ test("Video Studio route uses the authenticated dashboard boundary", () => {
 
   assert.match(page, /isSupportedLocale/);
   assert.match(page, /setRequestLocale\(locale\)/);
-  assert.match(page, /<VideoStudioWorkspace incomingGenerationId=\{incomingGenerationId\} generationAvailable=\{isVideoGenerationAvailable\(\)\} \/>/);
+  assert.match(page, /<VideoStudioWorkspace incomingGenerationId=\{incomingGenerationId\} generationAvailable=\{isVideoGenerationAvailable\(\)\} proVideoEntitled=\{canUseVideoTier\(subscription, "pro"\)\} \/>/);
+  assert.match(page, /getActiveSubscription\(ownerId\)/);
   assert.match(layout, /getAuthenticatedUserId/);
   assert.match(layout, /redirect\(`\/\$\{locale\}\/login`\)/);
 });

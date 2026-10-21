@@ -7,6 +7,8 @@ import { createAuthorizedVideoPlaybackUrl, createVideoSourceUploadTicket, finali
 import { toVideoPresentationRecord } from "@/lib/video-generation/presentation";
 import { SupabaseVideoJobRepository } from "@/lib/video-generation/supabase-repository";
 import { validateVideoGenerationDraft } from "@/lib/video-generation/validation";
+import { canUseVideoTier } from "@/lib/credit-economy/entitlements";
+import { getActiveSubscription } from "@/lib/credit-economy/subscription-repository";
 
 export async function submitVideoGenerationAction(draft: unknown) {
   const ownerId = await getAuthenticatedUserId();
@@ -14,6 +16,8 @@ export async function submitVideoGenerationAction(draft: unknown) {
   if (!isVideoGenerationFeatureEnabled()) return { ok: false as const, code: "feature_disabled" as const };
   const parsed = validateVideoGenerationDraft(draft);
   if (!parsed.ok) return { ok: false as const, code: "invalid_input" as const, field: parsed.field };
+  const subscription = await getActiveSubscription(ownerId);
+  if (!canUseVideoTier(subscription, parsed.value.quality)) return { ok: false as const, code: "entitlement_required" as const };
   const route = resolveVideoRoute(parsed.value.mode, parsed.value.quality);
   if (!route.ok) return { ok: false as const, code: "routing_unapproved" as const };
   // Unreachable while the capability registry remains unapproved. Real activation must

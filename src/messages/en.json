@@ -600,6 +600,7 @@
       },
       "quality": {
         "heading": "Generation quality",
+        "proLocked": "Growth plan or higher required. Pro pricing is not available yet.",
         "options": {
           "standard": { "label": "Standard", "description": "Balanced product video generation." },
           "pro": { "label": "Pro", "description": "Premium product video generation." },
@@ -774,6 +775,7 @@
       "plan": {
         "label": "Plan",
         "credits": "{count} credits remaining",
+        "creditsUnavailable": "Live balance unavailable",
         "upgrade": "Upgrade plan"
       },
       "unavailable": "This area will be available in a future update.",

@@ -40,7 +40,7 @@ async function createLocalPreview(file: File) {
   }
 }
 
-export function VideoStudioWorkspace({ incomingGenerationId = null, generationAvailable = false }: { incomingGenerationId?: string | null; generationAvailable?: boolean }) {
+export function VideoStudioWorkspace({ incomingGenerationId = null, generationAvailable = false, proVideoEntitled = false }: { incomingGenerationId?: string | null; generationAvailable?: boolean; proVideoEntitled?: boolean }) {
   const t = useTranslations("Dashboard.videoStudio");
   const [draft, dispatch] = useReducer(videoStudioReducer, initialVideoStudioDraft);
   const [view, setView] = useState<WorkspaceView>("controls");
@@ -284,7 +284,8 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
           qualityOptions={qualityValues.map((value) => ({
             value,
             label: t(`quality.options.${value}.label`),
-            description: t(`quality.options.${value}.description`),
+            description: value === "pro" && !proVideoEntitled ? t("quality.proLocked") : t(`quality.options.${value}.description`),
+            disabled: value === "pro" && !proVideoEntitled,
           }))}
           aspectRatio={draft.aspectRatio}
           aspectRatioOptions={aspectRatioValues.map((value) => ({ value, label: value }))}

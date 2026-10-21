@@ -600,6 +600,7 @@
       },
       "quality": {
         "heading": "Üretim kalitesi",
+        "proLocked": "Growth veya üzeri plan gerekir. Pro fiyatlandırması henüz kullanılamıyor.",
         "options": {
           "standard": { "label": "Standart", "description": "Dengeli ürün videosu üretimi." },
           "pro": { "label": "Pro", "description": "Premium ürün videosu üretimi." },
@@ -774,6 +775,7 @@
       "plan": {
         "label": "Plan",
         "credits": "{count} kredi kaldı",
+        "creditsUnavailable": "Gerçek bakiye henüz kullanılamıyor",
         "upgrade": "Planı yükselt"
       },
       "unavailable": "Bu alan gelecek bir güncellemede kullanıma açılacak.",
