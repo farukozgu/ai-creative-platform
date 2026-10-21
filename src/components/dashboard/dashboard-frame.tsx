@@ -6,6 +6,7 @@ import { resolveDashboardSidebarCollapsed } from "@/components/dashboard/dashboa
 import styles from "@/components/dashboard/dashboard-sidebar.module.css";
 import { usePathname } from "@/i18n/navigation";
 import creationStyles from "@/features/generation/creation-workspace.module.css";
+import videoStyles from "@/features/video/video-studio-workspace.module.css";
 
 const storageKey = "klay-dashboard-sidebar-collapsed";
 const sidebarChangeEvent = "klay-dashboard-sidebar-change";
@@ -32,8 +33,10 @@ export function DashboardFrame({ children, topbar, displayName }: { children: Re
   const collapsed = useSyncExternalStore(subscribe, getCollapsed, () => false);
   const pathname = usePathname();
   const isCreation = pathname === "/dashboard/create";
+  const isVideoStudio = pathname === "/dashboard/video";
+  const isCompactWorkspace = isCreation || isVideoStudio;
   const [expandedAt, setExpandedAt] = useState<string | null>(null);
-  const creationExpanded = isCreation && expandedAt === pathname;
+  const compactNavigationExpanded = isCompactWorkspace && expandedAt === pathname;
 
   useEffect(() => {
     if (process.env.NODE_ENV !== "development") return;
@@ -55,14 +58,14 @@ export function DashboardFrame({ children, topbar, displayName }: { children: Re
     window.dispatchEvent(new Event(sidebarChangeEvent));
   }
 
-  const effectiveCollapsed = isCreation ? !creationExpanded : collapsed;
-  const creationRailStyle = isCreation
-    ? ({ "--dashboard-rail-width": creationExpanded ? "15rem" : "4.25rem" } as CSSProperties)
+  const effectiveCollapsed = isCompactWorkspace ? !compactNavigationExpanded : collapsed;
+  const compactRailStyle = isCompactWorkspace
+    ? ({ "--dashboard-rail-width": compactNavigationExpanded ? "15rem" : "4.25rem" } as CSSProperties)
     : undefined;
-  return <div className={`dashboard-shell ${styles.frame} ${isCreation ? creationStyles.editorFrame : ""}`} style={creationRailStyle} data-collapsed={effectiveCollapsed || undefined} data-creation-expanded={creationExpanded || undefined} onKeyDown={(event) => {
-    if (event.key === "Escape" && creationExpanded) setExpandedAt(null);
+  return <div className={`dashboard-shell ${styles.frame} ${isCreation ? creationStyles.editorFrame : ""} ${isVideoStudio ? videoStyles.videoFrame : ""}`} style={compactRailStyle} data-collapsed={effectiveCollapsed || undefined} data-creation-expanded={isCreation && compactNavigationExpanded || undefined} data-video-expanded={isVideoStudio && compactNavigationExpanded || undefined} onKeyDown={(event) => {
+    if (event.key === "Escape" && compactNavigationExpanded) setExpandedAt(null);
   }}>
-    <DashboardSidebar displayName={displayName} collapsed={effectiveCollapsed} onToggle={isCreation ? () => setExpandedAt(creationExpanded ? null : pathname) : toggleSidebar} />
-    <div className={`dashboard-workspace-shell ${isCreation ? creationStyles.editorContent : ""}`}>{topbar}{children}</div>
+    <DashboardSidebar displayName={displayName} collapsed={effectiveCollapsed} onToggle={isCompactWorkspace ? () => setExpandedAt(compactNavigationExpanded ? null : pathname) : toggleSidebar} />
+    <div className={`dashboard-workspace-shell ${isCreation ? creationStyles.editorContent : ""} ${isVideoStudio ? videoStyles.videoContent : ""}`}>{topbar}{children}</div>
   </div>;
 }

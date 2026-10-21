@@ -80,6 +80,9 @@ export type ImageGenerationUsage = {
   inputTokens?: number;
   outputTokens?: number;
   totalTokens?: number;
+  cachedInputTokens?: number;
+  imageInputTokens?: number;
+  imageOutputTokens?: number;
 };
 
 export type ImageGenerationResult = {

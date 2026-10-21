@@ -73,8 +73,15 @@ function getProviderUsage(response: unknown): ImageGenerationResult["usage"] {
   if (!response || typeof response !== "object" || !("usage" in response) || !response.usage || typeof response.usage !== "object") return undefined;
   const usage = response.usage as Record<string, unknown>;
   const number = (value: unknown) => typeof value === "number" && Number.isFinite(value) ? value : undefined;
+  const inputDetails = usage.input_tokens_details && typeof usage.input_tokens_details === "object" ? usage.input_tokens_details as Record<string, unknown> : {};
+  const imageTokens = usage.image_tokens && typeof usage.image_tokens === "object" ? usage.image_tokens as Record<string, unknown> : {};
   const inputTokens = number(usage.input_tokens), outputTokens = number(usage.output_tokens), totalTokens = number(usage.total_tokens);
-  return inputTokens === undefined && outputTokens === undefined && totalTokens === undefined ? undefined : { inputTokens, outputTokens, totalTokens };
+  const cachedInputTokens = number(inputDetails.cached_tokens);
+  const imageInputTokens = number(imageTokens.input_tokens ?? usage.image_input_tokens);
+  const imageOutputTokens = number(imageTokens.output_tokens ?? usage.image_output_tokens);
+  return inputTokens === undefined && outputTokens === undefined && totalTokens === undefined && cachedInputTokens === undefined && imageInputTokens === undefined && imageOutputTokens === undefined
+    ? undefined
+    : { inputTokens, outputTokens, totalTokens, cachedInputTokens, imageInputTokens, imageOutputTokens };
 }
 
 export class OpenAIImageProvider implements ImageGenerationProviderClient {

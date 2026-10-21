@@ -47,7 +47,9 @@ import {
   REFERENCE_ANALYSIS_VERSION,
 } from "@/lib/generation/references/reference-analysis";
 import { readReferenceAnalysisCache } from "@/lib/generation/references/reference-analysis-cache";
-import { createCostTelemetry } from "@/lib/generation/cost-telemetry";
+import { createCostTelemetry, createProviderUsageEvent, createUnknownOperationEvent } from "@/lib/generation/cost-telemetry";
+import { toUsageUnits, type CostUsageEvent } from "@/lib/generation/cost/cost-accounting";
+import { getOpenAIResponseTelemetry } from "@/lib/openai/response-telemetry";
 import { buildGenerationFailureTelemetry } from "@/lib/generation/failure-telemetry";
 import { resolveReferenceMatch } from "@/lib/generation/references/resolve-reference-match";
 import { getReferenceShotProfile, REFERENCE_MATCH_VERSION, type ReferenceMode } from "@/lib/generation/references/reference-shot-profile";
@@ -65,6 +67,7 @@ import {
   watchOnWristInstructions,
 } from "@/lib/generation/prompts/build-image-generation-prompt";
 import { enhanceCreativeDirection } from "@/lib/generation/prompts/enhance-creative-direction";
+import { getPromptEnhancementModel } from "@/lib/generation/prompts/prompt-enhancer-config";
 import {
   getGenerationStrategyCategory,
   resolveGenerationStrategy,
@@ -91,7 +94,7 @@ import { resolveComposition } from "@/lib/composition-intelligence/resolve-compo
 import { COMPOSITION_INTELLIGENCE_VERSION } from "@/lib/composition-intelligence/types";
 import { resolveCreativeCompliance } from "@/lib/creative-direction-compliance/resolve-compliance";
 import { CREATIVE_DIRECTION_COMPLIANCE_VERSION } from "@/lib/creative-direction-compliance/compliance-version";
-import { validateGeneratedImageBestEffort } from "@/lib/fidelity-validation/validate-generated-image";
+import { getFidelityValidationModel, validateGeneratedImageBestEffort } from "@/lib/fidelity-validation/validate-generated-image";
 import { compileRepairInstructions } from "@/lib/auto-repair/compile-repair-instructions";
 import { resolveRepairPlan } from "@/lib/auto-repair/resolve-repair-plan";
 import { mapGenerationTerminalDecisionToStatus, resolveFinalCandidateSelection, resolveGenerationTerminalDecision } from "@/lib/auto-repair/select-final-attempt";
@@ -173,6 +176,7 @@ export async function createImageEdit(locale: AppLocale, projectId: string, base
   const { data: marked } = await admin.from("generations").update({ status: "processing", processing_started_at: now.toISOString() }).eq("id", edit.id).select("id").maybeSingle();
   if (!marked) return { ok: false, error: "Edit could not be started.", code: "creationFailed" };
   try {
+    const editCostEvents: CostUsageEvent[] = [];
     const [baseDownload, productDownloads] = await Promise.all([admin.storage.from(base.output_bucket_id).download(base.output_object_path), Promise.all(orderedEditProducts.map((product) => admin.storage.from(product.bucket_id).download(product.object_path)))]);
     if (baseDownload.error || !baseDownload.data || productDownloads.some((download) => download.error || !download.data)) throw new Error("Unable to load edit images.");
     const baseBuffer = Buffer.from(await baseDownload.data.arrayBuffer());
@@ -180,6 +184,7 @@ export async function createImageEdit(locale: AppLocale, projectId: string, base
     const productInputs = await Promise.all(orderedEditProducts.map(async (product, index) => { const data = productDownloads[index]!.data!; return { id: product.id, bucketId: product.bucket_id, objectPath: product.object_path, data: Buffer.from(await data.arrayBuffer()), mimeType: data.type || "image/jpeg" }; }));
     const productInput = productInputs[0]!;
     let result = await getImageGenerationProvider("openai").generate({ generationId: edit.id, projectId, sourceAsset: productInput, images: orderImageEditImages(baseInput, productInputs), prompt: buildImageEditPrompt(instruction.trim(), intent, editHumanRealismDirection), provider: "openai", model: process.env.OPENAI_IMAGE_MODEL?.trim() || "gpt-image-2.5-sunburst", quality: intent.allowedChanges.length === 1 && intent.allowedChanges[0] === "background" ? "high" : "xhigh", aspectRatio: resolveAspectRatio(base.aspect_ratio), operation: "image_edit" });
+    editCostEvents.push(createProviderUsageEvent({ operation: "image_initial", model: process.env.OPENAI_IMAGE_MODEL?.trim() || "gpt-image-2.5-sunburst", phase: "initial", requestId: typeof result.providerMetadata?.requestId === "string" ? result.providerMetadata.requestId : null, usage: toUsageUnits(result.usage) }));
     let validationCalls = 1;
     let imageGenerationCalls = 1;
     let validation = await validateImageEditBestEffort({ base: baseBuffer, edited: result.imageData, instruction: instruction.trim(), humanRealismExpected });
@@ -189,6 +194,7 @@ export async function createImageEdit(locale: AppLocale, projectId: string, base
       const previous = result.imageData;
       const repairPrompt = `Use the previous edited image and original base image. Correct only the failed edit behavior: ${validation.issueCodes.join(", ")}. Restore all unrequested elements to the base image appearance. Preserve the exact product identity, person identity, pose, camera, environment, lighting, and composition. For EDIT_HUMAN_REALISM_ERROR, repair only the affected anatomical or skin region.\n\n${editHumanRealismDirection}\n\nOriginal instruction: ${instruction.trim()}`;
       result = await getImageGenerationProvider("openai").generate({ generationId: edit.id, projectId, sourceAsset: productInput, images: orderImageEditImages({ ...baseInput, data: previous }, productInputs), prompt: repairPrompt, provider: "openai", model: process.env.OPENAI_IMAGE_MODEL?.trim() || "gpt-image-2.5-sunburst", quality: "xhigh", aspectRatio: resolveAspectRatio(base.aspect_ratio), operation: "image_edit" });
+      editCostEvents.push(createProviderUsageEvent({ operation: "image_repair", model: process.env.OPENAI_IMAGE_MODEL?.trim() || "gpt-image-2.5-sunburst", phase: "repair", requestId: typeof result.providerMetadata?.requestId === "string" ? result.providerMetadata.requestId : null, usage: toUsageUnits(result.usage) }));
       imageGenerationCalls += 1;
       validationCalls += 1;
       validation = await validateImageEditBestEffort({ base: baseBuffer, edited: result.imageData, instruction: instruction.trim(), humanRealismExpected });
@@ -199,7 +205,7 @@ export async function createImageEdit(locale: AppLocale, projectId: string, base
     if (upload.error) throw new Error("Unable to store edited image.");
     const processingCompletedAt = new Date();
     const editHumanRealismIssue = validation.status !== "validation_unavailable" && validation.issueCodes.includes("EDIT_HUMAN_REALISM_ERROR");
-    const { error: saveError } = await admin.from("generations").update({ status: "succeeded", output_bucket_id: generatedAssetsBucket, output_object_path: objectPath, output_mime_type: "image/png", provider_request_id: typeof result.providerMetadata?.requestId === "string" ? result.providerMetadata.requestId : null, fidelity_status: validation.status === "pass" ? "locked" : validation.status === "validation_unavailable" ? "not_available" : "not_checked", provider_metadata: { operation: "image_edit", humanRealism: { version: HUMAN_REALISM_VERSION, expected: humanRealismExpected, applied: editHumanRealismPolicy.applied, focusAreas: editHumanRealismPolicy.focusAreas, issues: editHumanRealismIssue ? [{ issueCode: "EDIT_HUMAN_REALISM_ERROR", confidence: 1, severity: "major", region: "edited_human_region", repairable: true, commercialImpact: "high" }] : [], hardFailure: false, repairEligible: editHumanRealismIssue, repairTriggered: repairAttempted && editHumanRealismIssue, repairCategory: repairAttempted && editHumanRealismIssue ? "body_interaction_repair" : null }, edit: { version: "image-edit-v1", baseGenerationId, editOfGenerationId: baseGenerationId, instruction: instruction.trim(), resolvedScopes: intent.allowedChanges, preservedElements: intent.preservedElements, validatorStatus: validation.status, validatorIssueCodes: validation.issueCodes, repairAttempted, editVersion: 1 }, costTelemetry: createCostTelemetry({ productUnderstandingCalls: 0, referenceAnalysisCalls: 0, imageGenerationCalls: imageGenerationCalls - (repairAttempted ? 1 : 0), validationCalls, repairGenerationCalls: repairAttempted ? 1 : 0, inputProductImageCount: productInputs.length, inputReferenceCount: 0, repairAttempted, finalOutcome: validation.status === "validation_unavailable" ? "unverified" : "succeeded", validationOutcome: validation.status, providerUsage: result.usage }), provider: result.providerMetadata ?? {} }, processing_completed_at: processingCompletedAt.toISOString(), processing_duration_ms: processingCompletedAt.getTime() - now.getTime() }).eq("id", edit.id).eq("status", "processing");
+    const { error: saveError } = await admin.from("generations").update({ status: "succeeded", output_bucket_id: generatedAssetsBucket, output_object_path: objectPath, output_mime_type: "image/png", provider_request_id: typeof result.providerMetadata?.requestId === "string" ? result.providerMetadata.requestId : null, fidelity_status: validation.status === "pass" ? "locked" : validation.status === "validation_unavailable" ? "not_available" : "not_checked", provider_metadata: { operation: "image_edit", humanRealism: { version: HUMAN_REALISM_VERSION, expected: humanRealismExpected, applied: editHumanRealismPolicy.applied, focusAreas: editHumanRealismPolicy.focusAreas, issues: editHumanRealismIssue ? [{ issueCode: "EDIT_HUMAN_REALISM_ERROR", confidence: 1, severity: "major", region: "edited_human_region", repairable: true, commercialImpact: "high" }] : [], hardFailure: false, repairEligible: editHumanRealismIssue, repairTriggered: repairAttempted && editHumanRealismIssue, repairCategory: repairAttempted && editHumanRealismIssue ? "body_interaction_repair" : null }, edit: { version: "image-edit-v1", baseGenerationId, editOfGenerationId: baseGenerationId, instruction: instruction.trim(), resolvedScopes: intent.allowedChanges, preservedElements: intent.preservedElements, validatorStatus: validation.status, validatorIssueCodes: validation.issueCodes, repairAttempted, editVersion: 1 }, costTelemetry: createCostTelemetry({ productUnderstandingCalls: 0, referenceAnalysisCalls: 0, imageGenerationCalls: imageGenerationCalls - (repairAttempted ? 1 : 0), validationCalls, repairGenerationCalls: repairAttempted ? 1 : 0, inputProductImageCount: productInputs.length, inputReferenceCount: 0, repairAttempted, finalOutcome: validation.status === "validation_unavailable" ? "unverified" : "succeeded", validationOutcome: validation.status, providerUsage: result.usage, events: editCostEvents }), provider: result.providerMetadata ?? {} }, processing_completed_at: processingCompletedAt.toISOString(), processing_duration_ms: processingCompletedAt.getTime() - now.getTime() }).eq("id", edit.id).eq("status", "processing");
     if (saveError) throw new Error("Unable to save edited image record.");
     try {
       await createNotification({ userId, type: "image_edit_completed", projectId, projectName: project.title, generationId: edit.id });
@@ -508,6 +514,8 @@ export async function runQueuedImageGeneration(
   const generationStartedAt = Date.now();
   let performance: ReturnType<typeof createGenerationPerformanceRecorder> | null = null;
   const executionCounts = { imageGenerationCalls: 0, visionValidationCalls: 0, promptEnhancementCalls: 0, productAnalysisCalls: 0, referenceAnalysisCalls: 0, artworkAnalysisCalls: 0, segmentationCalls: 0, projectionAnalysisCalls: 0, repairCalls: 0 };
+  // This is deliberately bounded at persistence time. It contains neither prompt nor media data.
+  const costEvents: CostUsageEvent[] = [];
   let inputProductImageCount: number | null = null;
   let inputReferenceCount: number | null = null;
   safeGenerationEvent("queue", "processor_entered", { generationId });
@@ -710,9 +718,12 @@ export async function runQueuedImageGeneration(
     const referenceCacheKey = { version: REFERENCE_ANALYSIS_VERSION, model: getReferenceAnalysisModel(), orderedAssetIds: usableReferenceImages.map(({ asset: reference }) => reference.id) };
     const cachedReferenceAnalysis = readReferenceAnalysisCache(usableReferenceImages[0]?.asset.reference_analysis_cache, referenceCacheKey);
     const referenceAnalysis = cachedReferenceAnalysis
-      ? { diagnostic: null, styleBrief: cachedReferenceAnalysis.styleBrief, usableCount: usableReferenceImages.length }
+      ? { diagnostic: null, styleBrief: cachedReferenceAnalysis.styleBrief, usableCount: usableReferenceImages.length, telemetry: null }
       : await analyzeReferenceImages(usableReferenceImages.map(({ data, mimeType }) => ({ data, mimeType })));
     if (!cachedReferenceAnalysis && usableReferenceImages.length) executionCounts.referenceAnalysisCalls += 1;
+    if (!cachedReferenceAnalysis && usableReferenceImages.length) {
+      costEvents.push(referenceAnalysis.telemetry ? createProviderUsageEvent({ operation: "reference_analysis", model: getReferenceAnalysisModel(), phase: "supporting", requestId: referenceAnalysis.telemetry.requestId, usage: referenceAnalysis.telemetry.usage }) : createUnknownOperationEvent({ operation: "reference_analysis", provider: "openai", model: getReferenceAnalysisModel() }));
+    }
     if (!cachedReferenceAnalysis && referenceAnalysis.styleBrief && usableReferenceImages[0]) {
       await admin.from("assets").update({ reference_analysis_cache: { ...referenceCacheKey, styleBrief: referenceAnalysis.styleBrief, analyzedAt: new Date().toISOString() } }).eq("id", usableReferenceImages[0].asset.id).eq("user_id", userId).eq("asset_type", "reference_image");
     }
@@ -758,6 +769,10 @@ export async function runQueuedImageGeneration(
         ? { detected: cachedLocalization.detected === true, side: (cachedLocalization.side === "front" || cachedLocalization.side === "back" || cachedLocalization.side === "unknown" ? cachedLocalization.side : "unknown") as "front" | "back" | "unknown", boundingBox: cachedBox, confidence: typeof cachedLocalization.confidence === "number" ? cachedLocalization.confidence : 0, containsText: cachedLocalization.containsText === true, multipleRegions: cachedLocalization.multipleRegions === true }
         : await performance.measure("artwork_localization", () => localizeApparelArtwork(sourcePixels));
       if (!cachedLocalization) executionCounts.artworkAnalysisCalls += 1;
+      if (!cachedLocalization) {
+        const artworkTelemetry = getOpenAIResponseTelemetry(localized);
+        costEvents.push(artworkTelemetry ? createProviderUsageEvent({ operation: "artwork_analysis", model: getReferenceAnalysisModel(), phase: "supporting", requestId: artworkTelemetry.requestId, usage: artworkTelemetry.usage }) : createUnknownOperationEvent({ operation: "artwork_analysis", provider: "openai", model: getReferenceAnalysisModel() }));
+      }
       if (localized?.detected && localized.boundingBox) {
         const crop = await createApparelArtworkCrop({ data: sourcePixels, assetId: asset.id, side: localized.side, boundingBox: localized.boundingBox, confidence: localized.confidence, containsText: localized.containsText, detected: localized.detected });
         if (crop) apparelArtwork = { data: crop.data, identitySource: crop.identitySource, side: localized.side };
@@ -976,6 +991,9 @@ export async function runQueuedImageGeneration(
       generationMode: preset?.generationMode,
     }));
     if (enhancementEnabled && promptEnhancement.succeeded) executionCounts.promptEnhancementCalls += 1;
+    if (enhancementEnabled && promptEnhancement.telemetry) {
+      costEvents.push(promptEnhancement.telemetry ? createProviderUsageEvent({ operation: "prompt_enhancement", model: getPromptEnhancementModel(), phase: "supporting", requestId: promptEnhancement.telemetry.requestId, usage: promptEnhancement.telemetry.usage }) : createUnknownOperationEvent({ operation: "prompt_enhancement", provider: "openai", model: getPromptEnhancementModel() }));
+    }
     logDevelopmentGenerationEvent("prompt_enhanced", {
       captureProfile: preset?.creativeDirection.capture?.profile ?? null,
       enabled: enhancementEnabled,
@@ -1034,6 +1052,9 @@ export async function runQueuedImageGeneration(
           segmentationProvider: new FalBirefnetProvider(),
         });
         if (maskResolution.source === "automatic" || maskResolution.failureReason === "segmentation_provider_unavailable" || maskResolution.failureReason === "empty_mask") executionCounts.segmentationCalls += 1;
+        if (maskResolution.source === "automatic" || maskResolution.failureReason === "segmentation_provider_unavailable" || maskResolution.failureReason === "empty_mask") {
+          costEvents.push(createUnknownOperationEvent({ operation: "segmentation", provider: "fal", model: "fal-ai/birefnet/v2" }));
+        }
 
         if (!maskResolution.mask || !maskResolution.source) {
           effectivePreservationMode = "reference_edit";
@@ -1260,6 +1281,13 @@ export async function runQueuedImageGeneration(
       aspectRatio,
       ...(usesReferenceReplacement ? { operation: "reference_product_replacement" as const } : {}),
     }));
+    costEvents.push(createProviderUsageEvent({
+      operation: "image_initial",
+      model: queuedGeneration.model,
+      phase: "initial",
+      requestId: typeof result.providerMetadata?.requestId === "string" ? result.providerMetadata.requestId : null,
+      usage: toUsageUnits(result.usage),
+    }));
     console.info("[generation] output_format_resolved", { requestedAspectRatio: aspectRatio, providerWidth: outputCanvas.width, providerHeight: outputCanvas.height, exactRatio: outputCanvas.width * Number(aspectRatio.split(":")[1]) === outputCanvas.height * Number(aspectRatio.split(":")[0]) });
     providerDiagnosticContext = null;
 
@@ -1332,12 +1360,13 @@ export async function runQueuedImageGeneration(
       exactProductApparel: apparelFidelityMode.exactProductApparel,
     }));
     executionCounts.visionValidationCalls += 1;
+    costEvents.push(fidelityValidation.telemetry ? createProviderUsageEvent({ operation: "fidelity_validation", model: getFidelityValidationModel(), phase: "supporting", requestId: fidelityValidation.telemetry.requestId, usage: fidelityValidation.telemetry.usage }) : createUnknownOperationEvent({ operation: "fidelity_validation", provider: "openai", model: getFidelityValidationModel() }));
     const hybridEligible = resolveHybridProjectionEligibility({ vertical: productProfile?.vertical ?? null, artworkPresent: Boolean(apparelArtwork), exactProductApparel: apparelFidelityMode.exactProductApparel, artworkSide: apparelArtwork?.side ?? "unknown", localized: Boolean(apparelArtwork) });
     if (hybridEligible && apparelArtwork && apparelIdentityManifest?.artworkBoundingRegion) {
       try {
         const projection = await import("@/lib/apparel-projection/project-artwork");
         const artworkBox = apparelIdentityManifest.artworkBoundingRegion;
-        const projected = await performance.measure("hybrid_projection", () => projection.projectApparelArtwork({ sourceImage: inputPixels, artworkCrop: apparelArtwork.data, artworkBox, generatedImage: finalImageData, side: apparelArtwork.side as "front" | "back", generationId: queuedGeneration.id, onAnalysisCall: () => { executionCounts.projectionAnalysisCalls += 1; }, log: (event, fields) => console.info(`[hybrid-projection] ${event}`, fields) }));
+        const projected = await performance.measure("hybrid_projection", () => projection.projectApparelArtwork({ sourceImage: inputPixels, artworkCrop: apparelArtwork.data, artworkBox, generatedImage: finalImageData, side: apparelArtwork.side as "front" | "back", generationId: queuedGeneration.id, onAnalysisCall: () => { executionCounts.projectionAnalysisCalls += 1; costEvents.push(createUnknownOperationEvent({ operation: "projection_analysis", provider: "openai", model: getReferenceAnalysisModel() })); }, log: (event, fields) => console.info(`[hybrid-projection] ${event}`, fields) }));
         finalImageData = projected.image;
         hybridProjectionMetadata = { ...projected.metadata };
       } catch (error) {
@@ -1460,6 +1489,13 @@ export async function runQueuedImageGeneration(
           aspectRatio,
           ...(jewelryReferenceRepair ? { operation: "image_edit" as const } : usesReferenceReplacement ? { operation: "reference_product_replacement" as const } : {}),
         }));
+        costEvents.push(createProviderUsageEvent({
+          operation: "image_repair",
+          model: queuedGeneration.model,
+          phase: "repair",
+          requestId: typeof repairResult.providerMetadata?.requestId === "string" ? repairResult.providerMetadata.requestId : null,
+          usage: toUsageUnits(repairResult.usage),
+        }));
         let repairImageData = repairResult.imageData;
         let repairMimeType = repairResult.mimeType;
         if (pixelLockInput && effectivePreservationMode === "pixel_lock") {
@@ -1496,6 +1532,7 @@ export async function runQueuedImageGeneration(
           exactProductApparel: apparelFidelityMode.exactProductApparel,
         }));
         executionCounts.visionValidationCalls += 1;
+        costEvents.push(repairValidation.telemetry ? createProviderUsageEvent({ operation: "repair_validation", model: getFidelityValidationModel(), phase: "repair", requestId: repairValidation.telemetry.requestId, usage: repairValidation.telemetry.usage }) : createUnknownOperationEvent({ operation: "repair_validation", provider: "openai", model: getFidelityValidationModel(), phase: "repair" }));
         const repairIssueCounts = {
           critical: repairValidation.issues.filter(({ severity }) => severity === "critical").length,
           major: repairValidation.issues.filter(({ severity }) => severity === "major").length,
@@ -1652,7 +1689,7 @@ export async function runQueuedImageGeneration(
           ...(presetFamily ? { preset: { ...(createCreativePresetMetadata(getCreativePreset(presetId), resolvedVariantId) ?? {}), version: PRESET_SYSTEM_VERSION, familyId: presetFamily.id, selectedPresetFamily: presetFamily.id, selectedPresentationMode, resolvedPresentationMode: resolvedPresetVariant?.presentationMode ?? null, presentationModeSource: selectedPresentationMode ? "user" : "automatic", presentationModeOverrideReason, referenceOverriddenFields, presetPreservedFields, variantId: resolvedVariantId, allowedSceneTypes: presetFamily.allowedSceneTypes, disallowedSceneTypes: presetFamily.disallowedSceneTypes, ...(presetFamily.variants.find(({ id }) => id === resolvedVariantId) ? getPresetVariationMetadata(presetFamily.variants.find(({ id }) => id === resolvedVariantId)!) : {}) } } : {}),
           outputFormat: { requestedAspectRatio: aspectRatio, providerWidth: outputCanvas.width, providerHeight: outputCanvas.height, version: "output-format-v1" },
           execution: { version: GENERATION_EXECUTION_POLICY_VERSION, imageGenerationCalls: executionCounts.imageGenerationCalls, visionValidationCalls: executionCounts.visionValidationCalls, promptEnhancementCalls: executionCounts.promptEnhancementCalls, productAnalysisCalls: executionCounts.productAnalysisCalls, artworkAnalysisCalls: executionCounts.artworkAnalysisCalls, repairCalls: executionCounts.repairCalls, repairSuppressed: !repairPlan.shouldRetry && fidelityValidation.status === "fail", repairSuppressionReason: !repairPlan.shouldRetry && fidelityValidation.status === "fail" ? repairEligibility.reason : null, avoidedImageGenerationCalls: !repairPlan.shouldRetry && fidelityValidation.status === "fail" ? 1 : 0, totalDurationMs: stageDurations.total, stages: stageDurations, quality: executionPolicy.quality, difficulty: executionPolicy.difficulty, reasons: executionPolicy.reasons, repairQuality: repairPlan.shouldRetry ? executionPolicy.repairQuality : null, repairExpectedValue: repairEligibility.repairExpectedValue },
-          costTelemetry: createCostTelemetry({ productUnderstandingCalls: executionCounts.productAnalysisCalls, referenceAnalysisCalls: executionCounts.referenceAnalysisCalls, imageGenerationCalls: executionCounts.imageGenerationCalls - executionCounts.repairCalls, validationCalls: executionCounts.visionValidationCalls, repairGenerationCalls: executionCounts.repairCalls, promptEnhancementCalls: executionCounts.promptEnhancementCalls, artworkAnalysisCalls: executionCounts.artworkAnalysisCalls, segmentationCalls: executionCounts.segmentationCalls, projectionAnalysisCalls: executionCounts.projectionAnalysisCalls, inputProductImageCount: usableProductImages.length, inputReferenceCount: usableReferenceImages.length, repairAttempted: repairAttempt !== null, finalOutcome: fidelityValidation.status === "validation_unavailable" ? "unverified" : "succeeded", validationOutcome: selectedAttempt.validation.status, providerUsage: selectedProviderResult.usage }),
+          costTelemetry: createCostTelemetry({ productUnderstandingCalls: executionCounts.productAnalysisCalls, referenceAnalysisCalls: executionCounts.referenceAnalysisCalls, imageGenerationCalls: executionCounts.imageGenerationCalls - executionCounts.repairCalls, validationCalls: executionCounts.visionValidationCalls, repairGenerationCalls: executionCounts.repairCalls, promptEnhancementCalls: executionCounts.promptEnhancementCalls, artworkAnalysisCalls: executionCounts.artworkAnalysisCalls, segmentationCalls: executionCounts.segmentationCalls, projectionAnalysisCalls: executionCounts.projectionAnalysisCalls, inputProductImageCount: usableProductImages.length, inputReferenceCount: usableReferenceImages.length, repairAttempted: repairAttempt !== null, finalOutcome: fidelityValidation.status === "validation_unavailable" ? "unverified" : "succeeded", validationOutcome: selectedAttempt.validation.status, providerUsage: selectedProviderResult.usage, events: costEvents }),
           ...(apparelIdentityManifest ? { apparelArtwork: { version: "apparel-artwork-localization-v1", assetId: asset.id, detected: apparelArtwork !== null, side: apparelIdentityManifest.artworkSide, boundingBox: apparelIdentityManifest.artworkBoundingRegion ? { x: apparelIdentityManifest.artworkBoundingRegion.x, y: apparelIdentityManifest.artworkBoundingRegion.y, width: apparelIdentityManifest.artworkBoundingRegion.width, height: apparelIdentityManifest.artworkBoundingRegion.height } : null, confidence: apparelArtwork?.identitySource.confidence ?? 0, containsText: apparelArtwork?.identitySource.containsText ?? false, multipleRegions: false, identitySource: apparelArtwork?.identitySource ?? null } } : {}),
           providerStatus: "succeeded",
           qualityGatePassed,
@@ -1901,11 +1938,22 @@ export async function runQueuedImageGeneration(
       ? getSafeProviderErrorDiagnostics(error, { generationId, ...providerDiagnosticContext })
       : null;
     const failureStageDurations = performance?.finish();
+    const capturedImageEvents = costEvents.filter((event) => event.operation === "image_initial" || event.operation === "image_repair").length;
+    if (capturedImageEvents < executionCounts.imageGenerationCalls) {
+      costEvents.push(createUnknownOperationEvent({
+        operation: executionCounts.repairCalls > 0 ? "image_repair" : "image_initial",
+        provider: "openai",
+        model: providerDiagnosticContext?.model ?? "unknown",
+        phase: executionCounts.repairCalls > 0 ? "repair" : "initial",
+        ambiguous: true,
+      }));
+    }
     const failureTelemetry = buildGenerationFailureTelemetry({
       executionCounts,
       inputProductImageCount,
       inputReferenceCount,
       stageDurations: failureStageDurations,
+      events: costEvents,
     });
     const failureMetadata = providerDiagnosticContext
       ? mergeProviderFailureMetadata(persistedProviderMetadata, {

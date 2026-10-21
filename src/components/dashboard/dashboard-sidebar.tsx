@@ -18,9 +18,6 @@ type DashboardSidebarProps = {
 export function DashboardSidebar({ displayName, collapsed, onToggle }: DashboardSidebarProps) {
   const t = useTranslations("Dashboard.navigation");
   const { isActive } = useDashboardNavigationLocation();
-  const createItem = dashboardPrimaryNavigation.find((item) => item.key === "create")!;
-  const mainItems = dashboardPrimaryNavigation.filter((item) => item.key !== "create");
-
   function tooltip(label: string, id: string) {
     return collapsed ? <span id={id} role="tooltip" className={styles.tooltip}>{label}</span> : null;
   }
@@ -36,15 +33,10 @@ export function DashboardSidebar({ displayName, collapsed, onToggle }: Dashboard
       </button>
     </header>
     <div className={styles.body}>
-      <Link href={createItem.href} className={styles.primaryAction} aria-label={t("items.create")} aria-describedby={collapsed ? "sidebar-tooltip-create" : undefined} data-active={isActive(createItem) || undefined}>
-        <DashboardIcon name={createItem.icon} className={styles.icon} />
-        <span className={styles.label}>{t("items.create")}</span>
-        {tooltip(t("items.create"), "sidebar-tooltip-create")}
-      </Link>
       <section className={styles.navSection} aria-labelledby="sidebar-workspace-label">
         <span id="sidebar-workspace-label" className={styles.sectionLabel}>{t("workspaceGroup")}</span>
         <nav aria-label={t("primaryLabel")} className={styles.nav}>
-        {mainItems.map((item) => {
+        {dashboardPrimaryNavigation.map((item) => {
           const active = isActive(item);
           const label = t(`items.${item.key}`);
           const tooltipId = `sidebar-tooltip-${item.key}`;

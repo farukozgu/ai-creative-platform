@@ -3,7 +3,7 @@ import type { SVGProps } from "react";
 import type { DashboardIconName } from "@/data/dashboard-navigation";
 
 type DashboardIconProps = SVGProps<SVGSVGElement> & {
-  name: DashboardIconName | "menu" | "close" | "plus" | "arrow" | "collapse" | "expand" | "website" | "chevron" | "allCategories" | "apparel" | "jewelry" | "watch" | "footwear" | "cosmetics" | "bag" | "image" | "video" | "lock" | "bell" | "alert" | "edit";
+  name: DashboardIconName | "menu" | "close" | "plus" | "arrow" | "collapse" | "expand" | "website" | "chevron" | "allCategories" | "apparel" | "jewelry" | "watch" | "footwear" | "cosmetics" | "bag" | "image" | "video" | "search" | "lock" | "bell" | "alert" | "edit";
 };
 
 export function DashboardIcon({ name, ...props }: DashboardIconProps) {
@@ -71,6 +71,10 @@ export function DashboardIcon({ name, ...props }: DashboardIconProps) {
       return <svg {...commonProps}><rect x="3" y="4" width="18" height="16" rx="2" /><circle cx="9" cy="9" r="1.5" /><path d="m5.5 17 4.5-4.5 3.25 3.25 2.25-2.5 3 3.75" /></svg>;
     case "video":
       return <svg {...commonProps}><rect x="3" y="6" width="13" height="12" rx="2" /><path d="m16 10 5-3v10l-5-3" /></svg>;
+    case "videoLibrary":
+      return <svg {...commonProps}><rect x="4" y="4" width="16" height="16" rx="2" /><path d="M8 4v16M16 4v16M4 9h4m8 0h4M4 15h4m8 0h4" /><path d="m11 10 3 2-3 2v-4Z" /></svg>;
+    case "search":
+      return <svg {...commonProps}><circle cx="10.5" cy="10.5" r="6.5" /><path d="m15.5 15.5 4 4" /></svg>;
     case "lock":
       return <svg {...commonProps}><rect x="5" y="10" width="14" height="10" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></svg>;
     case "bell":

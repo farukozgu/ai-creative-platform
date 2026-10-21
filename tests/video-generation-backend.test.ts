@@ -1,0 +1,198 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import test from "node:test";
+
+import { estimateVerifiedProviderCost, resolveVideoRoute, videoEndpointCapabilities } from "../src/lib/video-generation/capabilities";
+import { buildFalVideoRequestInput } from "../src/lib/video-generation/fal-request";
+import { canTransitionVideoStatus } from "../src/lib/video-generation/lifecycle";
+import { MAX_VIDEO_RECONCILIATION_ATTEMPTS, reconcileVideoGeneration } from "../src/lib/video-generation/reconciliation";
+import { submitVideoGeneration } from "../src/lib/video-generation/service";
+import { isSourceUrlFresh } from "../src/lib/video-generation/source";
+import type { VideoBillingPolicy } from "../src/lib/video-generation/billing";
+import type { VideoGenerationDraft, VideoGenerationProvider, VideoJobRecord, VideoJobRepository } from "../src/lib/video-generation/types";
+import { validateDraftAgainstCapability, validateVideoGenerationDraft } from "../src/lib/video-generation/validation";
+
+const ownerId = "10000000-0000-4000-8000-000000000001";
+const submissionId = "20000000-0000-4000-8000-000000000002";
+const jobId = "30000000-0000-4000-8000-000000000003";
+const imageDraft: VideoGenerationDraft = {
+  clientSubmissionId: submissionId, mode: "image", prompt: "  A polished product reveal   with soft motion  ",
+  quality: "standard", aspectRatio: "16:9", durationSeconds: 5, cameraMovement: "auto", source: { kind: "generated-image", generationId: jobId },
+};
+const approvedImageCapability = { ...videoEndpointCapabilities.klingV3ProImage, productionApproved: true };
+const sourceResolver = {
+  resolveOwned: async () => ({
+    reference: imageDraft.source!, providerUrl: "https://signed.example/source.png",
+    expiresAt: "2099-10-20T10:30:00.000Z", mimeType: "image/png" as const,
+    sizeBytes: 1, width: 1000, height: 562, aspectRatio: "16:9" as const,
+  }),
+};
+
+function job(overrides: Partial<VideoJobRecord> = {}): VideoJobRecord {
+  return {
+    id: jobId, ownerId, clientSubmissionId: submissionId, mode: "image", prompt: "A product reveal", quality: "auto",
+    aspectRatio: "16:9", durationSeconds: 5, cameraMovement: "auto", sourceKind: null, sourceId: null,
+    provider: "fal", endpointId: approvedImageCapability.endpointId, modelId: approvedImageCapability.id,
+    providerRequestId: "provider-1", status: "queued", errorCode: null, outputBucketId: null,
+    outputObjectPath: null, outputMimeType: null, outputSizeBytes: null, estimatedProviderCostUsd: 0.42,
+    actualProviderCostUsd: null, billingReservationId: "reservation-1", billingStatus: "reserved",
+    reconciliationAttempts: 0, nextReconciliationAt: null, createdAt: "2026-10-20T10:00:00.000Z",
+    startedAt: null, completedAt: null, ...overrides,
+  };
+}
+
+class MemoryRepository implements VideoJobRepository {
+  records = new Map<string, VideoJobRecord>();
+  async createOrGet(input: Parameters<VideoJobRepository["createOrGet"]>[0]) {
+    const duplicate = [...this.records.values()].find((item) => item.ownerId === input.ownerId && item.clientSubmissionId === input.clientSubmissionId);
+    if (duplicate) return { job: duplicate, created: false };
+    const record = job({ ...input, id: jobId, createdAt: "2026-10-20T10:00:00.000Z", startedAt: null, completedAt: null, reconciliationAttempts: 0, nextReconciliationAt: null });
+    this.records.set(record.id, record);
+    return { job: record, created: true };
+  }
+  async findOwned(userId: string, id: string) { const record = this.records.get(id); return record?.ownerId === userId ? record : null; }
+  async findById(id: string) { return this.records.get(id) ?? null; }
+  async listOwned(userId: string) { return [...this.records.values()].filter((item) => item.ownerId === userId); }
+  async attachProviderRequest(id: string, requestId: string) { const record = this.records.get(id); if (!record) throw new Error("missing"); const next = { ...record, providerRequestId: requestId }; this.records.set(id, next); return next; }
+  async transition(id: string, from: readonly VideoJobRecord["status"][], patch: Partial<VideoJobRecord>) { const record = this.records.get(id); if (!record || !from.includes(record.status)) return null; const next = { ...record, ...patch }; this.records.set(id, next); return next; }
+  async scheduleReconciliation(id: string, attempts: number, nextAt: string | null) { const record = this.records.get(id); if (record) this.records.set(id, { ...record, reconciliationAttempts: attempts, nextReconciliationAt: nextAt }); }
+}
+
+function billing(overrides: Partial<VideoBillingPolicy> = {}) {
+  let reservations = 0; let releases = 0; let reconciliations = 0; let finalizations = 0;
+  const value: VideoBillingPolicy = {
+    reserve: async () => { reservations += 1; return { ok: true, reservation: { id: "reservation-1", status: "reserved" } }; },
+    finalize: async () => { finalizations += 1; }, release: async () => { releases += 1; }, markForReconciliation: async () => { reconciliations += 1; }, ...overrides,
+  };
+  return { value, counts: () => ({ reservations, releases, reconciliations, finalizations }) };
+}
+
+function provider(overrides: Partial<VideoGenerationProvider> = {}) {
+  let submissions = 0;
+  const value: VideoGenerationProvider = {
+    name: "fal", submit: async () => { submissions += 1; return { requestId: "provider-1" }; },
+    getStatus: async () => "completed", getResult: async () => ({ url: "https://v3b.fal.media/output.mp4", contentType: "video/mp4", sizeBytes: 10 }), ...overrides,
+  };
+  return { value, submissions: () => submissions };
+}
+
+test("both customer tiers route to their approved model configuration but remain closed", () => {
+  assert.deepEqual(resolveVideoRoute("image", "standard", {}), { ok: false, code: "feature_disabled" });
+  assert.deepEqual(resolveVideoRoute("image", "standard", { VIDEO_GENERATION_ENABLED: "true" }), { ok: false, code: "routing_unapproved" });
+  assert.deepEqual(resolveVideoRoute("image", "pro", { VIDEO_GENERATION_ENABLED: "true" }), { ok: false, code: "routing_unapproved" });
+  assert.equal(videoEndpointCapabilities.klingV3ProImage.endpointId, "fal-ai/kling-video/v3/pro/image-to-video");
+  assert.equal(videoEndpointCapabilities.seedanceV2StandardImage.endpointId, "bytedance/seedance-2.0/image-to-video");
+  assert.equal(estimateVerifiedProviderCost(approvedImageCapability, 10), 1.12);
+  assert.equal(estimateVerifiedProviderCost(videoEndpointCapabilities.seedanceV2StandardImage, 10), null);
+});
+
+test("draft validation sanitizes prompt input and rejects forged source combinations", () => {
+  const parsed = validateVideoGenerationDraft(imageDraft);
+  assert.equal(parsed.ok, true);
+  if (parsed.ok) assert.equal(parsed.value.prompt, "A polished product reveal with soft motion");
+  assert.equal(validateVideoGenerationDraft({ ...imageDraft, mode: "text", source: null }).ok, false);
+  assert.equal(validateVideoGenerationDraft({ ...imageDraft, source: null }).ok, false);
+  assert.equal(validateVideoGenerationDraft({ ...imageDraft, durationSeconds: 12 }).ok, false);
+});
+
+test("capability validation rejects unsupported durations and ratios without conversion", () => {
+  assert.equal(validateDraftAgainstCapability(imageDraft, approvedImageCapability).ok, true);
+  assert.equal(validateDraftAgainstCapability({ ...imageDraft, durationSeconds: 10 }, { ...approvedImageCapability, durations: [5] }).ok, false);
+  assert.equal(validateDraftAgainstCapability({ ...imageDraft, aspectRatio: "1:1" }, { ...approvedImageCapability, aspectRatios: ["16:9"] }).ok, false);
+});
+
+test("Kling and Seedance use different source-image payloads and disable audio", () => {
+  const request = { endpointId: "unused", mode: "image" as const, prompt: "Product reveal", durationSeconds: 5 as const, aspectRatio: "16:9" as const, sourceUrl: "https://signed.example/source.png" };
+  assert.deepEqual(buildFalVideoRequestInput({ ...request, modelId: "kling-v3-pro-image" }), { start_image_url: request.sourceUrl, prompt: request.prompt, duration: "5", generate_audio: false, enable_safety_checker: true });
+  assert.deepEqual(buildFalVideoRequestInput({ ...request, modelId: "seedance-v2-standard-image" }), { image_url: request.sourceUrl, prompt: request.prompt, duration: "5", aspect_ratio: "16:9", resolution: "720p", generate_audio: false });
+  assert.throws(() => buildFalVideoRequestInput({ ...request, modelId: "unknown" }));
+});
+
+test("idempotent submissions create one provider job and release the duplicate reservation", async () => {
+  const repository = new MemoryRepository(); const paid = billing(); const mockProvider = provider();
+  const dependencies = { repository, billing: paid.value, provider: mockProvider.value, sourceResolver, capability: approvedImageCapability, env: { VIDEO_GENERATION_ENABLED: "true" } };
+  const [first, duplicate] = await Promise.all([submitVideoGeneration(ownerId, imageDraft, dependencies), submitVideoGeneration(ownerId, imageDraft, dependencies)]);
+  assert.equal(first.ok, true); assert.equal(duplicate.ok, true); assert.equal(mockProvider.submissions(), 1);
+  assert.deepEqual(paid.counts(), { reservations: 2, releases: 1, reconciliations: 0, finalizations: 0 });
+});
+
+test("an ambiguous provider failure is not retried and requires billing reconciliation", async () => {
+  const repository = new MemoryRepository(); const paid = billing();
+  const result = await submitVideoGeneration(ownerId, imageDraft, {
+    repository, billing: paid.value, provider: provider({ submit: async () => { throw new Error("timeout"); } }).value,
+    sourceResolver, capability: approvedImageCapability, env: { VIDEO_GENERATION_ENABLED: "true" },
+  });
+  assert.deepEqual(result.ok ? null : result.code, "provider_submission_ambiguous");
+  assert.equal(repository.records.get(jobId)?.status, "failed");
+  assert.equal(paid.counts().reconciliations, 1);
+});
+
+test("persistence failure releases the reservation and never reaches the provider", async () => {
+  const paid = billing(); const mockProvider = provider();
+  const repository = new MemoryRepository();
+  repository.createOrGet = async () => { throw new Error("database unavailable"); };
+  const result = await submitVideoGeneration(ownerId, imageDraft, {
+    repository, billing: paid.value, provider: mockProvider.value, sourceResolver,
+    capability: approvedImageCapability, env: { VIDEO_GENERATION_ENABLED: "true" },
+  });
+  assert.equal(result.ok ? null : result.code, "persistence_failure");
+  assert.equal(mockProvider.submissions(), 0);
+  assert.equal(paid.counts().releases, 1);
+});
+
+test("lifecycle transitions are monotonic and terminal states reject duplicate completion", () => {
+  assert.equal(canTransitionVideoStatus("queued", "processing"), true);
+  assert.equal(canTransitionVideoStatus("processing", "succeeded"), true);
+  assert.equal(canTransitionVideoStatus("succeeded", "processing"), false);
+  assert.equal(canTransitionVideoStatus("failed", "queued"), false);
+});
+
+test("reconciliation retries output storage without marking success", async () => {
+  const repository = new MemoryRepository(); repository.records.set(jobId, job({ status: "processing" }));
+  const result = await reconcileVideoGeneration(jobId, {
+    repository, provider: provider().value, billing: billing().value,
+    outputStore: { persist: async () => { throw new Error("storage unavailable"); } },
+    now: () => new Date("2026-10-20T10:00:00.000Z"),
+  });
+  assert.equal(result.status, "output_retry");
+  assert.equal(repository.records.get(jobId)?.status, "processing");
+  assert.equal(repository.records.get(jobId)?.reconciliationAttempts, 1);
+});
+
+test("reconciliation stops at the retry limit without another provider call", async () => {
+  const repository = new MemoryRepository(); repository.records.set(jobId, job({ status: "processing", reconciliationAttempts: MAX_VIDEO_RECONCILIATION_ATTEMPTS }));
+  let statusReads = 0;
+  const result = await reconcileVideoGeneration(jobId, {
+    repository, provider: provider({ getStatus: async () => { statusReads += 1; return "processing"; } }).value,
+    billing: billing().value, outputStore: { persist: async () => { throw new Error("not called"); } },
+  });
+  assert.equal(result.status, "failed"); assert.equal(statusReads, 0); assert.equal(repository.records.get(jobId)?.errorCode, "retry_limit_reached");
+});
+
+test("billing failure keeps the durable output checkpointed for a retry", async () => {
+  const repository = new MemoryRepository(); repository.records.set(jobId, job({ status: "processing" }));
+  let stores = 0;
+  const result = await reconcileVideoGeneration(jobId, {
+    repository, provider: provider().value,
+    billing: billing({ finalize: async () => { throw new Error("ledger unavailable"); } }).value,
+    outputStore: { persist: async () => { stores += 1; return { bucketId: "generated-videos", objectPath: `${ownerId}/${jobId}/output.mp4`, contentType: "video/mp4", sizeBytes: 10 }; } },
+  });
+  assert.equal(result.status, "billing_retry");
+  assert.equal(stores, 1);
+  assert.equal(repository.records.get(jobId)?.outputObjectPath, `${ownerId}/${jobId}/output.mp4`);
+  assert.equal(repository.records.get(jobId)?.status, "processing");
+});
+
+test("expired signed sources are rejected before provider submission", () => {
+  assert.equal(isSourceUrlFresh({ reference: { kind: "generated-image", generationId: jobId }, providerUrl: "https://signed.example", expiresAt: "2026-10-20T10:05:00.000Z", mimeType: "image/png", sizeBytes: 1, width: 1000, height: 1000, aspectRatio: "1:1" }, Date.parse("2026-10-20T10:00:00.000Z")), false);
+});
+
+test("migration enforces owner RLS, idempotency, private media, and terminal guards", () => {
+  const sql = readFileSync("database/migrations/20261020000000_create_video_generation_foundation.sql", "utf8");
+  assert.match(sql, /generations_video_owner_submission_unique[\s\S]*\(owner_id, client_submission_id\)/i);
+  assert.match(sql, /enable row level security/i);
+  assert.match(sql, /auth\.uid\(\)\) = owner_id/i);
+  assert.match(sql, /terminal video generations are immutable/i);
+  assert.match(sql, /'generated-videos', 'generated-videos', false/i);
+  assert.doesNotMatch(sql, /grant[^;]*insert[^;]*on table public\.generations[^;]*to authenticated/i);
+});

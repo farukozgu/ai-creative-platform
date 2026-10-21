@@ -540,6 +540,186 @@
       "emptyTitle": "Görsel çalışma alanınız",
       "emptyDescription": "Kontrolleri kullanarak görselinizi hazırlayın. Henüz üretilmiş bir görsel yok."
     },
+    "videoStudio": {
+      "metadataTitle": "Video Studio",
+      "metadataDescription": "Ürün görsellerinden video hazırlamak için Klay AI Video Studio.",
+      "title": "Video Studio",
+      "description": "Kaynağınızı ve hareket yönünüzü hazırlayın.",
+      "generate": "Video Oluştur",
+      "preparationOnly": "Hazırlık modu · Video üretimi henüz bağlı değil.",
+      "source": {
+        "heading": "Kaynak görsel",
+        "description": "Videonun başlangıç karesi olarak kullanılacak ürün görselini seçin.",
+        "upload": "Cihazdan görsel seç",
+        "replace": "Değiştir",
+        "remove": "Kaldır",
+        "chooseLibrary": "Klay Kütüphanesi'nden seç",
+        "closeLibrary": "Kütüphaneyi kapat",
+        "dropLabel": "JPEG, PNG veya WebP · En fazla 20 MB",
+        "selectedAlt": "Seçilen kaynak ürün görseli",
+        "localLabel": "Yerel görsel",
+        "libraryLabel": "Klay Kütüphanesi",
+        "fileMeta": "{format} · {kilobytes} KB",
+        "libraryLoading": "Görseller yükleniyor…",
+        "libraryEmpty": "Kütüphanenizde kullanılabilir görsel yok.",
+        "libraryError": "Kütüphane yüklenemedi.",
+        "retry": "Tekrar dene",
+        "selectAsset": "Kaynak görsel olarak seç",
+        "incomingName": "Üretilen Klay görseli",
+        "incomingLoading": "Seçilen üretilmiş görsel yükleniyor…",
+        "incomingError": "Bu görsel kullanılamıyor veya artık erişiminiz yok. Başka bir kaynak görsel seçin."
+      },
+      "prompt": {
+        "image": {
+          "heading": "Hareket açıklaması",
+          "description": "Mevcut görselin nasıl canlanacağını anlatın.",
+          "placeholder": "Örn. Ürüne doğru yavaş sinematik yaklaşma ve yumuşak yansıma geçişleri…"
+        },
+        "inspirationLabel": "Açıklama önerileri"
+      },
+      "suggestions": {
+        "image": {
+          "dolly": "Yavaş sinematik yaklaşma ve hafif yansımalar",
+          "orbit": "Ürünün çevresinde nazik dönüş",
+          "fabric": "Doğal kumaş hareketi",
+          "lighting": "Yumuşak ışık geçişi"
+        }
+      },
+      "camera": {
+        "heading": "Kamera hareketi",
+        "description": "Tercihiniz gelecekte model yeteneklerine göre uyarlanacak.",
+        "options": {
+          "auto": { "label": "Otomatik", "description": "Sahneye uygun hareket tercih edilir." },
+          "dolly-in": { "label": "Yaklaş", "description": "Kamera ürüne doğru ilerler." },
+          "dolly-out": { "label": "Uzaklaş", "description": "Kamera üründen geriye açılır." },
+          "orbit": { "label": "Yörünge", "description": "Kamera ürünün çevresinde hareket eder." },
+          "pan-left": { "label": "Sola kaydır", "description": "Kadraj yatay olarak sola ilerler." },
+          "pan-right": { "label": "Sağa kaydır", "description": "Kadraj yatay olarak sağa ilerler." },
+          "static": { "label": "Sabit", "description": "Kamera konumu korunur." }
+        }
+      },
+      "quality": {
+        "heading": "Üretim kalitesi",
+        "options": {
+          "standard": { "label": "Standart", "description": "Dengeli ürün videosu üretimi." },
+          "pro": { "label": "Pro", "description": "Premium ürün videosu üretimi." },
+          "auto": { "label": "Otomatik", "description": "Geçmiş seçim." },
+          "best": { "label": "En iyi kalite", "description": "Geçmiş seçim." }
+        }
+      },
+      "output": {
+        "heading": "Çıktı ayarları",
+        "aspectRatio": "En boy oranı",
+        "duration": "Süre",
+        "seconds": "{seconds} saniye"
+      },
+      "canvas": {
+        "previewLabel": "Video önizleme alanı",
+        "draftLabel": "Taslak çıktı çerçevesi",
+        "libraryLink": "Video Kütüphanesi",
+        "sourceAlt": "Video için seçilen kaynak kare",
+        "imageEmptyTitle": "Kaynak karenizi seçin",
+        "imageEmptyDescription": "Seçilen görsel, kırpılmadan taslak çıktı çerçevesinde gösterilecek."
+      },
+      "generations": {
+        "title": "Üretimler",
+        "emptyTitle": "Henüz video üretilmedi",
+        "emptyDescription": "Tamamlanan videolar gelecekte burada görünecek."
+      },
+      "validation": {
+        "source-required": "Devam etmek için bir kaynak görsel seçin.",
+        "prompt-required": "Devam etmek için kısa bir hareket açıklaması yazın.",
+        "invalid-source-type": "JPEG, PNG veya WebP biçiminde bir görsel seçin.",
+        "source-too-large": "Görsel 20 MB veya daha küçük olmalı.",
+        "source-unreadable": "Bu görsel tarayıcıda açılamadı. Başka bir dosya deneyin.",
+        "not-connected": "Taslağınız hazır. Video üretimi sonraki aşamada bağlanacak."
+      },
+      "mobile": {
+        "viewLabel": "Video Studio görünümü",
+        "controls": "Kontroller",
+        "preview": "Önizleme"
+      }
+    },
+    "videoLibrary": {
+      "metadataTitle": "Video Kütüphanesi",
+      "metadataDescription": "Klay AI ile oluşturulan videoları inceleyin ve yönetin.",
+      "eyebrow": "VİDEO ÇALIŞMA ALANI",
+      "title": "Video Kütüphanesi",
+      "description": "Üretilen videolarınızı inceleyin ve üretim ayrıntılarına geri dönün.",
+      "newVideo": "Yeni Video",
+      "galleryLabel": "Üretilen videolar",
+      "resultCount": "{count} video",
+      "modes": { "image": "Görselden Videoya", "text": "Arşivlenmiş video" },
+      "filters": { "all": "Tümü", "image": "Görselden Videoya" },
+      "sort": { "newest": "Önce en yeni", "oldest": "Önce en eski" },
+      "status": {
+        "queued": "Sırada",
+        "processing": "İşleniyor",
+        "ready": "Hazır",
+        "failed": "Başarısız",
+        "unavailable": "Kullanılamıyor"
+      },
+      "toolbar": {
+        "label": "Video kütüphanesi kontrolleri",
+        "filterLabel": "Oluşturma moduna göre filtrele",
+        "searchLabel": "Videolarda ara",
+        "searchPlaceholder": "Video başlığıyla ara",
+        "sortLabel": "Sırala"
+      },
+      "card": {
+        "open": "Ayrıntıları aç",
+        "download": "İndir",
+        "noPreview": "Önizleme kullanılamıyor",
+        "thumbnailAlt": "Video küçük resmi",
+        "seconds": "{value} sn"
+      },
+      "empty": {
+        "title": "Henüz video yok",
+        "description": "Video üretimi bağlandığında oluşturduğunuz videolar burada görünecek.",
+        "action": "Video Studio'yu aç"
+      },
+      "noResults": {
+        "title": "Eşleşen video yok",
+        "description": "Farklı bir arama deneyin veya etkin filtreleri temizleyin.",
+        "action": "Filtreleri temizle"
+      }
+    },
+    "videoDetail": {
+      "metadataTitle": "Video ayrıntıları",
+      "metadataDescription": "Bir videoyu ve kullanılabilir üretim ayrıntılarını inceleyin.",
+      "back": "Video Kütüphanesi'ne dön",
+      "download": "Videoyu indir",
+      "playerLabel": "Video önizlemesi",
+      "thumbnailAlt": "Video önizleme küçük resmi",
+      "sourceAlt": "Bu video için kullanılan kaynak görsel",
+      "detailsTitle": "Üretim ayrıntıları",
+      "seconds": "{value} saniye",
+      "modes": { "image": "Görselden Videoya", "text": "Arşivlenmiş video" },
+      "status": {
+        "queued": "Sırada",
+        "processing": "İşleniyor",
+        "ready": "Hazır",
+        "failed": "Başarısız",
+        "unavailable": "Kullanılamıyor"
+      },
+      "labels": {
+        "mode": "Oluşturma modu",
+        "prompt": "Açıklama",
+        "camera": "Kamera hareketi",
+        "quality": "Kalite",
+        "aspectRatio": "En boy oranı",
+        "duration": "Süre",
+        "createdAt": "Oluşturulma",
+        "source": "Kaynak görsel"
+      },
+      "unavailable": {
+        "queued": { "title": "Video sırada", "description": "Video işlendiğinde oynatma burada kullanılabilir olacak." },
+        "processing": { "title": "Video işleniyor", "description": "Video hazır olduğunda oynatma burada görünecek." },
+        "ready": { "title": "Oynatma kullanılamıyor", "description": "Bu kayıt oynatılabilir bir video varlığı içermiyor." },
+        "failed": { "title": "Video oluşturulamadı", "description": "Bu üretim için oynatılabilir bir video bulunmuyor." },
+        "unavailable": { "title": "Video kullanılamıyor", "description": "Bu kaydın oynatılabilir varlığı kullanılamıyor." }
+      }
+    },
     "backgroundJobs": { "active": "Görsel hazırlanıyor" },
     "metadataTitle": "Yaratıcı Çalışma Alanı",
     "metadataDescription": "Klay.ai çalışma alanında kampanyaya hazır ürün görselleri oluşturun ve yaratıcı yönleri keşfedin.",
@@ -601,7 +781,9 @@
       "closeMenu": "Çalışma alanı navigasyonunu kapat",
       "items": {
         "home": "Ana Sayfa",
-        "create": "Yeni üretim",
+        "create": "Görsel Studio",
+        "video": "Video Studio",
+        "videos": "Video Kütüphanesi",
         "projects": "Projeler",
         "templates": "Şablonlar",
         "assets": "Varlıklar",
@@ -614,8 +796,6 @@
     "topbar": {
       "welcome": "Hoş geldiniz, {name}",
       "welcomeWithoutName": "Hoş geldiniz",
-      "newProject": "Yeni proje",
-      "newBlankProject": "Boş proje oluştur",
       "workspace": "Yaratıcı Çalışma Alanı",
       "credits": "Krediler —",
       "creditsHint": "Plan kurulumu tamamlandığında kullanılabilir",
@@ -765,11 +945,6 @@
     "composer": {
       "heading": "Yeni ürün üret",
       "description": "Ürününü yükle, sahneyi belirle ve kampanya görselini oluştur.",
-      "outputType": {
-        "label": "Üretim türü",
-        "image": { "title": "Görsel", "description": "Kampanyaya hazır ürün görseli oluştur" },
-        "video": { "title": "Video", "description": "Kısa ürün videosu oluştur", "badge": "Yakında" }
-      },
       "projectNameLabel": "Proje adı",
       "projectNamePlaceholder": "İsteğe bağlı",
       "flow": { "progressLabel": "Oluşturma adımları", "stepLabel": "Adım {current} / {total}", "navProduct": "Ürün", "navFormat": "Format", "navDirection": "Yön", "navReference": "Referans", "navDetails": "Detaylar", "nameTitle": "Bu çalışmaya bir isim ver", "namePlaceholder": "FW26 Deri Ceket Kampanyası", "nameRequired": "Devam etmek için çalışmanıza bir isim verin.", "productTitle": "Ürününü ekle", "productDescription": "İlk görsel ürün kimliğini belirler. Ek görseller aynı ürünün farklı açılarını göstermelidir.", "productAuthority": "Ürün kimliği", "primaryView": "ANA GÖRSEL", "supportingView": "DİĞER AÇI", "directionTitle": "Nasıl bir görsel oluşturalım?", "presetPath": "Preset ile başla", "customPath": "Kendi yönümü oluştur", "presentationLabel": "Sunum biçimi", "referenceTitle": "Bir görünüm referansın var mı?", "referenceDescription": "Ürünün yerine geçmeden pozu, kompozisyonu, ışığı ve atmosferi yönlendirir.", "referenceAuthority": "Sahne ve stil yönü", "optional": "İsteğe bağlı", "detailsTitle": "Son bir dokunuş?", "reviewTitle": "Yaratıcı özet", "reviewDescription": "Kampanyayı üretime göndermeden önce prodüksiyon tercihlerini gözden geçir.", "viewCount": "{count} ürün görseli", "referenceCount": "{count} referans", "noReference": "referans yok", "back": "Geri", "continue": "Devam et", "skip": "Atla", "generate": "Görseli üret", "generatingTitle": "Kampanyan hazırlanıyor", "generatingDescription": "Klay, ürün kimliğini korurken seçtiğin sahne ve formatı bir araya getiriyor.", "generatingProduct": "Ürün detayları korunuyor", "generatingScene": "Sahne kuruluyor", "generatingComposition": "Kompozisyon dengeleniyor", "generatingRender": "Görsel işleniyor", "generatingCheck": "Son kontroller yapılıyor", "chips": { "cinematic": "Daha sinematik", "minimal": "Minimal tut", "product": "Ürünü öne çıkar", "hardLight": "Daha sert ışık", "night": "Gece çekimi", "editorial": "Editoryal" }, "tryAgain": "Tekrar dene" },
@@ -1524,6 +1699,7 @@
       "favoriteAdd": "Favorilere ekle",
       "favoriteRemove": "Favorilerden çıkar",
       "favoriteError": "Favori durumu güncellenemedi.",
+      "animate": "Videoya Dönüştür",
       "filterAll": "Tümü",
       "filterFavorites": "Favoriler",
       "favoritesEmptyHeading": "Henüz favori görsel yok",

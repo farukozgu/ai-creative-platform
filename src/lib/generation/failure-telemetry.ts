@@ -1,4 +1,5 @@
 import { createCostTelemetry } from "./cost-telemetry";
+import type { CostUsageEvent } from "./cost/cost-accounting";
 import { GENERATION_EXECUTION_POLICY_VERSION } from "./execution-policy/execution-policy-version";
 import type { GenerationPerformanceStage } from "./performance";
 
@@ -19,6 +20,7 @@ type FailureTelemetryInput = {
   inputProductImageCount: number | null;
   inputReferenceCount: number | null;
   stageDurations?: Partial<Record<GenerationPerformanceStage, number>>;
+  events?: CostUsageEvent[];
 };
 
 /** Builds failure-only metadata without making lifecycle or persistence decisions. */
@@ -27,6 +29,7 @@ export function buildGenerationFailureTelemetry({
   inputProductImageCount,
   inputReferenceCount,
   stageDurations,
+  events,
 }: FailureTelemetryInput) {
   return {
     execution: {
@@ -57,6 +60,7 @@ export function buildGenerationFailureTelemetry({
       repairAttempted: executionCounts.repairCalls > 0,
       finalOutcome: "failed",
       validationOutcome: "not_completed",
+      events,
     }),
   };
 }

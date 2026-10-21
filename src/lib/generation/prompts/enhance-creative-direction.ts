@@ -2,6 +2,7 @@ import "server-only";
 
 import { getOpenAIClient } from "@/lib/openai/client";
 import { structuredResponseText } from "@/lib/openai/structured-response";
+import { attachOpenAIResponseTelemetry } from "@/lib/openai/response-telemetry";
 
 import {
   enhanceCreativeDirectionWithClient,
@@ -123,7 +124,8 @@ class OpenAIPromptEnhancementClient implements PromptEnhancementClient {
       throw new Error("Prompt enhancement returned no text.");
     }
 
-    return JSON.parse(outputText) as unknown;
+    const parsed = JSON.parse(outputText) as Record<string, unknown>;
+    return attachOpenAIResponseTelemetry(parsed, response);
   }
 }
 

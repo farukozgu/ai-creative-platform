@@ -1,6 +1,7 @@
 import "server-only";
 
 import { getOpenAIClient } from "@/lib/openai/client";
+import { attachOpenAIResponseTelemetry, getOpenAIResponseTelemetry } from "@/lib/openai/response-telemetry";
 import { structuredResponseText } from "@/lib/openai/structured-response";
 import { getReferenceAnalysisModel } from "@/lib/generation/references/reference-analysis";
 import { buildValidationBrief, renderValidationInstructions } from "./build-validation-brief";
@@ -75,7 +76,7 @@ class OpenAIFidelityValidationClient implements FidelityValidationClient {
     });
     const output = response.output_text?.trim();
     if (!output) throw new Error("Fidelity validation returned no structured output.");
-    return JSON.parse(output) as unknown;
+    return attachOpenAIResponseTelemetry(JSON.parse(output) as Record<string, unknown>, response);
   }
 }
 
@@ -90,11 +91,11 @@ export async function validateGeneratedImage(input: FidelityValidationInput, cli
     const result = await client.validate(input, brief);
     const raw = normalize(result);
     const gate = resolveQualityGate(raw);
-    return { ...gate, version: FIDELITY_VALIDATION_VERSION };
+    return { ...gate, version: FIDELITY_VALIDATION_VERSION, telemetry: getOpenAIResponseTelemetry(result) };
   }
   const raw = await client.validate(input, brief);
   const result = resolveQualityGate(normalize(raw));
-  return { ...result, version: FIDELITY_VALIDATION_VERSION };
+  return { ...result, version: FIDELITY_VALIDATION_VERSION, telemetry: getOpenAIResponseTelemetry(raw) };
 }
 
 export async function validateGeneratedImageBestEffort(input: FidelityValidationInput): Promise<FidelityValidationResult> {
@@ -110,6 +111,7 @@ export async function validateGeneratedImageBestEffort(input: FidelityValidation
       commerciallyUsable: null,
       summary: "Semantic fidelity validation was unavailable; generation remains accessible and was not marked as passed.",
       version: FIDELITY_VALIDATION_VERSION,
+      telemetry: null,
     };
   }
 }

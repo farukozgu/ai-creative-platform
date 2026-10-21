@@ -9,6 +9,7 @@ import type { ProductIdentityManifest } from "@/lib/product-identity/types";
 import type { HumanRealismPolicy } from "@/lib/human-realism/types";
 import type { ApparelFitProfile } from "@/lib/apparel-fit-preservation/types";
 import type { PresentationContractField, PresentationModeContract } from "@/lib/creative-presets/presentation-mode-contracts";
+import type { OpenAIResponseTelemetry } from "@/lib/openai/response-telemetry";
 
 export const fidelityValidationCategories = [
   "product_identity", "geometry", "color_material", "branding_text", "body_interaction",
@@ -54,6 +55,7 @@ export type FidelityValidationResult = {
   commerciallyUsable: boolean | null;
   summary: string;
   version: string;
+  telemetry?: OpenAIResponseTelemetry | null;
 };
 
 export type FidelityValidationBrief = {

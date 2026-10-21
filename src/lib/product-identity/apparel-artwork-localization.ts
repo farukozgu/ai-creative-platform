@@ -1,4 +1,5 @@
 import type { ApparelArtworkIdentitySource } from "@/lib/generation/types";
+import { attachOpenAIResponseTelemetry } from "@/lib/openai/response-telemetry";
 
 async function getSharp() {
   const sharpModule = await import("sharp");
@@ -41,8 +42,8 @@ export async function localizeApparelArtwork(data: Buffer): Promise<ArtworkLocal
     });
     const parsed = JSON.parse(response.output_text ?? "") as ArtworkLocalization;
     if (typeof parsed.detected !== "boolean" || !["front", "back", "unknown"].includes(parsed.side) || !Number.isFinite(parsed.confidence) || parsed.confidence < 0 || parsed.confidence > 1 || typeof parsed.containsText !== "boolean" || typeof parsed.multipleRegions !== "boolean") return null;
-    if (!parsed.detected) return { ...parsed, boundingBox: null };
-    return isValidNormalizedBox(parsed.boundingBox) ? parsed : null;
+    if (!parsed.detected) return attachOpenAIResponseTelemetry({ ...parsed, boundingBox: null }, response);
+    return isValidNormalizedBox(parsed.boundingBox) ? attachOpenAIResponseTelemetry(parsed, response) : null;
   } catch {
     return null;
   }

@@ -7,6 +7,7 @@ import {
   structuredResponseText,
 } from "@/lib/openai/structured-response";
 import { getOpenAIDiagnostic, type OpenAIDiagnostic } from "@/lib/openai/response-diagnostics";
+import { attachOpenAIResponseTelemetry } from "@/lib/openai/response-telemetry";
 
 import { REFERENCE_ANALYSIS_VERSION } from "./reference-style-brief";
 import { REFERENCE_MATCH_VERSION } from "./reference-shot-profile";
@@ -103,7 +104,7 @@ class OpenAIReferenceAnalysisClient implements ReferenceAnalysisClient {
     const outputText = response.output_text?.trim();
     if (!outputText) throw new ReferenceAnalysisRequestError("structured_parse", null);
     try {
-      return JSON.parse(outputText) as unknown;
+    return attachOpenAIResponseTelemetry(JSON.parse(outputText) as Record<string, unknown>, response);
     } catch (error) {
       throw new ReferenceAnalysisRequestError("structured_parse", error);
     }
@@ -130,13 +131,13 @@ export async function analyzeReferenceImages(
     return {
       diagnostic: { ...getOpenAIDiagnostic(null), stage: "image_prepare" },
       styleBrief: null,
-      usableCount: 0,
+      usableCount: 0, telemetry: null,
     };
   }
 
   const result = await analyzePreparedReferenceImages(prepared, client);
   if (result.styleBrief) {
-    return { diagnostic: null, styleBrief: result.styleBrief, usableCount: result.usableCount };
+    return { diagnostic: null, styleBrief: result.styleBrief, usableCount: result.usableCount, telemetry: result.telemetry };
   }
 
   const requestFailure = result.failure instanceof ReferenceAnalysisRequestError
@@ -150,6 +151,7 @@ export async function analyzeReferenceImages(
     },
     styleBrief: null,
     usableCount: result.usableCount,
+    telemetry: result.telemetry,
   };
 }
 

@@ -8,6 +8,8 @@ import {
   renderCreativeBrief,
   type CreativeBrief,
 } from "./creative-brief";
+import type { OpenAIResponseTelemetry } from "@/lib/openai/response-telemetry";
+import { getOpenAIResponseTelemetry } from "@/lib/openai/response-telemetry";
 
 export type { CreativeBrief } from "./creative-brief";
 
@@ -31,6 +33,7 @@ export type PromptEnhancementResult = {
   prompt: string;
   succeeded: boolean;
   userPrompt: string;
+  telemetry?: OpenAIResponseTelemetry | null;
 };
 
 export type PromptEnhancementClient = {
@@ -72,24 +75,24 @@ export async function enhanceCreativeDirectionWithClient(
   ].filter(Boolean).join("\n\n");
 
   if (!input.enabled || !rawPrompt) {
-    return { enhancedPrompt: null, prompt: rawPrompt, succeeded: false, userPrompt };
+    return { enhancedPrompt: null, prompt: rawPrompt, succeeded: false, userPrompt, telemetry: null };
   }
 
   try {
     const brief = await client.createCreativeBrief({ ...input, userCreativeDirection: userPrompt });
     if (!isCreativeBrief(brief)) {
-      return { enhancedPrompt: null, prompt: rawPrompt, succeeded: false, userPrompt };
+      return { enhancedPrompt: null, prompt: rawPrompt, succeeded: false, userPrompt, telemetry: getOpenAIResponseTelemetry(brief) };
     }
 
     const enhancedPrompt = renderEnhancedCreativePrompt(
       preserveFashionCaptureProfile(input, brief),
     ).trim();
     if (!enhancedPrompt) {
-      return { enhancedPrompt: null, prompt: rawPrompt, succeeded: false, userPrompt };
+      return { enhancedPrompt: null, prompt: rawPrompt, succeeded: false, userPrompt, telemetry: getOpenAIResponseTelemetry(brief) };
     }
 
-    return { enhancedPrompt, prompt: enhancedPrompt, succeeded: true, userPrompt };
+    return { enhancedPrompt, prompt: enhancedPrompt, succeeded: true, userPrompt, telemetry: getOpenAIResponseTelemetry(brief) };
   } catch {
-    return { enhancedPrompt: null, prompt: rawPrompt, succeeded: false, userPrompt };
+    return { enhancedPrompt: null, prompt: rawPrompt, succeeded: false, userPrompt, telemetry: null };
   }
 }

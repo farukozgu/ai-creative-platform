@@ -1,3 +1,5 @@
+import { makeUsageEvent, summarizeCostEvents, unknownUsage, type CostOperation, type CostUsageEvent, type UsageUnits } from "./cost/cost-accounting";
+
 export type CostTelemetryOutcome = "succeeded" | "failed" | "unverified";
 
 export type CostTelemetryInput = {
@@ -17,6 +19,7 @@ export type CostTelemetryInput = {
   finalOutcome: CostTelemetryOutcome;
   validationOutcome: string;
   providerUsage?: unknown;
+  events?: CostUsageEvent[];
 };
 
 export function createCostTelemetry(input: CostTelemetryInput) {
@@ -24,6 +27,7 @@ export function createCostTelemetry(input: CostTelemetryInput) {
   const artworkAnalysisCalls = input.artworkAnalysisCalls ?? 0;
   const segmentationCalls = input.segmentationCalls ?? 0;
   const projectionAnalysisCalls = input.projectionAnalysisCalls ?? 0;
+  const events = input.events?.slice(0, 16) ?? [];
   return {
     version: "generation-cost-v1",
     productUnderstandingCalls: input.productUnderstandingCalls,
@@ -42,5 +46,13 @@ export function createCostTelemetry(input: CostTelemetryInput) {
     finalOutcome: input.finalOutcome,
     validationOutcome: input.validationOutcome,
     ...(input.providerUsage === undefined ? {} : { providerUsage: input.providerUsage }),
+    costTelemetryV2: { version: "cost-telemetry-v2", events, summary: summarizeCostEvents(events) },
   };
+}
+export function createUnknownOperationEvent(input: { operation: CostOperation; provider: "openai" | "fal"; model: string; phase?: "initial" | "repair" | "supporting"; requestId?: string | null; occurredAt?: string; ambiguous?: boolean }): CostUsageEvent {
+  return makeUsageEvent({ operation: input.operation, provider: input.provider, model: input.model, requestId: input.requestId ?? null, phase: input.phase ?? "supporting", occurredAt: input.occurredAt ?? new Date().toISOString(), usage: unknownUsage, ambiguous: input.ambiguous });
+}
+
+export function createProviderUsageEvent(input: { operation: CostOperation; provider?: "openai" | "fal"; model: string; phase: "initial" | "repair" | "supporting"; requestId: string | null; usage: UsageUnits; occurredAt?: string; ambiguous?: boolean }): CostUsageEvent {
+  return makeUsageEvent({ operation: input.operation, provider: input.provider ?? "openai", model: input.model, requestId: input.requestId, phase: input.phase, occurredAt: input.occurredAt ?? new Date().toISOString(), usage: input.usage, ambiguous: input.ambiguous });
 }

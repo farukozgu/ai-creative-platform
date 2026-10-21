@@ -115,35 +115,8 @@
   min-height: 0;
 }
 
-.primaryAction {
-  position: relative;
-  display: flex;
-  min-height: 2.75rem;
-  align-items: center;
-  gap: 0.75rem;
-  margin-top: 1.25rem;
-  border: 1px solid var(--dashboard-border);
-  border-radius: var(--radius-sm);
-  background: var(--dashboard-accent-surface);
-  padding: 0 0.75rem;
-  color: var(--dashboard-foreground);
-  font-size: 0.8125rem;
-  font-weight: 660;
-  text-decoration: none;
-  transition: background-color var(--transition-fast) ease, border-color var(--transition-fast) ease, color var(--transition-fast) ease;
-}
-
-.primaryAction:hover {
-  border-color: var(--dashboard-border-strong);
-  background: var(--dashboard-surface-hover);
-}
-
-.primaryAction .icon {
-  color: var(--dashboard-accent);
-}
-
 .navSection {
-  margin-top: 2rem;
+  margin-top: 1.25rem;
 }
 
 .sectionLabel {
@@ -284,16 +257,8 @@
   width: 100%;
 }
 
-.frame[data-collapsed] .primaryAction {
-  width: 2.75rem;
-  min-height: 2.75rem;
-  justify-content: center;
-  margin-inline: auto;
-  padding: 0;
-}
-
 .frame[data-collapsed] .navSection {
-  margin-top: 1.5rem;
+  margin-top: 1.25rem;
 }
 
 .frame[data-collapsed] .nav {
@@ -310,7 +275,7 @@
   left: -0.75rem;
 }
 
-.frame[data-collapsed] :is(.primaryAction, .navItem, .utilityItem):is(:hover, :focus-visible) .tooltip {
+.frame[data-collapsed] :is(.navItem, .utilityItem):is(:hover, :focus-visible) .tooltip {
   opacity: 1;
   transform: translate(0, -50%);
 }
@@ -385,7 +350,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .toggle,
-  .primaryAction,
   .navItem,
   .utilityItem,
   .tooltip {

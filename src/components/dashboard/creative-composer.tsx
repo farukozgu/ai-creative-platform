@@ -54,7 +54,6 @@ import type { CreationEntry } from "@/features/generation/creation-entry";
 
 type FilePreview = { file: File; previewUrl: string };
 type FlowStep =
-  | "type"
   | "name"
   | "product"
   | "format"
@@ -66,7 +65,6 @@ type FlowStep =
   | "failed";
 
 const steps: readonly FlowStep[] = [
-  "type",
   "name",
   "product",
   "format",
@@ -112,7 +110,7 @@ export function CreativeComposer({
   const productPreviews = useRef<FilePreview[]>([]);
   const referencePreviews = useRef<FilePreview[]>([]);
   const locked = useRef(false);
-  const [step, setStep] = useState<FlowStep>(initialEntry?.presetId ? "name" : "type");
+  const [step, setStep] = useState<FlowStep>("name");
   const [projectName, setProjectName] = useState("");
   const [products, setProducts] = useState<FilePreview[]>([]);
   const [references, setReferences] = useState<FilePreview[]>([]);
@@ -169,7 +167,6 @@ export function CreativeComposer({
       setPresetVertical(preset.vertical);
       setPresentationMode(nextPresentationMode);
       setCreationMode("preset");
-      setStep((current) => (current === "type" ? "name" : current));
       window.requestAnimationFrame(() =>
         document.getElementById("composer")?.scrollIntoView({
           behavior: window.matchMedia("(prefers-reduced-motion: reduce)")
@@ -482,15 +479,14 @@ export function CreativeComposer({
   return (
     <section
       id="composer"
-      className={`creation-flow ${step === "type" ? "is-intro" : "is-guided"}`}
+      className="creation-flow is-guided"
       data-step={step}
       aria-labelledby="creation-flow-title"
     >
-      {step !== "type" ? (
-        <nav
-          className="creation-progress"
-          aria-label={t("flow.progressLabel")}
-        >
+      <nav
+        className="creation-progress"
+        aria-label={t("flow.progressLabel")}
+      >
           {navItems.map(([key, label], index) => {
             const stepIndex = steps.indexOf(key);
             const isCurrent = step === key;
@@ -515,64 +511,9 @@ export function CreativeComposer({
               </button>
             );
           })}
-        </nav>
-      ) : null}
+      </nav>
 
       <div className="creation-stage" key={step}>
-        {step === "type" ? (
-          <>
-            <div className="creation-intro-copy">
-              <div className="creation-intro-meta">
-                <p className="creation-kicker">KLAY STUDIO</p>
-                <span>{stepEyebrow}</span>
-              </div>
-              <h1 id="creation-flow-title">{t("heading")}</h1>
-              <p>{t("description")}</p>
-            </div>
-            <div className="creation-type-options">
-              <button
-                type="button"
-                className="creation-type-card is-primary"
-                onClick={() => setStep("name")}
-              >
-                <span className="creation-type-visual" aria-hidden="true">
-                  <span className="creation-type-frame is-landscape">
-                    <DashboardIcon name="image" />
-                  </span>
-                  <span className="creation-type-frame is-portrait" />
-                  <span className="creation-type-frame is-square" />
-                </span>
-                <span className="creation-type-footer">
-                  <span className="creation-type-icon">
-                    <DashboardIcon name="image" />
-                  </span>
-                  <span className="creation-type-copy">
-                    <strong>{t("outputType.image.title")}</strong>
-                    <span>{t("outputType.image.description")}</span>
-                  </span>
-                  <span className="creation-type-arrow" aria-hidden="true">
-                    <DashboardIcon name="arrow" />
-                  </span>
-                </span>
-              </button>
-              <button type="button" className="creation-type-card" disabled>
-                <span className="creation-type-status">
-                  {t("outputType.video.badge")}
-                </span>
-                <span className="creation-type-video-mark" aria-hidden="true">
-                  <DashboardIcon name="video" />
-                </span>
-                <span className="creation-type-footer">
-                  <span className="creation-type-copy">
-                    <strong>{t("outputType.video.title")}</strong>
-                    <span>{t("outputType.video.description")}</span>
-                  </span>
-                </span>
-              </button>
-            </div>
-          </>
-        ) : null}
-
         {step === "name" ? (
           <>
             <ComposerStepHeader
@@ -999,8 +940,7 @@ export function CreativeComposer({
         {error ? <p className="creation-error" role="alert">{error}</p> : null}
       </div>
 
-      {step !== "type" ? (
-        <footer className="creation-actions">
+      <footer className="creation-actions">
           <Button
             variant="ghost"
             onClick={() => {
@@ -1021,8 +961,7 @@ export function CreativeComposer({
                 : t("flow.continue")}
             </Button>
           )}
-        </footer>
-      ) : <footer className="creation-actions" />}
+      </footer>
     </section>
   );
 }

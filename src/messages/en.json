@@ -540,6 +540,186 @@
       "emptyTitle": "Your creative workspace",
       "emptyDescription": "Configure your image using the controls. No generated image yet."
     },
+    "videoStudio": {
+      "metadataTitle": "Video Studio",
+      "metadataDescription": "Klay AI Video Studio for preparing videos from product images.",
+      "title": "Video Studio",
+      "description": "Prepare your source and motion direction.",
+      "generate": "Generate Video",
+      "preparationOnly": "Preparation mode · Video generation is not connected yet.",
+      "source": {
+        "heading": "Source image",
+        "description": "Choose the product image that will act as the opening frame.",
+        "upload": "Choose image from device",
+        "replace": "Replace",
+        "remove": "Remove",
+        "chooseLibrary": "Choose from Klay Library",
+        "closeLibrary": "Close library",
+        "dropLabel": "JPEG, PNG or WebP · Up to 20 MB",
+        "selectedAlt": "Selected source product image",
+        "localLabel": "Local image",
+        "libraryLabel": "Klay Library",
+        "fileMeta": "{format} · {kilobytes} KB",
+        "libraryLoading": "Loading images…",
+        "libraryEmpty": "No usable images in your library yet.",
+        "libraryError": "The library could not be loaded.",
+        "retry": "Try again",
+        "selectAsset": "Select as source image",
+        "incomingName": "Generated Klay image",
+        "incomingLoading": "Loading the selected generated image…",
+        "incomingError": "This image is unavailable or you no longer have access. Choose another source image."
+      },
+      "prompt": {
+        "image": {
+          "heading": "Motion prompt",
+          "description": "Describe how the existing image should come to life.",
+          "placeholder": "E.g. Slow cinematic dolly-in with subtle reflection changes…"
+        },
+        "inspirationLabel": "Prompt suggestions"
+      },
+      "suggestions": {
+        "image": {
+          "dolly": "Slow cinematic dolly-in with subtle reflections",
+          "orbit": "Gentle orbit around the product",
+          "fabric": "Natural fabric movement",
+          "lighting": "Soft lighting transition"
+        }
+      },
+      "camera": {
+        "heading": "Camera movement",
+        "description": "This preference will be adapted to future model capabilities.",
+        "options": {
+          "auto": { "label": "Auto", "description": "Prefer movement appropriate for the scene." },
+          "dolly-in": { "label": "Dolly In", "description": "Move the camera toward the product." },
+          "dolly-out": { "label": "Dolly Out", "description": "Pull the camera away from the product." },
+          "orbit": { "label": "Orbit", "description": "Move the camera around the product." },
+          "pan-left": { "label": "Pan Left", "description": "Move the frame horizontally to the left." },
+          "pan-right": { "label": "Pan Right", "description": "Move the frame horizontally to the right." },
+          "static": { "label": "Static", "description": "Keep the camera position fixed." }
+        }
+      },
+      "quality": {
+        "heading": "Generation quality",
+        "options": {
+          "standard": { "label": "Standard", "description": "Balanced product video generation." },
+          "pro": { "label": "Pro", "description": "Premium product video generation." },
+          "auto": { "label": "Auto", "description": "Historical selection." },
+          "best": { "label": "Best Quality", "description": "Historical selection." }
+        }
+      },
+      "output": {
+        "heading": "Output settings",
+        "aspectRatio": "Aspect ratio",
+        "duration": "Duration",
+        "seconds": "{seconds} seconds"
+      },
+      "canvas": {
+        "previewLabel": "Video preview area",
+        "draftLabel": "Draft output frame",
+        "libraryLink": "Video Library",
+        "sourceAlt": "Selected source frame for the video",
+        "imageEmptyTitle": "Choose your source frame",
+        "imageEmptyDescription": "Your selected image will appear inside the draft output frame without cropping."
+      },
+      "generations": {
+        "title": "Generations",
+        "emptyTitle": "No videos generated yet",
+        "emptyDescription": "Completed videos will appear here in a future phase."
+      },
+      "validation": {
+        "source-required": "Choose a source image to continue.",
+        "prompt-required": "Add a short motion prompt to continue.",
+        "invalid-source-type": "Choose a JPEG, PNG, or WebP image.",
+        "source-too-large": "The image must be 20 MB or smaller.",
+        "source-unreadable": "This image could not be opened in your browser. Try another file.",
+        "not-connected": "Your draft is ready. Video generation will be connected in a future phase."
+      },
+      "mobile": {
+        "viewLabel": "Video Studio view",
+        "controls": "Controls",
+        "preview": "Preview"
+      }
+    },
+    "videoLibrary": {
+      "metadataTitle": "Video Library",
+      "metadataDescription": "Review and manage videos created in Klay AI.",
+      "eyebrow": "VIDEO WORKSPACE",
+      "title": "Video Library",
+      "description": "Review your generated videos and return to their production details.",
+      "newVideo": "New Video",
+      "galleryLabel": "Generated videos",
+      "resultCount": "{count, plural, one {# video} other {# videos}}",
+      "modes": { "image": "Image to Video", "text": "Archived video" },
+      "filters": { "all": "All", "image": "Image to Video" },
+      "sort": { "newest": "Newest first", "oldest": "Oldest first" },
+      "status": {
+        "queued": "Queued",
+        "processing": "Processing",
+        "ready": "Ready",
+        "failed": "Failed",
+        "unavailable": "Unavailable"
+      },
+      "toolbar": {
+        "label": "Video library controls",
+        "filterLabel": "Filter by creation mode",
+        "searchLabel": "Search videos",
+        "searchPlaceholder": "Search by video title",
+        "sortLabel": "Sort"
+      },
+      "card": {
+        "open": "Open details",
+        "download": "Download",
+        "noPreview": "Preview unavailable",
+        "thumbnailAlt": "Video thumbnail",
+        "seconds": "{value} sec"
+      },
+      "empty": {
+        "title": "No videos yet",
+        "description": "Videos you create will appear here when video generation is connected.",
+        "action": "Open Video Studio"
+      },
+      "noResults": {
+        "title": "No matching videos",
+        "description": "Try a different search or clear the active filters.",
+        "action": "Clear filters"
+      }
+    },
+    "videoDetail": {
+      "metadataTitle": "Video details",
+      "metadataDescription": "Review a video and its available generation details.",
+      "back": "Back to Video Library",
+      "download": "Download video",
+      "playerLabel": "Video preview",
+      "thumbnailAlt": "Video preview thumbnail",
+      "sourceAlt": "Source image used for this video",
+      "detailsTitle": "Generation details",
+      "seconds": "{value} seconds",
+      "modes": { "image": "Image to Video", "text": "Archived video" },
+      "status": {
+        "queued": "Queued",
+        "processing": "Processing",
+        "ready": "Ready",
+        "failed": "Failed",
+        "unavailable": "Unavailable"
+      },
+      "labels": {
+        "mode": "Creation mode",
+        "prompt": "Prompt",
+        "camera": "Camera movement",
+        "quality": "Quality",
+        "aspectRatio": "Aspect ratio",
+        "duration": "Duration",
+        "createdAt": "Created",
+        "source": "Source image"
+      },
+      "unavailable": {
+        "queued": { "title": "Video queued", "description": "Playback will be available after this video has been processed." },
+        "processing": { "title": "Video is processing", "description": "Playback will appear here when the video is ready." },
+        "ready": { "title": "Playback unavailable", "description": "This record does not include a playable video asset." },
+        "failed": { "title": "Video could not be created", "description": "No playable video is available for this generation." },
+        "unavailable": { "title": "Video unavailable", "description": "The playable asset is not available for this record." }
+      }
+    },
     "backgroundJobs": { "active": "Creating image" },
     "metadataTitle": "Creative Workspace",
     "metadataDescription": "Create campaign-ready product visuals and explore creative directions in the Klay.ai workspace.",
@@ -601,7 +781,9 @@
       "closeMenu": "Close workspace navigation",
       "items": {
         "home": "Home",
-        "create": "New generation",
+        "create": "Image Studio",
+        "video": "Video Studio",
+        "videos": "Video Library",
         "projects": "Projects",
         "templates": "Templates",
         "assets": "Assets",
@@ -614,8 +796,6 @@
     "topbar": {
       "welcome": "Welcome, {name}",
       "welcomeWithoutName": "Welcome",
-      "newProject": "New project",
-      "newBlankProject": "Create blank project",
       "workspace": "Creative Workspace",
       "credits": "Credits â€”",
       "creditsHint": "Available after plan setup",
@@ -765,11 +945,6 @@
     "composer": {
       "heading": "Create a new product",
       "description": "Upload your product, set the scene, and create a campaign image.",
-      "outputType": {
-        "label": "Creation type",
-        "image": { "title": "Image", "description": "Create a campaign-ready product image" },
-        "video": { "title": "Video", "description": "Create a short product video", "badge": "Coming soon" }
-      },
       "projectNameLabel": "Project name",
       "projectNamePlaceholder": "Optional",
       "flow": { "progressLabel": "Creation steps", "stepLabel": "Step {current} of {total}", "navProduct": "Product", "navFormat": "Format", "navDirection": "Direction", "navReference": "Reference", "navDetails": "Details", "nameTitle": "Give this work a name", "namePlaceholder": "FW26 Leather Jacket Campaign", "nameRequired": "Give your work a name to continue.", "productTitle": "Add your product", "productDescription": "The first image anchors product identity. Additional images must show the same product from other angles.", "productAuthority": "Product identity", "primaryView": "MAIN IMAGE", "supportingView": "OTHER ANGLE", "directionTitle": "What should we create?", "presetPath": "Start with a preset", "customPath": "Create my own direction", "presentationLabel": "Presentation", "referenceTitle": "Do you have a visual reference?", "referenceDescription": "Guide the pose, composition, light, and atmosphere without replacing your product.", "referenceAuthority": "Scene and style guidance", "optional": "Optional", "detailsTitle": "One final touch?", "reviewTitle": "Creative brief", "reviewDescription": "Review the production choices before sending your campaign to generation.", "viewCount": "{count} product views", "referenceCount": "{count} references", "noReference": "no reference", "back": "Back", "continue": "Continue", "skip": "Skip", "generate": "Generate image", "generatingTitle": "Your campaign is being prepared", "generatingDescription": "Klay is preserving product identity while assembling the selected scene and format.", "generatingProduct": "Preserving product details", "generatingScene": "Building the scene", "generatingComposition": "Balancing composition", "generatingRender": "Rendering the visual", "generatingCheck": "Running final checks", "chips": { "cinematic": "More cinematic", "minimal": "Keep it minimal", "product": "Feature the product", "hardLight": "Harder light", "night": "Night shoot", "editorial": "Editorial" }, "tryAgain": "Try again" },
@@ -1529,6 +1704,7 @@
       "favoriteAdd": "Add to favorites",
       "favoriteRemove": "Remove from favorites",
       "favoriteError": "Favorite status could not be updated.",
+      "animate": "Animate",
       "filterAll": "All",
       "filterFavorites": "Favorites",
       "favoritesEmptyHeading": "No favorite images yet",

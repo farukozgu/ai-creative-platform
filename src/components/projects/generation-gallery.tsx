@@ -5,7 +5,10 @@ import type { GenerationStatus } from "@/lib/projects/get-projects";
 import { ProjectImageViewer } from "@/components/projects/project-image-viewer";
 import {AppState} from "@/components/ui/app-state";
 import { FavoriteButton } from "@/components/ui/favorite-button";
+import { DashboardIcon } from "@/components/dashboard/dashboard-icons";
 import { filterFavoriteGenerations, type FavoriteGenerationResult } from "@/lib/generations/favorite-generation";
+import { getVideoStudioSourceHref } from "@/lib/generations/video-source-handoff";
+import { Link } from "@/i18n/navigation";
 
 export type GenerationGalleryItem = {
   id: string;
@@ -23,6 +26,7 @@ export type GenerationGalleryItem = {
   direction: string;
   isFavorite: boolean;
   validationUnverified: boolean;
+  animateSourceId: string | null;
 };
 
 type GalleryMessages = {
@@ -60,6 +64,7 @@ type GalleryMessages = {
   favoriteAdd: string;
   favoriteRemove: string;
   favoriteError: string;
+  animate: string;
   filterAll: string;
   filterFavorites: string;
   favoritesEmptyHeading: string;
@@ -138,6 +143,7 @@ export function GenerationGallery({ items, controls, runActions, onSelectionChan
           <span className="dashboard-status" data-status={selected?.status ?? "draft"}><span aria-hidden="true" />{selected?.statusLabel ?? messages.emptyHeading}</span>
           <div>
             {selected?.status === "succeeded" && selected.previewUrl ? <FavoriteButton active={selected.isFavorite} disabled={pendingFavoriteIds.has(selected.id)} label={selected.isFavorite ? messages.favoriteRemove : messages.favoriteAdd} onClick={() => void toggleFavorite(selected)} /> : null}
+            {selected?.animateSourceId ? <Link href={getVideoStudioSourceHref(selected.animateSourceId)} aria-label={`${messages.animate}: ${selected.alt}`}><DashboardIcon name="video" /><span>{messages.animate}</span></Link> : null}
             <a href="#project-image-edit">{messages.edit}</a>
             <button type="button" disabled={!selected?.previewUrl} onClick={openFullscreen}>{messages.openFullscreen}</button>
           </div>

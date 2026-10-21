@@ -6386,6 +6386,7 @@ html[data-motion="ready"] .signup-form-wrap {
 .project-canvas-toolbar { display: flex; min-height: 3.5rem; align-items: center; justify-content: space-between; gap: 0.75rem; border-bottom: 1px solid var(--dashboard-border); background: var(--dashboard-surface); padding: 0.625rem 0.875rem; }
 .project-canvas-toolbar > div { display: flex; align-items: center; gap: 0.4rem; }
 .project-canvas-toolbar :is(a, button) { display: inline-flex; min-height: 2.125rem; align-items: center; border: 1px solid var(--dashboard-border); border-radius: var(--radius-sm); background: var(--dashboard-surface); padding: 0 0.65rem; color: var(--dashboard-foreground); font: inherit; font-size: 0.6875rem; font-weight: 600; text-decoration: none; cursor: pointer; transition: border-color var(--transition-fast) ease, background-color var(--transition-fast) ease; }
+.project-canvas-toolbar a svg { width: 0.875rem; height: 0.875rem; margin-right: 0.35rem; color: var(--dashboard-muted); }
 .project-canvas-toolbar :is(a, button):hover { border-color: var(--dashboard-border-strong); background: var(--dashboard-surface-raised); }
 .project-canvas-toolbar .favorite-button.is-active { border-color: color-mix(in srgb, var(--dashboard-accent) 45%, var(--dashboard-border)); background: var(--dashboard-accent-surface); color: var(--dashboard-accent); }
 .project-canvas-toolbar button:disabled { cursor: not-allowed; opacity: 0.5; }
@@ -6455,8 +6456,8 @@ html[data-motion="ready"] .signup-form-wrap {
   .project-inspector .project-controls-title { grid-column: auto; }
   .project-inspector .project-image-edit, .project-inspector-details { margin-inline: 1rem; }
   .project-canvas-toolbar { align-items: flex-start; flex-direction: column; }
-  .project-canvas-toolbar > div { width: 100%; }
-  .project-canvas-toolbar :is(a, button) { flex: 1; justify-content: center; }
+  .project-canvas-toolbar > div { width: 100%; flex-wrap: wrap; }
+  .project-canvas-toolbar :is(a, button) { flex: 1 1 calc(50% - 0.4rem); justify-content: center; }
   .project-generation-history .project-generation-history-item { width: 7.5rem; min-width: 7.5rem; flex-basis: 7.5rem; }
   .project-generation-history-heading { align-items: flex-start; flex-direction: column; }
 }

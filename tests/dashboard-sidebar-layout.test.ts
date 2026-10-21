@@ -31,15 +31,23 @@ test("sidebar defaults respect explicit preferences before the tablet fallback",
   assert.equal(resolveDashboardSidebarCollapsed("false", true), false);
 });
 
-test("sidebar resolves Home, Create and Projects active destinations", () => {
+test("sidebar orders both studios and resolves their distinct active destinations", () => {
   const home = dashboardPrimaryNavigation.find((item) => item.key === "home")!;
   const create = dashboardPrimaryNavigation.find((item) => item.key === "create")!;
+  const video = dashboardPrimaryNavigation.find((item) => item.key === "video")!;
+  const videos = dashboardPrimaryNavigation.find((item) => item.key === "videos")!;
   const projects = dashboardPrimaryNavigation.find((item) => item.key === "projects")!;
 
+  assert.deepEqual(dashboardPrimaryNavigation.map(({ key }) => key), ["home", "create", "video", "videos", "projects"]);
+  assert.equal(create.icon, "image");
   assert.equal(isDashboardNavigationItemActive(home, "/dashboard", ""), true);
   assert.equal(isDashboardNavigationItemActive(home, "/dashboard", "#composer"), false);
   assert.equal(isDashboardNavigationItemActive(create, "/dashboard", "#composer"), true);
   assert.equal(isDashboardNavigationItemActive(create, "/dashboard/create", ""), true);
+  assert.equal(isDashboardNavigationItemActive(video, "/dashboard/video", ""), true);
+  assert.equal(isDashboardNavigationItemActive(video, "/dashboard/videos", ""), false);
+  assert.equal(isDashboardNavigationItemActive(videos, "/dashboard/videos", ""), true);
+  assert.equal(isDashboardNavigationItemActive(videos, "/dashboard/videos/example", ""), true);
   assert.equal(isDashboardNavigationItemActive(home, "/dashboard/create", ""), false);
   assert.equal(isDashboardNavigationItemActive(projects, "/dashboard/projects/example", ""), true);
 });
@@ -54,6 +62,8 @@ test("sidebar uses scoped semantic theme styles and keeps compact access afforda
   assert.match(styles, /var\(--dashboard-accent-surface\)/);
   assert.doesNotMatch(styles, /#[0-9a-f]{3,8}/i);
   assert.match(sidebar, /role="tooltip"/);
+  assert.match(sidebar, /dashboardPrimaryNavigation.map/);
+  assert.doesNotMatch(sidebar, /primaryAction|createItem|mainItems/);
   assert.match(sidebar, /DashboardPlanCard collapsed=\{collapsed\}/);
   assert.match(sidebar, /DashboardAccountMenu displayName=\{displayName\} collapsed=\{collapsed\}/);
 });
@@ -65,6 +75,15 @@ test("mobile drawer retains dismissal, focus trap and route-change handling", ()
   assert.match(mobileNav, /event\.key !== "Tab"/);
   assert.match(mobileNav, /previousLocationRef\.current !== locationKey/);
   assert.match(mobileNav, /dashboard-drawer-backdrop[\s\S]*closeDrawer\(true\)/);
+  assert.match(mobileNav, /dashboardPrimaryNavigation.map/);
+});
+
+test("navigation labels identify Image Studio in both locales", () => {
+  const expected = { en: "Image Studio", tr: "Görsel Studio" };
+  for (const [locale, label] of Object.entries(expected)) {
+    const messages = JSON.parse(read(`src/messages/${locale}.json`)) as { Dashboard: { navigation: { items: Record<string, string> } } };
+    assert.equal(messages.Dashboard.navigation.items.create, label);
+  }
 });
 
 test("dashboard topbar greets the signed-in user in both locales", () => {
@@ -121,9 +140,10 @@ test("creative composer presents exactly one step from the guided sequence", () 
 
   assert.match(
     composer,
-    /const steps: readonly FlowStep\[\] = \[\s*"type",\s*"name",\s*"product",\s*"format",\s*"direction",\s*"reference",\s*"details",\s*"review",\s*\]/,
+    /const steps: readonly FlowStep\[\] = \[\s*"name",\s*"product",\s*"format",\s*"direction",\s*"reference",\s*"details",\s*"review",\s*\]/,
   );
-  for (const step of ["type", "name", "product", "format", "direction", "reference", "details", "review"]) {
+  assert.doesNotMatch(composer, /outputType\.video|step === "type"/);
+  for (const step of ["name", "product", "format", "direction", "reference", "details", "review"]) {
     assert.match(composer, new RegExp(`\\{step === "${step}" \\? \\(`));
   }
 });

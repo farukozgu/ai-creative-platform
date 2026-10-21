@@ -19,11 +19,12 @@ for (const locale of ["tr", "en"] as const) {
   });
 }
 
-test("workspace keeps the eight-step inspector and mobile preview switch", () => {
+test("workspace keeps the image-only seven-step inspector and mobile preview switch", () => {
   const composer = readFileSync("src/components/dashboard/creative-composer.tsx", "utf8");
   const workspace = readFileSync("src/features/generation/creation-workspace.tsx", "utf8");
   const route = readFileSync("src/app/[locale]/dashboard/create/page.tsx", "utf8");
-  assert.match(composer, /"type",\s*"name",\s*"product",\s*"format",\s*"direction",\s*"reference",\s*"details",\s*"review"/);
+  assert.match(composer, /"name",\s*"product",\s*"format",\s*"direction",\s*"reference",\s*"details",\s*"review"/);
+  assert.doesNotMatch(composer, /outputType\.video|creation-type-card/);
   assert.match(workspace, /setView\("preview"\)/);
   assert.match(route, /<CreativeComposer/);
   assert.match(route, /canvas=\{<CreationCanvas \/>\}/);
