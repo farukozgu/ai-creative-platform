@@ -233,14 +233,21 @@ export async function reorderProductAssets(
   return { status: "success" };
 }
 
-export async function reanalyzeProductAsset(assetId: unknown): Promise<import("@/lib/product-understanding/analyze-product-asset").ProductAnalysisResult> {
+export async function reanalyzeProductAsset(assetId: unknown): Promise<import("@/lib/product-understanding/product-reanalysis-admission").ManualProductReanalysisResult> {
   if (typeof assetId !== "string" || !uuidPattern.test(assetId)) {
     return { status: "failed", reason: "asset_not_found" };
   }
   const userId = await getAuthenticatedUserId();
   if (!userId) return { status: "failed", reason: "asset_not_found" };
-  const { analyzeProductAsset } = await import("@/lib/product-understanding/analyze-product-asset");
-  return analyzeProductAsset({ assetId, force: true, userId });
+  const [{ analyzeProductAsset }, { supabaseProductReanalysisAdmissionGateway }, { runManualProductReanalysis }] = await Promise.all([
+    import("@/lib/product-understanding/analyze-product-asset"),
+    import("@/lib/product-understanding/product-reanalysis-admission"),
+    import("@/lib/product-understanding/product-reanalysis-service"),
+  ]);
+  return runManualProductReanalysis({ assetId, ownerId: userId }, {
+    analyze: analyzeProductAsset,
+    gateway: supabaseProductReanalysisAdmissionGateway,
+  });
 }
 
 export async function registerReferenceAsset(

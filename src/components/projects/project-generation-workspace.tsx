@@ -10,7 +10,7 @@ type Props = {
   items: GenerationGalleryItem[];
   runActions: { id: string; node: ReactNode }[];
   controls: ReactNode;
-  editAction: (baseGenerationId: string, instruction: string) => Promise<CreateImageEditResult>;
+  editAction: (baseGenerationId: string, instruction: string, submissionId: string) => Promise<CreateImageEditResult>;
   favoriteAction: (generationId: string, nextValue: boolean) => Promise<FavoriteGenerationResult>;
   editMessages: React.ComponentProps<typeof ImageEditPanel>["messages"];
   hasOutput: boolean;

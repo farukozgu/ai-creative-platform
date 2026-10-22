@@ -61,6 +61,11 @@ export type AnalyzeProductAssetOptions = {
   assetId: string;
   force?: boolean;
   userId: string;
+  /** Used only by the durable manual-reanalysis admission service. */
+  providerLifecycle?: {
+    beforeProviderSubmission(): Promise<boolean>;
+    providerResponseReceived(): Promise<boolean>;
+  };
 };
 
 function normalizeUnsupportedClassification(input: { rawCategory: string | null; reason: string | null; assetId: string }): ProductAnalysisOutputValidation {
@@ -164,7 +169,13 @@ export async function analyzeProductAssetWithDependencies(
   let responseDiagnostics: { responseCategory: string; topLevelKeys: string; outputTextPresent: boolean; outputArrayPresent: boolean; choicesArrayPresent: boolean; contentArrayPresent: boolean; parsedJsonPresent: boolean; profileFieldPresent: boolean; validatedOutputKind: string; validatedOutputStatus: string | null; validatedOutputVertical: string | null; validatedProfilePresent: boolean };
   try {
     logAnalysis("provider_request_start", { assetId: asset.id, model: getProductUnderstandingModel(), imageMimeType: prepared.mimeType, imageBytes: prepared.data.length });
+    if (options.providerLifecycle && !await options.providerLifecycle.beforeProviderSubmission()) {
+      return { status: "failed", reason: "analysis_failed" };
+    }
     response = await dependencies.client.analyze({ assetId: asset.id, image: prepared });
+    if (options.providerLifecycle && !await options.providerLifecycle.providerResponseReceived()) {
+      return { status: "failed", reason: "analysis_failed" };
+    }
     const record = response && typeof response === "object" && !Array.isArray(response) ? response as Record<string, unknown> : null;
     const validatedOutput = record && "output" in record ? record.output : null;
     const validatedRecord = validatedOutput && typeof validatedOutput === "object" && !Array.isArray(validatedOutput) ? validatedOutput as Record<string, unknown> : null;

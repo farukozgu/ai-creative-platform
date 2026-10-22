@@ -74,6 +74,14 @@ import {
 } from "@/lib/generation/strategy/generation-strategy";
 import { validateGenerationPolicy } from "@/lib/generation/strategy/validate-generation-policy";
 import { getSafeProviderErrorDiagnostics } from "@/lib/generation/providers/provider-error-diagnostics";
+import {
+  admitImageEdit,
+  bindImageEditAdmission,
+  createImageEditRequestFingerprint,
+  isImageEditExecutionEnabled,
+  transitionImageEditAdmission,
+  validateImageEditSubmissionId,
+} from "@/lib/generation/image-edit-admission";
 import { mergeProviderFailureMetadata } from "@/lib/generation/providers/merge-provider-failure-metadata";
 import { getImageModelCapabilities } from "@/lib/generation/providers/image-model-capabilities";
 import { FalBirefnetProvider } from "@/lib/generation/segmentation/providers/fal-birefnet-provider";
@@ -142,20 +150,27 @@ export type CreateQueuedImageGenerationResult =
   | { ok: false; message: CreateQueuedImageGenerationError }
   | { ok: true; generationId: string };
 
-export type CreateImageEditResult = { ok: false; error: string; code: "creationFailed" | "missingEditInstruction" | "missingOutput" } | { ok: true; generationId: string; status: "succeeded" };
+export type CreateImageEditResult = { ok: false; error: string; code: "creationFailed" | "missingEditInstruction" | "missingOutput" | "admissionUnavailable" } | { ok: true; generationId: string; status: "succeeded" };
 
-export async function createImageEdit(locale: AppLocale, projectId: string, baseGenerationId: string, instruction: string): Promise<CreateImageEditResult> {
-  if (!isSupportedLocale(locale) || !uuidPattern.test(projectId) || !uuidPattern.test(baseGenerationId) || typeof instruction !== "string" || instruction.trim().length < 2 || instruction.length > 1000) return { ok: false, error: "Edit instruction is invalid.", code: "missingEditInstruction" };
+export async function createImageEdit(locale: AppLocale, projectId: string, baseGenerationId: string, instruction: string, submissionId?: string): Promise<CreateImageEditResult> {
+  // This independently controlled execution gate defaults to false. A deployed
+  // admission migration alone must not make a paid provider path reachable.
+  if (!isImageEditExecutionEnabled()) return { ok: false, error: "Image editing is unavailable.", code: "admissionUnavailable" };
+  if (!isSupportedLocale(locale) || !uuidPattern.test(projectId) || !uuidPattern.test(baseGenerationId) || !validateImageEditSubmissionId(submissionId) || typeof instruction !== "string" || instruction.trim().length < 2 || instruction.length > 1000) return { ok: false, error: "Edit instruction is invalid.", code: "missingEditInstruction" };
   const userId = await getAuthenticatedUserId();
   if (!userId) return { ok: false, error: "Edit could not be authorized.", code: "creationFailed" };
   const supabase = await createClient();
   const { data: project } = await supabase.from("projects").select("id,user_id,title").eq("id", projectId).eq("user_id", userId).maybeSingle();
   if (!project || project.user_id !== userId) return { ok: false, error: "Project could not be loaded.", code: "creationFailed" };
+  const admission = await admitImageEdit({ ownerId: userId, projectId, baseGenerationId, submissionId, fingerprint: createImageEditRequestFingerprint({ projectId, baseGenerationId, instruction }) });
+  if (admission.kind === "replay") return admission.generationId && admission.state === "output_persisted" ? { ok: true, generationId: admission.generationId, status: "succeeded" } : { ok: false, error: "An edit request is already being processed.", code: "creationFailed" };
+  if (admission.kind === "rejected") return { ok: false, error: "Image editing is unavailable.", code: "admissionUnavailable" };
+  const failPreProviderAdmission = async () => { await transitionImageEditAdmission({ ...admission, state: "failed_pre_provider" }); };
   const { data: base } = await supabase.from("generations").select("id,project_id,input_asset_id,generation_type,status,output_bucket_id,output_object_path,aspect_ratio,provider_metadata").eq("id", baseGenerationId).eq("project_id", projectId).maybeSingle();
-  if (!base || base.generation_type !== "image" || base.status !== "succeeded" || !base.output_bucket_id || !base.output_object_path || base.output_bucket_id !== generatedAssetsBucket || !hasValidObjectPath(userId, projectId, base.output_object_path)) return { ok: false, error: "Selected output is unavailable.", code: "missingOutput" };
+  if (!base || base.generation_type !== "image" || base.status !== "succeeded" || !base.output_bucket_id || !base.output_object_path || base.output_bucket_id !== generatedAssetsBucket || !hasValidObjectPath(userId, projectId, base.output_object_path)) { await failPreProviderAdmission(); return { ok: false, error: "Selected output is unavailable.", code: "missingOutput" }; }
   const currentProductAssets = await getProjectProductAssets(userId, projectId);
   const asset = currentProductAssets.find(({ id }) => id === base.input_asset_id) ?? currentProductAssets[0] ?? null;
-  if (!asset || asset.bucket_id !== "product-assets" || !hasValidObjectPath(userId, projectId, asset.object_path)) return { ok: false, error: "Source product image is unavailable.", code: "creationFailed" };
+  if (!asset || asset.bucket_id !== "product-assets" || !hasValidObjectPath(userId, projectId, asset.object_path)) { await failPreProviderAdmission(); return { ok: false, error: "Source product image is unavailable.", code: "creationFailed" }; }
   const baseProductMetadata = base.provider_metadata?.product_images;
   const editProductIds = baseProductMetadata && typeof baseProductMetadata === "object" && "asset_ids" in baseProductMetadata && Array.isArray(baseProductMetadata.asset_ids)
     ? [asset.id, ...baseProductMetadata.asset_ids.filter((id: unknown): id is string => typeof id === "string" && id !== asset.id)].slice(0, MAX_PROJECT_PRODUCT_IMAGES)
@@ -171,11 +186,17 @@ export async function createImageEdit(locale: AppLocale, projectId: string, base
   const editHumanRealismDirection = compileHumanRealismPrompt(editHumanRealismPolicy, null);
   const admin = getSupabaseAdminClient();
   const editInitialMetadata = { operation: "image_edit", humanRealism: { version: HUMAN_REALISM_VERSION, expected: humanRealismExpected, applied: editHumanRealismPolicy.applied, focusAreas: editHumanRealismPolicy.focusAreas }, edit: { version: "image-edit-v1", baseGenerationId, editOfGenerationId: baseGenerationId, instruction: instruction.trim(), resolvedScopes: intent.allowedChanges, preservedElements: intent.preservedElements, validatorStatus: "pending", repairAttempted: false, editVersion: 1 } };
-  const { data: edit, error } = await admin.from("generations").insert({ project_id: projectId, input_asset_id: asset.id, generation_type: "image", status: "processing", provider: "openai", model: process.env.OPENAI_IMAGE_MODEL?.trim() || "gpt-image-2.5-sunburst", quality: intent.allowedChanges.length === 1 && intent.allowedChanges[0] === "background" ? "high" : "xhigh", aspect_ratio: base.aspect_ratio ?? "1:1", preservation_mode: "reference_edit", fidelity_status: "not_checked", creative_direction_snapshot: instruction.trim(), provider_metadata: editInitialMetadata }).select("id").single();
-  if (error || !edit) return { ok: false, error: "Edit record could not be created.", code: "creationFailed" };
+  let edit: { id: string } | null = admission.generationId ? { id: admission.generationId } : null;
+  if (!edit) {
+    const { data, error } = await admin.from("generations").insert({ owner_id: userId, client_submission_id: submissionId, project_id: projectId, input_asset_id: asset.id, generation_type: "image", status: "processing", provider: "openai", model: process.env.OPENAI_IMAGE_MODEL?.trim() || "gpt-image-2.5-sunburst", quality: intent.allowedChanges.length === 1 && intent.allowedChanges[0] === "background" ? "high" : "xhigh", aspect_ratio: base.aspect_ratio ?? "1:1", preservation_mode: "reference_edit", fidelity_status: "not_checked", creative_direction_snapshot: instruction.trim(), provider_metadata: editInitialMetadata }).select("id").single();
+    if (error || !data) { await failPreProviderAdmission(); return { ok: false, error: "Edit record could not be created.", code: "creationFailed" }; }
+    edit = data;
+  }
+  if (!await bindImageEditAdmission({ ...admission, generationId: edit.id })) { await failPreProviderAdmission(); return { ok: false, error: "Edit admission could not be finalized.", code: "admissionUnavailable" }; }
   const now = new Date();
   const { data: marked } = await admin.from("generations").update({ status: "processing", processing_started_at: now.toISOString() }).eq("id", edit.id).select("id").maybeSingle();
-  if (!marked) return { ok: false, error: "Edit could not be started.", code: "creationFailed" };
+  if (!marked) { await failPreProviderAdmission(); return { ok: false, error: "Edit could not be started.", code: "creationFailed" }; }
+  let providerMayHaveBeenSubmitted = false;
   try {
     const editCostEvents: CostUsageEvent[] = [];
     const [baseDownload, productDownloads] = await Promise.all([admin.storage.from(base.output_bucket_id).download(base.output_object_path), Promise.all(orderedEditProducts.map((product) => admin.storage.from(product.bucket_id).download(product.object_path)))]);
@@ -184,7 +205,10 @@ export async function createImageEdit(locale: AppLocale, projectId: string, base
     const baseInput = { id: base.id, bucketId: base.output_bucket_id, objectPath: base.output_object_path, data: baseBuffer, mimeType: "image/png" };
     const productInputs = await Promise.all(orderedEditProducts.map(async (product, index) => { const data = productDownloads[index]!.data!; return { id: product.id, bucketId: product.bucket_id, objectPath: product.object_path, data: Buffer.from(await data.arrayBuffer()), mimeType: data.type || "image/jpeg" }; }));
     const productInput = productInputs[0]!;
+    if (!await transitionImageEditAdmission({ ...admission, state: "possibly_submitted" })) return { ok: false, error: "Edit admission lease was lost.", code: "admissionUnavailable" };
+    providerMayHaveBeenSubmitted = true;
     let result = await getImageGenerationProvider("openai").generate({ generationId: edit.id, projectId, sourceAsset: productInput, images: orderImageEditImages(baseInput, productInputs), prompt: buildImageEditPrompt(instruction.trim(), intent, editHumanRealismDirection), provider: "openai", model: process.env.OPENAI_IMAGE_MODEL?.trim() || "gpt-image-2.5-sunburst", quality: intent.allowedChanges.length === 1 && intent.allowedChanges[0] === "background" ? "high" : "xhigh", aspectRatio: resolveAspectRatio(base.aspect_ratio), operation: "image_edit" });
+    if (!await transitionImageEditAdmission({ ...admission, state: "provider_responded" })) return { ok: false, error: "Edit admission lease was lost.", code: "admissionUnavailable" };
     editCostEvents.push(createProviderUsageEvent({ operation: "image_initial", model: process.env.OPENAI_IMAGE_MODEL?.trim() || "gpt-image-2.5-sunburst", phase: "initial", requestId: typeof result.providerMetadata?.requestId === "string" ? result.providerMetadata.requestId : null, usage: toUsageUnits(result.usage) }));
     let validationCalls = 1;
     let imageGenerationCalls = 1;
@@ -194,7 +218,10 @@ export async function createImageEdit(locale: AppLocale, projectId: string, base
       repairAttempted = true;
       const previous = result.imageData;
       const repairPrompt = `Use the previous edited image and original base image. Correct only the failed edit behavior: ${validation.issueCodes.join(", ")}. Restore all unrequested elements to the base image appearance. Preserve the exact product identity, person identity, pose, camera, environment, lighting, and composition. For EDIT_HUMAN_REALISM_ERROR, repair only the affected anatomical or skin region.\n\n${editHumanRealismDirection}\n\nOriginal instruction: ${instruction.trim()}`;
+      if (!await transitionImageEditAdmission({ ...admission, state: "possibly_submitted" })) return { ok: false, error: "Edit admission lease was lost.", code: "admissionUnavailable" };
+      providerMayHaveBeenSubmitted = true;
       result = await getImageGenerationProvider("openai").generate({ generationId: edit.id, projectId, sourceAsset: productInput, images: orderImageEditImages({ ...baseInput, data: previous }, productInputs), prompt: repairPrompt, provider: "openai", model: process.env.OPENAI_IMAGE_MODEL?.trim() || "gpt-image-2.5-sunburst", quality: "xhigh", aspectRatio: resolveAspectRatio(base.aspect_ratio), operation: "image_edit" });
+      if (!await transitionImageEditAdmission({ ...admission, state: "provider_responded" })) return { ok: false, error: "Edit admission lease was lost.", code: "admissionUnavailable" };
       editCostEvents.push(createProviderUsageEvent({ operation: "image_repair", model: process.env.OPENAI_IMAGE_MODEL?.trim() || "gpt-image-2.5-sunburst", phase: "repair", requestId: typeof result.providerMetadata?.requestId === "string" ? result.providerMetadata.requestId : null, usage: toUsageUnits(result.usage) }));
       imageGenerationCalls += 1;
       validationCalls += 1;
@@ -214,10 +241,12 @@ export async function createImageEdit(locale: AppLocale, projectId: string, base
       console.warn("[generation] image_edit_notification_failed", { generationId: edit.id, reason: notificationError instanceof Error ? notificationError.name : "notification_error" });
     }
     revalidatePath(`/${locale}/dashboard/projects/${projectId}`, "page");
+    await transitionImageEditAdmission({ ...admission, state: "output_persisted" });
     return { ok: true, generationId: edit.id, status: "succeeded" };
   } catch (error) {
     const completedAt = new Date();
     const diagnostics = getSafeProviderErrorDiagnostics(error, { generationId: edit.id, provider: "openai", model: process.env.OPENAI_IMAGE_MODEL?.trim() || "gpt-image-2.5-sunburst", imageCount: orderedEditProducts.length + 1, preservationMode: "reference_edit", strategy: "reference_edit", sceneFamily: null });
+    await transitionImageEditAdmission({ ...admission, state: providerMayHaveBeenSubmitted ? "reconciliation_required" : "failed_pre_provider" });
     await admin.from("generations").update({ status: "failed", error_message: generationFailureCode, processing_completed_at: completedAt.toISOString(), processing_duration_ms: completedAt.getTime() - now.getTime(), provider_metadata: mergeProviderFailureMetadata(editInitialMetadata, { category: "generation_failed", code: diagnostics.code, status: diagnostics.status, providerDecision: "provider_error", klayClassification: null, providerFalsePositiveCandidate: false }) }).eq("id", edit.id).eq("status", "processing");
     try {
       await createNotification({ userId, type: "image_edit_failed", projectId, projectName: project.title, generationId: edit.id });

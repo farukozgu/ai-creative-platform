@@ -8,7 +8,7 @@ import type { CreateImageEditResult } from "@/app/[locale]/dashboard/projects/[p
 import { resolveImageEditCompletion } from "@/components/projects/image-edit-completion";
 import { GenerationStatusIndicator, type GenerationState } from "@/components/projects/generation-status-indicator";
 
-export function ImageEditPanel({ hasOutput, selectedGenerationId, onEditSucceeded, action, messages }: { hasOutput: boolean; selectedGenerationId: string | null; onEditSucceeded: (generationId: string) => void; action: (baseGenerationId: string, instruction: string) => Promise<CreateImageEditResult>; messages: { title: string; description: string; placeholder: string; helper: string; apply: string; unavailable: string; failed: string; progressTitle: string; progressDescription: string; progressStatuses: readonly [string, string, string, string]; closeProgress: string; activeStatus: string; successStatus: string; failedStatus: string } }) {
+export function ImageEditPanel({ hasOutput, selectedGenerationId, onEditSucceeded, action, messages }: { hasOutput: boolean; selectedGenerationId: string | null; onEditSucceeded: (generationId: string) => void; action: (baseGenerationId: string, instruction: string, submissionId: string) => Promise<CreateImageEditResult>; messages: { title: string; description: string; placeholder: string; helper: string; apply: string; unavailable: string; failed: string; progressTitle: string; progressDescription: string; progressStatuses: readonly [string, string, string, string]; closeProgress: string; activeStatus: string; successStatus: string; failedStatus: string } }) {
   const inputId = useId();
   const router = useRouter();
   const instructionRef = useRef<HTMLTextAreaElement>(null);
@@ -30,10 +30,10 @@ export function ImageEditPanel({ hasOutput, selectedGenerationId, onEditSucceede
     setProgressTitle(messages.progressTitle);
     log("submit_started");
     try {
-      const result = await action(selectedGenerationId, instruction);
+      const result = await action(selectedGenerationId, instruction, crypto.randomUUID());
       log("action_resolved", { ok: result.ok, generationIdPresent: result.ok });
       const completion = resolveImageEditCompletion(result);
-      if (completion.error) { setError(messages.failed); setGenerationState("failed"); return; }
+      if (completion.error) { setError(!result.ok && result.code === "admissionUnavailable" ? messages.unavailable : messages.failed); setGenerationState("failed"); return; }
       if (completion.selectedGenerationId) { onEditSucceeded(completion.selectedGenerationId); setGenerationState("succeeded"); }
       if (completion.clearInstruction && instructionRef.current) instructionRef.current.value = "";
       if (completion.refresh) {

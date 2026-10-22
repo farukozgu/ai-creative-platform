@@ -28,6 +28,7 @@ export async function createImageEdit(
   projectId: string,
   baseGenerationId: string,
   instruction: string,
+  submissionId: string,
 ): Promise<CreateImageEditResult> {
-  return createImageEditService(locale, projectId, baseGenerationId, instruction);
+  return createImageEditService(locale, projectId, baseGenerationId, instruction, submissionId);
 }
