@@ -33,7 +33,7 @@ export function validateModelAppearanceDraft(draft: ModelAppearanceDraft) {
   return fields.every((field) => field.trim().length > 0) && adultAgeRanges.includes(draft.ageRange as AdultAgeRange);
 }
 
-export type PersistedModelProfile = ModelAppearanceDraft & { id: string; status: "draft" | "archived"; createdAt: string; updatedAt: string };
+export type PersistedModelProfile = ModelAppearanceDraft & { id: string; status: "draft" | "candidate_pending" | "identity_review_pending" | "approved" | "archived"; createdAt: string; updatedAt: string };
 
 export function parseModelAppearanceDraft(value: unknown): ModelAppearanceDraft | null {
   if (!value || typeof value !== "object") return null;

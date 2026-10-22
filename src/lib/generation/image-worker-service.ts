@@ -133,6 +133,7 @@ export type UpdateCreativeDirectionState = {
 
 type CreateQueuedImageGenerationError =
   | "creationFailed"
+  | "identityGenerationDisabled"
   | "missingCreativeDirection"
   | "missingProductImage"
   | "invalidAspectRatio";
@@ -326,6 +327,10 @@ export async function createQueuedImageGeneration(
   _previousState: CreateQueuedImageGenerationResult | null,
   formData?: FormData,
 ): Promise<CreateQueuedImageGenerationResult> {
+  // An identity-conditioned request must never fall back to a standard paid job.
+  if (formData?.has("model_id") || formData?.has("identity_version_id") || formData?.has("identity_reference_asset_ids")) {
+    return { ok: false, message: "identityGenerationDisabled" };
+  }
   let createPhase: "before_insert" | "inserting" | "inserted" = "before_insert";
   safeGenerationEvent("create", "entered");
   const enhancementEnabled = formData ? formData.get("enhance_with_ai") === "on" : true;

@@ -7392,6 +7392,18 @@ html[data-motion="ready"] .signup-form-wrap {
 .creation-generation-intro > p:last-child { max-width: 30rem; color: var(--dashboard-muted); font-size: 0.82rem; line-height: 1.6; }
 .dashboard-home-create .creation-generation .generation-timeline { margin: 0; }
 .creation-failure-mark { display: grid; width: 3rem; height: 3rem; place-items: center; border: 1px solid var(--dashboard-status-error); border-radius: 50%; color: var(--dashboard-status-error); font-size: 1.1rem; }
+.composer-model-selector { display: grid; gap: 0.7rem; margin: 0; border: 1px solid var(--dashboard-border); border-radius: var(--radius); padding: 1rem; }
+.composer-model-selector legend { padding-inline: 0.35rem; font-size: 0.82rem; font-weight: 620; }
+.composer-model-selector > p { margin: 0; color: var(--dashboard-muted); font-size: 0.78rem; line-height: 1.5; }
+.composer-model-selector label { font-size: 0.78rem; font-weight: 620; }
+.composer-model-selector select { min-height: 2.75rem; border: 1px solid var(--dashboard-border-strong); border-radius: var(--radius); background: var(--dashboard-surface-raised); color: var(--dashboard-foreground); padding-inline: 0.75rem; }
+.composer-model-selector select:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.composer-model-state { border-left: 2px solid var(--dashboard-border-strong); padding-left: 0.7rem; }
+.composer-model-preview { display: grid; grid-template-columns: 4rem minmax(0, 1fr); gap: 0.75rem; align-items: center; border-top: 1px solid var(--dashboard-border); padding-top: 0.75rem; }
+.composer-model-preview img { width: 4rem; height: 4rem; border-radius: var(--radius); object-fit: cover; }
+.composer-model-preview > div { display: grid; gap: 0.15rem; }
+.composer-model-preview span, .composer-model-preview small { color: var(--dashboard-muted); font-size: 0.72rem; }
+.composer-model-gate { grid-column: 1 / -1; margin: 0; color: var(--dashboard-status-warning); font-size: 0.75rem; }
 
 .dashboard-home-create :is(.creation-type-card, .creation-upload, .creation-ratio-grid button, .creation-preset-grid button):hover:not(:disabled) { border-color: var(--dashboard-border-strong); transform: translateY(-2px); }
 .dashboard-home-create .creation-preset-grid button:hover .creation-preset-media img { transform: scale(1.025); }

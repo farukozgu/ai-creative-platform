@@ -19,6 +19,7 @@ type GenerateImageFormProps = {
     missingProductImage: string;
     missingCreativeDirection: string;
     creationFailed: string;
+    identityGenerationDisabled: string;
     generationFailed: string;
     invalidAspectRatio: string;
     aspectRatio: AspectRatioPickerMessages;

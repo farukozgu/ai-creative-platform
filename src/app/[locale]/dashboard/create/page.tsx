@@ -6,6 +6,7 @@ import { CreationCanvas } from "@/features/generation/creation-canvas";
 import { resolveCreationEntry } from "@/features/generation/creation-entry";
 import { isSupportedLocale } from "@/i18n/routing";
 import { getAuthenticatedUserId } from "@/lib/auth/require-user";
+import { listComposerModelIdentities } from "@/lib/models/composer-model-selection";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -24,10 +25,13 @@ export default async function CreatePage({ params, searchParams }: Props) {
   if (!isSupportedLocale(locale)) notFound();
   setRequestLocale(locale);
   const [userId, query] = await Promise.all([getAuthenticatedUserId(), searchParams]);
+  const modelLibrary = userId
+    ? await listComposerModelIdentities(userId)
+    : { state: "unavailable" as const, models: [] as const };
   const entry = resolveCreationEntry(query.preset, query.presentation);
   return (
     <CreationWorkspace canvas={<CreationCanvas />}>
-      <CreativeComposer locale={locale} userId={userId} initialEntry={entry} />
+      <CreativeComposer locale={locale} userId={userId} initialEntry={entry} modelLibrary={modelLibrary} />
     </CreationWorkspace>
   );
 }

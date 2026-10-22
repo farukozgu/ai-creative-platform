@@ -12,7 +12,7 @@ import type { AppLocale } from "@/i18n/routing";
 
 const fields = ["presentation", "ageRange", "skinTone", "hairColor", "hairstyle", "eyeColor", "silhouette", "visualStyle"] as const;
 
-export function ModelCreate({ locale, modelId = null, initial = emptyModelAppearanceDraft }: { locale: AppLocale; modelId?: string | null; initial?: ModelAppearanceDraft }) {
+export function ModelCreate({ locale, modelId = null, initial = emptyModelAppearanceDraft, embedded = false }: { locale: AppLocale; modelId?: string | null; initial?: ModelAppearanceDraft; embedded?: boolean }) {
   const t = useTranslations("Dashboard.modelStudio.create");
   const draftT = useTranslations("Dashboard.modelStudioDraft");
   const [draft, setDraft] = useState<ModelAppearanceDraft>(initial);
@@ -22,9 +22,10 @@ export function ModelCreate({ locale, modelId = null, initial = emptyModelAppear
   const complete = validateModelAppearanceDraft(draft);
   const update = (field: keyof ModelAppearanceDraft, value: string) => setDraft((current) => ({ ...current, [field]: value }));
 
-  return <main className="dashboard-main"><div className={`dashboard-main-inner dashboard-container ${styles.page}`}>
+  const Shell = embedded ? "section" : "main";
+  return <Shell className={embedded ? undefined : "dashboard-main"}><div className={`dashboard-main-inner dashboard-container ${styles.page}`}>
     <header className={styles.header}><div><p className={styles.eyebrow}>{t("eyebrow")}</p><h1>{t("title")}</h1><p>{t("description")}</p></div></header>
-    <ol className={styles.steps} aria-label={t("stepsLabel")}>{["define", "review", "generate", "select", "approve"].map((step, index) => <li key={step} data-active={index === 0 || undefined} data-planned={index > 1 || undefined}><span>{index + 1}</span>{t(`steps.${step}`)}</li>)}</ol>
+    <ol className={styles.steps} aria-label={t("stepsLabel")}>{["define", "review", "generate", "select", "approve", "use"].map((step, index) => <li key={step} data-active={index === 0 || undefined} data-planned={index > 1 || undefined}><span>{index + 1}</span>{t(`steps.${step}`)}</li>)}</ol>
     <div className={styles.createLayout}>
       <form className={styles.form} onSubmit={(event) => { event.preventDefault(); startTransition(async () => { const response = await saveModelDraft(locale, modelId, draft); if (response.status === "success" && response.id) { setResult("success"); router.push(`/dashboard/models/${response.id}`); } else setResult("error"); }); }}>
         <fieldset><legend>{t("identityLegend")}</legend><p className={styles.helper}>{t("identityHelper")}</p>
@@ -36,5 +37,5 @@ export function ModelCreate({ locale, modelId = null, initial = emptyModelAppear
       <aside className={styles.guidance}><h2>{t("guidance.title")}</h2><dl><div><dt>{t("guidance.identity.title")}</dt><dd>{t("guidance.identity.description")}</dd></div><div><dt>{t("guidance.scene.title")}</dt><dd>{t("guidance.scene.description")}</dd></div></dl><p className={styles.safety}>{t("safety")}</p></aside>
     </div>
     <section className={styles.nextStep}><div><h2>{t("reviewTitle")}</h2><p>{complete ? t("reviewReady") : t("reviewIncomplete")}</p></div><Button disabled>{t("generationUnavailable")}</Button><p className={styles.unavailable}>{t("unavailableHelper")}</p></section>
-  </div></main>;
+  </div></Shell>;
 }

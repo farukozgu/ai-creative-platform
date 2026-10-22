@@ -51,6 +51,7 @@ import {
 import { useRouter } from "@/i18n/navigation";
 import type { AppLocale } from "@/i18n/routing";
 import type { CreationEntry } from "@/features/generation/creation-entry";
+import type { ComposerModelLibrary, ComposerModelIdentity } from "@/lib/models/composer-model-selection";
 
 type FilePreview = { file: File; previewUrl: string };
 type FlowStep =
@@ -96,10 +97,12 @@ export function CreativeComposer({
   locale,
   userId,
   initialEntry,
+  modelLibrary,
 }: {
   locale: AppLocale;
   userId: string | null;
   initialEntry?: CreationEntry;
+  modelLibrary: ComposerModelLibrary;
 }) {
   const t = useTranslations("Dashboard.composer");
   const presetT = useTranslations("Dashboard.presets");
@@ -130,6 +133,7 @@ export function CreativeComposer({
   const [dragging, setDragging] = useState(false);
   const [generationStage, setGenerationStage] = useState(0);
   const [generationSucceeded, setGenerationSucceeded] = useState(false);
+  const [selectedModel, setSelectedModel] = useState<ComposerModelIdentity | null>(null);
 
   const selectedPreset = getCreativePreset(presetId);
   const presets = useMemo(
@@ -283,6 +287,8 @@ export function CreativeComposer({
   }
 
   async function generate() {
+    // The identity generation boundary is intentionally closed in Phase 6D.1.
+    if (selectedModel) return;
     if (
       !userId ||
       !products.length ||
@@ -877,6 +883,29 @@ export function CreativeComposer({
                 className="creation-direction-input"
               />
             </div>
+            <fieldset className="composer-model-selector">
+              <legend>{t("modelSelection.legend")}</legend>
+              <p>{t("modelSelection.helper")}</p>
+              {modelLibrary.state === "unavailable" ? (
+                <p className="composer-model-state" role="status">{t("modelSelection.unavailable")}</p>
+              ) : !modelLibrary.models.length ? (
+                <p className="composer-model-state" role="status">{t("modelSelection.empty")}</p>
+              ) : (
+                <>
+                  <label htmlFor="composer-ai-model">{t("modelSelection.label")}</label>
+                  <select id="composer-ai-model" value={selectedModel?.identityVersionId ?? ""} onChange={(event) => setSelectedModel(modelLibrary.models.find((model) => model.identityVersionId === event.target.value) ?? null)}>
+                    <option value="">{t("modelSelection.none")}</option>
+                    {modelLibrary.models.map((model) => <option key={model.identityVersionId} value={model.identityVersionId}>{model.modelName} · {t("modelSelection.version", { version: model.identityVersionNumber })}</option>)}
+                  </select>
+                  {selectedModel ? (
+                    <div className="composer-model-preview">
+                      {selectedModel.previewReferenceAssetId ? <img src={`/api/model-reference/${selectedModel.previewReferenceAssetId}`} alt={t("modelSelection.previewAlt", { name: selectedModel.modelName })} /> : <span>{t("modelSelection.missingPreview")}</span>}
+                      <div><strong>{selectedModel.modelName}</strong><span>{t("modelSelection.version", { version: selectedModel.identityVersionNumber })}</span><small>{selectedModel.referenceAssetIds.length ? t("modelSelection.referencesAvailable", { count: selectedModel.referenceAssetIds.length }) : t("modelSelection.missingReferences")}</small></div>
+                    </div>
+                  ) : null}
+                </>
+              )}
+            </fieldset>
           </>
         ) : null}
 
@@ -932,6 +961,11 @@ export function CreativeComposer({
                       : t("flow.noReference")}
                   </strong>
                 </div>
+                <div>
+                  <span>{t("modelSelection.reviewLabel")}</span>
+                  <strong>{selectedModel ? `${selectedModel.modelName} · ${t("modelSelection.version", { version: selectedModel.identityVersionNumber })}` : t("modelSelection.none")}</strong>
+                </div>
+                {selectedModel ? <p className="composer-model-gate" role="status">{t("modelSelection.gateClosed")}</p> : null}
               </article>
             </div>
           </>
@@ -951,7 +985,7 @@ export function CreativeComposer({
             {t("flow.back")}
           </Button>
           {step === "review" ? (
-            <Button onClick={() => void generate()} disabled={!userId}>
+            <Button onClick={() => void generate()} disabled={!userId} aria-disabled={Boolean(selectedModel)}>
               {t("flow.generate")}
             </Button>
           ) : (
