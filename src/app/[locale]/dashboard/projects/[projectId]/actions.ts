@@ -20,7 +20,7 @@ import {
 import { getProjectProductAssets } from "@/lib/assets/product-assets";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { assertImageInputDecodable, getImageInputDecodeDiagnostic } from "@/lib/generation/providers/normalize-image-input";
+import { assertImageInputDecodable, getDecodedImageMimeType, getImageInputDecodeDiagnostic } from "@/lib/generation/providers/normalize-image-input";
 
 export type RegisterProductAssetResult = {
   status: "error" | "invalid_image" | "limit" | "success";
@@ -289,6 +289,8 @@ export async function registerReferenceAsset(
       return { status: "error" };
     }
     if (referenceImage.size > 20 * 1024 * 1024) return { status: "error" };
+    const decodedMimeType = await getDecodedImageMimeType(Buffer.from(await referenceImage.arrayBuffer()));
+    if (decodedMimeType !== referenceImage.type) return { status: "error" };
 
     const { error: assetError } = await admin.from("assets").insert({
       user_id: userId,

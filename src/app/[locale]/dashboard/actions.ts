@@ -20,11 +20,11 @@ export type CreateWorkspaceProjectResult =
   | { ok: false }
   | { ok: true; projectId: string };
 
-async function createProjectForUser(userId: string, title?: string) {
+async function createProjectForUser(userId: string, locale: AppLocale, title?: string) {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("projects")
-    .insert({ user_id: userId, title: title?.trim() || "İsimsiz Proje" })
+    .insert({ user_id: userId, title: title?.trim() || (locale === "en" ? "Untitled project" : "İsimsiz Proje") })
     .select("id")
     .single();
 
@@ -43,7 +43,7 @@ export async function createProject(
   }
 
   try {
-    const projectId = await createProjectForUser(userId, String(formData.get("title") ?? ""));
+    const projectId = await createProjectForUser(userId, locale, String(formData.get("title") ?? ""));
     if (!projectId) {
       return {status: "error"};
     }
@@ -65,7 +65,7 @@ export async function createWorkspaceProject(
   }
 
   try {
-    const projectId = await createProjectForUser(userId, title);
+    const projectId = await createProjectForUser(userId, "tr", title);
     if (!projectId) {
       return { ok: false };
     }

@@ -9,11 +9,11 @@ import { Link } from "@/i18n/navigation";
 import type { PersistedModelProfile } from "@/features/models/model-profile";
 import styles from "@/features/models/model-studio.module.css";
 
-export function ModelLibrary({ records }: { records: PersistedModelProfile[] }) {
+export function ModelLibrary({ records, locale }: { records: PersistedModelProfile[]; locale: string }) {
   const t = useTranslations("Dashboard.modelStudio.library");
   const draftT = useTranslations("Dashboard.modelStudioDraft");
   const [query, setQuery] = useState("");
-  const matchingRecords = records.filter((record) => record.name.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
+  const matchingRecords = records.filter((record) => record.name.toLocaleLowerCase(locale).includes(query.trim().toLocaleLowerCase(locale)));
 
   return <main className="dashboard-main"><div className={`dashboard-main-inner dashboard-container ${styles.page}`}>
     <header className={styles.header}>
@@ -31,6 +31,6 @@ export function ModelLibrary({ records }: { records: PersistedModelProfile[] }) 
       <span className={styles.emptyIcon} aria-hidden="true"><DashboardIcon name="search" /></span>
       <h2 id="model-search-empty-title">{t("noResults.title")}</h2><p>{t("noResults.description", { query })}</p>
       <Button variant="secondary" size="sm" onClick={() => setQuery("")}>{t("noResults.action")}</Button>
-    </section> : <section aria-label={draftT("resultLabel")}><ul className={styles.grid}>{matchingRecords.map((record) => <li key={record.id} className={styles.card}><Link href={`/dashboard/models/${record.id}`}><h2>{record.name}</h2><p>{draftT(record.status)}</p><time dateTime={record.updatedAt}>{draftT("updated", { date: new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(new Date(record.updatedAt)) })}</time></Link></li>)}</ul></section>}
+    </section> : <section aria-label={draftT("resultLabel")}><ul className={styles.grid}>{matchingRecords.map((record) => <li key={record.id} className={styles.card}><Link href={`/dashboard/models/${record.id}`}><h2>{record.name}</h2><p>{draftT(record.status)}</p><time dateTime={record.updatedAt}>{draftT("updated", { date: new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(record.updatedAt)) })}</time></Link></li>)}</ul></section>}
   </div></main>;
 }

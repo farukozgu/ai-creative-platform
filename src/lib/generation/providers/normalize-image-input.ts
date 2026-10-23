@@ -99,6 +99,15 @@ export async function assertImageInputDecodable(data: ImageInputData): Promise<v
   }
 }
 
+/** Returns the decoded format so upload registration can reject MIME spoofing. */
+export async function getDecodedImageMimeType(data: ImageInputData): Promise<NormalizedImageInput["mimeType"]> {
+  const source = Buffer.isBuffer(data) ? data : Buffer.from(await data.arrayBuffer());
+  const metadata = await readImageMetadata(source);
+  if (!metadata.format || !supportedFormats.has(metadata.format)) throw new ImageInputDecodeError("metadata", "unsupported_codec_or_format");
+  await assertImageInputDecodable(source);
+  return mimeTypeForFormat(metadata.format as "jpeg" | "png" | "webp");
+}
+
 export async function normalizeImageInputForOpenAI(
   data: ImageInputData,
   fallbackMimeType: string,
