@@ -13,6 +13,20 @@ test("successful generation insert accepts a durable queued job without synchron
   assert.doesNotMatch(source, /await dispatchQueuedGeneration\(generation\.id\)/);
 });
 
+test("dashboard create supplies an idempotency key and fails closed when image workers are disabled", async () => {
+  const composer = await readFile("src/components/dashboard/creative-composer.tsx", "utf8");
+  assert.match(composer, /generationSubmissionId\.current \?\?= crypto\.randomUUID\(\)/);
+  assert.match(composer, /generationData\.set\("client_submission_id", generationSubmissionId\.current\)/);
+  assert.match(composer, /generationResult\.message === "generationUnavailable"/);
+
+  const service = await readFile("src/lib/generation/image-worker-service.ts", "utf8");
+  const createStart = service.indexOf("export async function createQueuedImageGeneration(");
+  const insertStart = service.indexOf('safeGenerationEvent("create", "insert_start")', createStart);
+  const disabledGate = service.indexOf("if (!isImageGenerationWorkerEnabled())", createStart);
+  assert.ok(disabledGate > createStart && disabledGate < insertStart);
+  assert.match(service.slice(disabledGate, insertStart), /message: "generationUnavailable"/);
+});
+
 test("insert failure is explicit, safely logged, and duplicate submission resolves its existing job", async () => {
   const logs: Array<{ message: string; fields: unknown }> = [];
   const result = resolveGenerationInsertResult(

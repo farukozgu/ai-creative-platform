@@ -125,7 +125,7 @@ import { finalizeCommercialFashionProviderPrompt, resolveCommercialFashionSafety
 import { createModerationInputSummary } from "@/lib/generation/moderation-input-summary";
 import { classifyHumanReferenceFashion, isProviderModerationBlocked, type KlayReferenceClassification } from "@/lib/generation/reference-fashion-classification";
 import { APPAREL_FIT_PRESERVATION_VERSION } from "@/lib/apparel-fit-preservation/apparel-fit-version";
-import { withImageLeaseHeartbeat, type ImageExecutionClaim } from "@/lib/generation/image-scheduler";
+import { isImageGenerationWorkerEnabled, withImageLeaseHeartbeat, type ImageExecutionClaim } from "@/lib/generation/image-scheduler";
 
 export type RegisterProductAssetResult = {
   status: "error" | "success";
@@ -141,6 +141,7 @@ export type UpdateCreativeDirectionState = {
 
 type CreateQueuedImageGenerationError =
   | "creationFailed"
+  | "generationUnavailable"
   | "identityGenerationDisabled"
   | "missingCreativeDirection"
   | "missingProductImage"
@@ -356,6 +357,11 @@ export async function createQueuedImageGeneration(
   _previousState: CreateQueuedImageGenerationResult | null,
   formData?: FormData,
 ): Promise<CreateQueuedImageGenerationResult> {
+  // Do not create jobs that cannot be executed. The UI must not imply that
+  // image generation has started while the independent worker gate is closed.
+  if (!isImageGenerationWorkerEnabled()) {
+    return { ok: false, message: "generationUnavailable" };
+  }
   // An identity-conditioned request must never fall back to a standard paid job.
   if (formData?.has("model_id") || formData?.has("identity_version_id") || formData?.has("identity_reference_asset_ids")) {
     return { ok: false, message: "identityGenerationDisabled" };

@@ -13,6 +13,7 @@ import { getActiveGenerationStatuses } from "@/app/[locale]/dashboard/generation
 
 type GenerateImageFormProps = {
   action: (state: CreateQueuedImageGenerationResult | null, formData: FormData) => Promise<CreateQueuedImageGenerationResult>;
+  initialGenerationId?: string | null;
   messages: {
     generate: string;
     creating: string;
@@ -20,6 +21,7 @@ type GenerateImageFormProps = {
     missingCreativeDirection: string;
     creationFailed: string;
     identityGenerationDisabled: string;
+    generationUnavailable: string;
     generationFailed: string;
     invalidAspectRatio: string;
     aspectRatio: AspectRatioPickerMessages;
@@ -30,10 +32,11 @@ type GenerateImageFormProps = {
   };
 };
 
-export function GenerateImageForm({ action, messages }: GenerateImageFormProps) {
+export function GenerateImageForm({ action, initialGenerationId, messages }: GenerateImageFormProps) {
   const router = useRouter();
-  const [generationState, setGenerationState] = useState<GenerationState>("idle");
-  const [modalOpen, setModalOpen] = useState(false);
+  const [generationState, setGenerationState] = useState<GenerationState>(initialGenerationId ? "queued" : "idle");
+  const [activeGenerationId, setActiveGenerationId] = useState<string | null>(initialGenerationId ?? null);
+  const [modalOpen, setModalOpen] = useState(Boolean(initialGenerationId));
   const pending = generationState !== "idle" && generationState !== "succeeded" && generationState !== "failed";
   const [message, setMessage] = useState<string | null>(null);
   const [aspectRatio, setAspectRatio] = useState<GenerationAspectRatio>(DEFAULT_GENERATION_ASPECT_RATIO);
@@ -41,16 +44,17 @@ export function GenerateImageForm({ action, messages }: GenerateImageFormProps) 
   const submissionIdRef = useRef<string | null>(null);
 
   useEffect(() => {
-    const generationId = new URLSearchParams(window.location.search).get("generation");
-    if (!generationId || (generationState !== "queued" && generationState !== "processing")) return;
+    if (!activeGenerationId || (generationState !== "queued" && generationState !== "processing")) return;
     let cancelled = false;
     const poll = async () => {
       if (document.hidden) return;
-      const [generation] = await getActiveGenerationStatuses([generationId]);
+      const [generation] = await getActiveGenerationStatuses([activeGenerationId]);
       if (cancelled || !generation) return;
       setGenerationState(generation.status);
       if (generation.status === "succeeded" || generation.status === "failed" || generation.status === "reconciliation_required") {
         pendingRef.current = false;
+        submissionIdRef.current = null;
+        setActiveGenerationId(null);
         setModalOpen(false);
         router.refresh();
       }
@@ -58,7 +62,7 @@ export function GenerateImageForm({ action, messages }: GenerateImageFormProps) 
     const interval = window.setInterval(() => void poll(), 2500);
     void poll();
     return () => { cancelled = true; window.clearInterval(interval); };
-  }, [generationState, router]);
+  }, [activeGenerationId, generationState, router]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -75,6 +79,7 @@ export function GenerateImageForm({ action, messages }: GenerateImageFormProps) 
       const queued = await action(null, formData);
       if (!queued.ok) { setGenerationState("failed"); setMessage(messages[queued.message]); pendingRef.current = false; submissionIdRef.current = null; return; }
       setGenerationState("queued");
+      setActiveGenerationId(queued.generationId);
       router.replace(`?generation=${encodeURIComponent(queued.generationId)}`);
       router.refresh();
     } catch { setGenerationState("failed"); setMessage(messages.generationFailed); pendingRef.current = false; }

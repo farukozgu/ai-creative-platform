@@ -113,6 +113,7 @@ export function CreativeComposer({
   const productPreviews = useRef<FilePreview[]>([]);
   const referencePreviews = useRef<FilePreview[]>([]);
   const locked = useRef(false);
+  const generationSubmissionId = useRef<string | null>(null);
   const [step, setStep] = useState<FlowStep>("name");
   const [projectName, setProjectName] = useState("");
   const [products, setProducts] = useState<FilePreview[]>([]);
@@ -132,7 +133,6 @@ export function CreativeComposer({
   const [error, setError] = useState("");
   const [dragging, setDragging] = useState(false);
   const [generationStage, setGenerationStage] = useState(0);
-  const [generationSucceeded, setGenerationSucceeded] = useState(false);
   const [selectedModel, setSelectedModel] = useState<ComposerModelIdentity | null>(null);
 
   const selectedPreset = getCreativePreset(presetId);
@@ -300,7 +300,6 @@ export function CreativeComposer({
 
     locked.current = true;
     setGenerationStage(0);
-    setGenerationSucceeded(false);
     setStep("generating");
     setError("");
     let phase: "product" | "reference" | "other" = "other";
@@ -375,27 +374,27 @@ export function CreativeComposer({
       const generationData = new FormData();
       generationData.set("enhance_with_ai", "on");
       generationData.set("aspect_ratio", aspectRatio);
+      generationSubmissionId.current ??= crypto.randomUUID();
+      generationData.set("client_submission_id", generationSubmissionId.current);
       if (selectedPreset) generationData.set("preset_id", selectedPreset.id);
       if (presentationMode) {
         generationData.set("presentation_mode", presentationMode);
       }
-      if (
-        !(
-          await createQueuedImageGeneration(
-            locale,
-            project.projectId,
-            null,
-            generationData,
-          )
-        ).ok
-      ) {
+      const generationResult = await createQueuedImageGeneration(
+        locale,
+        project.projectId,
+        null,
+        generationData,
+      );
+      if (!generationResult.ok) {
+        if (generationResult.message === "generationUnavailable") {
+          failureMessage = t("flow.generationUnavailable");
+        }
         throw new Error("generation");
       }
 
       setGenerationStage(4);
-      setGenerationSucceeded(true);
-      await new Promise((resolve) => window.setTimeout(resolve, 400));
-      router.push(`/dashboard/projects/${project.projectId}`, { locale });
+      router.push(`/dashboard/projects/${project.projectId}?generation=${encodeURIComponent(generationResult.generationId)}`, { locale });
     } catch {
       setError(
         failureMessage ??
@@ -445,7 +444,7 @@ export function CreativeComposer({
         </div>
         <ol className="generation-timeline">
           {[0, 1, 2, 3, 4].map((index) => {
-            const state = generationSucceeded || index < generationStage
+            const state = index < generationStage
               ? "completed"
               : index === generationStage
                 ? "active"
