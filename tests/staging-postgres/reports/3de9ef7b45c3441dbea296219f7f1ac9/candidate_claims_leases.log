@@ -1,0 +1,23 @@
+Pager usage is off.
+BEGIN
+SET
+SET
+INSERT 0 2
+INSERT 0 2
+INSERT 0 3
+INSERT 0 2
+INSERT 0 3
+INSERT 0 3
+INSERT 0 2
+INSERT 0 2
+SET
+ 0449b1cd-4b5a-4827-8746-59f55676a0a5
+
+ 907c2f24-11f1-4d49-a452-e490d4dda5e1
+
+RESET
+ off
+
+INSERT 0 2
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/fixture-base.sql:67: ERROR:  new row for relation "video_source_assets" violates check constraint "video_source_assets_path_check"
+DETAIL:  Failing row contains (f7f50000-0000-4000-8000-000000000081, f7f50000-0000-4000-8000-000000000001, video-source-images, f7f50000-0000-4000-8000-000000000081/source.png, image/png, 1, 360, 360, 2026-10-23 20:45:24.422865+00).

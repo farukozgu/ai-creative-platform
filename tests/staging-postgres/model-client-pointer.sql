@@ -32,3 +32,4 @@ END;
 $client_pointer$;
 RESET ROLE;
 ROLLBACK;
+\echo KLAY_MODEL_CLIENT_POINTER_PASS

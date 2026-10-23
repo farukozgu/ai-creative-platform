@@ -71,3 +71,4 @@ $admission_assertions$;
 RESET ROLE;
 
 ROLLBACK;
+\echo KLAY_ADMISSIONS_PASS

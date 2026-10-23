@@ -84,3 +84,4 @@ $anonymous_denied$;
 RESET ROLE;
 
 ROLLBACK;
+\echo KLAY_AUTHENTICATED_RLS_PASS

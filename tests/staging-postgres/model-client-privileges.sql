@@ -71,3 +71,4 @@ END;
 $client_direct_approval$;
 RESET ROLE;
 ROLLBACK;
+\echo KLAY_MODEL_CLIENT_PRIVILEGES_PASS

@@ -28,3 +28,4 @@ END;
 $client_status$;
 RESET ROLE;
 ROLLBACK;
+\echo KLAY_MODEL_CLIENT_STATUS_PASS

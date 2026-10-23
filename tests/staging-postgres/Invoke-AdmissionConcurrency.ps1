@@ -102,6 +102,23 @@ try {
     throw "ASSERTION FAILED: SKIP LOCKED did not assign distinct expected candidate jobs (holder=$holderId, contender=$contenderId)."
   }
   Write-Host 'PASS: concurrent candidate claim skipped a held row and assigned distinct jobs.'
+
+  $reanalysisHolder = Start-SqlJob 'klay-reanalysis-lock' (Join-Path $PSScriptRoot 'concurrency-reanalysis-lock-holder.sql') 'klay-7f5-reanalysis-lock'
+  $jobs += $reanalysisHolder
+  Wait-Activity "SELECT count(*) FROM pg_stat_activity WHERE application_name='klay-7f5-reanalysis-lock' AND state='active' AND wait_event='PgSleep'" 1 10 'product reanalysis advisory-lock holder'
+  $reanalysisJobs = @(
+    (Start-SqlJob 'klay-reanalysis-1' (Join-Path $PSScriptRoot 'concurrency-reanalysis-1.sql') 'klay-7f5-reanalysis-1'),
+    (Start-SqlJob 'klay-reanalysis-2' (Join-Path $PSScriptRoot 'concurrency-reanalysis-2.sql') 'klay-7f5-reanalysis-2')
+  )
+  $jobs += $reanalysisJobs
+  Wait-Activity "SELECT count(*) FROM pg_stat_activity WHERE application_name LIKE 'klay-7f5-reanalysis-%' AND wait_event_type='Lock' AND wait_event='advisory'" 2 10 'two product reanalysis requests waiting on the owner lock'
+  $reanalysisOutcomes = @($reanalysisJobs | ForEach-Object { Receive-SqlJob $_ })
+  $null = Receive-SqlJob $reanalysisHolder
+  if (@($reanalysisOutcomes | Where-Object { $_ -eq 'admitted' }).Count -ne 1 -or
+      @($reanalysisOutcomes | Where-Object { $_ -eq 'replay' }).Count -ne 1) {
+    throw "ASSERTION FAILED: concurrent product reanalysis outcomes were unexpected: $($reanalysisOutcomes -join ',')"
+  }
+  Write-Host 'PASS: concurrent product reanalysis produced exactly one admission and one replay.'
 }
 finally {
   try {
@@ -114,6 +131,11 @@ finally {
       $cleanupResult = Invoke-KlayNativeCommand -FilePath $PsqlPath -ArgumentList @('-X', '-v', 'ON_ERROR_STOP=1', '-f', (Join-Path $PSScriptRoot 'concurrency-cleanup.sql'))
       Write-KlayNativeOutput -Result $cleanupResult
       if ($cleanupResult.ExitCode -ne 0) { throw 'Exact synthetic concurrency fixture cleanup failed; manually inspect the exact marked fixture before cleanup.' }
+
+      $auditResult = Invoke-KlayNativeCommand -FilePath $PsqlPath -ArgumentList @('-X', '-v', 'ON_ERROR_STOP=1', '-f', (Join-Path $PSScriptRoot 'fixture-residue-audit.sql'))
+      Write-KlayNativeOutput -Result $auditResult
+      $auditMarkers = @($auditResult.Output | ForEach-Object { ([string]$_).Trim() } | Where-Object { $_ -ceq 'KLAY_FIXTURE_RESIDUE_AUDIT_PASS' })
+      if ($auditResult.ExitCode -ne 0 -or $auditMarkers.Count -ne 1) { throw 'Post-concurrency residue audit failed; reserved synthetic identities may remain.' }
     }
   }
   finally { Pop-Location }

@@ -4,7 +4,7 @@ function ConvertFrom-KlayMigrationHistory {
     [Parameter(Mandatory = $true)][AllowEmptyCollection()][AllowEmptyString()][string[]] $OutputLines,
     [Parameter(Mandatory = $true)][string[]] $LocalVersions,
     [Parameter(Mandatory = $true)][int] $ExitCode,
-    [int] $ExpectedCount = 39,
+    [int] $ExpectedCount = 40,
     [switch] $F07MigrationStateInspection
   )
 

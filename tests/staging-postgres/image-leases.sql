@@ -79,3 +79,4 @@ $image_idempotency$;
 RESET ROLE;
 
 ROLLBACK;
+\echo KLAY_IMAGE_LEASES_PASS

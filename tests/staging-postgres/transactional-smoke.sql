@@ -166,3 +166,4 @@ END;
 $guc_bypass$;
 
 ROLLBACK;
+\echo KLAY_TRANSACTIONAL_SMOKE_PASS

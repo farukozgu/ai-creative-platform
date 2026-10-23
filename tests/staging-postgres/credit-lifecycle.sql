@@ -135,3 +135,4 @@ SELECT pg_temp.assert_true(
 );
 
 ROLLBACK;
+\echo KLAY_CREDIT_LIFECYCLE_PASS

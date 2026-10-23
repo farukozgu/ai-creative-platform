@@ -1,0 +1,9 @@
+Pager usage is off.
+Output format is unaligned.
+BEGIN
+SET
+SET
+DO
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/preflight.sql:28: NOTICE:  PASS: 40 migration versions are registered
+ROLLBACK
+KLAY_MIGRATION_PREFLIGHT_PASS

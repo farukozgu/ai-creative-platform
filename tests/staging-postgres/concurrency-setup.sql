@@ -25,6 +25,10 @@ INSERT INTO public.generations (
   'f7f50000-0000-4000-8000-000000000902','image','succeeded','synthetic','fixture-only','concurrency base image',
   'f7f50000-0000-4000-8000-000000000904'
 );
+INSERT INTO public.assets (id,user_id,project_id,bucket_id,object_path,asset_type)
+VALUES ('f7f50000-0000-4000-8000-000000000908','f7f50000-0000-4000-8000-000000000901',
+  'f7f50000-0000-4000-8000-000000000902','product-assets',
+  'f7f50000-0000-4000-8000-000000000901/f7f50000-0000-4000-8000-000000000902/concurrency.png','product');
 INSERT INTO public.model_profiles (id,user_id,name,status,appearance)
 VALUES ('f7f50000-0000-4000-8000-000000000905','f7f50000-0000-4000-8000-000000000901','Klay concurrent candidate model','draft','{"fixture":true}');
 INSERT INTO public.model_candidate_jobs (id,model_id,user_id,idempotency_key,status,model,appearance_snapshot)

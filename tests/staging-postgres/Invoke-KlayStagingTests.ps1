@@ -13,8 +13,7 @@ if ($F07CliCompatibilityReview) {
 }
 if ($F07MigrationStateInspection -and ($CandidateOwnershipDiagnostic -or $F07Diagnostic)) { throw 'State inspection cannot be combined with test modes.' }
 if ($CandidateOwnershipDiagnostic -and $F07Diagnostic) { throw 'Select only one focused diagnostic mode.' }
-$expectedMigrationCount = 39
-if ($F07Diagnostic -eq 'AfterRepair') { $expectedMigrationCount = 40 }
+$expectedMigrationCount = 40
 if ($F07MigrationStateInspection) { $expectedMigrationCount = 40 }
 $nativeHelper = Join-Path $PSScriptRoot 'Invoke-KlayNativeCommand.ps1'
 if (-not (Test-Path -LiteralPath $nativeHelper -PathType Leaf)) { throw 'Native command helper is missing.' }
@@ -68,8 +67,8 @@ try {
     $localVersions += $Matches[1]
   }
   if ($localVersions -notcontains '20261101020000') { throw 'Applied candidate ownership repair version is missing from local migration filenames.' }
-  if ((($F07Diagnostic -eq 'AfterRepair') -or $F07MigrationStateInspection) -ne ($localVersions -contains '20261101030000')) {
-    throw 'F07 migration presence does not match the selected explicit before/after baseline.'
+  if ((($F07Diagnostic -eq 'AfterRepair') -or $F07MigrationStateInspection) -and -not ($localVersions -contains '20261101030000')) {
+    throw 'The repaired F07 migration is missing from the required 40-version local baseline.'
   }
   $psql = Get-Command psql -ErrorAction SilentlyContinue
   if (-not $psql) { throw 'psql is required. Install the PostgreSQL client before running this opt-in suite.' }

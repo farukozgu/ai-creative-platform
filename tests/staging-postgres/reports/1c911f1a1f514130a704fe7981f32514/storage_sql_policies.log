@@ -1,0 +1,15 @@
+Pager usage is off.
+BEGIN
+SET
+SET
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/storage-metadata.sql:69: NOTICE:  PASS: all five configured storage buckets are private
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/storage-metadata.sql:69: NOTICE:  PASS: storage.objects RLS is enabled
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/storage-metadata.sql:69: NOTICE:  PASS: product upload policy scopes authenticated owner and path
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/storage-metadata.sql:69: NOTICE:  PASS: product read policy checks Storage object ownership
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/storage-metadata.sql:69: NOTICE:  PASS: generated asset read policy is tied to owned project
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/storage-metadata.sql:69: NOTICE:  PASS: model reference read policy requires owned reference metadata
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/storage-metadata.sql:69: NOTICE:  PASS: authenticated role has no model-reference upload policy
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/storage-metadata.sql:69: NOTICE:  PASS: video object read policies are owner-scoped
+DO
+ROLLBACK
+KLAY_STORAGE_METADATA_PASS

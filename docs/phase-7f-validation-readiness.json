@@ -1,0 +1,70 @@
+﻿{
+    "phase":  "KLAY AI Phase 7F.16",
+    "implementation_status":  "READY_FOR_OPERATOR",
+    "overall_readiness":  "READY_WITH_REQUIRED_STAGING_CREDENTIALS",
+    "staging_project_ref":  "gklpgcyndeghjgemoonk",
+    "protected_project_ref":  "fnzrnlvpkzwztccqzyzf",
+    "required_migration_count":  40,
+    "supabase_cli_version":  "2.114.0",
+    "operator_command":  "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"C:\\Users\\faruk\\Desktop\\ai-creative-platform\\tests\\staging-postgres\\Invoke-KlayComprehensiveStaging.ps1\"",
+    "remote_execution_performed_during_implementation":  false,
+    "required_groups":  [
+                            "staging_isolation_and_migration_history",
+                            "cross_user_rls",
+                            "transactional_security_smoke",
+                            "model_client_status",
+                            "model_client_pointer",
+                            "model_client_privileges",
+                            "candidate_claims_leases",
+                            "image_job_leases",
+                            "image_and_reanalysis_admissions",
+                            "credit_lifecycle",
+                            "storage_sql_policies",
+                            "candidate_ownership",
+                            "f07_client",
+                            "f07_privileged",
+                            "controlled_concurrency",
+                            "storage_authenticated_api",
+                            "final_residue_audit"
+                        ],
+    "storage_api_credentials":  {
+                                    "required":  [
+                                                     "two distinct disposable staging Auth accounts",
+                                                     "password for each",
+                                                     "one existing owned disposable project UUID per account",
+                                                     "staging anon/publishable API key",
+                                                     "staging service-role key for exact synthetic-object cleanup only"
+                                                 ],
+                                    "service_role_key_used_for_assertions":  false,
+                                    "missing_credentials_result":  "BLOCKED",
+                                    "secret_logging":  false
+                                },
+    "report_outputs":  [
+                           "JSON",
+                           "Markdown",
+                           "sanitized SQL logs"
+                       ],
+    "safeguards":  {
+                       "exact_staging_ref_and_pooler_allowlist":  true,
+                       "protected_project_ref_rejected":  true,
+                       "migration_apply_reset_relink_operations":  false,
+                       "workers_paid_providers_billing_enabled":  false,
+                       "post_concurrency_residue_audit":  true,
+                       "final_cleanup_audit":  true,
+                       "overall_pass_requires_every_required_group_and_cleanup":  true
+                   },
+    "local_validation":  {
+                             "powershell_5_1_parser":  "PASS (15 scripts)",
+                             "mock_runner_and_failure_contracts":  "PASS",
+                             "native_command_and_encoding":  "PASS",
+                             "npm_test":  "PASS (656 passed)",
+                             "typescript":  "PASS",
+                             "eslint":  "PASS",
+                             "static_sql_contracts":  "PASS"
+                         },
+    "remaining_external_prerequisites":  [
+                                             "Disposable staging Storage API accounts/projects and anon/publishable key are needed for Storage API PASS.",
+    "A staging-only service-role key is needed exclusively to delete the two unique synthetic Storage objects after authenticated tests.",
+                                             "A staging database password and Dashboard confirmation are needed when the operator runs the command."
+                                         ]
+}

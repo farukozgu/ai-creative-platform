@@ -1,0 +1,151 @@
+Pager usage is off.
+BEGIN
+SET
+SET
+CREATE TABLE
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+GRANT
+GRANT
+GRANT
+GRANT
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/f07-assertions.sql:48: WARNING:  no privileges were granted for "pg_temp_59"
+DO
+ f07_observed_null_guc 
+-----------------------
+ f
+(1 row)
+
+INSERT 0 1
+INSERT 0 1
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/f07-privileged.sql:16: NOTICE:  PASS: F07 denial: database-owner missing-context approval
+ f07_deny 
+----------
+ 
+(1 row)
+
+ set_config 
+------------
+ 
+(1 row)
+
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/f07-privileged.sql:20: NOTICE:  PASS: F07 denial: database-owner NULL/reset GUC with absent protected context
+ f07_deny 
+----------
+ 
+(1 row)
+
+INSERT 0 2
+INSERT 0 5
+INSERT 0 3
+INSERT 0 3
+INSERT 0 3
+SET
+       approve_model_candidate        
+--------------------------------------
+ 5730a8cd-21d5-42d7-9e38-934a6e49c3f5
+(1 row)
+
+       approve_model_candidate        
+--------------------------------------
+ 53d4dff9-c372-442a-9f96-81405bb068cd
+(1 row)
+
+       approve_model_candidate        
+--------------------------------------
+ 98263ed9-0678-49c6-b29b-c9f563ce45f5
+(1 row)
+
+RESET
+              set_config              
+--------------------------------------
+ 98263ed9-0678-49c6-b29b-c9f563ce45f5
+(1 row)
+
+              set_config              
+--------------------------------------
+ 53d4dff9-c372-442a-9f96-81405bb068cd
+(1 row)
+
+ set_config 
+------------
+ on
+(1 row)
+
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/f07-privileged.sql:25: NOTICE:  PASS: F07 denial: database-owner forged-GUC approval
+ f07_deny 
+----------
+ 
+(1 row)
+
+ set_config 
+------------
+ 
+(1 row)
+
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/f07-privileged.sql:29: NOTICE:  PASS: F07 denial: database-owner empty-GUC approval
+ f07_deny 
+----------
+ 
+(1 row)
+
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/f07-privileged.sql:32: NOTICE:  PASS: F07 denial: database-owner approved pointer clearing
+ f07_deny 
+----------
+ 
+(1 row)
+
+ set_config 
+------------
+ on
+(1 row)
+
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/f07-privileged.sql:35: NOTICE:  PASS: F07 denial: database-owner forged-GUC approved pointer clearing
+ f07_deny 
+----------
+ 
+(1 row)
+
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/f07-privileged.sql:37: NOTICE:  PASS: F07 denial: database-owner immutable version UPDATE
+ f07_deny 
+----------
+ 
+(1 row)
+
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/f07-privileged.sql:39: NOTICE:  PASS: F07 denial: database-owner immutable version DELETE
+ f07_deny 
+----------
+ 
+(1 row)
+
+SET
+       approve_model_candidate        
+--------------------------------------
+ 5730a8cd-21d5-42d7-9e38-934a6e49c3f5
+(1 row)
+
+RESET
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/f07-privileged.sql:44: NOTICE:  PASS: F07 authorized approval replay preserves one version
+ f07_assert 
+------------
+ 
+(1 row)
+
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/f07-privileged.sql:48: NOTICE:  PASS: F07 authorized approval creates owned version pointers
+ f07_assert 
+------------
+ 
+(1 row)
+
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/f07-privileged.sql:71: NOTICE:  PASS: F07 denial: authenticated context injection
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/f07-privileged.sql:71: NOTICE:  PASS: F07 denial: service-role context injection
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/f07-privileged.sql:71: NOTICE:  PASS: F07 private context inaccessible and empty after approval
+DO
+ f07_finish 
+------------
+ 
+(1 row)
+
+ROLLBACK
+KLAY_F07_PRIVILEGED_PASS

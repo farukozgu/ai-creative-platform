@@ -84,3 +84,4 @@ $candidate_expired$;
 RESET ROLE;
 
 ROLLBACK;
+\echo KLAY_CANDIDATE_LEASES_PASS

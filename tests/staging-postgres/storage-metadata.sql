@@ -69,3 +69,4 @@ END;
 $storage_policy_assertions$;
 
 ROLLBACK;
+\echo KLAY_STORAGE_METADATA_PASS

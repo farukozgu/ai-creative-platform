@@ -4,9 +4,9 @@ $ErrorActionPreference = 'Stop'
 $migrationDir = Join-Path $PSScriptRoot '..\..\database\migrations'
 $expected = @(Get-ChildItem -LiteralPath $migrationDir -Filter '*.sql' -File | ForEach-Object {
   if ($_.BaseName -cnotmatch '^(\d{14})(?:_|$)') { throw 'Malformed repository migration filename.' }
-  if ($Matches[1] -ne '20261101030000') { $Matches[1] } # Prepared migration is not part of the applied 39-version baseline.
+  $Matches[1]
 } | Sort-Object)
-if ($expected.Count -ne 39 -or $expected -notcontains '20261101020000') { throw 'Repository must contain the 39-version repaired baseline.' }
+if ($expected.Count -ne 40 -or $expected -notcontains '20261101020000' -or $expected -notcontains '20261101030000') { throw 'Repository must contain the complete 40-version repaired baseline.' }
 $positiveLines = @(
   'Initialising login role...'
   'Connecting to remote database...'
@@ -18,23 +18,21 @@ foreach ($version in $expected) {
   $positiveLines += (' | `{0}` | `{0}` | 2026-01-01 00:00:00 | ' -f $version)
 }
 $result = ConvertFrom-KlayMigrationHistory -OutputLines $positiveLines -LocalVersions $expected -ExitCode 0
-if ($result.Count -ne 39 -or $result.LocalVersions.Count -ne 39 -or $result.RemoteVersions.Count -ne 39) {
-  throw 'Positive Markdown-like history did not produce exactly 39 parsed versions.'
+if ($result.Count -ne 40 -or $result.LocalVersions.Count -ne 40 -or $result.RemoteVersions.Count -ne 40) {
+  throw 'Positive Markdown-like history did not produce exactly 40 parsed versions.'
 }
-Write-Host 'PASS: 39 repository filename versions match Markdown table rows with progress, whitespace, outer pipes, and backticks.'
+Write-Host 'PASS: 40 repository filename versions match Markdown table rows with progress, whitespace, outer pipes, and backticks.'
 $pending = @(Get-ChildItem -LiteralPath $migrationDir -Filter '20261101030000_*.sql' -File)
 if ($pending.Count -ne 1) { throw 'Expected exactly one uniquely named prepared F07 migration.' }
-$afterExpected = @($expected + '20261101030000')
-$afterLines = @($positiveLines + '| `20261101030000` | `20261101030000` | ignored timestamp |')
-$after = ConvertFrom-KlayMigrationHistory -OutputLines $afterLines -LocalVersions $afterExpected -ExitCode 0 -ExpectedCount 40
-if ($after.Count -ne 40) { throw 'Explicit post-repair 40-version comparison failed.' }
-Write-Host 'PASS: explicit post-repair baseline matches all 40 filename/Local/Remote versions.'
+$afterExpected = @($expected)
+$afterLines = @($positiveLines)
+Write-Host 'PASS: repaired baseline contains all 40 filename/Local/Remote versions.'
 
 # Reproduce the CLI's unbordered table (including its local-only pending row).
 # The cell parser also accepts Markdown borders and a code-quoted empty cell;
 # the former raw-line regex could not reliably handle these formats.
 $inspectionBase = @('Initialising login role...', '   Local | Remote | Time (UTC)', '  -----------|------------|---------------------')
-foreach ($version in $expected) { $inspectionBase += ('  {0} | {0} | 2026-01-01 00:00:00' -f $version) }
+foreach ($version in $expected | Where-Object { $_ -ne '20261101030000' }) { $inspectionBase += ('  {0} | {0} | 2026-01-01 00:00:00' -f $version) }
 $pendingLines = @($inspectionBase + '  20261101030000 |                | 2026-11-01 03:00:00')
 foreach ($pendingRow in @('  20261101030000 |                | 2026-11-01 03:00:00',
     '  20261101030000 |                |',
@@ -45,7 +43,7 @@ foreach ($pendingRow in @('  20261101030000 |                | 2026-11-01 03:00:
 }
 $recorded = ConvertFrom-KlayMigrationHistory -OutputLines $afterLines -LocalVersions $afterExpected -ExitCode 0 -ExpectedCount 40 -F07MigrationStateInspection
 if (-not $recorded.InstallationComplete -or $recorded.PendingVersions.Count) { throw 'Recorded inspection parsing failed.' }
-Write-Host 'PASS: inspection accepts exact 39 recorded + pending F07 in unbordered/Markdown formats and exact 40 recorded.'
+Write-Host 'PASS: inspection accepts exact 39 recorded + pending F07 and exact 40 recorded.'
 
 function Assert-InspectionRejected([string] $Label, [string[]] $Lines, [int] $Code=0, [switch] $Strict, [string[]] $Local=$afterExpected) {
   $rejected=$false

@@ -52,8 +52,8 @@ try {
       'Invoke-KlayPinnedSupabase.ps1','f07-cli-compatibility-preflight.sql')) {
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot $name) -Destination (Join-Path $testRoot $name)
   }
-  $migrationNames = @(Get-ChildItem -LiteralPath (Join-Path $PSScriptRoot '..\..\database\migrations') -Filter '*.sql' -File | Where-Object { $_.BaseName -notlike '20261101030000_*' } | Sort-Object Name | ForEach-Object { $_.Name })
-  if ($migrationNames.Count -ne 39) { throw 'Runner mocks require the reviewed 39 migration filenames.' }
+  $migrationNames = @(Get-ChildItem -LiteralPath (Join-Path $PSScriptRoot '..\..\database\migrations') -Filter '*.sql' -File | Sort-Object Name | ForEach-Object { $_.Name })
+  if ($migrationNames.Count -ne 40) { throw 'Runner mocks require the reviewed 40 migration filenames.' }
   $migrationNames | Set-Content -LiteralPath (Join-Path $testRoot 'migration-names.txt') -Encoding ASCII
 
   @'
@@ -178,8 +178,8 @@ $global:MockInStaging = $false
 $global:MockMigrationFiles = @(Get-Content -LiteralPath (Join-Path $PSScriptRoot 'migration-names.txt') | ForEach-Object {
   [pscustomobject]@{ Name = $_; BaseName = [IO.Path]::GetFileNameWithoutExtension($_) }
 })
-if (($Mode -eq 'AfterRepair' -and $Scenario -ne 'f07-after-migration-notinstalled') -or $Mode -in @('Inspection','Review','PinnedAfter') -or $Scenario -eq 'f07-before-pending-present') {
-  $global:MockMigrationFiles += [pscustomobject]@{Name='20261101030000_harden_approved_model_profile_integrity.sql';BaseName='20261101030000_harden_approved_model_profile_integrity'}
+if ($Scenario -eq 'f07-after-migration-notinstalled') {
+  $global:MockMigrationFiles = @($global:MockMigrationFiles | Where-Object { $_.BaseName -notlike '20261101030000_*' })
 }
 $env:PGPASSWORD = 'prior-mock-only'
 $env:PGSERVICE = 'prior-mock-service'
@@ -326,7 +326,6 @@ exit $code
     @{ Name = 'f07-after-migration-notinstalled'; Mode='AfterRepair'; Code=1; Calls='' },
     @{ Name = 'f07-after-history-truncated'; Mode='AfterRepair'; Code=1; Calls='CLI' },
     @{ Name = 'f07-after-remote-pending'; Mode='AfterRepair'; Code=1; Calls='CLI' },
-    @{ Name = 'f07-before-pending-present'; Mode='BeforeRepair'; Code=1; Calls='' },
     @{ Name = 'diagnostic-mode-conflict'; Mode='BeforeRepair'; Code=1; Calls='' }
   )
   foreach ($case in $cases) {

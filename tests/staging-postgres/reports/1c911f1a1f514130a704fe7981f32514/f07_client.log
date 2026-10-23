@@ -1,0 +1,157 @@
+Pager usage is off.
+BEGIN
+SET
+SET
+CREATE TABLE
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+GRANT
+GRANT
+GRANT
+GRANT
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/f07-assertions.sql:48: WARNING:  no privileges were granted for "pg_temp_40"
+DO
+INSERT 0 2
+INSERT 0 5
+INSERT 0 3
+INSERT 0 3
+INSERT 0 3
+SET
+       approve_model_candidate        
+--------------------------------------
+ 378a84cc-3bef-41ba-b30d-170f6eccc576
+(1 row)
+
+       approve_model_candidate        
+--------------------------------------
+ 09c1f113-c302-4441-b6fb-5b72c00219f6
+(1 row)
+
+       approve_model_candidate        
+--------------------------------------
+ cd85f95d-11ea-4949-bc9f-bd609b4fe9cc
+(1 row)
+
+RESET
+              set_config              
+--------------------------------------
+ cd85f95d-11ea-4949-bc9f-bd609b4fe9cc
+(1 row)
+
+              set_config              
+--------------------------------------
+ 09c1f113-c302-4441-b6fb-5b72c00219f6
+(1 row)
+
+SET
+              set_config              
+--------------------------------------
+ f7100000-0000-4000-8000-000000000001
+(1 row)
+
+                              set_config                               
+-----------------------------------------------------------------------
+ {"sub":"f7100000-0000-4000-8000-000000000001","role":"authenticated"}
+(1 row)
+
+ set_config 
+------------
+ on
+(1 row)
+
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/f07-client.sql:14: NOTICE:  PASS: F07 denial: authenticated approved to draft
+ f07_deny 
+----------
+ 
+(1 row)
+
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/f07-client.sql:16: NOTICE:  PASS: F07 denial: authenticated approved to archived
+ f07_deny 
+----------
+ 
+(1 row)
+
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/f07-client.sql:18: NOTICE:  PASS: F07 denial: authenticated foreign-owner pointer
+ f07_deny 
+----------
+ 
+(1 row)
+
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/f07-client.sql:20: NOTICE:  PASS: F07 denial: authenticated same-owner wrong-model pointer
+ f07_deny 
+----------
+ 
+(1 row)
+
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/f07-client.sql:23: NOTICE:  PASS: F07 denial: authenticated nonexistent version
+ f07_deny 
+----------
+ 
+(1 row)
+
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/f07-client.sql:26: NOTICE:  PASS: F07 denial: authenticated forged-GUC direct approval
+ f07_deny 
+----------
+ 
+(1 row)
+
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/f07-client.sql:28: NOTICE:  PASS: F07 denial: authenticated approval RPC
+ f07_deny 
+----------
+ 
+(1 row)
+
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/f07-client.sql:30: NOTICE:  PASS: F07 denial: authenticated approval candidate manipulation
+ f07_deny 
+----------
+ 
+(1 row)
+
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/f07-client.sql:33: NOTICE:  PASS: F07 denial: authenticated INSERT pointer injection
+ f07_deny 
+----------
+ 
+(1 row)
+
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/f07-client.sql:35: NOTICE:  PASS: F07 denial: authenticated identity version UPDATE
+ f07_deny 
+----------
+ 
+(1 row)
+
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/f07-client.sql:37: NOTICE:  PASS: F07 denial: authenticated identity version DELETE
+ f07_deny 
+----------
+ 
+(1 row)
+
+UPDATE 1
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/f07-client.sql:42: NOTICE:  PASS: F07 legitimate authenticated draft editing
+ f07_assert 
+------------
+ 
+(1 row)
+
+INSERT 0 1
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/f07-client.sql:45: NOTICE:  PASS: F07 legitimate authenticated draft creation
+ f07_assert 
+------------
+ 
+(1 row)
+
+UPDATE 1
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/f07-client.sql:47: NOTICE:  PASS: F07 legitimate draft archiving
+ f07_assert 
+------------
+ 
+(1 row)
+
+RESET
+ f07_finish 
+------------
+ 
+(1 row)
+
+ROLLBACK
+KLAY_F07_CLIENT_PASS

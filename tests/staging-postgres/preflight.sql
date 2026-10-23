@@ -16,8 +16,8 @@ BEGIN
   INTO migration_count, distinct_versions
   FROM supabase_migrations.schema_migrations;
 
-  IF migration_count <> 39 OR distinct_versions <> 39 THEN
-    RAISE EXCEPTION 'ASSERTION FAILED: expected 39 distinct registered migrations, found % rows and % distinct versions', migration_count, distinct_versions;
+  IF migration_count <> 40 OR distinct_versions <> 40 THEN
+    RAISE EXCEPTION 'ASSERTION FAILED: expected 40 distinct registered migrations, found % rows and % distinct versions', migration_count, distinct_versions;
   END IF;
   IF NOT EXISTS (SELECT 1 FROM supabase_migrations.schema_migrations WHERE version = '20261101020000') THEN
     RAISE EXCEPTION 'ASSERTION FAILED: candidate ownership repair version is not registered';

@@ -1,0 +1,12 @@
+Pager usage is off.
+BEGIN
+SET
+SET
+ id | test_marker 
+----+-------------
+(0 rows)
+
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/fixture-residue-audit.sql:40: NOTICE:  PASS: no reserved synthetic identities remain
+DO
+ROLLBACK
+KLAY_FIXTURE_RESIDUE_AUDIT_PASS

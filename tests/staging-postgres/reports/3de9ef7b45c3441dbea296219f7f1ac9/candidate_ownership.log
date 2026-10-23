@@ -1,0 +1,120 @@
+Pager usage is off.
+BEGIN
+SET
+SET
+CREATE FUNCTION
+INSERT 0 2
+INSERT 0 3
+INSERT 0 3
+INSERT 0 2
+UPDATE 1
+UPDATE 1
+DO
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/candidate-ownership-regression.sql:58: NOTICE:  PASS: valid job and candidate INSERT/UPDATE paths, including job rows without job_id
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/candidate-ownership-regression.sql:63: NOTICE:  PASS: job INSERT with foreign model owner
+ expect_ownership_rejection 
+----------------------------
+ 
+(1 row)
+
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/candidate-ownership-regression.sql:68: NOTICE:  PASS: job INSERT with missing model
+ expect_ownership_rejection 
+----------------------------
+ 
+(1 row)
+
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/candidate-ownership-regression.sql:73: NOTICE:  PASS: job UPDATE with foreign model owner
+ expect_ownership_rejection 
+----------------------------
+ 
+(1 row)
+
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/candidate-ownership-regression.sql:78: NOTICE:  PASS: candidate INSERT with foreign job
+ expect_ownership_rejection 
+----------------------------
+ 
+(1 row)
+
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/candidate-ownership-regression.sql:83: NOTICE:  PASS: candidate INSERT with same-owner but different-model job
+ expect_ownership_rejection 
+----------------------------
+ 
+(1 row)
+
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/candidate-ownership-regression.sql:88: NOTICE:  PASS: candidate INSERT with missing job
+ expect_ownership_rejection 
+----------------------------
+ 
+(1 row)
+
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/candidate-ownership-regression.sql:93: NOTICE:  PASS: candidate UPDATE with different-model job
+ expect_ownership_rejection 
+----------------------------
+ 
+(1 row)
+
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/candidate-ownership-regression.sql:98: NOTICE:  PASS: candidate UPDATE with foreign-owner job
+ expect_ownership_rejection 
+----------------------------
+ 
+(1 row)
+
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/candidate-ownership-regression.sql:103: NOTICE:  PASS: candidate UPDATE with missing job
+ expect_ownership_rejection 
+----------------------------
+ 
+(1 row)
+
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/candidate-ownership-regression.sql:108: NOTICE:  PASS: candidate UPDATE with foreign model owner
+ expect_ownership_rejection 
+----------------------------
+ 
+(1 row)
+
+CREATE TABLE
+INSERT 0 1
+CREATE TRIGGER
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/candidate-ownership-regression.sql:116: NOTICE:  PASS: unexpected-schema/table attachment without model_id or job_id
+ expect_ownership_rejection 
+----------------------------
+ 
+(1 row)
+
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/candidate-ownership-regression.sql:118: NOTICE:  PASS: unexpected UPDATE context
+ expect_ownership_rejection 
+----------------------------
+ 
+(1 row)
+
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/candidate-ownership-regression.sql:120: NOTICE:  PASS: unexpected DELETE context without NEW fields
+ expect_ownership_rejection 
+----------------------------
+ 
+(1 row)
+
+CREATE TABLE
+CREATE TRIGGER
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/candidate-ownership-regression.sql:126: NOTICE:  PASS: unexpected AFTER STATEMENT context
+ expect_ownership_rejection 
+----------------------------
+ 
+(1 row)
+
+SET
+              set_config              
+--------------------------------------
+ f7f70000-0000-4000-8000-000000000001
+(1 row)
+
+                              set_config                               
+-----------------------------------------------------------------------
+ {"sub":"f7f70000-0000-4000-8000-000000000001","role":"authenticated"}
+(1 row)
+
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/candidate-ownership-regression.sql:155: NOTICE:  PASS: authenticated job and candidate owner read isolation
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/candidate-ownership-regression.sql:155: NOTICE:  PASS: authenticated candidate job insertion still denied
+psql:C:/Users/faruk/Desktop/ai-creative-platform/tests/staging-postgres/candidate-ownership-regression.sql:155: NOTICE:  PASS: authenticated candidate insertion still denied
+DO
+RESET
+ROLLBACK
+KLAY_CANDIDATE_OWNERSHIP_REGRESSION_PASS
