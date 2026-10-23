@@ -1,0 +1,5 @@
+-- SUPERSEDED: do not execute the earlier role-plus-GUC proposal.
+-- Its nullable context flag did not fail closed and did not establish a
+-- protected approval path. The Phase 7F.10 candidate is now:
+-- database/migrations/20261101030000_harden_approved_model_profile_integrity.sql
+-- That additive migration is PREPARED ONLY, NOT APPLIED. See phase-7f10-f07.md.
