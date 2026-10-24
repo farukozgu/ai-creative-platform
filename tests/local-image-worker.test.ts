@@ -60,3 +60,15 @@ test("claim is a single fenced update; retries exhausted; batch and repair block
   assert.match(pipeline, /repairPlan.shouldRetry && !isLocalImageExecution\(\)/);
   assert.ok(pipeline.indexOf("assertLocalImageRequest({ generationId") < pipeline.indexOf("data: submissionCheckpoint"));
 });
+
+test("direct authenticated generation does not consume the local worker authorization budget", async () => {
+  const provider = await readFile("src/lib/generation/providers/openai-image-provider.ts", "utf8");
+  assert.match(provider, /if \(isLocalImageExecution\(\)\) consumeLocalImageRequest\(request\)/);
+
+  const action = await readFile("src/app/[locale]/dashboard/projects/[projectId]/generation-actions.ts", "utf8");
+  assert.match(action, /export async function createQueuedImageGeneration\(/);
+  assert.match(action, /getAuthenticatedUserId\(\)/);
+  assert.match(action, /\.eq\("user_id", userId\)/);
+  assert.match(action, /awaitGenerationPipeline\(generation\.id, runQueuedImageGeneration\)/);
+  assert.doesNotMatch(action, /export async function runQueuedImageGeneration\(/);
+});

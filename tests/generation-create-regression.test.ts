@@ -3,28 +3,47 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 import { resolveCreativeDirectionSnapshot, resolveGenerationInsertResult, serializeGenerationMetadata, toSafeGenerationInsertError } from "../src/lib/generation/generation-create-boundary";
+import { awaitGenerationPipeline } from "../src/lib/generation/await-generation-pipeline";
 
-test("successful generation insert accepts a durable queued job without synchronous dispatch", async () => {
+test("successful generation insert immediately awaits the request-driven image pipeline", async () => {
   assert.deepEqual(resolveGenerationInsertResult({ data: { id: "generation-1" }, error: null }), { ok: true, generation: { id: "generation-1" } });
-  const source = await readFile("src/lib/generation/image-worker-service.ts", "utf8");
+  const source = await readFile("src/app/[locale]/dashboard/projects/[projectId]/generation-actions.ts", "utf8");
   const success = source.indexOf('safeGenerationEvent("create", "insert_success"');
-  const queued = source.indexOf('safeGenerationEvent("queue", "created"');
-  assert.ok(success > 0 && queued > success);
-  assert.doesNotMatch(source, /await dispatchQueuedGeneration\(generation\.id\)/);
+  const pipeline = source.indexOf("awaitGenerationPipeline(generation.id, runQueuedImageGeneration)", success);
+  assert.ok(success > 0 && pipeline > success);
+  assert.match(source, /getImageGenerationProvider\(queuedGeneration\.provider\)\.generate\(/);
+  assert.match(source, /\.from\(generatedAssetsBucket\)\s*\.upload\(outputObjectPath, finalImageData/);
+  assert.match(source, /mapGenerationTerminalDecisionToStatus\(terminalDecision\)[\s\S]*?output_bucket_id: generatedAssetsBucket/);
+  assert.doesNotMatch(source, /claim_queued_image_generations|execution_lease_token|IMAGE_GENERATION_WORKER_ENABLED/);
 });
 
-test("dashboard create supplies an idempotency key and fails closed when image workers are disabled", async () => {
+test("mocked synchronous pipeline stores output on success and reports provider failures", async () => {
+  const events: string[] = [];
+  const successful = await awaitGenerationPipeline("generation-success", async () => {
+    events.push("provider.generate");
+    events.push("storage.upload");
+    events.push("generation.update:succeeded");
+    return { ok: true };
+  });
+  assert.equal(successful, true);
+  assert.deepEqual(events, ["provider.generate", "storage.upload", "generation.update:succeeded"]);
+
+  const failed = await awaitGenerationPipeline("generation-failure", async () => {
+    events.push("generation.update:failed");
+    return { ok: false };
+  });
+  assert.equal(failed, false);
+  assert.equal(events.at(-1), "generation.update:failed");
+});
+
+test("dashboard create supplies an idempotency key and the action reuses a prior submission", async () => {
   const composer = await readFile("src/components/dashboard/creative-composer.tsx", "utf8");
   assert.match(composer, /generationSubmissionId\.current \?\?= crypto\.randomUUID\(\)/);
   assert.match(composer, /generationData\.set\("client_submission_id", generationSubmissionId\.current\)/);
-  assert.match(composer, /generationResult\.message === "generationUnavailable"/);
-
-  const service = await readFile("src/lib/generation/image-worker-service.ts", "utf8");
-  const createStart = service.indexOf("export async function createQueuedImageGeneration(");
-  const insertStart = service.indexOf('safeGenerationEvent("create", "insert_start")', createStart);
-  const disabledGate = service.indexOf("if (!isImageGenerationWorkerEnabled())", createStart);
-  assert.ok(disabledGate > createStart && disabledGate < insertStart);
-  assert.match(service.slice(disabledGate, insertStart), /message: "generationUnavailable"/);
+  const action = await readFile("src/app/[locale]/dashboard/projects/[projectId]/generation-actions.ts", "utf8");
+  assert.match(action, /typeof submissionId !== "string" \|\| !uuidPattern\.test\(submissionId\)/);
+  assert.match(action, /\.eq\("client_submission_id", submissionId\)/);
+  assert.match(action, /owner_id: userId,\s*client_submission_id: submissionId/);
 });
 
 test("insert failure is explicit, safely logged, and duplicate submission resolves its existing job", async () => {
@@ -37,10 +56,12 @@ test("insert failure is explicit, safely logged, and duplicate submission resolv
   assert.equal(logs.length, 1);
   assert.equal(logs[0]?.message, "[generation-create] insert_failed");
   assert.doesNotMatch(JSON.stringify(logs), /sk-secret|token-value/);
-  const source = await readFile("src/lib/generation/image-worker-service.ts", "utf8");
+  const source = await readFile("src/app/[locale]/dashboard/projects/[projectId]/generation-actions.ts", "utf8");
   assert.match(source, /if \(insertResult\.error\?\.code === "23505"\)/);
   assert.match(source, /eq\("client_submission_id", submissionId\)/);
-  assert.doesNotMatch(source, /await dispatchQueuedGeneration/);
+  const insertFailure = source.indexOf("const resolvedInsert = resolveGenerationInsertResult(insertResult)");
+  assert.match(source.slice(insertFailure, insertFailure + 1200), /message: "creationFailed"/);
+  assert.match(source, /return \{ ok: false, message: "generationFailed" \}/);
 });
 
 test("missing insert data is treated as a logged database failure", () => {
