@@ -523,6 +523,148 @@
     "visualDescription": "Talk to our team about pilot access, partnerships or anything you would like to know about the product."
   },
   "Dashboard": {
+    "ugcStudio": {
+        "metadataTitle": "UGC Studio | Klay AI",
+        "title": "UGC Studio",
+        "eyebrow": "CREATIVE WORKSPACE",
+        "description": "Give your product a voice. Shape creator-led videos, from the first word to the final frame.",
+        "comingSoon": "Coming soon",
+        "configuration": "Creative configuration",
+        "workspace": "Video workspace",
+        "contentTitle": "01 · Creator & content",
+        "creator": "Creator",
+        "creatorHint": "Sample creator profiles for planning. These are placeholder visuals, not available creators.",
+        "creators": {
+          "ada": {
+            "name": "Ada",
+            "style": "Beauty · Natural",
+            "alt": "Sample beauty creator applying a skincare serum"
+          },
+          "deniz": {
+            "name": "Deniz",
+            "style": "Fashion · Editorial",
+            "alt": "Sample creator in a fashion campaign"
+          },
+          "maya": {
+            "name": "Maya",
+            "style": "Lifestyle · Elegant",
+            "alt": "Sample lifestyle creator carrying a bag in the city"
+          }
+        },
+        "product": "Product",
+        "upload": "Add a product photo",
+        "replace": "Replace photo",
+        "remove": "Remove",
+        "uploadHint": "JPG, PNG or WebP · Up to 10 MB. Previewed locally; never uploaded.",
+        "localOnly": "Local preview only",
+        "productAlt": "Selected product: {name}",
+        "invalidFile": "Choose a JPG, PNG or WebP image under 10 MB.",
+        "unreadableFile": "This image could not be opened. Please choose another photo.",
+        "format": "UGC format",
+        "formats": {
+          "testimonial": "Testimonial",
+          "review": "Product Review",
+          "unboxing": "Unboxing",
+          "demo": "Product Demo",
+          "story": "Storytelling",
+          "problem": "Problem / Solution"
+        },
+        "scriptTitle": "02 · Script & voice",
+        "sceneDirection": "Scene Direction",
+        "sceneDirectionPlaceholder": "Describe the setting, gestures, product interaction and camera movement…",
+        "sceneDirectionHint": "Visual instructions only. These words are not spoken aloud.",
+        "spokenDialogue": "Spoken Dialogue",
+        "spokenDialogueHint": "The exact words your creator should say, in Turkish or English.",
+        "dialogueTiming": "{count, plural, one {# word} other {# words}} · About {seconds} seconds at 150 words/min",
+        "dialogueTooLong": "This dialogue may exceed your {duration}-second video. Shorten it or choose a longer duration.",
+        "generateDialogue": "Generate dialogue with AI · Coming soon",
+        "dialogueGenerationHint": "AI dialogue generation is unavailable until a text-generation service is connected.",
+        "script": "Your script",
+        "scriptPlaceholder": "Start with a hook. Introduce your product, share what makes it special, and end with a clear call to action…",
+        "scriptCount": "{count} / 3,000 characters",
+        "voiceHint": "Voice preferences are saved in your brief. Speech, lip sync and audio preview are not available yet.",
+        "sceneTitle": "03 · Scene & output",
+        "scene": "Scene",
+        "output": "Output",
+        "subtitles": "Include subtitles",
+        "subtitlesOn": "Subtitles on",
+        "subtitlesOff": "Subtitles off",
+        "fields": {
+          "language": "Language",
+          "tone": "Tone",
+          "voice": "Voice",
+          "environment": "Environment",
+          "lighting": "Lighting",
+          "framing": "Camera framing",
+          "duration": "Duration",
+          "ratio": "Aspect ratio"
+        },
+        "options": {
+          "language": {
+            "tr": "Turkish",
+            "en": "English"
+          },
+          "tone": {
+            "natural": "Natural",
+            "energetic": "Energetic",
+            "professional": "Professional"
+          },
+          "voice": {
+            "warm": "Warm",
+            "bright": "Bright",
+            "calm": "Calm"
+          },
+          "environment": {
+            "home": "At home",
+            "studio": "Studio",
+            "outdoor": "Outdoors"
+          },
+          "lighting": {
+            "daylight": "Daylight",
+            "soft": "Soft light",
+            "warm": "Warm light"
+          },
+          "framing": {
+            "medium": "Medium shot",
+            "close": "Close-up",
+            "wide": "Wide shot"
+          },
+          "duration": {
+            "15": "15 seconds",
+            "30": "30 seconds",
+            "60": "60 seconds"
+          },
+          "ratio": {
+            "9:16": "9:16 · Vertical",
+            "1:1": "1:1 · Square",
+            "16:9": "16:9 · Landscape"
+          }
+        },
+        "sessionOnly": "Your brief stays in this session. Leaving or refreshing this page clears your choices.",
+        "preview": "Video preview",
+        "previewLabel": "Planning mode",
+        "emptyTitle": "Your story starts here",
+        "emptyDescription": "Choose a creator, add your product and write your script. Your video will appear here when generation launches.",
+        "noVideo": "No video generated",
+        "summary": "Your creative brief",
+        "noProduct": "No product selected",
+        "generate": "Generate UGC",
+        "generationHint": "UGC generation is not active yet. Explore the settings freely; no credits are used.",
+        "results": "Video results",
+        "resultCount": "{count, plural, =0 {No videos} one {# video} other {# videos}}",
+        "resultsEmpty": "A space for your next campaign",
+        "resultsHint": "Your future UGC videos will appear here. No videos have been created.",
+        "productSaved": "Saved to your private workspace",
+        "saveState": {
+          "idle": "Changes are saved automatically to a private project draft.",
+          "saving": "Saving your project draft…",
+          "saved": "Project draft saved.",
+          "error": "Some changes could not be saved. Check your connection and try again.",
+          "unavailable": "Project saving is unavailable until workspace setup is complete. Your changes are local to this page."
+        },
+        "resultVideoLabel": "Generated UGC video",
+        "resultDetails": "Video · {duration} seconds"
+      },
     "projectManagement": {
       "failed": "Failed",
       "failedDescription": "Projects whose latest generation failed. They may still contain successful outputs and other assets.",
@@ -862,6 +1004,7 @@
       "openMenu": "Open workspace navigation",
       "closeMenu": "Close workspace navigation",
       "items": {
+        "ugc": "UGC Studio",
         "home": "Home",
         "create": "Image Studio",
         "video": "Video Studio",

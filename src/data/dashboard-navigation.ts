@@ -10,6 +10,7 @@ export const dashboardPrimaryNavigation: DashboardNavigationItem[] = [
   { key: "home", icon: "home", href: "/dashboard" },
   { key: "create", icon: "image", href: "/dashboard/create" },
   { key: "video", icon: "video", href: "/dashboard/video" },
+  { key: "ugc", icon: "templates", href: "/dashboard/ugc" },
   { key: "videos", icon: "videoLibrary", href: "/dashboard/videos" },
   { key: "models", icon: "models", href: "/dashboard/models" },
   { key: "projects", icon: "projects", href: "/dashboard/projects" },

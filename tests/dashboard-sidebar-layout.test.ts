@@ -79,15 +79,19 @@ test("collapsed navigation tooltips support pointer hover, keyboard focus and Es
   assert.match(styles, /pointer-events: auto/);
 });
 
-test("sidebar orders both studios and resolves their distinct active destinations", () => {
+test("sidebar orders the studios and resolves their distinct active destinations", () => {
   const home = dashboardPrimaryNavigation.find((item) => item.key === "home")!;
   const create = dashboardPrimaryNavigation.find((item) => item.key === "create")!;
   const video = dashboardPrimaryNavigation.find((item) => item.key === "video")!;
+  const ugc = dashboardPrimaryNavigation.find((item) => item.key === "ugc")!;
   const videos = dashboardPrimaryNavigation.find((item) => item.key === "videos")!;
   const models = dashboardPrimaryNavigation.find((item) => item.key === "models")!;
   const projects = dashboardPrimaryNavigation.find((item) => item.key === "projects")!;
 
-  assert.deepEqual(dashboardPrimaryNavigation.map(({ key }) => key), ["home", "create", "video", "videos", "models", "projects"]);
+  assert.deepEqual(dashboardPrimaryNavigation.map(({ key }) => key), ["home", "create", "video", "ugc", "videos", "models", "projects"]);
+  assert.equal(isDashboardNavigationItemActive(ugc, "/dashboard/ugc", ""), true);
+  assert.equal(isDashboardNavigationItemActive(ugc, "/dashboard/video", ""), false);
+  assert.equal(isDashboardNavigationItemActive(video, "/dashboard/ugc", ""), false);
   assert.equal(create.icon, "image");
   assert.equal(isDashboardNavigationItemActive(home, "/dashboard", ""), true);
   assert.equal(isDashboardNavigationItemActive(home, "/dashboard", "#composer"), false);

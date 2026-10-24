@@ -7,13 +7,21 @@ import type { ProviderVideoFile, VideoGenerationProvider, VideoProviderRequest }
 
 type FalOutput = { video?: { url?: unknown; content_type?: unknown; file_size?: unknown } };
 
+/** Shared server credential/client construction; callers may constrain transport for verification. */
+export function createServerFalClient(
+  credentials = process.env.FAL_KEY,
+  options: Pick<NonNullable<Parameters<typeof createFalClient>[0]>, "fetch" | "responseHandler"> = {},
+) {
+  if (!credentials) throw new Error("The server-side fal.ai credential is unavailable.");
+  return createFalClient({ credentials, ...options });
+}
+
 export class FalVideoGenerationProvider implements VideoGenerationProvider {
   readonly name = "fal" as const;
   private readonly client: FalClient;
 
   constructor(credentials = process.env.FAL_KEY) {
-    if (!credentials) throw new Error("The server-side fal.ai credential is unavailable.");
-    this.client = createFalClient({ credentials });
+    this.client = createServerFalClient(credentials);
   }
 
   async submit(request: VideoProviderRequest) {
@@ -28,7 +36,10 @@ export class FalVideoGenerationProvider implements VideoGenerationProvider {
 
   async getStatus(endpointId: string, requestId: string) {
     const status = await this.client.queue.status(endpointId, { requestId, logs: false });
-    return status.status === "IN_QUEUE" ? "queued" as const : status.status === "IN_PROGRESS" ? "processing" as const : "completed" as const;
+    if (status.status === "IN_QUEUE") return "queued" as const;
+    if (status.status === "IN_PROGRESS") return "processing" as const;
+    if (status.status === "COMPLETED") return "completed" as const;
+    throw new Error("The provider returned an unknown video task status.");
   }
 
   async getResult(endpointId: string, requestId: string): Promise<ProviderVideoFile> {

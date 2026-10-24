@@ -523,6 +523,148 @@
     "visualDescription": "Pilot kullanım, iş birliği veya ürün hakkında konuşmak için ekibimizle iletişime geçin."
   },
   "Dashboard": {
+    "ugcStudio": {
+        "metadataTitle": "UGC Stüdyosu | Klay AI",
+        "title": "UGC Stüdyosu",
+        "eyebrow": "YARATICI ÇALIŞMA ALANI",
+        "description": "Ürününüz kendi hikâyesini anlatsın. İlk kelimeden son kareye, içerik üreticisi odaklı videolar planlayın.",
+        "comingSoon": "Yakında",
+        "configuration": "Yaratıcı ayarlar",
+        "workspace": "Video çalışma alanı",
+        "contentTitle": "01 · İçerik üreticisi ve format",
+        "creator": "İçerik üreticisi",
+        "creatorHint": "Planlama için örnek profiller. Görseller temsilidir; kullanılabilir içerik üreticileri değildir.",
+        "creators": {
+          "ada": {
+            "name": "Ada",
+            "style": "Güzellik · Doğal",
+            "alt": "Cilt bakım serumu uygulayan örnek güzellik içerik üreticisi"
+          },
+          "deniz": {
+            "name": "Deniz",
+            "style": "Moda · Editoryal",
+            "alt": "Moda kampanyasında örnek içerik üreticisi"
+          },
+          "maya": {
+            "name": "Maya",
+            "style": "Yaşam tarzı · Zarif",
+            "alt": "Şehirde çanta taşıyan örnek yaşam tarzı içerik üreticisi"
+          }
+        },
+        "product": "Ürün",
+        "upload": "Ürün fotoğrafı ekle",
+        "replace": "Fotoğrafı değiştir",
+        "remove": "Kaldır",
+        "uploadHint": "JPG, PNG veya WebP · En fazla 10 MB. Yalnızca cihazınızda önizlenir, sunucuya yüklenmez.",
+        "localOnly": "Yalnızca yerel önizleme",
+        "productAlt": "Seçilen ürün: {name}",
+        "invalidFile": "10 MB altında bir JPG, PNG veya WebP görsel seçin.",
+        "unreadableFile": "Görsel açılamadı. Lütfen başka bir fotoğraf seçin.",
+        "format": "UGC formatı",
+        "formats": {
+          "testimonial": "Kullanıcı deneyimi",
+          "review": "Ürün incelemesi",
+          "unboxing": "Kutu açılışı",
+          "demo": "Ürün tanıtımı",
+          "story": "Hikâye anlatımı",
+          "problem": "Sorun / Çözüm"
+        },
+        "scriptTitle": "02 · Senaryo ve ses",
+        "sceneDirection": "Sahne Yönergeleri",
+        "sceneDirectionPlaceholder": "Ortamı, jestleri, ürünle etkileşimi ve kamera hareketlerini anlatın…",
+        "sceneDirectionHint": "Yalnızca görsel yönergelerdir. Bu metin seslendirilmez.",
+        "spokenDialogue": "Konuşma Metni",
+        "spokenDialogueHint": "İçerik üreticisinin Türkçe veya İngilizce söylemesini istediğiniz sözler.",
+        "dialogueTiming": "{count} kelime · Dakikada 150 kelimeyle yaklaşık {seconds} saniye",
+        "dialogueTooLong": "Bu konuşma, seçtiğiniz {duration} saniyelik videoya sığmayabilir. Metni kısaltın veya süreyi artırın.",
+        "generateDialogue": "AI ile konuşma metni oluştur · Yakında",
+        "dialogueGenerationHint": "Bir metin üretim hizmeti bağlanana kadar AI ile konuşma metni oluşturma kullanılamaz.",
+        "script": "Senaryonuz",
+        "scriptPlaceholder": "Dikkat çekici bir giriş yapın. Ürününüzü tanıtın, onu özel kılan noktayı anlatın ve net bir çağrıyla bitirin…",
+        "scriptCount": "{count} / 3.000 karakter",
+        "voiceHint": "Ses tercihleri yaratıcı özetinize kaydedilir. Konuşma, dudak senkronizasyonu ve ses önizlemesi henüz kullanılamıyor.",
+        "sceneTitle": "03 · Sahne ve çıktı",
+        "scene": "Sahne",
+        "output": "Çıktı",
+        "subtitles": "Altyazı ekle",
+        "subtitlesOn": "Altyazı açık",
+        "subtitlesOff": "Altyazı kapalı",
+        "fields": {
+          "language": "Dil",
+          "tone": "Ton",
+          "voice": "Ses",
+          "environment": "Ortam",
+          "lighting": "Işık",
+          "framing": "Kamera kadrajı",
+          "duration": "Süre",
+          "ratio": "En-boy oranı"
+        },
+        "options": {
+          "language": {
+            "tr": "Türkçe",
+            "en": "İngilizce"
+          },
+          "tone": {
+            "natural": "Doğal",
+            "energetic": "Enerjik",
+            "professional": "Profesyonel"
+          },
+          "voice": {
+            "warm": "Sıcak",
+            "bright": "Canlı",
+            "calm": "Sakin"
+          },
+          "environment": {
+            "home": "Ev ortamı",
+            "studio": "Stüdyo",
+            "outdoor": "Dış mekân"
+          },
+          "lighting": {
+            "daylight": "Gün ışığı",
+            "soft": "Yumuşak ışık",
+            "warm": "Sıcak ışık"
+          },
+          "framing": {
+            "medium": "Orta plan",
+            "close": "Yakın plan",
+            "wide": "Geniş plan"
+          },
+          "duration": {
+            "15": "15 saniye",
+            "30": "30 saniye",
+            "60": "60 saniye"
+          },
+          "ratio": {
+            "9:16": "9:16 · Dikey",
+            "1:1": "1:1 · Kare",
+            "16:9": "16:9 · Yatay"
+          }
+        },
+        "sessionOnly": "Ayarlarınız bu oturumda kalır. Sayfadan ayrıldığınızda veya sayfayı yenilediğinizde seçimleriniz sıfırlanır.",
+        "preview": "Video önizlemesi",
+        "previewLabel": "Planlama modu",
+        "emptyTitle": "Hikâyeniz burada başlıyor",
+        "emptyDescription": "İçerik üreticisini seçin, ürününüzü ekleyin ve senaryonuzu yazın. Video üretimi açıldığında videonuz burada görünecek.",
+        "noVideo": "Henüz video üretilmedi",
+        "summary": "Yaratıcı özetiniz",
+        "noProduct": "Ürün seçilmedi",
+        "generate": "UGC üret",
+        "generationHint": "UGC üretimi henüz aktif değil. Ayarları özgürce keşfedin; kredi kullanılmaz.",
+        "results": "Video sonuçları",
+        "resultCount": "{count, plural, =0 {Video yok} one {# video} other {# video}}",
+        "resultsEmpty": "Sıradaki kampanyanıza ayrıldı",
+        "resultsHint": "Gelecekteki UGC videolarınız burada yer alacak. Henüz video oluşturulmadı.",
+        "productSaved": "Özel çalışma alanınıza kaydedildi",
+        "saveState": {
+          "idle": "Değişiklikleriniz özel proje taslağına otomatik kaydedilir.",
+          "saving": "Proje taslağınız kaydediliyor…",
+          "saved": "Proje taslağınız kaydedildi.",
+          "error": "Bazı değişiklikler kaydedilemedi. Bağlantınızı kontrol edip yeniden deneyin.",
+          "unavailable": "Çalışma alanı kurulumu tamamlanana kadar proje kaydı kullanılamıyor. Değişiklikleriniz bu sayfada kalır."
+        },
+        "resultVideoLabel": "Üretilen UGC videosu",
+        "resultDetails": "Video · {duration} saniye"
+      },
     "projectManagement": {
       "failed": "Başarısız",
       "failedDescription": "Son üretimi başarısız olan projeler. Bu projelerde başarılı çıktılar ve başka dosyalar bulunabilir.",
@@ -860,6 +1002,7 @@
       "openMenu": "Çalışma alanı navigasyonunu aç",
       "closeMenu": "Çalışma alanı navigasyonunu kapat",
       "items": {
+        "ugc": "UGC Stüdyosu",
         "home": "Ana Sayfa",
         "create": "Görsel Studio",
         "video": "Video Studio",
