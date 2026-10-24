@@ -7,6 +7,9 @@ import { runQueuedImageGeneration } from "@/lib/generation/image-worker-service"
 import { isAuthorizedVideoSchedulerRequest } from "@/lib/video-generation/scheduler-auth";
 
 export async function handleImageWorkerRequest(request: Request, expectedSecret: string | undefined) {
+  if (process.env.NODE_ENV === "development") {
+    return NextResponse.json({ error: "use_selected_local_image_worker" }, { status: 409 });
+  }
   if (!isAuthorizedVideoSchedulerRequest(request.headers.get("authorization"), expectedSecret)) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }

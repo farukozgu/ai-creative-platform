@@ -1,4 +1,5 @@
 import "server-only";
+import { assertLocalImageRequest, isLocalImageExecution } from "./local-image-budget";
 
 import { revalidatePath } from "next/cache";
 
@@ -1079,6 +1080,7 @@ export async function runQueuedImageGeneration(
     });
 
     if (requestedPreservationMode === "pixel_lock" && !usesReferenceReplacement) {
+      if (isLocalImageExecution()) throw new Error("Local single-image execution does not authorize paid segmentation; select a reference-edit job.");
       try {
         const sourceImage = Buffer.from(await inputImage.arrayBuffer());
         const maskResolution = await resolveProductMask({
@@ -1309,6 +1311,7 @@ export async function runQueuedImageGeneration(
       imageCount: generationImages.length,
     });
     safeGenerationEvent("provider", "request_start", { generationId: queuedGeneration.id, provider: queuedGeneration.provider, model: queuedGeneration.model });
+    assertLocalImageRequest({ generationId, projectId, model: queuedGeneration.model, quality: executionPolicy.quality });
     const { data: submissionCheckpoint } = await admin.from("generations").update({
       provider_submission_state: "submitting",
       provider_submission_started_at: new Date().toISOString(),
@@ -1482,7 +1485,7 @@ export async function runQueuedImageGeneration(
     }
 
     const projectionReady = hybridProjectionMetadata?.applied === true;
-    const repairEligibility = resolveRepairEligibility({ validation: fidelityValidation, exactProduct: apparelFidelityMode.exactProductApparel, hybridProjectionApplied: hybridProjectionMetadata?.applied === true, hybridProjectionEnabled: hybridEligible, hybridProjectionReady: projectionReady, maximumAttemptsRemaining: true });
+    const repairEligibility = resolveRepairEligibility({ validation: fidelityValidation, exactProduct: apparelFidelityMode.exactProductApparel, hybridProjectionApplied: hybridProjectionMetadata?.applied === true, hybridProjectionEnabled: hybridEligible, hybridProjectionReady: projectionReady, maximumAttemptsRemaining: !isLocalImageExecution() });
     const mappedRepairPlan = resolveRepairPlan(fidelityValidation);
     logDevelopmentGenerationEvent("repair_input_normalized", {
       issueCodes: fidelityValidation.issues.map(({ code }) => code),
@@ -1524,7 +1527,7 @@ export async function runQueuedImageGeneration(
     let repairAttempt: GenerationAttempt | null = null;
     let selectedProviderResult = result;
 
-    if (repairPlan.shouldRetry) {
+    if (repairPlan.shouldRetry && !isLocalImageExecution()) {
       logDevelopmentGenerationEvent("auto_repair_started", {
         generationId: queuedGeneration.id,
         attempt: 1,

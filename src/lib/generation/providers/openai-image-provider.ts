@@ -5,6 +5,7 @@ import type { ImageEditParamsNonStreaming } from "openai/resources/images";
 import sharp from "sharp";
 
 import { getOpenAIClient } from "@/lib/openai/client";
+import { consumeLocalImageRequest } from "../local-image-budget";
 
 import { resolveProviderImageSize, type GenerationOutputCanvas } from "../output-canvas";
 import { normalizeImageInputForOpenAI } from "./normalize-image-input";
@@ -115,6 +116,7 @@ export class OpenAIImageProvider implements ImageGenerationProviderClient {
         quality: request.quality,
         operation,
       });
+      consumeLocalImageRequest(request);
       const response = await getOpenAIClient().images.edit(buildOpenAIImageEditParams({
           model: request.model,
           image: imageFiles.length === 1 ? imageFiles[0] : imageFiles,

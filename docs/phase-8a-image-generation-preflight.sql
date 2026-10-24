@@ -66,7 +66,8 @@ order by r.table_name, r.column_name;
 
 -- Worker table privileges. The image worker reads projects/assets and inserts,
 -- reads, and updates generations using SUPABASE_SECRET_KEY (service_role).
--- Projects SELECT is a known local-migration gap unless separately granted.
+-- Migration 20260901001000 already grants projects SELECT to service_role;
+-- verify actual deployment rather than assuming a missing grant.
 select object_name, privilege, has_table_privilege('service_role', object_name, privilege) as granted
 from (values
   ('public.projects', 'SELECT'),
@@ -178,6 +179,16 @@ select e.signature,
 from expected_functions e
 left join pg_proc p on p.oid = to_regprocedure(e.signature)
 order by e.signature;
+
+-- Service-role RLS bypass and Storage catalog evidence only. These SELECTs do
+-- not prove Storage API credential routing or upload success at runtime.
+select rolname, rolbypassrls from pg_roles where rolname = 'service_role';
+select has_schema_privilege('service_role', 'public', 'USAGE') as public_usage;
+select schemaname, tablename, policyname, roles, cmd, qual, with_check
+from pg_policies where schemaname = 'storage' and tablename = 'objects'
+order by policyname;
+select relname, relrowsecurity from pg_class
+where oid in (to_regclass('storage.objects'), to_regclass('storage.buckets'));
 
 -- Only after the columns query confirms public.generations exists, run this
 -- separate read-only query before manual dispatch. Confirm it returns exactly
