@@ -24,11 +24,42 @@ test("plan card follows the mobile spacer inside the drawer footer", () => {
   assert.match(mobileNav, /dashboard-drawer-spacer[\s\S]*dashboard-drawer-footer[\s\S]*dashboard-drawer-plan-slot[\s\S]*dashboard-drawer-nav-secondary/);
 });
 
-test("sidebar defaults respect explicit preferences before the tablet fallback", () => {
-  assert.equal(resolveDashboardSidebarCollapsed(null, false), false);
-  assert.equal(resolveDashboardSidebarCollapsed(null, true), true);
-  assert.equal(resolveDashboardSidebarCollapsed("true", false), true);
-  assert.equal(resolveDashboardSidebarCollapsed("false", true), false);
+test("sidebar defaults to the icon rail and preserves explicit preferences", () => {
+  assert.equal(resolveDashboardSidebarCollapsed(null), true);
+  assert.equal(resolveDashboardSidebarCollapsed("true"), true);
+  assert.equal(resolveDashboardSidebarCollapsed("false"), false);
+  assert.equal(resolveDashboardSidebarCollapsed("invalid"), true);
+});
+
+test("sidebar keeps text branding and its toggle without the obsolete K symbol", () => {
+  const sidebar = read("src/components/dashboard/dashboard-sidebar.tsx");
+  const styles = read("src/components/dashboard/dashboard-sidebar.module.css");
+  assert.doesNotMatch(sidebar, /brandMark|>K<\/span>/);
+  assert.doesNotMatch(styles, /\.brandMark/);
+  assert.match(sidebar, /className=\{styles\.brandName\}/);
+  assert.match(sidebar, /aria-expanded=\{!collapsed\}/);
+  assert.match(styles, /\.frame\[data-collapsed\] \.brand \{\s*display: none/);
+});
+
+test("compact studio expansion remains local and Escape restores the compact rail", () => {
+  const frame = read("src/components/dashboard/dashboard-frame.tsx");
+  assert.match(frame, /pathname === "\/dashboard\/create"/);
+  assert.match(frame, /pathname === "\/dashboard\/video"/);
+  assert.match(frame, /isCompactWorkspace \? !compactNavigationExpanded : collapsed/);
+  assert.match(frame, /compactNavigationExpanded \? "15rem" : "4\.25rem"/);
+  assert.match(frame, /event\.key === "Escape" && compactNavigationExpanded/);
+  assert.match(frame, /onToggle=\{isCompactWorkspace \?/);
+});
+
+test("collapsed navigation tooltips support pointer hover, keyboard focus and Escape", () => {
+  const sidebar = read("src/components/dashboard/dashboard-sidebar.tsx");
+  const styles = read("src/components/dashboard/dashboard-sidebar.module.css");
+  assert.match(sidebar, /aria-describedby=\{collapsed \? tooltipId : undefined\}/);
+  assert.match(sidebar, /event\.key === "Escape"\) setTooltipDismissed\(true\)/);
+  assert.match(styles, /:not\(\[data-tooltip-dismissed\]\)[^\n]*:is\(:hover, :focus-visible\) \.tooltip/);
+  assert.match(styles, /visibility: hidden/);
+  assert.match(styles, /visibility: visible/);
+  assert.match(styles, /pointer-events: auto/);
 });
 
 test("sidebar orders both studios and resolves their distinct active destinations", () => {
@@ -60,7 +91,7 @@ test("sidebar uses scoped semantic theme styles and keeps compact access afforda
   const styles = read("src/components/dashboard/dashboard-sidebar.module.css");
 
   assert.match(styles, /--dashboard-rail-width: 15rem/);
-  assert.match(styles, /\.frame\[data-collapsed\][\s\S]*--dashboard-rail-width: 4\.25rem/);
+  assert.match(styles, /\.frame\[data-collapsed\][\s\S]*--dashboard-rail-width: 4\.5rem/);
   assert.match(styles, /var\(--dashboard-sidebar\)/);
   assert.match(styles, /var\(--dashboard-accent-surface\)/);
   assert.doesNotMatch(styles, /#[0-9a-f]{3,8}/i);

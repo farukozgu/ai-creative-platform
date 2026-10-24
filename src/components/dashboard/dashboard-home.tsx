@@ -17,25 +17,25 @@ export async function DashboardHome() {
     <>
       <section className={styles.discovery} aria-labelledby="dashboard-discovery-title">
         <div className={styles.intro}>
-          <p className={styles.eyebrow}>{t("eyebrow")}</p>
+          <p className={styles.eyebrow}><DashboardIcon name="spark" />{t("eyebrow")}</p>
           <h1 id="dashboard-discovery-title">{t("discoveryHeading")}</h1>
           <p>{t("discoveryDescription")}</p>
         </div>
         <DashboardWorkflowRail label={t("discoveryLabel")} previousLabel={t("previousWorkflow")} nextLabel={t("nextWorkflow")}>
-          {dashboardDiscoveryWorkflows.map(({ key, presetId }) => {
+          {dashboardDiscoveryWorkflows.map(({ key, presetId }, index) => {
             const preset = getCreativePreset(presetId);
             if (!preset) return null;
             return (
               <Link key={key} href={creationHref({ presetId, presentationMode: null })} className={styles.workflowCard}>
                 <span className={styles.workflowMedia}>
-                  <Image src={preset.thumbnail} alt="" fill sizes="(max-width: 640px) 76vw, (max-width: 1024px) 40vw, 24vw" loading="lazy" style={{ objectPosition: preset.objectPosition }} />
+                  <Image src={preset.thumbnail} alt="" fill sizes="(max-width: 639px) 82vw, (max-width: 1023px) 42vw, (max-width: 1199px) 30vw, 24vw" loading={index === 0 ? "eager" : "lazy"} />
                   <span className={styles.workflowCategory}>{t(`workflows.${key}.category`)}</span>
                   <span className={styles.workflowAction} aria-hidden="true">{t("workflowAction")}</span>
                 </span>
                 <span className={styles.workflowCopy}>
                   <strong>{t(`workflows.${key}.title`)}</strong>
                   <span>{t(`workflows.${key}.description`)}</span>
-                  <DashboardIcon name="arrow" />
+                  <span className={styles.workflowArrow}><DashboardIcon name="arrow" /></span>
                 </span>
               </Link>
             );
@@ -59,7 +59,7 @@ export async function DashboardHome() {
             if (!preset) return null;
             return (
               <Link key={key} href={creationHref({ presetId, presentationMode: null })} className={styles.launchRow}>
-                <span className={styles.launchImage}><Image src={preset.thumbnail} alt="" fill sizes="64px" loading="lazy" /></span>
+                <span className={styles.launchIcon}><DashboardIcon name={key === "fashion" ? "apparel" : "cosmetics"} /></span>
                 <span className={styles.launchCopy}><strong>{t(`launchers.${key}.title`)}</strong><span>{t(`launchers.${key}.description`)}</span></span>
                 <DashboardIcon name="arrow" className={styles.launchArrow} />
               </Link>

@@ -47,7 +47,7 @@ const variantClasses: Record<ButtonVariant, ButtonVariantClasses> = {
       "top-auto bottom-0 h-px translate-y-0 origin-left scale-x-0 bg-[var(--foreground)] [@media(hover:hover)]:group-hover:scale-x-100 motion-reduce:!translate-y-0 motion-reduce:!scale-x-0",
   },
   dark: {
-    button: "border-[var(--foreground)] bg-[var(--foreground)] text-white",
+    button: "border-[var(--button-primary-bg)] bg-[var(--button-primary-bg)] text-[var(--button-primary-text)]",
     fill: "bg-[var(--foreground-muted)] motion-reduce:!translate-y-full",
   },
 };

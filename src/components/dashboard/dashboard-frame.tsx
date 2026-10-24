@@ -12,25 +12,21 @@ const storageKey = "klay-dashboard-sidebar-collapsed";
 const sidebarChangeEvent = "klay-dashboard-sidebar-change";
 
 function subscribe(onChange: () => void) {
-  const media = window.matchMedia("(min-width: 768px) and (max-width: 1199px)");
   window.addEventListener("storage", onChange);
   window.addEventListener(sidebarChangeEvent, onChange);
-  media.addEventListener("change", onChange);
   return () => {
     window.removeEventListener("storage", onChange);
     window.removeEventListener(sidebarChangeEvent, onChange);
-    media.removeEventListener("change", onChange);
   };
 }
 
 function getCollapsed() {
   const saved = window.localStorage.getItem(storageKey);
-  const tabletViewport = window.matchMedia("(min-width: 768px) and (max-width: 1199px)").matches;
-  return resolveDashboardSidebarCollapsed(saved, tabletViewport);
+  return resolveDashboardSidebarCollapsed(saved);
 }
 
 export function DashboardFrame({ children, topbar, displayName }: { children: React.ReactNode; topbar: React.ReactNode; displayName?: string | null }) {
-  const collapsed = useSyncExternalStore(subscribe, getCollapsed, () => false);
+  const collapsed = useSyncExternalStore(subscribe, getCollapsed, () => true);
   const pathname = usePathname();
   const isCreation = pathname === "/dashboard/create";
   const isVideoStudio = pathname === "/dashboard/video";

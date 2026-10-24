@@ -64,13 +64,20 @@ test("Home workflow and launcher messages exist in both locales", () => {
 test("Dashboard Home motion remains scoped, pointer-aware, and reduced-motion safe", () => {
   const styles = read("src/components/dashboard/dashboard-home.module.css");
   assert.match(styles, /@media \(hover: hover\) and \(pointer: fine\)/);
-  assert.match(styles, /\.workflowCard:hover \{[^}]*translateY\(-3px\)/);
-  assert.match(styles, /\.workflowCard:hover \.workflowMedia img \{ transform: scale\(1\.035\)/);
-  assert.match(styles, /\.workflowCard:hover \.workflowCopy svg \{[^}]*translate\(3px, -3px\) rotate\(-45deg\)/);
-  assert.match(styles, /\.launchRow:hover \.launchArrow \{[^}]*translate\(3px, -3px\) rotate\(-45deg\)/);
-  assert.match(styles, /dashboard-generation-media::after/);
-  assert.match(styles, /workflowMedia::after/);
-  assert.match(styles, /workflowAction/);
-  assert.match(styles, /dashboard-generation-copy\) \{[^}]*translateY\(-3px\)/);
+  assert.doesNotMatch(styles, /scale\(|translate[XY]?\(|radial-gradient|backdrop-filter/);
   assert.match(styles, /@media \(prefers-reduced-motion: reduce\)/);
+  assert.match(styles, /\.workflowCard:focus-visible \.workflowAction \{ opacity: 1/);
+});
+
+test("Home preserves complete images and uses responsive action cards", () => {
+  const styles = read("src/components/dashboard/dashboard-home.module.css");
+  const rail = read("src/components/dashboard/dashboard-workflow-rail.tsx");
+  assert.match(styles, /\.workflowMedia \{[^}]*aspect-ratio: 3 \/ 2/);
+  assert.match(styles, /\.workflowMedia img \{ object-fit: contain/);
+  assert.match(styles, /\.home :global\(\.dashboard-generation-media img\) \{ object-fit: contain/);
+  assert.match(styles, /\.launchRow \{[^}]*border: 1px solid var\(--dashboard-border\)/);
+  assert.match(styles, /@media \(min-width: 640px\)/);
+  assert.match(styles, /@media \(min-width: 1200px\)/);
+  assert.match(rail, /event\.key === "ArrowLeft" \|\| event\.key === "ArrowRight"/);
+  assert.match(rail, /prefers-reduced-motion: reduce/);
 });

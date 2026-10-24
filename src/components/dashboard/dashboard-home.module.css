@@ -1,102 +1,114 @@
-.home {
-  --home-motion-fast: 180ms;
-  --home-motion-standard: 220ms;
-  --home-motion-media: 380ms;
-  gap: clamp(2.75rem, 5vw, 5rem);
-  padding-block: clamp(1.5rem, 3vw, 2.5rem) clamp(3rem, 6vw, 5rem);
+.home:global(.dashboard-main-inner.dashboard-container) {
+  --home-motion-fast: var(--transition-fast);
+  --home-motion-standard: var(--motion-fast);
+  gap: clamp(2rem, 3vw, 3rem);
+  max-width: var(--container);
+  padding-block: 1.5rem 2.5rem;
 }
 
-.discovery, .launchSection { min-width: 0; }
-.intro { display: grid; gap: 0.55rem; margin-bottom: 1.5rem; }
-.eyebrow { color: var(--dashboard-accent); font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
-.intro h1 { font-size: clamp(2rem, 3.5vw, 3.5rem); font-weight: 600; line-height: 1.08; letter-spacing: -0.045em; }
-.intro > p:last-child, .sectionHeading p { color: var(--dashboard-muted); font-size: 0.9375rem; line-height: 1.5; }
+.discovery,
+.launchSection { min-width: 0; }
+
+.intro { display: grid; gap: 0.5rem; margin-bottom: 1.25rem; }
+.eyebrow { display: flex; align-items: center; gap: 0.5rem; color: var(--dashboard-accent); font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.1em; }
+.eyebrow svg { width: 1rem; height: 1rem; }
+.intro h1 { font-size: clamp(1.5rem, 2.5vw, 2.25rem); font-weight: 600; line-height: 1.2; letter-spacing: -0.035em; text-wrap: balance; }
+.intro > p:last-child,
+.sectionHeading p { max-width: 40rem; color: var(--dashboard-muted); font-size: 0.875rem; line-height: 1.5; }
 
 .railWrap { min-width: 0; }
-.railControls { display: flex; justify-content: flex-end; gap: 0.5rem; margin-bottom: 0.75rem; }
-.railControls button { display: grid; width: 2.5rem; height: 2.5rem; place-items: center; border: 1px solid var(--dashboard-border); border-radius: var(--radius-sm); background: var(--dashboard-surface); color: var(--dashboard-foreground); cursor: pointer; transition: background-color var(--home-motion-fast) var(--ease-standard), border-color var(--home-motion-fast) var(--ease-standard), color var(--home-motion-fast) var(--ease-standard); }
+.railHeading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 0.75rem; }
+.railHeading > p { color: var(--dashboard-muted); font-size: 0.75rem; font-weight: 500; }
+.railControls { display: flex; flex: none; gap: 0.5rem; }
+.railControls button { display: grid; width: 2.5rem; height: 2.5rem; place-items: center; border: 1px solid var(--dashboard-border); border-radius: var(--radius-md); background: var(--dashboard-surface); color: var(--dashboard-foreground); cursor: pointer; transition: background-color var(--home-motion-fast) var(--ease-standard), border-color var(--home-motion-fast) var(--ease-standard), color var(--home-motion-fast) var(--ease-standard); }
 .railControls button:first-child svg { transform: rotate(180deg); }
 .railControls button:disabled { opacity: 0.35; cursor: default; }
-.railControls button:not(:disabled):is(:hover, :focus-visible) { border-color: var(--dashboard-border-strong); background: var(--dashboard-surface-raised); color: var(--dashboard-icon-primary); }
-.railControls svg { width: 1rem; height: 1rem; transition: transform var(--home-motion-fast) var(--ease-standard); }
-.rail { display: grid; grid-auto-columns: clamp(16rem, 27vw, 21rem); grid-auto-flow: column; gap: 0.875rem; min-width: 0; overflow-x: auto; padding: 0.125rem 0.125rem 0.75rem; scroll-snap-type: x mandatory; scrollbar-width: thin; scrollbar-color: var(--dashboard-border-strong) transparent; }
-.rail:focus-visible, .railControls button:focus-visible, .workflowCard:focus-visible, .launchRow:focus-visible { outline: 2px solid var(--dashboard-focus); outline-offset: 2px; }
-.workflowCard { display: grid; align-content: start; min-width: 0; overflow: hidden; border: 1px solid var(--dashboard-border); border-radius: var(--radius-md); background: var(--dashboard-surface); color: var(--dashboard-foreground); text-decoration: none; scroll-snap-align: start; transition: border-color var(--home-motion-standard) var(--ease-standard), transform var(--home-motion-standard) var(--ease-standard); }
-.workflowCard:focus-visible { border-color: var(--dashboard-border-strong); }
-.workflowMedia { position: relative; display: block; width: 100%; aspect-ratio: 5 / 4; overflow: hidden; background: var(--dashboard-surface-raised); }
-.workflowMedia::after { position: absolute; z-index: 1; inset: 0; background: radial-gradient(circle at 78% 22%, rgb(255 255 255 / 18%), transparent 42%); content: ""; opacity: 0; pointer-events: none; transition: opacity 450ms var(--ease-standard); }
-.workflowMedia img { object-fit: cover; transition: transform var(--home-motion-media) var(--ease-standard); }
-.workflowCategory { position: absolute; top: 0.75rem; left: 0.75rem; max-width: calc(100% - 1.5rem); padding: 0.375rem 0.625rem; border-radius: var(--radius-sm); background: color-mix(in srgb, var(--dashboard-background) 86%, transparent); color: var(--dashboard-foreground); font-size: 0.6875rem; font-weight: 650; }
-.workflowCopy { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.375rem 0.75rem; padding: 1rem; }
-.workflowAction { position: absolute; z-index: 2; right: 0.75rem; bottom: 0.75rem; border: 1px solid rgb(255 255 255 / 42%); border-radius: var(--radius); background: rgb(18 18 18 / 58%); padding: 0.35rem 0.55rem; color: white; font-size: 0.6875rem; font-weight: 650; opacity: 0; pointer-events: none; transform: translateY(0.25rem); transition: opacity var(--home-motion-fast) var(--ease-standard), transform var(--home-motion-fast) var(--ease-standard); }
-.workflowCopy strong { font-size: 1rem; font-weight: 650; line-height: 1.3; transition: transform var(--home-motion-fast) var(--ease-standard), color var(--home-motion-fast) var(--ease-standard); }
-.workflowCopy > span { grid-row: 2; color: var(--dashboard-muted); font-size: 0.8125rem; line-height: 1.4; }
-.workflowCopy svg { grid-column: 2; grid-row: 1 / 3; align-self: center; width: 1rem; height: 1rem; color: var(--dashboard-icon-secondary); transition: transform var(--home-motion-standard) var(--ease-standard), color var(--home-motion-standard) var(--ease-standard); }
-.workflowCard:focus-visible .workflowCopy svg { color: var(--dashboard-icon-primary); transform: translate(3px, -3px) rotate(-45deg); }
+.railControls button:not(:disabled):is(:hover, :focus-visible) { border-color: var(--dashboard-accent); background: var(--dashboard-accent-surface); color: var(--dashboard-accent-ink); }
+.railControls svg { width: 1rem; height: 1rem; }
+.rail { display: grid; grid-auto-columns: 82%; grid-auto-flow: column; align-items: stretch; gap: 1rem; min-width: 0; overflow-x: auto; padding: 0.25rem 0.25rem 0.75rem; scroll-snap-type: x mandatory; scroll-padding-inline: 0.25rem; scrollbar-width: thin; scrollbar-color: var(--dashboard-border-strong) transparent; }
+.rail:focus-visible,
+.railControls button:focus-visible,
+.workflowCard:focus-visible,
+.launchRow:focus-visible { outline: 2px solid var(--dashboard-focus); outline-offset: 2px; }
 
-.sectionHeading { display: grid; gap: 0.4rem; margin-bottom: 1.25rem; }
-.sectionHeading h2 { font-size: clamp(1.5rem, 2.2vw, 2.25rem); font-weight: 600; line-height: 1.15; letter-spacing: -0.035em; }
-.launchGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: clamp(1rem, 4vw, 3rem); }
-.launchRow { display: grid; grid-template-columns: 3.5rem minmax(0, 1fr) 1rem; align-items: center; gap: 0.875rem; min-width: 0; min-height: 5.75rem; padding: 0.75rem 0; border-top: 1px solid var(--dashboard-border); border-radius: var(--radius); color: var(--dashboard-foreground); text-decoration: none; transition: background-color var(--home-motion-fast) var(--ease-standard), color var(--home-motion-fast) var(--ease-standard); }
-.launchRow:focus-visible { background: var(--dashboard-surface-raised); }
-.launchIcon, .launchImage { position: relative; display: grid; width: 3.5rem; height: 3.5rem; place-items: center; overflow: hidden; border: 1px solid var(--dashboard-icon-container-border); border-radius: var(--radius-sm); background: var(--dashboard-icon-container); color: var(--dashboard-icon-primary); transition: background-color var(--home-motion-fast) var(--ease-standard), border-color var(--home-motion-fast) var(--ease-standard), color var(--home-motion-fast) var(--ease-standard), transform var(--home-motion-fast) var(--ease-standard); }
-.launchRow:first-child .launchIcon { color: var(--dashboard-accent); }
-.launchIcon svg { width: 1.5rem; height: 1.5rem; }
-.launchImage img { object-fit: cover; transition: transform var(--home-motion-standard) var(--ease-standard); }
-.launchCopy { display: grid; gap: 0.25rem; min-width: 0; }
-.launchCopy strong { font-size: 0.9375rem; font-weight: 650; line-height: 1.25; transition: color var(--home-motion-fast) var(--ease-standard); }
-.launchCopy > span { color: var(--dashboard-muted); font-size: 0.8125rem; line-height: 1.35; }
-.launchArrow { width: 1rem; height: 1rem; color: var(--dashboard-icon-secondary); transition: transform var(--home-motion-standard) var(--ease-standard), color var(--home-motion-standard) var(--ease-standard); }
-.launchRow:focus-visible .launchArrow { color: var(--dashboard-icon-primary); transform: translate(3px, -3px) rotate(-45deg); }
+.workflowCard { display: grid; grid-template-rows: auto 1fr; min-width: 0; border: 1px solid var(--dashboard-border); border-radius: var(--radius-xl); background: var(--dashboard-surface); color: var(--dashboard-foreground); text-decoration: none; scroll-snap-align: start; transition: border-color var(--home-motion-standard) var(--ease-standard), box-shadow var(--home-motion-standard) var(--ease-standard); }
+.workflowMedia { position: relative; display: block; aspect-ratio: 3 / 2; overflow: hidden; margin: 0.5rem 0.5rem 0; border-radius: var(--radius-md); background: var(--dashboard-surface-raised); }
+.workflowMedia img { object-fit: contain; }
+.workflowCategory { position: absolute; top: 0.5rem; left: 0.5rem; max-width: calc(100% - 1rem); padding: 0.25rem 0.5rem; border: 1px solid var(--dashboard-border); border-radius: var(--radius-sm); background: var(--dashboard-surface); color: var(--dashboard-foreground); font-size: 0.6875rem; font-weight: 500; line-height: 1.5; }
+.workflowAction { position: absolute; right: 0.5rem; bottom: 0.5rem; border-radius: var(--radius-sm); background: var(--dashboard-accent); padding: 0.25rem 0.5rem; color: var(--dashboard-accent-contrast); font-size: 0.6875rem; font-weight: 500; opacity: 0; transition: opacity var(--home-motion-fast) var(--ease-standard); }
+.workflowCopy { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-content: start; gap: 0.375rem 0.75rem; padding: 1rem; }
+.workflowCopy strong { font-size: 0.875rem; font-weight: 600; line-height: 1.4; }
+.workflowCopy > span:first-of-type { grid-column: 1; grid-row: 2; color: var(--dashboard-muted); font-size: 0.75rem; line-height: 1.5; }
+.workflowArrow { display: grid; grid-column: 2; grid-row: 1 / 3; align-self: center; width: 2rem; height: 2rem; place-items: center; border-radius: 50%; background: var(--dashboard-surface-raised); color: var(--dashboard-muted); transition: background-color var(--home-motion-fast) var(--ease-standard), color var(--home-motion-fast) var(--ease-standard); }
+.workflowArrow svg { width: 1rem; height: 1rem; }
+.workflowCard:focus-visible { border-color: var(--dashboard-accent); }
+.workflowCard:focus-visible .workflowArrow { background: var(--dashboard-accent-surface); color: var(--dashboard-accent-ink); }
+.workflowCard:focus-visible .workflowAction { opacity: 1; }
 
-.home :global(.dashboard-gallery-heading) { display: flex; align-items: end; justify-content: space-between; gap: 1rem; }
-.home :global(.dashboard-gallery-heading h2) { font-size: clamp(1.5rem, 2.2vw, 2.25rem); }
-.home :global(.dashboard-gallery-heading a) { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--dashboard-muted); font-size: 0.8125rem; text-decoration: none; }
+.sectionHeading { display: grid; gap: 0.375rem; margin-bottom: 1rem; }
+.sectionHeading h2 { font-size: clamp(1.125rem, 1.5vw, 1.5rem); font-weight: 600; line-height: 1.3; letter-spacing: -0.025em; }
+.launchGrid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.75rem; }
+.launchRow { display: grid; grid-template-columns: 2.75rem minmax(0, 1fr) 1rem; align-items: center; gap: 1rem; min-width: 0; min-height: 6.5rem; padding: 1.25rem; border: 1px solid var(--dashboard-border); border-radius: var(--radius-lg); background: var(--dashboard-surface); color: var(--dashboard-foreground); text-decoration: none; transition: border-color var(--home-motion-fast) var(--ease-standard), background-color var(--home-motion-fast) var(--ease-standard); }
+.launchRow:first-child { border-color: color-mix(in srgb, var(--dashboard-accent) 24%, var(--dashboard-border)); background: color-mix(in srgb, var(--dashboard-accent-surface) 35%, var(--dashboard-surface)); }
+.launchIcon { display: grid; width: 2.75rem; height: 2.75rem; place-items: center; border: 1px solid var(--dashboard-border); border-radius: var(--radius-md); background: var(--dashboard-surface-raised); color: var(--dashboard-muted); }
+.launchRow:first-child .launchIcon { border-color: transparent; background: var(--dashboard-accent-surface); color: var(--dashboard-accent-ink); }
+.launchIcon svg { width: 1.375rem; height: 1.375rem; }
+.launchCopy { display: grid; gap: 0.375rem; min-width: 0; }
+.launchCopy strong { font-size: 0.875rem; font-weight: 600; line-height: 1.4; }
+.launchCopy > span { color: var(--dashboard-muted); font-size: 0.75rem; line-height: 1.5; }
+.launchArrow { width: 1rem; height: 1rem; color: var(--dashboard-muted); }
+.launchRow:focus-visible { border-color: var(--dashboard-accent); background: var(--dashboard-accent-surface); }
+
+.home :global(.dashboard-content-section) { min-width: 0; padding: 0; }
+.home :global(.dashboard-gallery-heading) { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+.home :global(.dashboard-gallery-heading h2) { font-size: clamp(1.125rem, 1.5vw, 1.5rem); font-weight: 600; line-height: 1.3; letter-spacing: -0.025em; }
+.home :global(.dashboard-gallery-heading a) { display: inline-flex; flex: none; min-height: 2.5rem; align-items: center; gap: 0.5rem; border-radius: var(--radius-sm); color: var(--dashboard-muted); font-size: 0.75rem; text-decoration: none; }
 .home :global(.dashboard-gallery-heading a:hover) { color: var(--dashboard-accent); }
 .home :global(.dashboard-gallery-heading svg) { width: 1rem; height: 1rem; }
-.home :global(.dashboard-generation-grid) { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-.home :global(.dashboard-generation-card) { gap: 0; border-color: var(--dashboard-border); box-shadow: none; transition: border-color var(--home-motion-standard) var(--ease-standard), transform var(--home-motion-standard) var(--ease-standard); }
-.home :global(.dashboard-generation-copy) { padding: 0.75rem; transition: transform var(--home-motion-standard) var(--ease-standard); }
-.home :global(.dashboard-generation-media img) { transition: filter var(--home-motion-standard) var(--ease-standard), transform var(--home-motion-media) var(--ease-standard); }
-.home :global(.dashboard-generation-media::after) { position: absolute; z-index: 0; inset: 38% 0 0; background: linear-gradient(transparent, rgb(0 0 0 / 42%)); content: ""; opacity: 0; pointer-events: none; transition: opacity var(--home-motion-standard) var(--ease-standard); }
-.home :global(.dashboard-generation-actions) { transition: opacity var(--home-motion-fast) var(--ease-standard), transform var(--home-motion-fast) var(--ease-standard); }
-.home :global(.dashboard-generation-actions a) { background: rgb(15 15 15 / 54%); transition: background-color var(--home-motion-fast) var(--ease-standard); }
-.home :global(.dashboard-generation-copy strong) { transition: color var(--home-motion-fast) var(--ease-standard); }
+.home :global(.dashboard-generation-grid) { grid-template-columns: minmax(0, 1fr); gap: 1rem; padding: 0.25rem; }
+.home :global(.dashboard-generation-card) { gap: 0; border-color: var(--dashboard-border); border-radius: var(--radius-lg); background: var(--dashboard-surface); box-shadow: none; transition: border-color var(--home-motion-standard) var(--ease-standard), box-shadow var(--home-motion-standard) var(--ease-standard); }
+.home :global(.dashboard-generation-card-link:focus-visible) { outline-offset: -3px; }
+.home :global(.dashboard-generation-media) { background: var(--dashboard-surface-raised); }
+.home :global(.dashboard-generation-media img) { object-fit: contain; transition: none; }
+.home :global(.dashboard-generation-copy) { gap: 0.375rem; padding: 1rem; }
+.home :global(.dashboard-generation-copy strong) { font-size: 0.8125rem; font-weight: 600; }
+.home :global(.dashboard-generation-copy time) { color: var(--dashboard-muted); font-size: 0.75rem; }
+.home :global(.dashboard-generation-item:is(:hover, :focus-within) .dashboard-generation-card) { border-color: var(--dashboard-border-strong); box-shadow: none; transform: none; }
+.home :global(.dashboard-generation-item:hover .dashboard-generation-media img) { filter: none; transform: none; }
+.home :global(.dashboard-generation-item:focus-within .dashboard-generation-card) { border-color: var(--dashboard-accent); }
+.home :global(.dashboard-empty-state) { grid-template-columns: minmax(0, 1fr); justify-items: center; gap: 1rem; min-height: 15rem; border-radius: var(--radius-xl); padding: 2rem 1.25rem; text-align: center; box-shadow: none; }
+.home :global(.dashboard-empty-mark) { width: 3rem; height: 3rem; border: 0; border-radius: var(--radius-lg); background: var(--dashboard-accent-surface); color: var(--dashboard-accent-ink); }
+.home :global(.dashboard-empty-state h3) { font-size: 1rem; font-weight: 600; }
+.home :global(.dashboard-empty-state p) { max-width: 28rem; }
+.home :global(.dashboard-empty-state > a) { border-color: var(--dashboard-accent); border-radius: var(--radius-md); background: var(--dashboard-accent); color: var(--dashboard-accent-contrast); }
 
-@media (hover: hover) and (pointer: fine) {
-  .railControls button:not(:disabled):hover svg { transform: translateX(3px); }
-  .railControls button:first-child:not(:disabled):hover svg { transform: translateX(-3px) rotate(180deg); }
-  .workflowCard:hover { border-color: var(--dashboard-border-strong); transform: translateY(-3px); }
-  .workflowCard:hover .workflowMedia img { transform: scale(1.035); }
-  .workflowCard:hover .workflowMedia::after { opacity: 1; }
-  .workflowCard:hover .workflowAction { opacity: 1; transform: translateY(0); }
-  .workflowCard:hover .workflowCopy strong { color: var(--dashboard-accent); transform: translateX(2px); }
-  .workflowCard:hover .workflowCopy svg { color: var(--dashboard-icon-primary); transform: translate(3px, -3px) rotate(-45deg); }
-  .launchRow:hover { background: var(--dashboard-surface-raised); color: var(--dashboard-foreground); }
-  .launchRow:hover .launchCopy strong { color: var(--dashboard-accent); }
-  .launchRow:hover :is(.launchIcon, .launchImage) { border-color: var(--dashboard-border-strong); background: var(--dashboard-surface); transform: translateX(2px); }
-  .launchRow:hover .launchImage img { transform: scale(1.025); }
-  .launchRow:hover .launchArrow { color: var(--dashboard-icon-primary); transform: translate(3px, -3px) rotate(-45deg); }
-  .home :global(.dashboard-generation-item:hover .dashboard-generation-card) { border-color: var(--dashboard-border-strong); box-shadow: 0 0.5rem 1.25rem color-mix(in srgb, var(--dashboard-foreground) 8%, transparent); transform: translateY(-2px); }
-  .home :global(.dashboard-generation-item:hover .dashboard-generation-media img) { filter: none; transform: scale(1.025); }
-  .home :global(.dashboard-generation-item:hover .dashboard-generation-media::after) { opacity: 1; }
-  .home :global(.dashboard-generation-item:hover .dashboard-generation-copy) { transform: translateY(-3px); }
-  .home :global(.dashboard-generation-item:hover .dashboard-generation-copy strong) { color: var(--dashboard-accent); }
-}
-
-@media (max-width: 1023px) {
-  .rail { grid-auto-columns: minmax(15rem, 40vw); }
+@media (min-width: 640px) {
+  .rail { grid-auto-columns: calc((100% - 1rem) / 2); }
+  .launchGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
   .home :global(.dashboard-generation-grid) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
-@media (max-width: 639px) {
-  .home { gap: 3rem; }
-  .intro { margin-bottom: 1rem; }
-  .rail { grid-auto-columns: minmax(14rem, 76vw); gap: 0.75rem; }
-  .railControls { display: none; }
-  .launchGrid { grid-template-columns: minmax(0, 1fr); }
-  .home :global(.dashboard-generation-grid) { grid-template-columns: minmax(0, 1fr); }
-  .home :global(.dashboard-gallery-heading) { align-items: start; }
+@media (min-width: 1024px) {
+  .rail { grid-auto-columns: calc((100% - 2rem) / 3); }
+  .home :global(.dashboard-generation-grid) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (min-width: 1200px) {
+  .rail { grid-auto-columns: calc((100% - 3rem) / 4); }
+  .launchGrid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .launchRow { grid-template-columns: minmax(0, 1fr) 1rem; align-items: start; gap: 1rem; }
+  .launchCopy { grid-column: 1 / -1; grid-row: 2; }
+  .launchArrow { grid-column: 2; grid-row: 1; align-self: center; }
+  .home :global(.dashboard-generation-grid) { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .workflowCard:hover { border-color: var(--dashboard-border-strong); box-shadow: var(--shadow-subtle); }
+  .workflowCard:hover .workflowArrow { background: var(--dashboard-accent-surface); color: var(--dashboard-accent-ink); }
+  .workflowCard:hover .workflowAction { opacity: 1; }
+  .launchRow:hover { border-color: var(--dashboard-accent); background: var(--dashboard-accent-surface); }
+  .launchRow:hover .launchIcon,
+  .launchRow:hover .launchArrow { color: var(--dashboard-accent-ink); }
 }
 
 @media (hover: none) {
@@ -104,10 +116,11 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .railControls button, .railControls svg, .workflowCard, .workflowMedia::after, .workflowMedia img, .workflowAction, .workflowCopy strong, .workflowCopy svg, .launchRow, .launchIcon, .launchImage, .launchImage img, .launchCopy strong, .launchArrow, .home :global(.dashboard-generation-card), .home :global(.dashboard-generation-copy), .home :global(.dashboard-generation-media img), .home :global(.dashboard-generation-media::after), .home :global(.dashboard-generation-actions), .home :global(.dashboard-generation-actions a), .home :global(.dashboard-generation-copy strong) { transition: none; }
-  .workflowCard:hover, .home :global(.dashboard-generation-item:hover .dashboard-generation-card) { transform: none; }
-  .workflowCard:hover .workflowMedia img, .launchRow:hover .launchImage img, .home :global(.dashboard-generation-item:hover .dashboard-generation-media img) { transform: none; }
-  .workflowCard:hover .workflowAction { opacity: 0; }
-  .workflowCard:focus-visible .workflowCopy svg, .launchRow:focus-visible .launchArrow, .workflowCard:hover .workflowCopy svg, .launchRow:hover .launchArrow, .railControls button:not(:first-child):not(:disabled):hover svg { transform: none; }
-  .railControls button:first-child:not(:disabled):hover svg { transform: rotate(180deg); }
+  .railControls button,
+  .workflowCard,
+  .workflowAction,
+  .workflowArrow,
+  .launchRow,
+  .home :global(.dashboard-generation-card),
+  .home :global(.dashboard-generation-actions) { transition: none; }
 }

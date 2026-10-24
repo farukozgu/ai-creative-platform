@@ -14,17 +14,17 @@ export function DashboardIcon({ name, ...props }: DashboardIconProps) {
     stroke: "currentColor",
     strokeLinecap: "round" as const,
     strokeLinejoin: "round" as const,
-    strokeWidth: 1.75,
+    strokeWidth: 1.8,
     ...props,
   };
 
   switch (name) {
     case "home":
-      return <svg {...commonProps}><path d="m4 10 8-6 8 6v9a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1v-9Z" /></svg>;
+      return <svg {...commonProps}><path d="m3 10 7.15-6.1a2.85 2.85 0 0 1 3.7 0L21 10" /><path d="M5 8.5V18a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8.5M9 20v-5a3 3 0 0 1 6 0v5" /><path d="M11 9h2" /></svg>;
     case "spark":
       return <svg {...commonProps}><path d="m12 3 1.25 4.1a5.3 5.3 0 0 0 3.65 3.65L21 12l-4.1 1.25a5.3 5.3 0 0 0-3.65 3.65L12 21l-1.25-4.1a5.3 5.3 0 0 0-3.65-3.65L3 12l4.1-1.25a5.3 5.3 0 0 0 3.65-3.65L12 3Z" /></svg>;
     case "projects":
-      return <svg {...commonProps}><rect x="4" y="5" width="16" height="14" rx="2" /><path d="M8 5v14M8 9h12" /></svg>;
+      return <svg {...commonProps}><path d="M5 7V5a2 2 0 0 1 2-2h4l2 2h5a2 2 0 0 1 2 2v1" /><path d="M3 10a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2l-1 6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2l-1-8Z" /><path d="M8 15h5" /></svg>;
     case "templates":
       return <svg {...commonProps}><rect x="4" y="4" width="6" height="7" rx="1" /><rect x="14" y="4" width="6" height="4" rx="1" /><rect x="4" y="15" width="6" height="5" rx="1" /><rect x="14" y="12" width="6" height="8" rx="1" /></svg>;
     case "assets":
@@ -36,7 +36,7 @@ export function DashboardIcon({ name, ...props }: DashboardIconProps) {
     case "upgrade":
       return <svg {...commonProps}><path d="M12 20V5M6 11l6-6 6 6" /></svg>;
     case "account":
-      return <svg {...commonProps}><circle cx="12" cy="8" r="3" /><path d="M5.5 20a6.5 6.5 0 0 1 13 0" /></svg>;
+      return <svg {...commonProps}><rect x="3" y="3" width="18" height="18" rx="6" /><circle cx="12" cy="9" r="2.75" /><path d="M6.5 19a5.5 5.5 0 0 1 11 0" /></svg>;
     case "menu":
       return <svg {...commonProps}><path d="M4 7h16M4 12h16M4 17h16" /></svg>;
     case "close":
@@ -46,9 +46,9 @@ export function DashboardIcon({ name, ...props }: DashboardIconProps) {
     case "arrow":
       return <svg {...commonProps}><path d="M5 12h14M14 7l5 5-5 5" /></svg>;
     case "collapse":
-      return <svg {...commonProps}><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M9 4v16m7-11-3 3 3 3" /></svg>;
+      return <svg {...commonProps}><rect x="3" y="4" width="18" height="16" rx="3" /><path d="M9 4v16m7-11-3 3 3 3" /></svg>;
     case "expand":
-      return <svg {...commonProps}><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M9 4v16m4-11 3 3-3 3" /></svg>;
+      return <svg {...commonProps}><rect x="3" y="4" width="18" height="16" rx="3" /><path d="M9 4v16m4-11 3 3-3 3" /></svg>;
     case "website":
       return <svg {...commonProps}><path d="M13 5h6v6m0-6-9 9" /><path d="M19 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h4" /></svg>;
     case "chevron":
@@ -68,19 +68,19 @@ export function DashboardIcon({ name, ...props }: DashboardIconProps) {
     case "bag":
       return <svg {...commonProps}><path d="M5 9h14l1 11H4L5 9Z" /><path d="M9 9V7a3 3 0 0 1 6 0v2" /></svg>;
     case "image":
-      return <svg {...commonProps}><rect x="3" y="4" width="18" height="16" rx="2" /><circle cx="9" cy="9" r="1.5" /><path d="m5.5 17 4.5-4.5 3.25 3.25 2.25-2.5 3 3.75" /></svg>;
+      return <svg {...commonProps}><path d="M12 4H6a3 3 0 0 0-3 3v11a3 3 0 0 0 3 3h12a3 3 0 0 0 3-3v-5" /><circle cx="8" cy="9" r="1.5" /><path d="m4 18 5-5 4 4 3-3 4 4M18 2l1.15 3.85L23 7l-3.85 1.15L18 12l-1.15-3.85L13 7l3.85-1.15L18 2Z" /></svg>;
     case "video":
-      return <svg {...commonProps}><rect x="3" y="6" width="13" height="12" rx="2" /><path d="m16 10 5-3v10l-5-3" /></svg>;
+      return <svg {...commonProps}><path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9ZM3 9l-.5-3a2 2 0 0 1 1.6-2.3L18 1l1 5-16 3ZM8 3l3 4m3-5 3 4" /><path d="m10 12 5 3-5 3v-6Z" /></svg>;
     case "videoLibrary":
-      return <svg {...commonProps}><rect x="4" y="4" width="16" height="16" rx="2" /><path d="M8 4v16M16 4v16M4 9h4m8 0h4M4 15h4m8 0h4" /><path d="m11 10 3 2-3 2v-4Z" /></svg>;
+      return <svg {...commonProps}><path d="M7 3h11a3 3 0 0 1 3 3v11" /><rect x="3" y="6" width="15" height="15" rx="3" /><path d="M7 6v15M3 11h4m-4 5h4m4-6 4 3.5-4 3.5v-7Z" /></svg>;
     case "models":
-      return <svg {...commonProps}><circle cx="12" cy="8" r="3" /><path d="M5.5 20a6.5 6.5 0 0 1 13 0" /><path d="M18.5 5.5 20 7l-1.5 1.5L17 7l1.5-1.5Z" /></svg>;
+      return <svg {...commonProps}><path d="M14 3H7a4 4 0 0 0-4 4v10a4 4 0 0 0 4 4h10a4 4 0 0 0 4-4v-5" /><path d="M7 21v-2a4 4 0 0 1 8 0v2M8 9a3 3 0 0 1 6 0v2a3 3 0 0 1-6 0V9Zm3 1v1M19 2l.95 3.05L23 6l-3.05.95L19 10l-.95-3.05L15 6l3.05-.95L19 2Z" /></svg>;
     case "search":
       return <svg {...commonProps}><circle cx="10.5" cy="10.5" r="6.5" /><path d="m15.5 15.5 4 4" /></svg>;
     case "lock":
       return <svg {...commonProps}><rect x="5" y="10" width="14" height="10" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></svg>;
     case "bell":
-      return <svg {...commonProps}><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9Z" /><path d="M10 21h4" /></svg>;
+      return <svg {...commonProps}><path d="M18 9a6 6 0 0 0-12 0v3.5L4 16v2h16v-2l-2-3.5V9ZM10 21h4M12 3V2" /><path d="M4 7a8 8 0 0 1 1-2m15 2a8 8 0 0 0-1-2" /></svg>;
     case "alert":
       return <svg {...commonProps}><path d="M12 3 2.8 20h18.4L12 3Z" /><path d="M12 9v5m0 3h.01" /></svg>;
     case "edit":

@@ -70,7 +70,7 @@ test("Video Library copy is complete in Turkish and English", () => {
   }
 });
 
-test("library layouts preserve supported ratios, contained media, and 4px tokens", () => {
+test("library layouts preserve supported ratios, contained media, and shared radius tokens", () => {
   const styles = read("src/features/video/video-library.module.css");
   assert.match(styles, /data-aspect-ratio="16:9"/);
   assert.match(styles, /data-aspect-ratio="9:16"/);

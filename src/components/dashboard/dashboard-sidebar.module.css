@@ -1,9 +1,13 @@
 .frame {
+  --dashboard-rail-width: 4.5rem;
+}
+
+.frame:not([data-collapsed]) {
   --dashboard-rail-width: 15rem;
 }
 
 .frame[data-collapsed] {
-  --dashboard-rail-width: 4.25rem;
+  --dashboard-rail-width: 4.5rem;
 }
 
 .frame[data-creation-expanded] {
@@ -20,9 +24,9 @@
   min-height: 0;
   align-self: start;
   flex-direction: column;
-  border-right: 1px solid var(--dashboard-border);
+  border-right: 1px solid transparent;
   background: var(--dashboard-sidebar);
-  padding: 0.75rem;
+  padding: 1rem 0.75rem;
   color: var(--dashboard-foreground);
 }
 
@@ -44,33 +48,6 @@
   padding: 0 0.5rem;
   color: var(--dashboard-foreground);
   text-decoration: none;
-}
-
-.brandMark {
-  position: relative;
-  display: grid;
-  width: 1.75rem;
-  height: 1.75rem;
-  flex: 0 0 1.75rem;
-  place-items: center;
-  border: 1px solid var(--dashboard-border-strong);
-  border-radius: var(--radius);
-  background: var(--dashboard-surface);
-  font-size: 0.75rem;
-  font-weight: 780;
-  letter-spacing: -0.06em;
-}
-
-.brandMark::after {
-  position: absolute;
-  right: -0.1875rem;
-  bottom: -0.1875rem;
-  width: 0.4375rem;
-  height: 0.4375rem;
-  border: 2px solid var(--dashboard-sidebar);
-  border-radius: 50%;
-  background: var(--dashboard-accent);
-  content: "";
 }
 
 .brandName {
@@ -103,8 +80,8 @@
 
 .toggle svg,
 .icon {
-  width: 1.125rem;
-  height: 1.125rem;
+  width: 1.375rem;
+  height: 1.375rem;
   flex: none;
 }
 
@@ -116,7 +93,7 @@
 }
 
 .navSection {
-  margin-top: 1.25rem;
+  margin-top: 1.5rem;
 }
 
 .sectionLabel {
@@ -132,18 +109,18 @@
 
 .nav {
   display: grid;
-  gap: 0.125rem;
+  gap: 0.5rem;
 }
 
 .navItem,
 .utilityItem {
   position: relative;
   display: flex;
-  min-height: 2.5rem;
+  min-height: 2.75rem;
   align-items: center;
   gap: 0.75rem;
   border: 1px solid transparent;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   padding: 0 0.625rem;
   color: var(--dashboard-icon-secondary);
   font-size: 0.8125rem;
@@ -160,21 +137,11 @@
 
 .navItem[data-active="true"] {
   background: var(--dashboard-accent-surface);
-  color: var(--dashboard-foreground);
-}
-
-.navItem[data-active="true"]::before {
-  position: absolute;
-  left: -0.75rem;
-  width: 0.1875rem;
-  height: 1.25rem;
-  border-radius: var(--radius);
-  background: var(--dashboard-accent);
-  content: "";
+  color: var(--dashboard-accent-ink);
 }
 
 .navItem[data-active="true"] .icon {
-  color: var(--dashboard-icon-primary);
+  color: var(--dashboard-accent-icon);
 }
 
 .label {
@@ -189,6 +156,7 @@
   gap: 0.5rem;
   margin-top: auto;
   padding-top: 1.5rem;
+  border-top: 1px solid var(--dashboard-border);
 }
 
 .planSlot {
@@ -215,9 +183,17 @@
   font-weight: 560;
   line-height: 1.25;
   opacity: 0;
+  visibility: hidden;
   pointer-events: none;
   transform: translate(-0.25rem, -50%);
-  transition: opacity var(--transition-fast) ease, transform var(--transition-fast) ease;
+  transition: opacity var(--transition-fast) ease, transform var(--transition-fast) ease, visibility var(--transition-fast) ease;
+}
+
+.tooltip::before {
+  position: absolute;
+  inset: 0 100% 0 auto;
+  width: 0.75rem;
+  content: "";
 }
 
 .frame[data-collapsed] .sidebar {
@@ -232,15 +208,7 @@
 }
 
 .frame[data-collapsed] .brand {
-  width: 2.5rem;
-  justify-content: center;
-  padding: 0;
-}
-
-.frame[data-collapsed] .brandMark {
-  width: 2rem;
-  height: 2rem;
-  flex-basis: 2rem;
+  display: none;
 }
 
 .frame[data-collapsed] .brandName,
@@ -271,12 +239,10 @@
   padding: 0;
 }
 
-.frame[data-collapsed] .navItem[data-active="true"]::before {
-  left: -0.75rem;
-}
-
-.frame[data-collapsed] :is(.navItem, .utilityItem):is(:hover, :focus-visible) .tooltip {
+.frame[data-collapsed] .sidebar:not([data-tooltip-dismissed]) :is(.navItem, .utilityItem):is(:hover, :focus-visible) .tooltip {
   opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
   transform: translate(0, -50%);
 }
 
@@ -291,7 +257,7 @@
 .sidebar :global(.dashboard-sidebar-account-menu) {
   display: block;
   width: 100%;
-  border-top: 1px solid var(--dashboard-border);
+  border-top: 0;
   padding-top: 0.5rem;
 }
 
@@ -324,6 +290,7 @@
 
 @media (max-width: 767px) {
   .frame,
+  .frame:not([data-collapsed]),
   .frame[data-collapsed] {
     --dashboard-rail-width: 0rem;
   }
@@ -334,6 +301,8 @@
 }
 
 @media (max-height: 680px) and (min-width: 768px) {
+  .nav { gap: 0.25rem; }
+
   .navSection {
     margin-top: 1rem;
   }

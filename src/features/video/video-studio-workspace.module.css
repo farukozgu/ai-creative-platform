@@ -600,7 +600,7 @@
   min-height: 0;
   overflow: hidden;
   border: 1px solid var(--dashboard-border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-lg);
   background: var(--dashboard-surface);
 }
 
@@ -664,7 +664,7 @@
   overflow: hidden;
   border: 1px solid var(--dashboard-border-strong);
   border-radius: var(--radius-sm);
-  background: var(--dashboard-background);
+  background: var(--media-canvas);
   box-shadow: var(--shadow-subtle);
   transition: width var(--motion-fast) var(--ease-standard), height var(--motion-fast) var(--ease-standard);
 }

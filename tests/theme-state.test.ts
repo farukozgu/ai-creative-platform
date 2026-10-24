@@ -70,8 +70,8 @@ test("refresh initialization restores preference before paint", () => {
 
 test("dashboard follows the resolved root theme from the first paint", () => {
   const css = source("src/app/globals.css");
-  assert.match(css, /\.dashboard-shell \{[\s\S]*?--dashboard-background: #090909;/);
-  assert.match(css, /:root\[data-theme="light"\] \.dashboard-shell \{[\s\S]*?--dashboard-background: #f2f1f5;/);
+  assert.match(css, /\.dashboard-shell \{[\s\S]*?--dashboard-background: var\(--bg\);/);
+  assert.match(css, /:root\[data-theme="light"\] \.dashboard-shell \{[\s\S]*?--dashboard-background: #fafafc;/);
   assert.doesNotMatch(css, /data-theme-preference-source="stored"/);
 });
 
@@ -97,7 +97,7 @@ test("system mode subscribes to live OS preference changes", () => {
 });
 
 test("settings appearance options apply selection immediately and are keyboard operable", () => {
-  const control = source("src/app/[locale]/dashboard/account/appearance-control.tsx");
+  const control = source("src/components/theme/theme-preference-control.tsx");
   assert.match(control, /role="radiogroup"/);
   assert.match(control, /role="radio"/);
   assert.match(control, /onClick=\{\(\) => setPreference\(value\)\}/);

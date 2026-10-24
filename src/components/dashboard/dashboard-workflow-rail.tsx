@@ -37,9 +37,12 @@ export function DashboardWorkflowRail({ children, label, previousLabel, nextLabe
 
   return (
     <div className={styles.railWrap}>
-      <div className={styles.railControls}>
+      <div className={styles.railHeading}>
+        <p>{label}</p>
+        <div className={styles.railControls}>
         <button type="button" aria-label={previousLabel} disabled={bounds.start} onClick={() => move(-1)}><DashboardIcon name="arrow" /></button>
         <button type="button" aria-label={nextLabel} disabled={bounds.end} onClick={() => move(1)}><DashboardIcon name="arrow" /></button>
+        </div>
       </div>
       <div ref={railRef} className={styles.rail} role="region" aria-label={label} tabIndex={0} onScroll={updateBounds} onKeyDown={(event) => {
         if (event.key === "ArrowLeft" || event.key === "ArrowRight") {

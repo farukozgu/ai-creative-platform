@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { DashboardIcon } from "@/components/dashboard/dashboard-icons";
 import { dashboardPrimaryNavigation } from "@/data/dashboard-navigation";
@@ -18,14 +19,16 @@ type DashboardSidebarProps = {
 export function DashboardSidebar({ displayName, collapsed, onToggle }: DashboardSidebarProps) {
   const t = useTranslations("Dashboard.navigation");
   const { isActive } = useDashboardNavigationLocation();
+  const [tooltipDismissed, setTooltipDismissed] = useState(false);
   function tooltip(label: string, id: string) {
     return collapsed ? <span id={id} role="tooltip" className={styles.tooltip}>{label}</span> : null;
   }
 
-  return <aside className={styles.sidebar} aria-label={t("primaryLabel")}>
+  return <aside className={styles.sidebar} aria-label={t("primaryLabel")} data-tooltip-dismissed={tooltipDismissed || undefined} onKeyDown={(event) => {
+    if (event.key === "Escape") setTooltipDismissed(true);
+  }} onFocusCapture={() => setTooltipDismissed(false)} onPointerLeave={() => setTooltipDismissed(false)}>
     <header className={styles.header}>
       <Link href="/dashboard" className={styles.brand} aria-label={t("brand")}>
-        <span className={styles.brandMark} aria-hidden="true">K</span>
         <span className={styles.brandName}>{t("brand")}</span>
       </Link>
       <button type="button" className={styles.toggle} aria-label={collapsed ? t("expandSidebar") : t("collapseSidebar")} aria-expanded={!collapsed} title={collapsed ? t("expandSidebar") : t("collapseSidebar")} onClick={onToggle}>

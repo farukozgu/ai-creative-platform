@@ -44,7 +44,7 @@ src/
 - Rastgele hex renk, border-radius, gölge, spacing veya transition değeri kullanma; `globals.css` tokenlarını ve mevcut ölçeği kullan.
 - Mevcut UI bileşenini yeniden oluşturma. `Button`, `Badge`, `Container`, `Section` ve `SectionHeading` bileşenlerini kullan; yeni ihtiyaçta önce bunları genişlet.
 - Aynı işlev için birden çok button veya kart sistemi oluşturma.
-- Font kullanımını tutarlı tut: Body/UI için Geist, display için `next/font/google` ile yüklenen Manrope kullan; Playfair Display kullanma. Display fontu yalnızca büyük editorial başlıklarda kontrollü kullan.
+- Font kullanımını tutarlı tut: Body/UI ve başlıklarda `next/font/local` ile `public/poppins/` içindeki yerel Poppins dosyalarını kullan (400, 500, 600, 700; mevcut italik varyantları). Font indirme veya Google Fonts kullanma; Türkçe karakter desteğini koru.
 - Uzun paragraflardan, aşırı küçük metinlerden ve görselin önüne geçen içerikten kaçın.
 
 # Component Standards
