@@ -46,9 +46,26 @@ test("compact studio expansion remains local and Escape restores the compact rai
   assert.match(frame, /pathname === "\/dashboard\/create"/);
   assert.match(frame, /pathname === "\/dashboard\/video"/);
   assert.match(frame, /isCompactWorkspace \? !compactNavigationExpanded : collapsed/);
-  assert.match(frame, /compactNavigationExpanded \? "15rem" : "4\.25rem"/);
+  assert.doesNotMatch(frame, /compactRailStyle|CSSProperties|"--dashboard-rail-width"/);
   assert.match(frame, /event\.key === "Escape" && compactNavigationExpanded/);
   assert.match(frame, /onToggle=\{isCompactWorkspace \?/);
+});
+
+test("studio rails inherit the dashboard grid transition and fill its animated track", () => {
+  const shared = read("src/app/globals.css");
+  const sidebar = read("src/components/dashboard/dashboard-sidebar.module.css");
+  assert.match(shared, /transition: grid-template-columns var\(--motion-base\) var\(--ease-standard\)/);
+  assert.match(sidebar, /\.sidebar \{[^}]*width: 100%;[^}]*min-width: 0;/);
+  assert.match(sidebar, /\.frame:not\(\[data-collapsed\]\) \{\s*--dashboard-rail-width: 15rem;/);
+  for (const file of ["src/features/generation/creation-workspace.module.css", "src/features/video/video-studio-workspace.module.css"]) {
+    const css = read(file);
+    const frameRule = css.slice(0, css.indexOf("}"));
+    assert.match(frameRule, /--dashboard-compact-rail-width: 4\.25rem;/);
+    assert.doesNotMatch(frameRule, /--dashboard-rail-width:|transition:/);
+    assert.match(frameRule, /grid-template-columns: var\(--dashboard-rail-width\) minmax\(0, 1fr\)/);
+    assert.match(css, /@media \(max-width: 767px\)[\s\S]*--dashboard-rail-width: 0rem;/);
+  }
+  assert.match(shared, /@media \(prefers-reduced-motion: reduce\) \{\s*\.dashboard-shell,[^}]*transition: none;/);
 });
 
 test("collapsed navigation tooltips support pointer hover, keyboard focus and Escape", () => {
@@ -91,7 +108,8 @@ test("sidebar uses scoped semantic theme styles and keeps compact access afforda
   const styles = read("src/components/dashboard/dashboard-sidebar.module.css");
 
   assert.match(styles, /--dashboard-rail-width: 15rem/);
-  assert.match(styles, /\.frame\[data-collapsed\][\s\S]*--dashboard-rail-width: 4\.5rem/);
+  assert.match(styles, /--dashboard-compact-rail-width: 4\.5rem/);
+  assert.match(styles, /\.frame\[data-collapsed\]\s*\{\s*--dashboard-rail-width: var\(--dashboard-compact-rail-width\)/);
   assert.match(styles, /var\(--dashboard-sidebar\)/);
   assert.match(styles, /var\(--dashboard-accent-surface\)/);
   assert.doesNotMatch(styles, /#[0-9a-f]{3,8}/i);
@@ -132,7 +150,7 @@ test("dashboard topbar greets the signed-in user in both locales", () => {
   }
 });
 
-test("dashboard home retains discovery with an entry to the single route-owned composer", () => {
+test("dashboard overview retains an entry to the single route-owned composer", () => {
   const page = read("src/app/[locale]/dashboard/page.tsx");
   const composer = read("src/components/dashboard/creative-composer.tsx");
 
@@ -142,7 +160,7 @@ test("dashboard home retains discovery with an entry to the single route-owned c
   const createPage = read("src/app/[locale]/dashboard/create/page.tsx");
   assert.equal(createPage.match(/<CreativeComposer\b/g)?.length, 1);
   assert.doesNotMatch(createPage, /DashboardShell|DashboardSidebar|DashboardHomeHero/);
-  assert.match(read("src/components/dashboard/dashboard-home.tsx"), /CreationHomeEntry/);
+  assert.match(read("src/components/dashboard/dashboard-home.tsx"), /getPathname[\s\S]*href: "\/dashboard\/create"/);
   assert.match(composer, /DASHBOARD_PRESET_EVENT/);
   assert.match(composer, /creation-flow/);
 

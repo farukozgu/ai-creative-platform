@@ -1,5 +1,6 @@
 .frame {
-  --dashboard-rail-width: 4.5rem;
+  --dashboard-compact-rail-width: 4.5rem;
+  --dashboard-rail-width: var(--dashboard-compact-rail-width);
 }
 
 .frame:not([data-collapsed]) {
@@ -7,11 +8,7 @@
 }
 
 .frame[data-collapsed] {
-  --dashboard-rail-width: 4.5rem;
-}
-
-.frame[data-creation-expanded] {
-  --dashboard-rail-width: 15rem;
+  --dashboard-rail-width: var(--dashboard-compact-rail-width);
 }
 
 .sidebar {
@@ -19,7 +16,9 @@
   top: 0;
   z-index: 30;
   display: flex;
-  width: var(--dashboard-rail-width);
+  /* Follow the animated grid track instead of snapping to its target width. */
+  width: 100%;
+  min-width: 0;
   height: 100dvh;
   min-height: 0;
   align-self: start;

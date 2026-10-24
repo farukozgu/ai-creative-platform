@@ -12,15 +12,21 @@ type DeleteProjectModalProps = {
   open: boolean;
   onClose: () => void;
   redirectOnSuccess?: boolean;
+  onPendingChange?: (pending: boolean) => void;
   messages: {title: string; description: string; cancel: string; confirm: string; deleting: string; error: string};
 };
 
-export function DeleteProjectModal({action, open, onClose, redirectOnSuccess = false, messages}: DeleteProjectModalProps) {
+export function DeleteProjectModal({action, open, onClose, redirectOnSuccess = false, onPendingChange, messages}: DeleteProjectModalProps) {
   const [state, formAction, pending] = useActionState(action, initialState);
   const titleId = useId();
   const descriptionId = useId();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    onPendingChange?.(pending);
+    return () => onPendingChange?.(false);
+  }, [pending, onPendingChange]);
 
   useEffect(() => {
     const dialog = dialogRef.current;

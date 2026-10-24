@@ -6,6 +6,7 @@ import {isSupportedLocale, type AppLocale} from "@/i18n/routing";
 import {getAuthenticatedUserId} from "@/lib/auth/require-user";
 import {getSupabaseAdminClient} from "@/lib/supabase/admin";
 import {createClient} from "@/lib/supabase/server";
+import {validateProjectIds} from "@/lib/projects/project-selection";
 
 export type CreateProjectState = {
   status: "idle" | "error";
@@ -89,30 +90,48 @@ export async function deleteProject(
   void previousState;
   void formData;
 
-  const userId = await getAuthenticatedUserId();
-  if (!userId || !isSupportedLocale(locale)) {
-    return {status: "error"};
-  }
+  const result = await deleteProjects(locale, [projectId]);
+  return {status: result.status === "success" ? "success" : "error"};
+}
 
-  let error: Error | null = null;
+export type DeleteProjectsResult = {
+  status: "success" | "partial" | "error";
+  deletedIds: string[];
+  failedIds: string[];
+};
+
+export async function deleteProjects(locale: AppLocale, projectIds: unknown): Promise<DeleteProjectsResult> {
+  const ids = validateProjectIds(projectIds);
+  const failed = (): DeleteProjectsResult => ({status: "error", deletedIds: [], failedIds: ids ?? []});
+  if (!ids || !isSupportedLocale(locale)) return failed();
+
+  const userId = await getAuthenticatedUserId();
+  if (!userId) return failed();
+  const deletedIds: string[] = [];
+  const failedIds: string[] = [];
 
   try {
     const supabase = getSupabaseAdminClient();
-    const result = await supabase
-      .from("projects")
-      .delete()
-      .eq("id", projectId)
-      .eq("user_id", userId);
-    error = result.error;
+    const owned = await supabase.from("projects").select("id").eq("user_id", userId).in("id", ids);
+    if (owned.error) return failed();
+    const ownedIds = new Set((owned.data ?? []).map(project => project.id));
+    for (const id of ids) {
+      if (!ownedIds.has(id)) { failedIds.push(id); continue; }
+      try {
+        // Preserve the existing row-delete/cascade contract; no Storage cleanup.
+        const result = await supabase.from("projects").delete().eq("id", id).eq("user_id", userId).select("id").maybeSingle();
+        if (result.error || !result.data) failedIds.push(id);
+        else deletedIds.push(id);
+      } catch { failedIds.push(id); }
+    }
   } catch {
-    return {status: "error"};
+    return failed();
   }
 
-  if (error) {
-    return {status: "error"};
+  if (deletedIds.length) {
+    revalidatePath(`/${locale}/dashboard`, "page");
+    revalidatePath(`/${locale}/dashboard/projects`, "page");
+    for (const id of deletedIds) revalidatePath(`/${locale}/dashboard/projects/${id}`, "page");
   }
-
-  revalidatePath(`/${locale}/dashboard`, "page");
-  revalidatePath(`/${locale}/dashboard/projects`, "page");
-  return {status: "success"};
+  return {status: failedIds.length ? (deletedIds.length ? "partial" : "error") : "success", deletedIds, failedIds};
 }

@@ -20,9 +20,11 @@ const messages = {
   en: JSON.parse(read("src/messages/en.json")) as { Dashboard: { project: { composer: { invalidAspectRatio: string; aspectRatio: { label: string; names: Record<string, string> } } } } },
 };
 
-test("dashboard home omits recent projects while the projects area retains the shared menu", () => {
+test("projects library uses a direct delete action and page-scoped selection", () => {
   assert.doesNotMatch(dashboardHome, /RecentWork|recent-work/);
-  assert.match(gallery, /<ProjectCardMenu/);
+  assert.match(gallery, /<ProjectDeleteButton/);
+  assert.match(gallery, /<ProjectSelectionCheckbox/);
+  assert.match(projectsPage, /<ProjectsSelection key=\{JSON.stringify\(\[search, status, sort, result.page\]\)\}/);
 });
 
 test("projects library preserves server pagination and URL filter semantics", () => {
@@ -39,7 +41,23 @@ test("projects library cards expose real previews, timestamps, status and named 
   assert.match(gallery, /data-thumbnail-source=\{project\.thumbnail_source/);
   assert.match(gallery, /<time dateTime=\{project\.updated_at\}>/);
   assert.match(gallery, /<StatusBadge/);
-  assert.match(gallery, /messages\.projectActions\.replace\("\{title\}", title\)/);
+  assert.match(gallery, /ProjectDeleteButton projectId=\{project.id\} title=\{title\}/);
+});
+
+test("library cards separate media, information and accessible management controls", () => {
+  const css = read("src/app/globals.css");
+  const selection = read("src/components/projects/projects-selection.tsx");
+  const controls = read("src/components/projects/projects-selection.module.css");
+  assert.match(gallery, /projects-gallery-controls[\s\S]*ProjectSelectionCheckbox[\s\S]*ProjectDeleteButton[\s\S]*<Link/);
+  assert.match(gallery, /projects-gallery-media[\s\S]*<\/span>\s*<span className="projects-gallery-copy"/);
+  assert.doesNotMatch(gallery, /projects-gallery-shade|placeholder-mark/);
+  assert.match(css, /\.projects-gallery-media \{[^}]*aspect-ratio: 3 \/ 2/);
+  assert.match(css, /\.projects-gallery-media img \{[^}]*object-fit: contain/);
+  assert.match(css, /\.projects-gallery-grid \{[^}]*repeat\(auto-fill, minmax\(min\(100%, 15rem\), 1fr\)\)/);
+  assert.match(projectsPage, /<ProjectsSelection[\s\S]*toolbar=\{/);
+  assert.match(selection, /\{toolbar\}[\s\S]*className=\{styles.selectAll\}/);
+  assert.doesNotMatch(controls, /position: absolute/);
+  assert.match(css, /\.projects-loading \.project-card-skeleton-media \{ aspect-ratio: 3 \/ 2/);
 });
 
 test("projects library editorial copy exists in both locales", () => {
@@ -50,8 +68,12 @@ test("projects library editorial copy exists in both locales", () => {
   }
 });
 
-test("dashboard and projects surfaces share the card menu and delete modal", () => {
-  assert.match(gallery, /<ProjectCardMenu/);
+test("direct card deletion and detail menu reuse the existing confirmation modal", () => {
+  const direct = read("src/components/projects/project-delete-button.tsx");
+  assert.match(direct, /<DeleteProjectModal/);
+  assert.match(direct, /deleteProject.bind\(null, locale, projectId\)/);
+  assert.match(direct, /event.stopPropagation\(\)/);
+  assert.match(direct, /aria-label=\{t\("deleteProject", \{title\}\)\}/);
   assert.match(menu, /<DeleteProjectModal/);
   assert.match(menu, /event\.stopPropagation\(\)/);
   assert.match(menu, /role="menuitem"/);

@@ -1,7 +1,8 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useSyncExternalStore } from "react";
-import { isThemePreference, resolveTheme, type ThemePreference } from "./theme-state";
+import { createContext, useCallback, useContext, useLayoutEffect, useMemo, useSyncExternalStore } from "react";
+import { usePathname } from "next/navigation";
+import { isThemePreference, resolveRouteTheme, type ThemePreference } from "./theme-state";
 
 export type { ThemePreference } from "./theme-state";
 type ThemeContextValue = { preference: ThemePreference; setPreference: (value: ThemePreference) => void };
@@ -30,15 +31,17 @@ function subscribePreference(onChange: () => void) {
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
   const preference = useSyncExternalStore(subscribePreference, getPreference, (): ThemePreference => "system");
 
-  useEffect(() => {
+  // Apply route changes before paint, including when leaving a dark dashboard.
+  useLayoutEffect(() => {
     const media = window.matchMedia("(prefers-color-scheme: dark)");
     const applyTheme = () => {
       const stored = getStoredPreference();
       const selected = stored ?? "system";
       const root = document.documentElement;
-      root.dataset.theme = resolveTheme(selected, media.matches);
+      root.dataset.theme = resolveRouteTheme(pathname, selected, media.matches);
       root.dataset.themePreference = selected;
       root.dataset.themePreferenceSource = stored ? "stored" : "default";
     };
@@ -49,17 +52,17 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       media.removeEventListener("change", applyTheme);
       window.removeEventListener("storage", applyTheme);
     };
-  }, [preference]);
+  }, [pathname, preference]);
 
   const setPreference = useCallback((value: ThemePreference) => {
     try { window.localStorage.setItem(storageKey, value); } catch { /* Keep the in-memory selection. */ }
     window.dispatchEvent(new Event(preferenceEvent));
     const media = window.matchMedia("(prefers-color-scheme: dark)");
     const root = document.documentElement;
-    root.dataset.theme = resolveTheme(value, media.matches);
+    root.dataset.theme = resolveRouteTheme(pathname, value, media.matches);
     root.dataset.themePreference = value;
     root.dataset.themePreferenceSource = "stored";
-  }, []);
+  }, [pathname]);
   const context = useMemo(() => ({ preference, setPreference }), [preference, setPreference]);
   return <ThemeContext.Provider value={context}>{children}</ThemeContext.Provider>;
 }

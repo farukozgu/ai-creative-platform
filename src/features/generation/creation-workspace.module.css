@@ -5,12 +5,11 @@
   --creation-inspector-width: 22.5rem;
   --creation-header-height: 3.5rem;
   --creation-footer-height: 4.75rem;
-  --dashboard-rail-width: 4.25rem;
+  --dashboard-compact-rail-width: 4.25rem;
   height: 100dvh;
   min-height: 0;
   grid-template-columns: var(--dashboard-rail-width) minmax(0, 1fr);
   overflow: clip;
-  transition: none;
 }
 
 .editorContent {

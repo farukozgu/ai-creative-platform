@@ -523,6 +523,52 @@
     "visualDescription": "Talk to our team about pilot access, partnerships or anything you would like to know about the product."
   },
   "Dashboard": {
+    "projectManagement": {
+      "failed": "Failed",
+      "failedDescription": "Projects whose latest generation failed. They may still contain successful outputs and other assets.",
+      "selectProject": "Select project: {title}",
+      "deleteProject": "Delete project: {title}",
+      "selectionToolbar": "Project selection",
+      "selectAll": "Select all on this page",
+      "selectedCount": "{count, plural, one {# project selected} other {# projects selected}}",
+      "clear": "Clear selection",
+      "deleteSelected": "Delete selected",
+      "confirmTitle": "{count, plural, one {Delete # project?} other {Delete # projects?}}",
+      "confirmDescription": "{count, plural, one {# selected project will be permanently deleted.} other {# selected projects will be permanently deleted.}} These projects may contain successful images, videos and other assets, even if their latest generation failed. This cannot be undone.",
+      "confirmDelete": "{count, plural, one {Delete # project} other {Delete # projects}}",
+      "cancel": "Cancel",
+      "deleting": "Deleting…",
+      "deleteError": "The selected projects could not be deleted. Please try again.",
+      "result": "Deleted: {deleted}. Not deleted: {failed}."
+    },
+    "homeOverview": {
+      "title": "Overview",
+      "description": "Your projects, creations and model profiles, together.",
+      "create": "Create a new image",
+      "statistics": "Workspace statistics",
+      "metrics": {
+        "projects": "Total projects",
+        "images": "Generated images",
+        "models": "AI model profiles",
+        "videos": "Generated videos"
+      },
+      "unavailable": "Unavailable",
+      "recentProjects": "Recent projects",
+      "allProjects": "All projects",
+      "recentModels": "Your model profiles",
+      "allModels": "Model Studio",
+      "recentCreations": "Recent creations",
+      "projectsUnavailable": "Projects could not be loaded. Please try again later.",
+      "modelsUnavailable": "Model profiles are currently unavailable.",
+      "creationsUnavailable": "Recent creations could not be loaded. Please try again later.",
+      "emptyProjectsTitle": "Start your first project",
+      "emptyProjectsDescription": "Create an image and your project will appear here.",
+      "untitledProject": "Untitled project",
+      "updated": "Updated: {date}",
+      "emptyModelsTitle": "No model profiles yet",
+      "emptyModelsDescription": "Create a profile in Model Studio to save your appearance preferences.",
+      "createModel": "Create a model profile"
+    },
     "creationCanvas": {
       "eyebrow": "KLAY AI / CREATIVE WORKFLOW",
       "heading": "How Klay works",
@@ -686,6 +732,31 @@
       }
     },
     "modelStudio": {
+      "editor": {
+        "title": "Create your next character",
+        "editTitle": "Refine your model profile",
+        "subtitle": "Shape a fictional adult identity, one considered detail at a time.",
+        "identityTitle": "Basic identity",
+        "identityDescription": "Start with a name and the identity behind the appearance.",
+        "appearanceTitle": "Physical appearance",
+        "appearanceDescription": "Define the traits that give your character a consistent look.",
+        "directionTitle": "Visual direction",
+        "directionDescription": "Choose an aesthetic and add lasting appearance details.",
+        "gender": {
+          "label": "Gender",
+          "helper": "Optional. Gender and presentation describe different aspects of a profile.",
+          "clear": "Clear selection",
+          "options": {"female": "Female", "male": "Male", "non_binary": "Non-binary", "androgynous": "Androgynous", "prefer_not_to_say": "Prefer not to say"}
+        },
+        "liveSummary": "Live profile summary",
+        "notSet": "Not set yet",
+        "consistency": "Keep identity traits consistent. Clothing, poses and scenes belong to individual campaigns.",
+        "summaryNote": "This is a profile summary, not a generated portrait. You are defining a fictional adult character.",
+        "ready": "Your profile is ready to save as a draft.",
+        "incomplete": "Complete the identity, appearance and visual style fields to save your draft.",
+        "unavailable": "Candidate generation, identity approval and model use are not available yet. Saving a draft does not generate an image.",
+        "stageStates": {"current": "Current step", "completed": "Completed", "available": "Available", "unavailable": "Unavailable"}
+      },
       "metadataTitle": "AI Model Studio",
       "metadataDescription": "Define and prepare fictional adult model identities for future campaigns.",
       "library": { "eyebrow": "MODEL LIBRARY", "title": "AI Model Studio", "description": "Define fictional adult model identities for future campaigns. Approved references and reusable identities will appear here.", "create": "Create model", "toolbarLabel": "Model library controls", "searchLabel": "Search models", "searchPlaceholder": "Search model names", "empty": { "title": "No models yet", "description": "Your approved fictional model identities will appear here. Start by defining an appearance profile.", "action": "Create a model" }, "noResults": { "title": "No models match your search", "description": "No saved model matches “{query}”. Try another name or clear the search.", "action": "Clear search" } },
@@ -1440,7 +1511,7 @@
     },
     "projectsIndex": {
       "title": "Projects",
-      "description": "Manage your product imagery and generations in one creative library.",
+      "description": "Your projects and creations, in one place.",
       "count": "{count} projects",
       "resultCount": "{count} results",
       "search": "Search projects",

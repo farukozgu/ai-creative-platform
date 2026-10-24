@@ -5,6 +5,7 @@ import { isProductProfile } from "@/lib/product-understanding/product-profile";
 import type { SupportedVertical } from "@/lib/verticals/supported-verticals";
 
 export type ProjectStatus = "draft" | "active" | "completed";
+export type ProjectFilter = ProjectStatus | "failed";
 export type GenerationType = "image" | "video";
 export type GenerationStatus = "queued" | "processing" | "succeeded" | "failed";
 export type ProjectSort = "updated" | "newest" | "oldest";
@@ -47,7 +48,7 @@ type ProjectRow = Pick<Project, "id" | "title" | "status" | "created_at" | "upda
 
 const projectFields = `
   id, title, status, created_at, updated_at,
-  latest_generation:generations(generation_type, status, created_at),
+  latest_generation:generations(id, generation_type, status, created_at),
   successful_generation:generations(generation_type, status, output_bucket_id, output_object_path, created_at),
   product_asset:assets(bucket_id, object_path, product_profile, product_role, sort_order, created_at)
 `;
@@ -82,6 +83,7 @@ async function signProjectPreviews(rows: ProjectRow[]): Promise<Project[]> {
 function buildProjectQuery(supabase: Awaited<ReturnType<typeof createClient>>, userId: string) {
   return supabase.from("projects").select(projectFields, { count: "exact" }).eq("user_id", userId)
     .order("created_at", { referencedTable: "latest_generation", ascending: false })
+    .order("id", { referencedTable: "latest_generation", ascending: false })
     .limit(1, { referencedTable: "latest_generation" })
     .eq("successful_generation.generation_type", "image")
     .eq("successful_generation.status", "succeeded")
@@ -121,7 +123,7 @@ export async function getProjects(userId: string, limit?: number): Promise<Proje
   return signProjectPreviews((data ?? []) as unknown as ProjectRow[]);
 }
 
-export async function getProjectsPage(userId: string, options: { page: number; pageSize: number; search: string; status: ProjectStatus | null; sort: ProjectSort }) {
+export async function getProjectsPage(userId: string, options: { page: number; pageSize: number; search: string; status: ProjectFilter | null; sort: ProjectSort }) {
   if (process.env.NODE_ENV === "development") {
     console.info("[projects] query_start", { userIdPresent: Boolean(userId), limit: options.pageSize });
   }
@@ -130,11 +132,57 @@ export async function getProjectsPage(userId: string, options: { page: number; p
   if (totalError) throw new Error("Unable to count projects.");
   const field = options.sort === "updated" ? "updated_at" : "created_at";
   const ascending = options.sort === "oldest";
+  if (options.status === "failed") {
+    // Scan lightweight, owner-scoped summaries in bounded batches. Filtering an
+    // embedded generation to failed BEFORE its limit would select an older failure.
+    const failedIds: string[] = [];
+    const batchSize = 200;
+    for (let offset = 0; ; offset += batchSize) {
+      let scan = supabase.from("projects")
+        .select("id, latest_generation:generations(id, status, created_at)")
+        .eq("user_id", userId)
+        .order("created_at", { referencedTable: "latest_generation", ascending: false })
+        .order("id", { referencedTable: "latest_generation", ascending: false })
+        .limit(1, { referencedTable: "latest_generation" })
+        .order(field, { ascending }).order("id", { ascending });
+      if (options.search) scan = scan.ilike("title", `%${options.search}%`);
+      const { data: summaries, error: scanError } = await scan.range(offset, offset + batchSize - 1);
+      if (scanError) throw new Error("Unable to filter failed projects.");
+      for (const project of summaries ?? []) {
+        if (project.latest_generation[0]?.status === "failed") failedIds.push(project.id);
+      }
+      if (!summaries || summaries.length < batchSize) break;
+    }
+    const resultCount = failedIds.length;
+    const pageCount = Math.max(1, Math.ceil(resultCount / options.pageSize));
+    const page = Math.min(options.page, pageCount);
+    const ids = failedIds.slice((page - 1) * options.pageSize, page * options.pageSize);
+    if (!ids.length) return { projects: [] as Project[], totalCount: totalCount ?? 0, resultCount, page, pageCount };
+    const { data, error } = await buildProjectQuery(supabase, userId).in("id", ids)
+      .order(field, { ascending }).order("id", { ascending });
+    if (error) throw new Error("Unable to load failed projects.");
+    return { projects: await signProjectPreviews((data ?? []) as unknown as ProjectRow[]), totalCount: totalCount ?? 0, resultCount, page, pageCount };
+  }
   let query = buildProjectQuery(supabase, userId);
   if (options.search) query = query.ilike("title", `%${options.search}%`);
   if (options.status) query = query.eq("status", options.status);
-  const start = (options.page - 1) * options.pageSize;
-  const { data, count, error } = await query.order(field, { ascending }).range(start, start + options.pageSize - 1);
+  // Clamp before requesting a range: deleting the last item on a page can make
+  // that range invalid in PostgREST, rather than returning an empty result.
+  let page = options.page;
+  if (page > 1) {
+    let matchingCount = totalCount ?? 0;
+    if (options.search || options.status) {
+      let countQuery = supabase.from("projects").select("id", { count: "exact", head: true }).eq("user_id", userId);
+      if (options.search) countQuery = countQuery.ilike("title", `%${options.search}%`);
+      if (options.status) countQuery = countQuery.eq("status", options.status);
+      const { count, error } = await countQuery;
+      if (error) throw new Error("Unable to count matching projects.");
+      matchingCount = count ?? 0;
+    }
+    page = Math.min(page, Math.max(1, Math.ceil(matchingCount / options.pageSize)));
+  }
+  const start = (page - 1) * options.pageSize;
+  const { data, count, error } = await query.order(field, { ascending }).order("id", { ascending }).range(start, start + options.pageSize - 1);
   if (error) {
     logProjectQueryFailure(error);
     throw new Error("Unable to load projects.");
@@ -144,6 +192,6 @@ export async function getProjectsPage(userId: string, options: { page: number; p
     console.info("[projects] query_success", { count: data?.length ?? 0 });
   }
   const pageCount = Math.max(1, Math.ceil(resultCount / options.pageSize));
-  if (resultCount > 0 && options.page > pageCount) return getProjectsPage(userId, { ...options, page: pageCount });
-  return { projects: await signProjectPreviews((data ?? []) as unknown as ProjectRow[]), totalCount: totalCount ?? 0, resultCount, page: options.page, pageCount };
+  if (page > pageCount) return getProjectsPage(userId, { ...options, page: pageCount });
+  return { projects: await signProjectPreviews((data ?? []) as unknown as ProjectRow[]), totalCount: totalCount ?? 0, resultCount, page, pageCount };
 }

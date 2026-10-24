@@ -2,13 +2,12 @@
 .videoFrame.videoFrame[data-collapsed] {
   --video-inspector-width: 22.5rem;
   --video-header-height: 3.5rem;
-  --dashboard-rail-width: 4.25rem;
+  --dashboard-compact-rail-width: 4.25rem;
   position: relative;
   height: 100dvh;
   min-height: 0;
   grid-template-columns: var(--dashboard-rail-width) minmax(0, 1fr);
   overflow: clip;
-  transition: none;
 }
 
 .videoContent {

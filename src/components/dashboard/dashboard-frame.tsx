@@ -1,6 +1,6 @@
 "use client";
 
-import { type CSSProperties, useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
 import { resolveDashboardSidebarCollapsed } from "@/components/dashboard/dashboard-sidebar-state";
 import styles from "@/components/dashboard/dashboard-sidebar.module.css";
@@ -55,10 +55,7 @@ export function DashboardFrame({ children, topbar, displayName }: { children: Re
   }
 
   const effectiveCollapsed = isCompactWorkspace ? !compactNavigationExpanded : collapsed;
-  const compactRailStyle = isCompactWorkspace
-    ? ({ "--dashboard-rail-width": compactNavigationExpanded ? "15rem" : "4.25rem" } as CSSProperties)
-    : undefined;
-  return <div className={`dashboard-shell ${styles.frame} ${isCreation ? creationStyles.editorFrame : ""} ${isVideoStudio ? videoStyles.videoFrame : ""}`} style={compactRailStyle} data-collapsed={effectiveCollapsed || undefined} data-creation-expanded={isCreation && compactNavigationExpanded || undefined} data-video-expanded={isVideoStudio && compactNavigationExpanded || undefined} onKeyDown={(event) => {
+  return <div className={`dashboard-shell ${styles.frame} ${isCreation ? creationStyles.editorFrame : ""} ${isVideoStudio ? videoStyles.videoFrame : ""}`} data-collapsed={effectiveCollapsed || undefined} data-creation-expanded={isCreation && compactNavigationExpanded || undefined} data-video-expanded={isVideoStudio && compactNavigationExpanded || undefined} onKeyDown={(event) => {
     if (event.key === "Escape" && compactNavigationExpanded) setExpandedAt(null);
   }}>
     <DashboardSidebar displayName={displayName} collapsed={effectiveCollapsed} onToggle={isCompactWorkspace ? () => setExpandedAt(compactNavigationExpanded ? null : pathname) : toggleSidebar} />

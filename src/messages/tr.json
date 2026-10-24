@@ -523,6 +523,52 @@
     "visualDescription": "Pilot kullanım, iş birliği veya ürün hakkında konuşmak için ekibimizle iletişime geçin."
   },
   "Dashboard": {
+    "projectManagement": {
+      "failed": "Başarısız",
+      "failedDescription": "Son üretimi başarısız olan projeler. Bu projelerde başarılı çıktılar ve başka dosyalar bulunabilir.",
+      "selectProject": "Projeyi seç: {title}",
+      "deleteProject": "Projeyi sil: {title}",
+      "selectionToolbar": "Proje seçimi",
+      "selectAll": "Bu sayfadakilerin tümünü seç",
+      "selectedCount": "{count} proje seçildi",
+      "clear": "Seçimi temizle",
+      "deleteSelected": "Seçilenleri sil",
+      "confirmTitle": "{count} proje silinsin mi?",
+      "confirmDescription": "Seçilen {count} proje kalıcı olarak silinecek. Son üretimleri başarısız olsa bile bu projelerde başarılı görseller, videolar ve başka dosyalar bulunabilir. Bu işlem geri alınamaz.",
+      "confirmDelete": "{count} projeyi sil",
+      "cancel": "Vazgeç",
+      "deleting": "Siliniyor…",
+      "deleteError": "Seçilen projeler silinemedi. Lütfen tekrar dene.",
+      "result": "Silinen: {deleted}. Silinemeyen: {failed}."
+    },
+    "homeOverview": {
+      "title": "Genel Bakış",
+      "description": "Projelerin, üretimlerin ve model profillerin bir arada.",
+      "create": "Yeni görsel oluştur",
+      "statistics": "Çalışma alanı istatistikleri",
+      "metrics": {
+        "projects": "Toplam proje",
+        "images": "Üretilen görsel",
+        "models": "AI model profili",
+        "videos": "Üretilen video"
+      },
+      "unavailable": "Kullanılamıyor",
+      "recentProjects": "Son projeler",
+      "allProjects": "Tüm projeler",
+      "recentModels": "Model profillerin",
+      "allModels": "Model Studio",
+      "recentCreations": "Son üretimler",
+      "projectsUnavailable": "Projeler şu anda yüklenemiyor. Daha sonra tekrar dene.",
+      "modelsUnavailable": "Model profilleri şu anda kullanılamıyor.",
+      "creationsUnavailable": "Son üretimler şu anda yüklenemiyor. Daha sonra tekrar dene.",
+      "emptyProjectsTitle": "İlk projenle başla",
+      "emptyProjectsDescription": "Görsel oluşturduğunda projen burada görünecek.",
+      "untitledProject": "İsimsiz proje",
+      "updated": "Güncellendi: {date}",
+      "emptyModelsTitle": "Henüz model profilin yok",
+      "emptyModelsDescription": "Model Studio’da bir profil oluşturarak görünüm tercihlerini kaydet.",
+      "createModel": "Model profili oluştur"
+    },
     "creationCanvas": {
       "eyebrow": "KLAY AI / YARATICI SÜREÇ",
       "heading": "Klay nasıl çalışır?",
@@ -686,6 +732,31 @@
       }
     },
     "modelStudio": {
+      "editor": {
+        "title": "Yeni karakterine hayat ver",
+        "editTitle": "Model profilini geliştir",
+        "subtitle": "Kurgusal yetişkin karakterinin kimliğini, ayrıntılarıyla şekillendir.",
+        "identityTitle": "Temel kimlik",
+        "identityDescription": "Bir isimle başla, görünümün arkasındaki kimliği tanımla.",
+        "appearanceTitle": "Fiziksel görünüm",
+        "appearanceDescription": "Karakterinin tutarlı görünmesini sağlayan özellikleri belirle.",
+        "directionTitle": "Görsel yön",
+        "directionDescription": "Bir estetik seç ve kalıcı görünüm ayrıntılarını ekle.",
+        "gender": {
+          "label": "Cinsiyet",
+          "helper": "İsteğe bağlıdır. Cinsiyet ve dışa yansıyan ifade, profilin farklı yönlerini tanımlar.",
+          "clear": "Seçimi temizle",
+          "options": {"female": "Kadın", "male": "Erkek", "non_binary": "Non-binary", "androgynous": "Androjen", "prefer_not_to_say": "Belirtmek istemiyorum"}
+        },
+        "liveSummary": "Canlı profil özeti",
+        "notSet": "Henüz seçilmedi",
+        "consistency": "Kimlik özelliklerini tutarlı tut. Kıyafet, poz ve sahne tercihlerini her kampanyada ayrı belirle.",
+        "summaryNote": "Bu bir profil özetidir; üretilmiş portre değildir. Kurgusal bir yetişkin karakter tanımlıyorsun.",
+        "ready": "Profilin taslak olarak kaydedilmeye hazır.",
+        "incomplete": "Taslağını kaydetmek için kimlik, görünüm ve görsel stil alanlarını tamamla.",
+        "unavailable": "Aday üretimi, kimlik onayı ve model kullanımı henüz açık değil. Taslak kaydetmek görsel üretmez.",
+        "stageStates": {"current": "Mevcut adım", "completed": "Tamamlandı", "available": "Kullanılabilir", "unavailable": "Kullanılamıyor"}
+      },
       "metadataTitle": "AI Model Studio", "metadataDescription": "Gelecekteki kampanyalar için kurgusal yetişkin model kimliklerini tanımlayın ve hazırlayın.",
       "library": { "eyebrow": "MODEL KÜTÜPHANESİ", "title": "AI Model Studio", "description": "Gelecekteki kampanyalar için kurgusal yetişkin model kimlikleri tanımlayın. Onaylı referanslar ve tekrar kullanılabilir kimlikler burada görünecek.", "create": "Model oluştur", "toolbarLabel": "Model kütüphanesi kontrolleri", "searchLabel": "Modellerde ara", "searchPlaceholder": "Model adına göre ara", "empty": { "title": "Henüz model yok", "description": "Onaylı kurgusal model kimlikleriniz burada görünecek. Bir görünüm profili tanımlayarak başlayın.", "action": "Model oluştur" }, "noResults": { "title": "Aramanızla eşleşen model yok", "description": "“{query}” ile eşleşen kayıtlı model bulunamadı. Başka bir ad deneyin veya aramayı temizleyin.", "action": "Aramayı temizle" } },
       "create": { "eyebrow": "KURGUSAL YETİŞKİN MODEL", "title": "Model profili tanımlayın", "description": "Gelecekteki kampanyalarda sabit kalması gereken kimlik özelliklerini belirleyin. Adayları incelemeden önce taslak profili kaydedin. Üretim henüz kullanılamıyor.", "stepsLabel": "Model oluşturma aşamaları", "steps": { "define": "Görünümü tanımla", "review": "Taslağı kaydet", "generate": "Aday üret", "select": "Adayları incele", "approve": "Kimliği onayla", "use": "Onaylı modeli kullan" }, "identityLegend": "Görünüm profili", "identityHelper": "Bu özellikler gelecekte kalıcı olacak kurgusal bir kimliği tanımlar. Tüm profiller yetişkinleri temsil eder.", "choose": "Seçin", "notesLegend": "Yaratıcı notlar", "notesHelper": "İsteğe bağlı notlar, gelecekteki kimlik brief'ini yönlendirir. Gerçek bir kişinin benzerliğini eklemeyin.", "fields": { "name": { "label": "Çalışma adı", "placeholder": "Örneğin, Stüdyo modeli 01" }, "presentation": { "label": "Sunum", "options": ["Feminen", "Maskülen", "Androjen"] }, "ageRange": { "label": "Yetişkin yaş aralığı", "options": ["18–24", "25–34", "35–44", "45–54", "55+"] }, "skinTone": { "label": "Cilt tonu", "options": ["Açık", "Orta", "Koyu"] }, "hairColor": { "label": "Saç rengi", "options": ["Siyah", "Kahverengi", "Sarı", "Kızıl", "Gri"] }, "hairstyle": { "label": "Saç stili", "options": ["Kısa", "Orta uzunluk", "Uzun", "Kıvırcık", "Sık kıvırcık"] }, "eyeColor": { "label": "Göz rengi", "options": ["Kahverengi", "Mavi", "Yeşil", "Ela", "Gri"] }, "silhouette": { "label": "Vücut / silüet", "options": ["Narin", "Dengeli", "Atletik", "Uzun"] }, "visualStyle": { "label": "Görsel stil", "options": ["Doğal editorial", "Rafine stüdyo", "Çağdaş kampanya"] }, "notes": { "label": "İsteğe bağlı yaratıcı notlar", "placeholder": "Yalnızca kimlik için önemli, kalıcı görünüm detaylarını yazın." } }, "guidance": { "title": "Kimliği ayrı tutun", "identity": { "title": "Kimlik profili", "description": "Görünüm özellikleri ve onaylı referanslar gelecekteki model kimliğini tanımlar." }, "scene": { "title": "Kampanya stili", "description": "Kıyafet, poz, ışık ve arka plan her çekime aittir; kimliği yeniden tanımlamaz." } }, "safety": "Yalnızca kurgusal yetişkin modeller. Gerçek kişi benzerlikleri, yüklemeler ve ünlü taklitleri kullanılamaz.", "reviewTitle": "Üretim henüz bağlı değil", "reviewReady": "Profiliniz tamamlandı; sonraki aşama kullanıma açıldığında gözden geçirilebilir.", "reviewIncomplete": "Profili gözden geçirmeye hazırlamak için gerekli görünüm alanlarını tamamlayın.", "generationUnavailable": "Aday üretimi planlandı", "unavailableHelper": "Aday üretimi ve kimlik onayı kullanıma kapalıdır. Taslak kaydı için Model Studio veritabanı şeması gerekir." }
@@ -1438,7 +1509,7 @@
     },
     "projectsIndex": {
       "title": "Projeler",
-      "description": "Ürün görsellerinizi ve üretimlerinizi tek bir yaratıcı arşivde yönetin.",
+      "description": "Projelerini ve üretimlerini tek yerden yönet.",
       "count": "{count} proje",
       "resultCount": "{count} sonuç",
       "search": "Proje ara",

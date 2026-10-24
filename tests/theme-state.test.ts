@@ -3,18 +3,18 @@ import { readFileSync } from "node:fs";
 import { runInNewContext } from "node:vm";
 import test from "node:test";
 
-import { isThemePreference, resolveTheme } from "../src/components/theme/theme-state";
+import { getThemeInitScript } from "../src/components/theme/theme-init-script";
+import { isThemePreference, resolveRouteTheme, resolveTheme } from "../src/components/theme/theme-state";
 
 const source = (path: string) => readFileSync(path, "utf8");
 
-function runInitializer(saved: string | null, systemPrefersDark: boolean, storageUnavailable = false) {
-  const initializer = source("src/components/theme/theme-init-script.tsx");
-  const script = initializer.match(/const script = `([^`]+)`;/)?.[1];
-  assert.ok(script);
+function runInitializer(saved: string | null, systemPrefersDark: boolean, storageUnavailable = false, pathname = "/tr/dashboard") {
+  const script = getThemeInitScript();
   const dataset: Record<string, string> = {};
   let reads = 0;
   runInNewContext(script, {
     document: { documentElement: { dataset } },
+    location: { pathname },
     localStorage: { getItem(key: string) {
       assert.equal(key, "klay-theme-preference");
       reads += 1;
@@ -36,6 +36,57 @@ test("theme preference defaults to system and follows a light or dark OS", () =>
   assert.equal(preference, "system");
   assert.equal(resolveTheme(preference, true), "dark");
   assert.equal(resolveTheme(preference, false), "light");
+});
+
+test("public pages always initialize light and preserve the dashboard preference", () => {
+  for (const locale of ["tr", "en"]) {
+    for (const route of ["", "/login", "/signup", "/contact", "/dashboard-preview", "/other/dashboard"]) {
+      for (const saved of ["dark", "light", "system", null, "invalid"]) {
+        for (const osDark of [false, true]) {
+          const pathname = `/${locale}${route}`;
+          const preference = isThemePreference(saved) ? saved : "system";
+          const actual = runInitializer(saved, osDark, false, pathname);
+          assert.equal(actual.theme, "light");
+          assert.equal(actual.themePreference, preference);
+          assert.equal(resolveRouteTheme(pathname, preference, osDark), "light");
+        }
+      }
+    }
+    assert.equal(runInitializer(null, true, true, `/${locale}`).theme, "light");
+  }
+});
+
+test("dashboard and nested routes retain every preference in both locales", () => {
+  for (const prefix of ["", "/tr", "/en"]) {
+    for (const suffix of ["", "/", "/settings", "/projects/example"]) {
+      for (const preference of ["dark", "light", "system"] as const) {
+        for (const osDark of [false, true]) {
+          const pathname = `${prefix}/dashboard${suffix}`;
+          const expected = resolveTheme(preference, osDark);
+          assert.equal(runInitializer(preference, osDark, false, pathname).theme, expected);
+          assert.equal(resolveRouteTheme(pathname, preference, osDark), expected);
+        }
+      }
+    }
+  }
+});
+
+test("dark dashboard to public to dashboard restores dark in both locales", () => {
+  for (const locale of ["tr", "en"]) {
+    const routes = [`/${locale}/dashboard/settings`, `/${locale}`, `/${locale}/dashboard`];
+    assert.deepEqual(routes.map(path => resolveRouteTheme(path, "dark", false)), ["dark", "light", "dark"]);
+    assert.deepEqual(routes.map(path => runInitializer("dark", false, false, path).theme), ["dark", "light", "dark"]);
+  }
+});
+
+test("route changes apply before paint without persisting the forced light preference", () => {
+  const provider = source("src/components/theme/theme-provider.tsx");
+  assert.match(provider, /usePathname\(\)/);
+  assert.match(provider, /useLayoutEffect\(\(\) =>/);
+  assert.match(provider, /\[pathname, preference\]/);
+  assert.match(provider, /resolveRouteTheme\(pathname, selected, media.matches\)/);
+  assert.match(provider, /resolveRouteTheme\(pathname, value, media.matches\)/);
+  assert.equal((provider.match(/localStorage\.setItem/g) ?? []).length, 1);
 });
 
 test("explicit preferences override the OS and remain valid persisted values", () => {
