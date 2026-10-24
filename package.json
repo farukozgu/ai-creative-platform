@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "pretest": "tsx --test tests/image-worker-durability.test.ts tests/credit-economy.test.ts tests/generation-create-regression.test.ts tests/generation-cost-optimization.test.ts tests/generation-quality-benchmark.test.ts tests/persisted-generation-benchmark-adapter.test.ts tests/apparel-fit-preservation.test.ts tests/reference-validation-false-rejection.test.ts",
+    "pretest": "tsx --test tests/synchronous-image-generation.test.ts tests/credit-economy.test.ts tests/generation-create-regression.test.ts tests/generation-cost-optimization.test.ts tests/generation-quality-benchmark.test.ts tests/persisted-generation-benchmark-adapter.test.ts tests/apparel-fit-preservation.test.ts tests/reference-validation-false-rejection.test.ts",
     "dev": "next dev --webpack",
     "build": "next build",
     "start": "next start",

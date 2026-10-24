@@ -6,33 +6,27 @@ import { resolveHumanRealismPolicy } from "../src/lib/human-realism/human-realis
 import { compileHumanRealismPrompt } from "../src/lib/human-realism/compile-human-realism-prompt";
 import { resolveRepairPlan } from "../src/lib/auto-repair/resolve-repair-plan";
 import { awaitGenerationPipeline } from "../src/lib/generation/await-generation-pipeline";
-import { dispatchQueuedGeneration } from "../src/lib/generation/dispatch-queued-generation";
 
-test("creation persists Sunburst and xhigh defaults with environment override", async () => {
-  const source = await readFile("src/lib/generation/image-worker-service.ts", "utf8");
+test("synchronous Composer generation keeps the configured model and quality defaults", async () => {
+  const source = await readFile("src/app/[locale]/dashboard/projects/[projectId]/generation-actions.ts", "utf8");
   assert.match(source, /OPENAI_IMAGE_MODEL\?\.trim\(\) \|\| "gpt-image-2\.5-sunburst"/);
-  assert.match(source, /quality: "xhigh"/);
+  assert.match(source, /quality: "high"/);
 });
 
-test("server action accepts a durable queued job while the legacy runner retains its queued guard", async () => {
-  const source = await readFile("src/lib/generation/image-worker-service.ts", "utf8");
-  const dispatch = await readFile("src/lib/generation/dispatch-queued-generation.ts", "utf8");
+test("server action awaits image generation and retains its queued-state transition", async () => {
+  const source = await readFile("src/app/[locale]/dashboard/projects/[projectId]/generation-actions.ts", "utf8");
   const awaitPipeline = await readFile("src/lib/generation/await-generation-pipeline.ts", "utf8");
   assert.match(source, /\.insert\([\s\S]+client_submission_id: submissionId/);
-  assert.match(dispatch, /await awaitGenerationPipeline\(generationId, runner\)/);
-  assert.match(dispatch, /finalizer\(generationId, "dispatch_failed"\)/);
+  assert.match(source, /await awaitGenerationPipeline\(generation\.id, runQueuedImageGeneration\)/);
   assert.match(awaitPipeline, /const result = await runner\(generationId\)/);
-  assert.doesNotMatch(source, /await dispatchQueuedGeneration\(generation\.id\)/);
   assert.match(source, /safeGenerationEvent\("create", "insert_success"/);
   assert.match(source, /safeGenerationEvent\("dispatch", "pipeline_entered"/);
-  assert.match(source, /\.in\("status", \["queued", "processing"\]\)[\s\S]{0,240}execution_lease_token/);
-  assert.match(source, /\.eq\("id", generationId\)[\s\S]*\.in\("status", \["queued", "processing"\]\)/);
+  assert.match(source, /\.eq\("status", "processing"\)/);
+  assert.match(source, /queuedGeneration\.id/);
   assert.match(source, /type: "generation_completed"/);
   assert.match(source, /type: "generation_failed"/);
   assert.match(awaitPipeline, /result\.ok/);
-  assert.doesNotMatch(dispatch + awaitPipeline, /trigger\.dev|tasks\.trigger|setTimeout|void\s+runQueued/);
   assert.match(source, /safeGenerationEvent\("provider", "request_start"/);
-  assert.match(source, /\.eq\("id", queuedGeneration\.id\)[\s\S]{0,180}\.in\("status", \["queued", "processing"\]\)/);
 });
 
 test("dispatch waits for the pipeline result before reporting completion", async () => {
@@ -49,50 +43,6 @@ test("dispatch waits for the pipeline result before reporting completion", async
   release({ ok: true });
   assert.equal(await pending, true);
   assert.equal(completed, true);
-});
-
-test("dispatch finalizes a runner exception only while the record is still queued", async () => {
-  const finalizations: Array<{ id: string; category: string }> = [];
-  const result = await dispatchQueuedGeneration(
-    "generation-1",
-    async () => { throw new Error("provider timeout"); },
-    async (id, category) => { finalizations.push({ id, category }); return true; },
-  );
-  assert.equal(result, false);
-  assert.deepEqual(finalizations, [{ id: "generation-1", category: "dispatch_failed" }]);
-});
-
-test("duplicate dispatch cannot turn a claimed processing job into a failure", async () => {
-  let queuedFinalizerCalled = false;
-  const result = await dispatchQueuedGeneration(
-    "generation-1",
-    async () => ({ ok: false }),
-    async () => {
-      // The production finalizer has a status = queued predicate; false means
-      // another worker has already claimed the record and no state was changed.
-      queuedFinalizerCalled = true;
-      return false;
-    },
-  );
-  assert.equal(result, false);
-  assert.equal(queuedFinalizerCalled, true);
-});
-
-test("a successful pipeline does not run failure finalization", async () => {
-  let finalized = false;
-  const result = await dispatchQueuedGeneration(
-    "generation-1",
-    async () => ({ ok: true }),
-    async () => { finalized = true; },
-  );
-  assert.equal(result, true);
-  assert.equal(finalized, false);
-});
-
-test("submission does not convert an undispatched durable record into a failure", async () => {
-  const source = await readFile("src/lib/generation/image-worker-service.ts", "utf8");
-  assert.doesNotMatch(source, /error_message: "dispatch_failed"/);
-  assert.doesNotMatch(source, /await dispatchQueuedGeneration\(generation\.id\)/);
 });
 
 test("Trigger.dev dependencies and configuration are removed", async () => {

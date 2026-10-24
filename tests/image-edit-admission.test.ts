@@ -37,9 +37,8 @@ class AtomicAdmissionHarness {
 
 const fingerprint = (instruction: string) => createImageEditRequestFingerprint({ projectId: project, baseGenerationId: base, instruction });
 
-test("feature gate is disabled by default and cannot be enabled by unrelated flags", () => {
+test("image edit feature gate is disabled by default and uses its own flag", () => {
   assert.equal(isImageEditExecutionEnabled({}), false);
-  assert.equal(isImageEditExecutionEnabled({ IMAGE_GENERATION_WORKER_ENABLED: "true" }), false);
   assert.equal(isImageEditExecutionEnabled({ IMAGE_EDIT_EXECUTION_ENABLED: "true" }), true);
 });
 test("submission IDs are UUID-bound and fingerprints bind normalized paid payloads", () => {

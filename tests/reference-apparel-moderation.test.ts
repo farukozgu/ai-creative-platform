@@ -59,7 +59,7 @@ test("commercial apparel reference path has no generated sexualized terminology"
 });
 
 test("moderation failures remain terminal and do not add a generation retry", async () => {
-  const source = await readFile("src/lib/generation/image-worker-service.ts", "utf8");
+  const source = await readFile("src/app/[locale]/dashboard/projects/[projectId]/generation-actions.ts", "utf8");
   const providerRequest = source.indexOf('safeGenerationEvent("provider", "request_start"');
   const repairBranch = source.indexOf("if (repairPlan.shouldRetry)");
   const providerFailure = source.indexOf('safeGenerationEvent("queue", "provider_error"');
@@ -183,9 +183,9 @@ test("moderation diagnostics expose counts and flags but no image or prompt cont
 });
 
 test("apparel reference replacement uses one provider request and keeps moderation terminal", async () => {
-  const source = await readFile("src/lib/generation/image-worker-service.ts", "utf8");
+  const source = await readFile("src/app/[locale]/dashboard/projects/[projectId]/generation-actions.ts", "utf8");
   const initial = source.indexOf('safeGenerationEvent("provider", "request_start"');
-  const initialRequest = source.indexOf("const result = await withImageLeaseHeartbeat(claim", initial);
+  const initialRequest = source.indexOf('performance.measure("provider_initial"', initial);
   const repairBranch = source.indexOf("if (repairPlan.shouldRetry)", initial);
   const failure = source.indexOf('safeGenerationEvent("queue", "provider_error"');
   assert.ok(initial >= 0 && initialRequest > initial && repairBranch > initialRequest && failure > repairBranch);

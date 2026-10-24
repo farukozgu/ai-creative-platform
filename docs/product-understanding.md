@@ -10,7 +10,7 @@ Creative Composer / project page
   -> save creative_direction on projects
   -> optional preset + up to 3 reference images
   -> createQueuedImageGeneration snapshots direction and request metadata
-  -> runQueuedImageGeneration downloads product/reference assets
+  -> the server action runs the image pipeline synchronously and loads product/reference assets
   -> reference style analysis + optional Prompt Intelligence enhancement
   -> strategy router
   -> final prompt policy compiler
@@ -19,7 +19,7 @@ Creative Composer / project page
   -> generated-assets upload + generations completion metadata
 ```
 
-The primary orchestration is `src/app/[locale]/dashboard/projects/[projectId]/actions.ts`. The dashboard composer performs the same sequence immediately; the project page offers the persisted-product flow.
+The primary orchestration is `src/app/[locale]/dashboard/projects/[projectId]/generation-actions.ts`. Composer and project-page submissions await this pipeline in the server action before returning.
 
 ### Current decisions and policies
 

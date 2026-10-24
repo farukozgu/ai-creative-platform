@@ -18,7 +18,7 @@ Code lives in `src/app` (routes/actions), `src/components` (UI), `src/features` 
 
 ### Creative Composer and image generation
 
-The dashboard provides Creative Composer, product/reference assets, presets, fidelity policies, prompt construction, generation records, validation, and bounded repair logic. The image path has durable queue, lease, fencing, heartbeat, and reconciliation foundations. Worker and cron routes are server-gated; their presence does not mean production generation is active.
+Creative Composer accepts a product image, optional references, and a preset or creative direction. Its server action creates the generation record and runs the image pipeline synchronously in the same request. The request waits for provider generation, image validation and any eligible repair, then stores the output and returns the completed generation. If execution fails, the action records the failure and returns an error. The server needs provider credentials for generation.
 
 ### Product Understanding
 
@@ -70,12 +70,11 @@ Copy `.env.example`; never commit real values.
 | `OPENAI_FIDELITY_VALIDATION_MODEL`, `OPENAI_PRODUCT_UNDERSTANDING_MODEL` | Optional validation/product-analysis model overrides. |
 | `ENABLE_AUTOMATIC_SEGMENTATION` | Optional segmentation gate; only `true` enables it. |
 | `GENERATION_MODEL_PRICING` | Optional server-side JSON pricing configuration. |
-| `IMAGE_GENERATION_WORKER_ENABLED`, `IMAGE_GENERATION_WORKER_SECRET`, `CRON_SECRET` | Image worker gate and authorization. |
 | `IMAGE_EDIT_EXECUTION_ENABLED` | Image-edit gate; default `false`. |
 | `VIDEO_GENERATION_ENABLED`, `VIDEO_RECONCILIATION_SCHEDULER_ENABLED`, `VIDEO_RECONCILIATION_CRON_SECRET` | Video gates and scheduler authorization. |
 
 ## Operational status
 
-The default posture is fail-closed. Image workers, image edits, video generation, video reconciliation, payment processing, and customer billing are disabled unless explicitly and safely activated outside this task. Model Studio execution and identity-conditioned inference are deferred. Migrations in this repository are not claimed to be deployed.
+Image generation runs synchronously from Creative Composer when server-side provider credentials are configured. Video generation, video reconciliation, payment processing, and customer billing remain gated unless explicitly activated. Model Studio execution and identity-conditioned inference are deferred. Migrations in this repository are not claimed to be deployed.
 
 Passing local tests/builds does not verify remote database policy, migration deployment, provider billing, production configuration, or browser accessibility.

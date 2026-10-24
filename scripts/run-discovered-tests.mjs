@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 
 const preflightSuites = new Set([
   "apparel-fit-preservation.test.ts", "credit-economy.test.ts", "generation-cost-optimization.test.ts",
-  "generation-create-regression.test.ts", "generation-quality-benchmark.test.ts", "image-worker-durability.test.ts",
+  "generation-create-regression.test.ts", "generation-quality-benchmark.test.ts", "synchronous-image-generation.test.ts",
   "persisted-generation-benchmark-adapter.test.ts", "reference-validation-false-rejection.test.ts",
 ]);
 const suites = readdirSync("tests", { withFileTypes: true })

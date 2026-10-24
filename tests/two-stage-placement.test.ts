@@ -12,7 +12,7 @@ import type { ProductProfile } from "../src/lib/product-understanding/product-pr
 import type { FidelityValidationResult } from "../src/lib/fidelity-validation/types";
 
 const root = process.cwd();
-const generationAction = readFileSync(join(root, "src/lib/generation/image-worker-service.ts"), "utf8");
+const generationAction = readFileSync(join(root, "src/app/[locale]/dashboard/projects/[projectId]/generation-actions.ts"), "utf8");
 const provider = readFileSync(join(root, "src/lib/generation/providers/openai-image-provider.ts"), "utf8");
 function watchProfile(): ProductProfile {
   return {
@@ -37,7 +37,7 @@ test("production generation calls the final provider directly with source-first 
   assert.match(generationAction, /getImageGenerationProvider\(queuedGeneration\.provider\)\.generate\(\{/);
   assert.match(generationAction, /images: generationImages/);
   assert.match(generationAction, /quality: executionPolicy\.quality/);
-  assert.ok(generationAction.indexOf("const result = await withImageLeaseHeartbeat(claim") < generationAction.indexOf("validateGeneratedImageBestEffort({"));
+  assert.ok(generationAction.indexOf('performance.measure("provider_initial"') < generationAction.indexOf("validateGeneratedImageBestEffort({"));
   assert.doesNotMatch(provider, /scene_preparation|identity_placement/);
 
   const ordered = orderGenerationImages(
