@@ -30,6 +30,6 @@ export function ModelDetail({locale, profile, review}: {locale: AppLocale; profi
         <header className={styles.header}><div><h1>{profile.name}</h1></div><Badge>{t(profile.status)}</Badge></header>
         <ModelProfileSummary draft={profile} />
       </div>}
-    <div className={`dashboard-main-inner dashboard-container ${styles.page}`}><CandidateReview data={review} /></div>
+    <div className={`dashboard-main-inner dashboard-container ${styles.page}`}><CandidateReview data={review} locale={locale} modelId={profile.id} isDraft={profile.status === "draft"} /></div>
   </main>;
 }

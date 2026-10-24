@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState, useTransition } from "react";
+import { generateModelPortrait } from "@/app/[locale]/dashboard/models/actions";
+import type { AppLocale } from "@/i18n/routing";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
@@ -11,13 +13,28 @@ function Portrait({ url, alt, missing }: { url: string | null; alt: string; miss
   return <div className={styles.portrait}>{url ? <Image src={url} alt={alt} fill unoptimized sizes="(max-width: 699px) 100vw, 40vw" /> : <span>{missing}</span>}</div>;
 }
 
-export function CandidateReview({ data }: { data: CandidateReviewData }) {
+export function CandidateReview({ data, locale, modelId, isDraft }: { data: CandidateReviewData; locale: AppLocale; modelId: string; isDraft: boolean }) {
   const t = useTranslations("Dashboard.modelReview");
+  const [pending, startTransition] = useTransition();
+  const submitting = useRef(false);
+  const [generationStatus, setGenerationStatus] = useState<"success" | "duplicate" | "invalid" | "error" | null>(null);
+  function generate() {
+    if (submitting.current || pending) return;
+    submitting.current = true;
+    setGenerationStatus(null);
+    startTransition(async () => {
+      try { setGenerationStatus((await generateModelPortrait(locale, modelId)).status); }
+      catch { setGenerationStatus("error"); }
+      finally { submitting.current = false; }
+    });
+  }
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selected = data.candidates.find((item) => item.id === selectedId) ?? data.candidates[0] ?? null;
   const ready = data.candidates.filter((item) => item.status === "ready");
   return <section className={styles.review} aria-labelledby="candidate-review-title">
     <div><p className={styles.eyebrow}>{t("eyebrow")}</p><h2 id="candidate-review-title">{t("title")}</h2><p>{t("description")}</p></div>
+    {isDraft && <div><p>{t("generation.savedSettings")}</p><Button type="button" onClick={generate} disabled={pending || data.state !== "ready" || data.jobStatus !== null || generationStatus === "success" || generationStatus === "duplicate"} aria-busy={pending}>{t(pending ? "generation.pending" : "generation.generate")}</Button></div>}
+    {generationStatus && <p role={generationStatus === "error" || generationStatus === "invalid" ? "alert" : "status"}>{t(`generation.${generationStatus}`)}</p>}
     {data.state === "unavailable" ? <p role="alert" className={styles.reviewState}>{t("unavailable")}</p> : <>
       <p className={styles.reviewState} role="status">{t(`job.${data.jobStatus ?? "none"}`)}</p>
       {data.candidates.length === 0 ? <p className={styles.reviewState}>{t("empty")}</p> : <div className={styles.reviewLayout}>
