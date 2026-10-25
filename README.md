@@ -43,6 +43,7 @@ npm test
 npm run lint
 npx tsc --noEmit
 npm run build
+npm run test:runtime
 git diff --check
 ```
 
@@ -56,6 +57,8 @@ npx tsx --test tests/image-edit-admission.test.ts
 ```
 
 Tests are deterministic local checks; they do not apply migrations, mutate Supabase, or make paid provider calls.
+
+After a build, `npm run test:runtime` starts and stops its own loopback-only Next.js server. Its 11 anonymous GET checks cover default/TR/EN routing, HTML language, protected dashboard redirects, truncated-cookie cleanup, private API exclusion, the web manifest and local image optimization. AI execution is disabled in that child process; no authenticated fixture mutations or provider requests are made. The active locale/session entry point is `src/proxy.ts`, alongside `src/app`.
 
 ## Environment variables
 

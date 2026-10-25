@@ -11,19 +11,20 @@
     "generate:preset-qa": "tsx scripts/generate-preset-live-qa-manifest.ts",
     "benchmark:generation-quality": "tsx scripts/run-generation-quality-benchmark.ts",
     "benchmark:adapt-persisted": "tsx scripts/run-persisted-generation-benchmark.ts",
-    "test": "node scripts/run-discovered-tests.mjs"
+    "test": "node scripts/run-discovered-tests.mjs",
+    "test:runtime": "node scripts/test-next-runtime.mjs"
   },
   "dependencies": {
     "@fal-ai/client": "^1.10.1",
     "@supabase/ssr": "^0.12.4",
     "@supabase/supabase-js": "^2.112.3",
     "clsx": "^2.1.1",
-    "next": "16.2.12",
+    "next": "16.4.3",
     "next-intl": "^4.13.4",
     "openai": "^7.4.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "sharp": "0.34.5",
+    "sharp": "0.35.5",
     "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
@@ -32,7 +33,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.2.12",
+    "eslint-config-next": "16.4.3",
     "tailwindcss": "^4",
     "tsx": "^4.23.12",
     "typescript": "^5"

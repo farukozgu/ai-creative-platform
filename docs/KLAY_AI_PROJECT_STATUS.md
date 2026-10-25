@@ -2,6 +2,19 @@
 
 Son güncelleme: **26 Ekim 2026** · İlk denetim temeli: `c4dbb2e` · Geliştirme branch'i: `codex/composer-beta`. Mevcut kaydedilmemiş UGC çalışmaları korunuyor ve bu geliştirmeye dahil edilmiyor.
 
+## Güvenlik ve runtime — tamamlandı
+
+Production dependency kontrolündeki önceki **1 kritik + 5 yüksek** bulgu hedefli sürüm güncellemeleriyle kapatıldı. `npm audit --omit=dev` artık **0 toplam bulgu** ve exit 0 döndürüyor. Bu sonuç npm advisory kapsamındaki production bağımlılıklarına aittir; bütün ürün için güvenlik garantisi değildir.
+
+- Next.js / eslint-config-next **16.2.12 → 16.4.3**, sharp **0.34.5 → 0.35.5** sabitlendi. İlgili Next/SWC ve sharp/libvips platform paketleri lockfile'da eşleşti. Runtime gereksinimi Node **20.9+**.
+- Yalnız etkilenen transitif nanoid **3.3.20**, source-map-js **1.2.2**, zod **4.6.7** sürümlerine güncellendi; Next'in PostCSS'i **8.5.23** oldu. React, OpenAI, fal, Supabase ve next-intl sürümleri değiştirilmedi. Yeni doğrudan dependency veya zorlayıcı override eklenmedi; `npm audit fix --force` kullanılmadı.
+- Kurulu Next.js rehberi ve [resmî Next.js release notları](https://github.com/vercel/next.js/releases/tag/v16.4.3), [sharp release notları](https://github.com/lovell/sharp/releases/tag/v0.35.5), [sharp 0.35 breaking changes](https://sharp.pixelplumbing.com/changelog/v0.35.0/) incelendi. Kaldırılan sharp API'leri kaynakta kullanılmıyor; native görsel testleri geçti.
+- Gerçek yerel HTTP kontrolü `/` için 404 ortaya çıkardı: kökteki proxy, `src/app` kullanan yapıda derlenmiyordu. Mevcut kod `src/proxy.ts` konumuna taşındı; session/persisted-cookie davranışı korunarak locale proxy etkinleşti. Manifest'in locale yönlendirmesine girmemesi de düzeltildi.
+- [Runtime smoke script'i](../scripts/test-next-runtime.mjs), yeni `npm run test:runtime` komutuyla **11/11** geçti: varsayılan TR, TR/EN yönlendirme ve HTML lang, anonim dashboard reddi, bozuk cookie temizliği, özel API, manifest ve sharp kullanan image optimizer. Yalnız anonim localhost GET'leri; AI kapalı, database fixture/migration yok.
+- Bu sürümlerle `npm test` ana aşaması **761/761**, pretest, ESLint, standalone TypeScript ve production build başarılı. Build artık **Proxy (Middleware)** entry point'ini içeriyor. Supabase'de veya production ayarlarında yeni değişiklik yapılmadı.
+
+Sonraki beta kabul adımı canlı authenticated Auth/Storage indirme doğrulaması ve ayrıca onaylanacak sınırlı ücretli ürün/kalite oturumudur. Production migration, ayar değişikliği, merge/deployment ve ücretli çağrı yapılmadı; UGC Generate kapalı.
+
 ## Composer Beta — tamamlanan geliştirme
 
 **Güvenli indirme ve ortak OpenAI beta sınırı uygulandı; production'a açılmadı.** Galeri, proje tam ekranı ve dashboard tam ekranında indirme var. Her tıklamada authenticated kullanıcı/proje sahipliği, image/succeeded durumu, private bucket, MIME ve tam owner/project/generation yolu doğrulanıyor. Önizleme URL'si kullanılmıyor; sunucuda 60 saniyelik, dosya adı belirlenmiş yeni signed URL üretiliyor. TR/EN yüklenme ve hata durumları, tekrar tıklama koruması ve mevcut Button/focus sistemi kullanılıyor.
@@ -49,8 +62,8 @@ UGC üretimi **kapalı kalmalıdır**. Foundation üretimde kurulu; Pipeline yal
 
 | Katman | Mevcut yapı ve sorumluluk |
 | --- | --- |
-| Uygulama | Next.js **16.2.12**, App Router, React **19.2.4**, strict TypeScript. `src/app/[locale]` sayfaları ve Server Actions; birkaç özel API route'u. |
-| Kimlik doğrulama | Supabase SSR/browser istemcileri; `proxy.ts` oturum yenileme ve locale yönlendirme. Dashboard layout'u oturum kontrolü yapar; mutasyonlarda ayrıca kullanıcı/ownership kontrolü bulunur. |
+| Uygulama | Next.js **16.4.3**, App Router, React **19.2.4**, strict TypeScript. `src/app/[locale]` sayfaları ve Server Actions; birkaç özel API route'u. |
+| Kimlik doğrulama | Supabase SSR/browser istemcileri; `src/proxy.ts` oturum yenileme ve locale yönlendirme. Dashboard layout'u oturum kontrolü yapar; mutasyonlarda ayrıca kullanıcı/ownership kontrolü bulunur. |
 | Veri erişimi | `src/lib/supabase/{client,server,admin}.ts`. Privileged işlemler sunucu admin istemcisiyle; kullanıcı okumaları ve birçok yazma işlemi RLS üzerinden. |
 | Ürün arayüzleri | `src/features/generation`, `models`, `video`, `ugc`; ayrıca `src/components/dashboard` ve `projects` altında Composer/proje akışları. Gerçek yapı AGENTS.md'deki hedef şemadan kısmen farklıdır. |
 | Domain/entegrasyon | `src/lib/generation`, `product-understanding`, `models`, `video-generation`, `ugc`, `credit-economy` ve ürün sadakati modülleri. |
@@ -143,7 +156,9 @@ Eski staging araçları 39/40 migration baseline'larına, belirli proje/host'a v
 | `npm test` | **Başarılı.** Sekiz pretest dosyası aşaması geçti; ardından keşfedilen ana aşama **761 passed, 0 failed, 0 skipped**. Bu sayı ana aşamanın özetidir, pretest dahil toplam değildir. |
 | `npm run lint` | **Başarılı**, exit 0. |
 | `tsc --noEmit --incremental false` | **Başarılı**, exit 0; yerel TypeScript binary kullanıldı. |
-| `npm run build` | **Başarılı**, Next.js 16.2.12; 32/32 static page üretim adımı ve ilgili dashboard/API route'ları derlendi. Bu bir deployment değildir. |
+| `npm run build` | **Başarılı**, Next.js 16.4.3; 32/32 static page üretim adımı, dashboard/API ve aktif Proxy derlendi. Bu bir deployment değildir. |
+| `npm run test:runtime` | **11/11 başarılı**, anonim yerel production-server kontrolleri. |
+| `npm audit --omit=dev` | **0 toplam bulgu**, exit 0; production bağımlılıkları. |
 | `git diff --check` | **Başarılı**, exit 0. Yeni belgenin yerel kaynak bağlantıları ve whitespace kontrolü de yapıldı. |
 | PostgreSQL / iki oturum | Yeni beta kotası **10/10**, bağımsız CLI oturumlarında kilit çakışması doğrulandı. UGC'nin önceki 14/14 ve 26/26 sonuçları yeniden çalıştırılmadı; UGC claim yarışı açık. |
 | Canlı sağlayıcı / ödeme / Storage | Çağrılmadı. |
@@ -157,7 +172,7 @@ Mevcut benchmark araçları ve sentetik pilotlar kalite ölçüm akışını do�
 
 | Öncelik | Somut iş | Bitiş ölçütü / bağımlılık |
 | --- | --- | --- |
-| **P0 / production güvenlik kapısı** | Push sonrası doğrulanan mevcut production dependency bulgularını hedefli düzelt. | `npm audit --omit=dev`: **1 kritik + 5 yüksek**; etkilenen paketler Next.js, sharp, postcss, nanoid, source-map-js ve zod. Doğrudan framework/native image upgrade'i bu özellik PR'ına kontrolsüz eklenmedi; önce kurulu sürüm rehberleri ve kırılma etkisi, sonra dar kapsamlı güncelleme ve regresyon doğrulaması. Bu bulgular kapanmadan production beta hazır sayılmaz. |
+| **P0 / production dependency kapısı tamamlandı** | Next.js/sharp ve etkilenen transitif paketler hedefli güncellendi; locale proxy'nin çalışma konumu düzeltildi. | Production npm audit **0**, test **761/761**, runtime **11/11**, lint/TypeScript/build başarılı. Production beta için canlı kabul oturumu ve ayrı açık kurulum/deployment onayı hâlâ gerekli. |
 | **P0 / kod tamamlandı** | Composer ve portre girişleriyle ortak OpenAI transport'una açık beta erişimi ve atomic günlük user/global çağrı kotası eklendi. | Yerel SDK/unit testleri, gerçek PostgreSQL 10/10 ve iki oturum kilit kanıtı var. Production kurulum ve ayarları kapalı; ayrı onay gerekiyor. |
 | **P0 / sonuç teslimi tamamlandı** | Galeri ve proje/dashboard tam ekranından güvenli görsel indirme eklendi. | Owner/bucket/path/MIME kontrolü, 60 saniyelik named signed URL, TR/EN hata/yüklenme ve klavye/focus doğrulandı. Canlı authenticated Storage doğrulaması bekliyor. |
 | **P0 / UGC'deki tek açık yarış kanıtı** | Mevcut iki oturumlu planı yalnızca disposable test projesinde uygula ve kısa, temizlenmiş sonuç kaydı ekle. | Farklı backend PID'leri, çakışan transaction'lar, bir claim kazananı, B'de sıfır claim, tek lease/route ve exact fixture temizliği. Bu, UGC'yi açmaz; diğer engeller devam eder. 14/14 ve 26/26'yı sebepsiz yeniden başlatma. |
@@ -200,5 +215,5 @@ Sonraki güncellemelerde değişen özelliği, kaynak dosyalarını, çalıştı
 - `edf827a`: atomic OpenAI beta access and daily request limits.
 - İki geliştirme `origin/codex/composer-beta` branch'ine gönderildi; README ve durum belgesi ayrı dokümantasyon commit'iyle aynı branch'te tutulur. Main'e merge veya deployment yapılmadı.
 - Push sırasında GitHub default branch için dependency güvenlik uyarıları bildirdi. Bunlar yeni geliştirmeden önceki bağımlılık ağacına ait; doğrulanmış production etkisine göre hedefli düzeltme önceliğidir, toplu otomatik paket güncellemesi yapılmadı.
-- Salt okunur production dependency kontrolü 1 kritik ve 5 yüksek bulguyu doğruladı; roadmap'e production öncesi P0 güvenlik kapısı olarak alındı.
+- Salt okunur kontrolün doğruladığı önceki 1 kritik ve 5 yüksek production dependency bulgusu, yukarıdaki hedefli güvenlik geliştirmesinde kapatıldı; güncel sonuç 0.
 - Reviewable draft PR: [Composer Beta #1](https://github.com/farukozgu/ai-creative-platform/pull/1). GitHub connector'ın PR yazma yetkisi yoktu; mevcut Git Credential Manager oturumu bellekte kullanılarak PR oluşturuldu. Yeni token oluşturulmadı veya kaynak/dokümana kaydedilmedi.
