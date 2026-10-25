@@ -118,6 +118,7 @@ import { APPAREL_FIT_PRESERVATION_VERSION } from "@/lib/apparel-fit-preservation
 import { awaitGenerationPipeline } from "@/lib/generation/await-generation-pipeline";
 import { getOpenAIBetaPolicy } from "@/lib/openai/beta-policy";
 import { createImageEdit as createImageEditService } from "@/lib/generation/image-worker-service";
+import { isProviderOutcomeAmbiguous } from "@/lib/generation/providers/provider-error-diagnostics";
 
 export type RegisterProductAssetResult = {
   status: "error" | "success";
@@ -140,7 +141,7 @@ type CreateQueuedImageGenerationError =
 
 export type CreateQueuedImageGenerationResult =
   | { ok: false; message: CreateQueuedImageGenerationError | "generationFailed" }
-  | { ok: true; generationId: string; status: "queued" | "processing" | "succeeded" | "failed" };
+  | { ok: true; generationId: string; status: "queued" | "processing" | "succeeded" | "failed" | "reconciliation_required" };
 
 export type CreateImageEditResult = { ok: false; error: string; code: "creationFailed" | "missingEditInstruction" | "missingOutput" | "admissionUnavailable" } | { ok: true; generationId: string; status: "succeeded" };
 
@@ -217,6 +218,11 @@ function isGenerationProvider(value: unknown): value is GenerationProvider {
   return value === "openai";
 }
 
+function resolveSubmittedGenerationStatus(value: unknown): "queued" | "processing" | "succeeded" | "failed" | "reconciliation_required" {
+  if (value === "queued" || value === "processing" || value === "succeeded" || value === "failed" || value === "reconciliation_required") return value;
+  return "processing";
+}
+
 function safeGenerationEvent(scope: "create" | "queue" | "dispatch" | "provider", event: string, fields: Record<string, boolean | number | string | null> = {}) {
   console.info(`[generation-${scope}] ${event}`, fields);
 }
@@ -247,6 +253,7 @@ export async function createQueuedImageGeneration(
   formData?: FormData,
 ): Promise<CreateQueuedImageGenerationResult> {
   let createPhase: "before_insert" | "inserting" | "inserted" = "before_insert";
+  let insertedGenerationId: string | null = null;
   safeGenerationEvent("create", "entered");
   const enhancementEnabled = formData ? formData.get("enhance_with_ai") === "on" : true;
   const rawAspectRatio = formData?.get("aspect_ratio") ?? DEFAULT_GENERATION_ASPECT_RATIO;
@@ -325,7 +332,7 @@ export async function createQueuedImageGeneration(
       .maybeSingle();
     if (!existingGenerationError && existingGeneration) {
       revalidatePath(`/${locale}/dashboard/projects/${project.id}`, "page");
-      const status = existingGeneration.status === "queued" || existingGeneration.status === "processing" || existingGeneration.status === "failed" ? existingGeneration.status : "succeeded";
+      const status = resolveSubmittedGenerationStatus(existingGeneration.status);
       return { ok: true, generationId: existingGeneration.id, status };
     }
     const providerMetadata = serializeGenerationMetadata({
@@ -406,13 +413,14 @@ export async function createQueuedImageGeneration(
           .eq("client_submission_id", submissionId)
           .maybeSingle();
         if (duplicate) {
-          const status = duplicate.status === "queued" || duplicate.status === "processing" || duplicate.status === "failed" ? duplicate.status : "succeeded";
+          const status = resolveSubmittedGenerationStatus(duplicate.status);
           return { ok: true, generationId: duplicate.id, status };
         }
       }
       return { ok: false, message: "creationFailed" };
     }
     const generation = resolvedInsert.generation;
+    insertedGenerationId = generation.id;
     createPhase = "inserted";
 
     safeGenerationEvent("create", "insert_success", { generationId: generation.id });
@@ -434,15 +442,30 @@ export async function createQueuedImageGeneration(
         await createNotification({ userId, type: "generation_failed", projectId: project.id, projectName: project.title, generationId: generation.id });
       }
       revalidatePath(`/${locale}/dashboard/projects/${project.id}`, "page");
-      return { ok: false, message: "generationFailed" };
+      const { data: terminalGeneration } = await admin.from("generations").select("status").eq("id", generation.id).eq("owner_id", userId).maybeSingle();
+      return { ok: true, generationId: generation.id, status: resolveSubmittedGenerationStatus(terminalGeneration?.status) };
     }
 
     revalidatePath(`/${locale}/dashboard/projects/${project.id}`, "page");
 
     return { ok: true, generationId: generation.id, status: "succeeded" };
   } catch (error) {
-    if (createPhase === "inserting") logGenerationInsertFailure(error);
-    else console.error("[generation-create] action_failed", { phase: createPhase, message: error instanceof Error ? error.message.slice(0, 500) : "unknown creation error" });
+    if (createPhase === "inserting") {
+      logGenerationInsertFailure(error);
+      try {
+        const { data: insertedGeneration } = await getSupabaseAdminClient().from("generations").select("id,status")
+          .eq("owner_id", userId).eq("project_id", projectId).eq("generation_type", "image").eq("client_submission_id", submissionId).maybeSingle();
+        if (insertedGeneration) return { ok: true, generationId: insertedGeneration.id, status: resolveSubmittedGenerationStatus(insertedGeneration.status) };
+      } catch { /* Preserve the submission key in the client so a retry resolves the same insert. */ }
+    } else if (createPhase === "inserted" && insertedGenerationId) {
+      console.error("[generation-create] action_failed", { phase: createPhase, message: error instanceof Error ? error.message.slice(0, 500) : "unknown creation error" });
+      try {
+        const { data: savedGeneration } = await getSupabaseAdminClient().from("generations").select("status").eq("id", insertedGenerationId).eq("owner_id", userId).maybeSingle();
+        return { ok: true, generationId: insertedGenerationId, status: resolveSubmittedGenerationStatus(savedGeneration?.status ?? "processing") };
+      } catch { return { ok: true, generationId: insertedGenerationId, status: "processing" }; }
+    } else {
+      console.error("[generation-create] action_failed", { phase: createPhase, message: error instanceof Error ? error.message.slice(0, 500) : "unknown creation error" });
+    }
     return { ok: false, message: "creationFailed" };
   }
 }
@@ -481,6 +504,15 @@ async function runQueuedImageGeneration(
   let postStorageError: unknown = null;
   let persistedProviderMetadata: Record<string, unknown> | null = null;
   let terminalFailureReason: string | null = null;
+  let providerOutcomeAmbiguous = false;
+
+  async function captureProviderSubmission<T>(operation: () => Promise<T>): Promise<T> {
+    try { return await operation(); }
+    catch (error) {
+      providerOutcomeAmbiguous ||= isProviderOutcomeAmbiguous(error);
+      throw error;
+    }
+  }
 
   try {
     const supabase = admin;
@@ -1224,7 +1256,7 @@ async function runQueuedImageGeneration(
     });
     safeGenerationEvent("provider", "request_start", { generationId: queuedGeneration.id, provider: queuedGeneration.provider, model: queuedGeneration.model });
     executionCounts.imageGenerationCalls += 1;
-    const result = await performance.measure("provider_initial", () => getImageGenerationProvider(queuedGeneration.provider).generate({
+    const result = await performance.measure("provider_initial", () => captureProviderSubmission(() => getImageGenerationProvider(queuedGeneration.provider).generate({
       generationId: queuedGeneration.id,
       projectId: project.id,
       sourceAsset: providerProductAsset,
@@ -1235,7 +1267,7 @@ async function runQueuedImageGeneration(
       quality: executionPolicy.quality,
       aspectRatio,
       ...(usesReferenceReplacement ? { operation: "reference_product_replacement" as const } : {}),
-    }));
+    })));
     costEvents.push(createProviderUsageEvent({
       operation: "image_initial",
       model: queuedGeneration.model,
@@ -1428,7 +1460,7 @@ async function runQueuedImageGeneration(
       try {
         executionCounts.repairCalls = 1;
         executionCounts.imageGenerationCalls += 1;
-        const repairResult = await performance.measure("provider_repair", () => getImageGenerationProvider(queuedGeneration.provider).generate({
+        const repairResult = await performance.measure("provider_repair", () => captureProviderSubmission(() => getImageGenerationProvider(queuedGeneration.provider).generate({
           generationId: queuedGeneration.id,
           projectId: project.id,
           sourceAsset: providerProductAsset,
@@ -1443,7 +1475,7 @@ async function runQueuedImageGeneration(
           quality: executionPolicy.repairQuality,
           aspectRatio,
           ...(jewelryReferenceRepair ? { operation: "image_edit" as const } : usesReferenceReplacement ? { operation: "reference_product_replacement" as const } : {}),
-        }));
+        })));
         costEvents.push(createProviderUsageEvent({
           operation: "image_repair",
           model: queuedGeneration.model,
@@ -1514,7 +1546,8 @@ async function runQueuedImageGeneration(
           providerRequestId: typeof repairResult.providerMetadata?.requestId === "string" ? repairResult.providerMetadata.requestId : null,
           preservationMode: effectivePreservationMode,
         };
-      } catch {
+      } catch (repairError) {
+        if (providerOutcomeAmbiguous) throw repairError;
         logDevelopmentGenerationEvent("auto_repair_validated", {
           generationId: queuedGeneration.id,
           status: "validation_unavailable",
@@ -1885,10 +1918,11 @@ async function runQueuedImageGeneration(
       }));
     }
     logDevelopmentGenerationEvent("failed", { generationId });
-    safeGenerationEvent("queue", "processor_exit", { generationId, status: "failed" });
+    const terminalStatus = providerOutcomeAmbiguous ? "reconciliation_required" : "failed";
+    safeGenerationEvent("queue", "processor_exit", { generationId, status: terminalStatus });
     const completedAt = new Date();
     const providerModerationBlocked = providerDiagnosticContext !== null && isProviderModerationBlocked(error);
-    const failureCategory = providerModerationBlocked ? "provider_moderation_blocked" : "generation_failed";
+    const failureCategory = providerModerationBlocked ? "provider_moderation_blocked" : providerOutcomeAmbiguous ? "provider_submission_ambiguous" : "generation_failed";
     const failureDiagnostics = providerDiagnosticContext
       ? getSafeProviderErrorDiagnostics(error, { generationId, ...providerDiagnosticContext })
       : null;
@@ -1921,13 +1955,14 @@ async function runQueuedImageGeneration(
       })
       : { ...(persistedProviderMetadata ?? {}) };
     const { data: failedGeneration, error: failurePersistenceError } = await admin.from("generations").update({
-      status: "failed",
+      status: terminalStatus,
       error_message: terminalFailureReason ?? failureCategory,
       provider_metadata: {
         ...failureMetadata,
         execution: failureTelemetry.execution,
         costTelemetry: failureTelemetry.costTelemetry,
-        providerStatus: "failed",
+        providerStatus: providerOutcomeAmbiguous ? "unknown" : "failed",
+        ...(providerOutcomeAmbiguous ? { providerOutcome: "ambiguous" } : {}),
       },
       processing_completed_at: completedAt.toISOString(),
       ...(processingStartedAt ? { processing_duration_ms: completedAt.getTime() - processingStartedAt.getTime() } : {}),
@@ -1943,10 +1978,10 @@ async function runQueuedImageGeneration(
           console.warn("[generation] failure_notification_failed", { generationId, reason: notificationError instanceof Error ? notificationError.name : "notification_error" });
         }
       }
-      safeGenerationEvent("queue", "status_transition", { generationId, status: "failed" });
+      safeGenerationEvent("queue", "status_transition", { generationId, status: terminalStatus });
     }
     const errorMessage = error instanceof Error ? error.message.toLowerCase() : "";
     const retryable = /network|timeout|temporar|rate limit|download|upload|database|fetch failed|econn|5\d\d/.test(errorMessage);
-    return { ok: false, message: "generationFailed", retryable: providerModerationBlocked ? false : retryable, failureCategory: providerModerationBlocked ? "provider_moderation_blocked" : retryable ? "transient_infrastructure" : "generation_failed" };
+    return { ok: false, message: "generationFailed", retryable: providerModerationBlocked || providerOutcomeAmbiguous ? false : retryable, failureCategory: providerModerationBlocked ? "provider_moderation_blocked" : providerOutcomeAmbiguous ? "provider_submission_ambiguous" : retryable ? "transient_infrastructure" : "generation_failed" };
   }
 }

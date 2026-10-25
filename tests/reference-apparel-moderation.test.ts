@@ -65,7 +65,7 @@ test("moderation failures remain terminal and do not add a generation retry", as
   const providerFailure = source.indexOf('safeGenerationEvent("queue", "provider_error"');
   assert.ok(providerRequest >= 0 && repairBranch > providerRequest && providerFailure > repairBranch);
   assert.match(source, /providerModerationBlocked \? "provider_moderation_blocked"/);
-  assert.match(source, /retryable: providerModerationBlocked \? false : retryable/);
+  assert.match(source, /retryable: providerModerationBlocked \|\| providerOutcomeAmbiguous \? false : retryable/);
   assert.doesNotMatch(source.slice(providerFailure), /provider_repair/);
 });
 

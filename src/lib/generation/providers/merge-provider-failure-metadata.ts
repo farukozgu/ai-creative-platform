@@ -1,5 +1,5 @@
 export type ProviderFailureMetadata = {
-  category: "provider_moderation_blocked" | "generation_failed";
+  category: "provider_moderation_blocked" | "provider_submission_ambiguous" | "generation_failed";
   code: string | null;
   status: number | null;
   providerDecision: "moderation_blocked" | "provider_error";

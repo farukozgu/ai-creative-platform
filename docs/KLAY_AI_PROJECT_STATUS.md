@@ -25,6 +25,10 @@ Ortak `getOpenAIClient` transport'u artık bütün OpenAI HTTP çağrılarını 
 
 Yeni schema/RPC eksikse, kota servisi erişilemiyorsa veya limit bittiyse sağlayıcıya çıkılmaz. Composer ve portre girişleri ayrıca beta erişimini job oluşturulmadan kontrol eder. Mevcut generation/repair/Storage pipeline yeniden yazılmadı. Worker'a geçiş, finansal işlem veya UGC açılışı yapılmadı. Yeni uygulama dependency'si eklenmedi.
 
+### Composer hata ve tekrar güvenliği
+
+Aktif görsel üretim yolunda OpenAI bağlantı zaman aşımı, bağlantı kopması ve HTTP 408/5xx yanıtı artık `reconciliation_required` olarak kaydedilir; provider sonucu bilinmiyorsa iş `failed` gibi gösterilip aynı iş sessizce yeniden çalıştırılmaz. Bilinen hata ve belirsiz sonuç UI'da ayrılır, terminal durumda ilerleme modalı kapanır. Kullanıcı yeni bir üretimi seçerse ek OpenAI API kredisi kullanabileceği TR/EN metinle belirtilir. Server Action yanıtı kaybolduğunda aynı `client_submission_id` korunur; sunucu önce mevcut işi arar ve varsa yeni provider çağrısı yapmadan mevcut durumu döndürür. Migration, Supabase veri değişikliği veya ücretli API çağrısı yapılmadı. Hosting'in uzun senkron istek sınırı ve canlı sağlayıcı davranışı hâlâ saha testini gerektirir.
+
 ### Supabase erişimi ve doğrulama
 
 - Güvenli Supabase entegrasyonu ve CLI **2.114.0** erişimi çalışıyor; yeni login veya parola paylaşımı gerekmedi. Test ref'i kullanıcı tarafından **`gklpgcyndeghjgemoonk`** olarak teyit edildi ve API'den `klay-ai-staging`, `ACTIVE_HEALTHY`, PostgreSQL 17.11 olarak doğrulandı.
@@ -210,6 +214,8 @@ Sonraki güncellemelerde değişen özelliği, kaynak dosyalarını, çalıştı
 - Görev başında bulunan altı modified ve iki untracked UGC dosyası korundu; yeni commit'lere katılmıyor. Bunlara ait yerel doğrulama bağlantıları remote branch'te henüz bulunmayabilir.
 - Son test/lint/TypeScript/build başarılı. Diff/whitespace ve secret kontrolü commit öncesinde yapılır.
 - Bekleyenler: canlı Auth/Storage, kullanıcı onaylı gerçek ürün/sağlayıcı kalitesi ve production geçişi; disposable projede UGC'ye özel gerçek iki-claim testi.
+
+Composer hata/tekrar güvenliği için `provider-outcome-recovery.test.ts` eklendi; bu geliştirme sonrası `npm test` **766/766**, lint ve production build başarılı. Supabase veya sağlayıcıya canlı çağrı yapılmadı.
 
 ## GitHub senkronizasyon kaydı
 
