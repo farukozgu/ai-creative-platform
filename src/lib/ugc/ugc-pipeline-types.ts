@@ -4,8 +4,12 @@ import type { UgcProviderJobStatus } from "@/lib/ugc/ugc-video-provider";
 export type UgcPipelineJob = UgcSnapshotJob & {
   status: "draft" | UgcProviderJobStatus;
   providerRequestId: string | null;
-  providerPlan: UgcVisualPlan | null;
+  providerPlan: (UgcVisualPlan | UgcLegacyKlingTaskPlan) | null;
   attempts: number;
+};
+export type UgcLegacyKlingTaskPlan = {
+  version: 1; legacyTask: true; snapshotDigest: string; provider: "fal";
+  modelId: "kling-v3-pro-image"; endpointId: "fal-ai/kling-video/v3/pro/image-to-video"; durationSeconds: 15;
 };
 export type UgcClaim = { job: UgcPipelineJob; token: string; version: number };
 export type UgcStoredVideo = { bucketId: "ugc-generated-videos"; objectPath: string; contentType: "video/mp4"; byteSize: number; durationSeconds: number };

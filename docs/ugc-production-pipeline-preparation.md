@@ -1,4 +1,6 @@
-# UGC Kling pipeline preparation — disabled
+# UGC pipeline preparation — disabled
+
+> Historical Kling preparation below. New submission verification defaults to Seedance 2.5. Version 1 Kling plans retain their original reconciliation route. The [current audit](ugc-seedance-integration-audit.md) supersedes capability statements below. The review-only SQL proposal now accepts historical Kling/15s and Seedance/15s or 30s plans; it remains unapplied. No installed foundation migration was changed.
 
 ## Scope and current audit
 

@@ -8,8 +8,14 @@ export type UgcJobIdentity = { id: string; ownerId: string; projectId: string };
 export type UgcSnapshotJob = UgcJobIdentity & { requestHash: string; requestSnapshot: Record<string, unknown> };
 export type UgcPrivateImage = { objectPath: string; sha256: string; width: number; height: number };
 type ImageElement = { frontal: UgcPrivateImage; references: UgcPrivateImage[] };
-export type UgcVisualPlan = {
+export type UgcVisualBrief = {
+  creatorConceptId: string; format: string; language: string; voice: string; tone: string;
+  sceneDirection: string; spokenDialogue: string; environment: string; framing: string; lighting: string;
+};
+export type UgcKlingVisualPlan = {
   version: 1;
+  /** Set only by the forward migration for pre-pipeline Kling task IDs. */
+  legacyTask?: true;
   snapshotDigest: string;
   provider: "fal";
   endpointId: string;
@@ -20,10 +26,11 @@ export type UgcVisualPlan = {
   startImage: UgcPrivateImage;
   elements: [ImageElement, ImageElement];
   // Preferences are retained for review, not represented as supported speech controls.
-  brief: { creatorConceptId: string; format: string; language: string; voice: string; tone: string; sceneDirection: string; spokenDialogue: string; environment: string; framing: string; lighting: string };
+  brief: UgcVisualBrief;
 };
-export type UgcPlanningIssue = "invalid_snapshot" | "unsupported_duration" | "creator_reference_unavailable" | "reference_images_unavailable" | "product_image_unavailable" | "source_ratio_mismatch" | "scene_direction_required" | "prompt_too_long" | "exact_dialogue_unverified" | "turkish_speech_unsupported" | "voice_selection_unverified" | "lip_sync_unverified" | "subtitles_unsupported";
-export type UgcPlanningResult = { ok: true; plan: UgcVisualPlan } | { ok: false; code: "unsupported_capability" | "invalid_snapshot"; issues: UgcPlanningIssue[] };
+export type UgcVisualPlan = UgcKlingVisualPlan | import("./ugc-seedance-planner").UgcSeedanceVisualPlan | import("./ugc-seedance-planner").UgcMiniVisualPlan;
+export type UgcPlanningIssue = "invalid_snapshot" | "unsupported_duration" | "creator_reference_unavailable" | "reference_images_unavailable" | "product_image_unavailable" | "source_ratio_mismatch" | "scene_direction_required" | "prompt_too_long" | "exact_dialogue_unverified" | "turkish_speech_unsupported" | "voice_selection_unverified" | "lip_sync_unverified" | "subtitles_unsupported" | "reference_inputs_unsupported" | "audio_settings_unsupported" | "audio_reference_invalid" | "audio_reference_storage_unavailable";
+export type UgcPlanningResult<T = UgcVisualPlan> = { ok: true; plan: T } | { ok: false; code: "unsupported_capability" | "invalid_snapshot"; issues: UgcPlanningIssue[] };
 
 export const isUgcUuid = (value: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 export const isObject = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null && !Array.isArray(value);
@@ -51,7 +58,7 @@ function isElement(job: UgcJobIdentity, value: unknown): value is ImageElement {
 }
 
 /** Immutable snapshot only. This planner never signs objects, contacts fal or enables generation. */
-export function planUgcKlingRequest(job: UgcSnapshotJob): UgcPlanningResult {
+export function planUgcKlingRequest(job: UgcSnapshotJob): UgcPlanningResult<UgcKlingVisualPlan> {
   const snapshot = structuredClone(job.requestSnapshot);
   if (![job.id, job.ownerId, job.projectId].every(isUgcUuid) || !/^[0-9a-f]{64}$/.test(job.requestHash)) {
     return { ok: false, code: "invalid_snapshot", issues: ["invalid_snapshot"] };

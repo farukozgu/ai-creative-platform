@@ -524,6 +524,13 @@
   },
   "Dashboard": {
     "ugcStudio": {
+      "model": {
+        "label": "UGC model",
+        "standard": { "label": "Standard", "description": "Plan 15-second clips at 720p with creator and product references. Portrait, square and landscape formats." },
+        "premium": { "label": "Premium", "description": "Plan 15- or 30-second clips at 720p with creator and product references. Portrait, square and landscape formats." },
+        "limits": "Generation is unavailable for both tiers. Native audio is planned; exact speech, Turkish pronunciation, voice identity and lip sync are unverified. Audio uploads, subtitles and 60-second clips are unavailable.",
+        "durationUnsupported": "Your {duration}-second draft is preserved. Choose a supported duration or another model before preparing a request."
+      },
         "metadataTitle": "UGC Studio | Klay AI",
         "title": "UGC Studio",
         "eyebrow": "CREATIVE WORKSPACE",

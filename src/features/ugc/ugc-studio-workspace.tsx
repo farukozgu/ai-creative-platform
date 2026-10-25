@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { DashboardIcon } from "@/components/dashboard/dashboard-icons";
 import { completeUgcProductUploadAction, createUgcProductUploadAction, removeUgcProductAction, saveUgcProjectDraftAction } from "@/app/[locale]/dashboard/ugc/actions";
 import type { UgcDraftSettings, UgcStudioInitialState } from "@/features/ugc/ugc-studio-contract";
+import type { UgcModelOption, UgcModelTier } from "@/features/ugc/ugc-model-contract";
 import { getUgcDialogueTiming } from "@/features/ugc/ugc-dialogue-timing";
 import { createClient } from "@/lib/supabase/client";
 import styles from "./ugc-studio-workspace.module.css";
@@ -35,9 +36,11 @@ function Disclosure({ title, summary, children, open = false }: { title: string;
   </details>;
 }
 
-export function UgcStudioWorkspace({ initialDraft, initialResults, schemaAvailable }: { initialDraft: UgcStudioInitialState; initialResults: UgcVideoResult[]; schemaAvailable: boolean }) {
+export function UgcStudioWorkspace({ initialDraft, initialResults, schemaAvailable, modelOptions }: { initialDraft: UgcStudioInitialState; initialResults: UgcVideoResult[]; schemaAvailable: boolean; modelOptions: UgcModelOption[] }) {
   const t = useTranslations("Dashboard.ugcStudio");
   const locale = useLocale();
+  const [modelTier, setModelTier] = useState<UgcModelTier>(initialDraft?.modelTier ?? "premium");
+  const selectedModel = modelOptions.find(model => model.tier === modelTier);
   const [projectId, setProjectId] = useState<string | null>(initialDraft?.id ?? null);
   const [creator, setCreator] = useState<string>(initialDraft?.creatorConceptId ?? "ada");
   const [format, setFormat] = useState<(typeof formats)[number]>(initialDraft?.format ?? "testimonial");
@@ -53,6 +56,7 @@ export function UgcStudioWorkspace({ initialDraft, initialResults, schemaAvailab
   const uploadRequest = useRef(0);
   const saveRequest = useRef(0);
   const dialogueTiming = getUgcDialogueTiming(spokenDialogue, Number(draft.duration));
+  const durationSupported = selectedModel?.durations.includes(Number(draft.duration)) ?? false;
   useEffect(() => () => { uploadRequest.current += 1; }, []);
   useEffect(() => () => { if (product?.url.startsWith("blob:")) URL.revokeObjectURL(product.url); }, [product]);
 
@@ -66,7 +70,7 @@ export function UgcStudioWorkspace({ initialDraft, initialResults, schemaAvailab
       lighting: draft.lighting, framing: draft.framing, duration: draft.duration,
       aspectRatio: draft.ratio, subtitles,
     };
-    return { id, title: null, creatorConceptId: creator, format, sceneDirection, spokenDialogue, settings };
+    return { id, title: null, modelTier, creatorConceptId: creator, format, sceneDirection, spokenDialogue, settings };
   }
 
   useEffect(() => {
@@ -79,12 +83,12 @@ export function UgcStudioWorkspace({ initialDraft, initialResults, schemaAvailab
         lighting: draft.lighting, framing: draft.framing, duration: draft.duration,
         aspectRatio: draft.ratio, subtitles,
       };
-      void saveUgcProjectDraftAction(locale, { id: projectId, title: null, creatorConceptId: creator, format, sceneDirection, spokenDialogue, settings }).then(result => {
+      void saveUgcProjectDraftAction(locale, { id: projectId, title: null, modelTier, creatorConceptId: creator, format, sceneDirection, spokenDialogue, settings }).then(result => {
         if (request === saveRequest.current) setSaveState(result.ok ? "saved" : result.code === "unavailable" ? "unavailable" : "error");
       }).catch(() => { if (request === saveRequest.current) setSaveState("unavailable"); });
     }, 650);
     return () => window.clearTimeout(timer);
-  }, [schemaAvailable, locale, projectId, creator, format, sceneDirection, spokenDialogue, draft, subtitles]);
+  }, [schemaAvailable, locale, projectId, modelTier, creator, format, sceneDirection, spokenDialogue, draft, subtitles]);
 
   async function selectProduct(file?: File) {
     if (!file) return;
@@ -120,8 +124,8 @@ export function UgcStudioWorkspace({ initialDraft, initialResults, schemaAvailab
 
   function setting(key: Setting) {
     return <label className={styles.field} key={key}><span>{t(`fields.${key}`)}</span>
-      <select value={draft[key]} onChange={event => setDraft(previous => ({ ...previous, [key]: event.target.value }))}>
-        {options[key].map(value => <option key={value} value={value}>{t(`options.${key}.${value}`)}</option>)}
+      <select value={draft[key]} aria-describedby={key === "duration" ? "ugc-model-capabilities ugc-model-limits" : undefined} onChange={event => setDraft(previous => ({ ...previous, [key]: event.target.value }))}>
+        {options[key].map(value => <option key={value} value={value} disabled={key === "duration" && !selectedModel?.durations.includes(Number(value))}>{t(`options.${key}.${value}`)}</option>)}
       </select>
     </label>;
   }
@@ -130,6 +134,20 @@ export function UgcStudioWorkspace({ initialDraft, initialResults, schemaAvailab
     <header className={styles.heading}><div><div className={styles.eyebrow}><DashboardIcon name="video" />{t("eyebrow")}</div><h1>{t("title")}</h1><p>{t("description")}</p></div><Badge className={styles.badge}>{t("comingSoon")}</Badge></header>
     <div className={styles.workspace}>
       <section className={styles.configuration} aria-label={t("configuration")}>
+        <div className={styles.card}>
+          <div className={styles.cardBody}>
+            <fieldset className={styles.group} aria-describedby="ugc-model-capabilities ugc-model-limits">
+              <legend>{t("model.label")}</legend>
+              <div className={styles.formats}>{modelOptions.map(model => <label className={styles.choice} key={model.tier}>
+                <input type="radio" name="ugc-model-tier" value={model.tier} checked={modelTier === model.tier} onChange={() => setModelTier(model.tier)} />
+                <span>{t(`model.${model.tier}.label`)}</span>
+              </label>)}</div>
+            </fieldset>
+            <p id="ugc-model-capabilities" className={styles.hint} role="status" aria-live="polite">{t(`model.${modelTier}.description`)}</p>
+            <p id="ugc-model-limits" className={styles.hint}>{t("model.limits")}</p>
+            {!durationSupported ? <p className={styles.error} role="status">{t("model.durationUnsupported", { duration: draft.duration })}</p> : null}
+          </div>
+        </div>
         <Disclosure title={t("contentTitle")} summary={`${t(`creators.${creator}.name`)} · ${t(`formats.${format}`)}`} open>
           <fieldset className={styles.group} aria-describedby="ugc-creator-hint"><legend>{t("creator")}</legend>
             <div className={styles.creators}>{creators.map(item => <label key={item.id} className={styles.creator}>
@@ -175,6 +193,7 @@ export function UgcStudioWorkspace({ initialDraft, initialResults, schemaAvailab
             <span className={styles.frameLabel}>{draft.ratio}</span><div className={styles.empty}><span className={styles.emptyIcon}><DashboardIcon name="video" /></span><h3>{t("emptyTitle")}</h3><p>{t("emptyDescription")}</p></div><span className={styles.frameFooter}>{t("noVideo")}</span>
           </div></div>
           <div className={styles.brief}><h2>{t("summary")}</h2><dl>
+            <div><dt>{t("model.label")}</dt><dd>{t(`model.${modelTier}.label`)}</dd></div>
             <div><dt>{t("creator")}</dt><dd>{t(`creators.${creator}.name`)}</dd></div>
             <div><dt>{t("product")}</dt><dd>{product?.name ?? t("noProduct")}</dd></div>
             <div><dt>{t("format")}</dt><dd>{t(`formats.${format}`)}</dd></div>

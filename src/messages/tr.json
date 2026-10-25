@@ -524,6 +524,13 @@
   },
   "Dashboard": {
     "ugcStudio": {
+      "model": {
+        "label": "UGC modeli",
+        "standard": { "label": "Standart", "description": "İçerik üreticisi ve ürün referanslarıyla 720p, 15 saniyelik klipler planlayın. Dikey, kare ve yatay formatlar." },
+        "premium": { "label": "Premium", "description": "İçerik üreticisi ve ürün referanslarıyla 720p, 15 veya 30 saniyelik klipler planlayın. Dikey, kare ve yatay formatlar." },
+        "limits": "Her iki modelde de üretim kapalıdır. Doğal ses için hazırlık vardır; birebir konuşma, Türkçe telaffuz, ses kimliği ve dudak senkronu doğrulanmamıştır. Ses yükleme, altyazı ve 60 saniyelik klipler kullanılamaz.",
+        "durationUnsupported": "{duration} saniyelik taslağınız korundu. İstek hazırlamadan önce desteklenen bir süre veya başka bir model seçin."
+      },
         "metadataTitle": "UGC Stüdyosu | Klay AI",
         "title": "UGC Stüdyosu",
         "eyebrow": "YARATICI ÇALIŞMA ALANI",

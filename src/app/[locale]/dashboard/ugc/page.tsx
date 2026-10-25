@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { UgcStudioWorkspace } from "@/features/ugc/ugc-studio-workspace";
+import { getUgcModelOptions } from "@/lib/ugc/ugc-model-registry";
 import { isSupportedLocale } from "@/i18n/routing";
 import { getAuthenticatedUserId } from "@/lib/auth/require-user";
 import { getUgcStudioInitialState, listUgcProjectResults, UgcSchemaUnavailableError } from "@/lib/ugc/ugc-projects";
@@ -31,5 +32,5 @@ export default async function UgcStudioPage({ params }: PageProps) {
     if (!(error instanceof UgcSchemaUnavailableError)) throw error;
     schemaAvailable = false;
   }
-  return <main className="dashboard-main"><UgcStudioWorkspace initialDraft={initialDraft} initialResults={initialResults ?? []} schemaAvailable={schemaAvailable} /></main>;
+  return <main className="dashboard-main"><UgcStudioWorkspace modelOptions={getUgcModelOptions()} initialDraft={initialDraft} initialResults={initialResults ?? []} schemaAvailable={schemaAvailable} /></main>;
 }

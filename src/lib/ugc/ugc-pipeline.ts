@@ -1,21 +1,25 @@
 import "server-only";
 
+import { createHash } from "node:crypto";
 import { canonicalUgcJson, planUgcKlingRequest } from "@/lib/ugc/ugc-request-planner";
+import { planUgcModelRequest } from "@/lib/ugc/ugc-seedance-planner";
 import { UgcOutputInvalidError } from "@/lib/ugc/ugc-pipeline-types";
-import type { UgcSnapshotJob, UgcVisualPlan } from "@/lib/ugc/ugc-request-planner";
-import type { UgcKlingInput } from "@/lib/ugc/ugc-fal-submission";
+import type { UgcSnapshotJob, UgcVisualPlan, UgcPlanningResult } from "@/lib/ugc/ugc-request-planner";
+import type { UgcFalInput } from "@/lib/ugc/ugc-fal-submission";
 import type { UgcPipelineRepository, UgcStoredVideo } from "@/lib/ugc/ugc-pipeline-types";
 import type { ProviderVideoFile } from "@/lib/video-generation/types";
 
 export interface UgcPipelineDependencies {
   repository: UgcPipelineRepository;
+  /** Explicit override only for legacy Kling verification; new UGC plans use Seedance. */
+  planRequest?: (job: UgcSnapshotJob) => UgcPlanningResult;
   media: {
-    resolveInput(job: UgcSnapshotJob, plan: UgcVisualPlan): Promise<UgcKlingInput>;
+    resolveInput(job: UgcSnapshotJob, plan: UgcVisualPlan): Promise<UgcFalInput>;
     recover(job: UgcSnapshotJob): Promise<UgcStoredVideo | null>;
     persist(job: UgcSnapshotJob, file: ProviderVideoFile): Promise<UgcStoredVideo>;
   };
   transport: {
-    submit(input: UgcKlingInput): Promise<string>;
+    submit(input: UgcFalInput): Promise<string>;
     getStatus(endpointId: string, taskId: string): Promise<"queued" | "processing" | "completed">;
     getResult(endpointId: string, taskId: string): Promise<ProviderVideoFile>;
   };
@@ -32,11 +36,11 @@ export async function verifyUgcSubmission(ownerId: string, jobId: string, deps: 
   const job = await deps.repository.findOwned(ownerId, jobId);
   if (!job || job.ownerId !== ownerId) return { kind: "not_found" } as const;
   if (job.status !== "draft") return { kind: "duplicate" } as const;
-  const planned = planUgcKlingRequest(job);
+  const planned = (deps.planRequest ?? planUgcModelRequest)(job);
   if (!planned.ok) return planned;
   const claim = await deps.repository.claimSubmission(job, planned.plan);
   if (!claim) return { kind: "duplicate" } as const;
-  let input: UgcKlingInput;
+  let input: UgcFalInput;
   try { input = await deps.media.resolveInput(claim.job, planned.plan); }
   catch {
     await deps.repository.finish(claim, { status: "failed", errorCode: "source_unavailable" });
@@ -66,8 +70,19 @@ export async function verifyUgcReconciliation(ownerId: string, jobId: string, de
     await deps.repository.finish(claim, { status: "provider_submission_ambiguous", errorCode: "provider_submission_ambiguous" });
     return { kind: "ambiguous" } as const;
   }
-  const planned = planUgcKlingRequest(job);
-  if (!planned.ok || canonicalUgcJson(planned.plan) !== canonicalUgcJson(job.providerPlan)) {
+  // Historical tasks stay on their pinned route; never migrate an in-flight request.
+  const legacyKlingTask = job.providerPlan?.version === 1 && job.providerPlan.legacyTask === true;
+  const planningJob = legacyKlingTask ? { ...job,
+    requestHash: createHash("sha256").update(canonicalUgcJson(job.requestSnapshot)).digest("hex") } : job;
+  const planned = job.providerPlan?.version === 1 ? planUgcKlingRequest(planningJob) : planUgcModelRequest(planningJob);
+  const pinnedPlanMatches = planned.ok && (legacyKlingTask
+    ? job.providerPlan?.version === 1 && planned.plan.version === 1
+      && planned.plan.provider === job.providerPlan.provider
+      && planned.plan.modelId === job.providerPlan.modelId
+      && planned.plan.endpointId === job.providerPlan.endpointId
+      && planned.plan.durationSeconds === job.providerPlan.durationSeconds
+    : canonicalUgcJson(planned.plan) === canonicalUgcJson(job.providerPlan));
+  if (!pinnedPlanMatches) {
     await deps.repository.finish(claim, { status: "failed", errorCode: "provider_failure" });
     return { kind: "invalid_plan" } as const;
   }
@@ -76,7 +91,7 @@ export async function verifyUgcReconciliation(ownerId: string, jobId: string, de
     return { kind: "retry_limit" } as const;
   }
   const defer = (errorCode?: "provider_failure" | "output_persistence_failure") => deps.repository.finish(claim, {
-    status: job.status === "processing" ? "processing" : "queued", errorCode,
+    status: job.status === "queued" ? "queued" : "processing", errorCode,
     delaySeconds: Math.min(300, 10 * 2 ** Math.min(job.attempts, 5)),
   });
   try {

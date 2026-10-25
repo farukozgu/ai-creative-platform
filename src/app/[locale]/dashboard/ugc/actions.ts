@@ -4,6 +4,8 @@ import { createHash } from "node:crypto";
 import { isSupportedLocale } from "@/i18n/routing";
 import { getAuthenticatedUserId } from "@/lib/auth/require-user";
 import { ugcProjectRepository } from "@/lib/ugc/ugc-projects";
+import { resolveUgcPreparationModel } from "@/lib/ugc/ugc-model-registry";
+import { canonicalUgcJson } from "@/lib/ugc/ugc-request-planner";
 import { createUgcProductUploadTicket, finalizeUgcProductUpload, removeUgcProduct } from "@/lib/ugc/ugc-product-storage";
 import {
   prepareUgcJobForUser,
@@ -79,7 +81,8 @@ export async function prepareUgcVideoRequestAction(
   if (!validLocale(locale)) return failed("invalid_input");
   const result = await prepareUgcJobForUser(
     await getAuthenticatedUserId(), projectId, idempotencyKey, ugcProjectRepository,
-    snapshot => createHash("sha256").update(JSON.stringify(snapshot)).digest("hex"),
+    snapshot => createHash("sha256").update(canonicalUgcJson(snapshot)).digest("hex"),
+    resolveUgcPreparationModel,
   );
   return result.ok ? result : failed(result.code);
 }

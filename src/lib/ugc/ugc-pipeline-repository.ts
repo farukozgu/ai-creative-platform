@@ -2,13 +2,13 @@ import "server-only";
 
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import type { UgcVisualPlan } from "@/lib/ugc/ugc-request-planner";
-import type { UgcClaim, UgcClaimPatch, UgcPipelineJob, UgcPipelineRepository } from "@/lib/ugc/ugc-pipeline-types";
+import type { UgcClaim, UgcClaimPatch, UgcPipelineJob, UgcPipelineRepository, UgcLegacyKlingTaskPlan } from "@/lib/ugc/ugc-pipeline-types";
 
 function mapJob(row: Record<string, unknown>): UgcPipelineJob {
   return { id: String(row.id), ownerId: String(row.owner_id), projectId: String(row.project_id),
     requestHash: String(row.request_hash), requestSnapshot: row.request_snapshot as Record<string, unknown>,
     status: row.status as UgcPipelineJob["status"], providerRequestId: row.provider_request_id as string | null,
-    providerPlan: row.provider_plan as UgcVisualPlan | null, attempts: Number(row.reconciliation_attempts ?? 0) };
+    providerPlan: row.provider_plan as (UgcVisualPlan | UgcLegacyKlingTaskPlan) | null, attempts: Number(row.reconciliation_attempts ?? 0) };
 }
 
 /** Requires the separate, unapplied pipeline migration. Not instantiated by any route/action. */

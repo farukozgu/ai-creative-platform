@@ -31,6 +31,8 @@ function throwDatabaseError(error: DatabaseError) {
 function projectFromRow(row: ProjectRow): UgcOwnedProject | null {
   const creator = row.creator_concept as Record<string, unknown> | null;
   const parsed = validateUgcDraftInput({
+    modelTier: typeof row.configuration === "object" && row.configuration !== null
+      ? (row.configuration as Record<string, unknown>).modelTier : undefined,
     id: row.id, title: row.title, creatorConceptId: creator?.selection_id,
     format: typeof row.configuration === "object" && row.configuration !== null
       ? (row.configuration as Record<string, unknown>).format : undefined,

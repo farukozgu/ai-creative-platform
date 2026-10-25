@@ -77,6 +77,10 @@ test("repository writes compatible configuration and restores both fields after 
   const legacy = await new Repository().getOwned(ownerId, id);
   assert.equal(legacy?.spokenDialogue, draft.spokenDialogue);
   assert.equal(legacy?.sceneDirection, "");
+  stored.configuration.modelTier = "standard";
+  assert.equal((await new Repository().getOwned(ownerId, id))?.modelTier, "standard");
+  delete stored.configuration.modelTier;
+  assert.equal((await new Repository().getOwned(ownerId, id))?.modelTier, "premium");
 });
 
 test("Kling preparation retains distinct scene and speech inputs without enabling audio/generation", () => {
@@ -107,9 +111,12 @@ test("both localized UGC forms render labeled textareas, estimates, warnings and
       "./ugc-studio-workspace.module.css": { __esModule: true, default: new Proxy({}, { get: (_target, key) => String(key) }) },
     });
     const Workspace = loaded.UgcStudioWorkspace as typeof UgcStudioWorkspace;
-    const html = renderToStaticMarkup(React.createElement(Workspace, {
+    const registry = load("src/lib/ugc/ugc-model-registry.ts", {}) as typeof import("../src/lib/ugc/ugc-model-registry");
+    const props = {
+      modelOptions: registry.getUgcModelOptions(),
       initialDraft: { ...draft, product: null, updatedAt: "now", spokenDialogue: "Merhaba ".repeat(100) }, initialResults: [], schemaAvailable: true,
-    }));
+    };
+    const html = renderToStaticMarkup(React.createElement(Workspace, props));
     assert.ok(html.includes(t("sceneDirection")));
     assert.ok(html.includes(t("spokenDialogue")));
     assert.match(html, /for="ugc-scene-direction"/);
@@ -120,5 +127,14 @@ test("both localized UGC forms render labeled textareas, estimates, warnings and
     assert.match(html, /<button[^>]*disabled=""[^>]*aria-describedby="ugc-dialogue-generation-hint"/);
     assert.match(html, /<button[^>]*disabled=""[^>]*aria-describedby="ugc-generation-status"/);
     for (const value of ["language", "voice", "tone"] as const) assert.ok(html.includes(t(`fields.${value}`)));
+    assert.ok(html.includes(t("model.standard.label"))); assert.ok(html.includes(t("model.premium.label")));
+    assert.ok(html.includes(t("model.limits")));
+    assert.match(html, /<input(?=[^>]*name="ugc-model-tier")(?=[^>]*value="premium")(?=[^>]*checked)[^>]*>/);
+    assert.match(html, /<option[^>]*value="60"[^>]*disabled/);
+    const standardHtml = renderToStaticMarkup(React.createElement(Workspace, { ...props, initialDraft: { ...props.initialDraft, modelTier: "standard", settings: { ...draft.settings, duration: "30" } } }));
+    assert.match(standardHtml, /<input(?=[^>]*name="ugc-model-tier")(?=[^>]*value="standard")(?=[^>]*checked)[^>]*>/);
+    assert.match(standardHtml, /<option[^>]*value="30"[^>]*disabled/);
+    assert.ok(standardHtml.includes(t("model.durationUnsupported", { duration: "30" })));
+    assert.ok(standardHtml.includes(t("model.standard.description")));
   }
 });

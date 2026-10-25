@@ -3,9 +3,11 @@ import "server-only";
 import { createHash } from "node:crypto";
 import sharp from "sharp";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
-import { buildUgcKlingInput } from "@/lib/ugc/ugc-fal-submission";
+import { buildUgcKlingInput, buildUgcSeedanceInput } from "@/lib/ugc/ugc-fal-submission";
+import type { UgcFalInput, UgcKlingInput, UgcSeedanceInput } from "@/lib/ugc/ugc-fal-submission";
+import type { UgcSeedanceVisualPlan, UgcMiniVisualPlan } from "@/lib/ugc/ugc-seedance-planner";
 import { canonicalUgcJson, isOwnedUgcImage, isUgcUuid } from "@/lib/ugc/ugc-request-planner";
-import type { UgcSnapshotJob, UgcVisualPlan, UgcJobIdentity } from "@/lib/ugc/ugc-request-planner";
+import type { UgcSnapshotJob, UgcVisualPlan, UgcKlingVisualPlan, UgcJobIdentity } from "@/lib/ugc/ugc-request-planner";
 import type { UgcStoredVideo } from "@/lib/ugc/ugc-pipeline-types";
 import { UgcOutputInvalidError } from "@/lib/ugc/ugc-pipeline-types";
 import { validateProviderVideo, MAX_DURABLE_VIDEO_BYTES } from "@/lib/video-generation/output";
@@ -17,7 +19,8 @@ export function ugcVideoObjectPath(job: UgcJobIdentity) {
 }
 
 /** Bounded ISO BMFF container inspection, not a full codec decoder or speech verification. */
-export function inspectUgcMp4(bytes: Buffer, expectedRatio: string) {
+export function inspectUgcMp4(bytes: Buffer, expectedRatio: string, expectedDuration: 15 | 30 = 15) {
+  if (expectedDuration !== 15 && expectedDuration !== 30) throw new Error("Unsupported UGC duration.");
   type Box = { type: string; start: number; end: number };
   function boxes(start: number, end: number): Box[] {
     const found: Box[] = [];
@@ -59,7 +62,7 @@ export function inspectUgcMp4(bytes: Buffer, expectedRatio: string) {
     const scale = bytes.readUInt32BE(mdhd.start + (version === 1 ? 20 : 12));
     const ticks = version === 1 ? Number(bytes.readBigUInt64BE(mdhd.start + 24)) : bytes.readUInt32BE(mdhd.start + 16);
     const durationSeconds = ticks / scale;
-    if (!Number.isSafeInteger(ticks) || !scale || !Number.isFinite(durationSeconds) || Math.abs(durationSeconds - 15) > 0.5) throw new Error("Unexpected MP4 duration.");
+    if (!Number.isSafeInteger(ticks) || !scale || !Number.isFinite(durationSeconds) || Math.abs(durationSeconds - expectedDuration) > 0.5) throw new Error("Unexpected MP4 duration.");
     const tkVersion = bytes[tkhd.start];
     if (![0, 1].includes(tkVersion) || tkhd.end - tkhd.start < (tkVersion === 1 ? 96 : 84)) throw new Error("Invalid MP4 dimensions.");
     const width = bytes.readUInt32BE(tkhd.end - 8) / 65536;
@@ -96,9 +99,16 @@ async function readBounded(response: Response, maximum: number) {
 export class SupabaseUgcPrivateMedia {
   constructor(private readonly download: typeof fetch = fetch) {}
 
-  async resolveInput(job: UgcSnapshotJob, plan: UgcVisualPlan) {
+  async resolveInput(job: UgcSnapshotJob, plan: UgcKlingVisualPlan): Promise<UgcKlingInput>;
+  async resolveInput(job: UgcSnapshotJob, plan: UgcSeedanceVisualPlan): Promise<UgcSeedanceInput>;
+  async resolveInput(job: UgcSnapshotJob, plan: UgcMiniVisualPlan): Promise<UgcSeedanceInput>;
+  async resolveInput(job: UgcSnapshotJob, plan: UgcVisualPlan): Promise<UgcFalInput>;
+  async resolveInput(job: UgcSnapshotJob, plan: UgcVisualPlan): Promise<UgcFalInput> {
+    // Planning supports audio references; private audio provisioning/decoding does not yet exist.
+    // Never sign arbitrary URLs or widen the image-only bucket to bypass this boundary.
+    if (plan.version !== 1 && plan.audio?.mode === "reference") throw new Error("UGC private audio reference storage unavailable.");
     const admin = getSupabaseAdminClient();
-    const images = [plan.startImage, ...plan.elements.flatMap(element => [element.frontal, ...element.references])];
+    const images = plan.version !== 1 ? plan.images : [plan.startImage, ...plan.elements.flatMap(element => [element.frontal, ...element.references])];
     const urls = new Map<string, string>();
     const pinnedImages = new Map<string, string>();
     for (const image of images) {
@@ -123,13 +133,16 @@ export class SupabaseUgcPrivateMedia {
       if (url.protocol !== "https:" || url.origin !== storageOrigin || !url.pathname.startsWith("/storage/v1/object/sign/ugc-product-assets/")) throw new Error("Invalid signed UGC source.");
       urls.set(image.objectPath, signed.data.signedUrl);
     }
-    return buildUgcKlingInput(plan, urls);
+    return plan.version !== 1 ? buildUgcSeedanceInput(plan, urls) : buildUgcKlingInput(plan, urls);
   }
 
   private stored(job: UgcSnapshotJob, bytes: Buffer): UgcStoredVideo {
-    const settings = job.requestSnapshot.settings as { aspectRatio?: string } | undefined;
+    const settings = job.requestSnapshot.settings as { aspectRatio?: string; duration?: string } | undefined;
     let measured;
-    try { measured = inspectUgcMp4(bytes, settings?.aspectRatio ?? ""); }
+    try {
+      if (settings?.duration !== "15" && settings?.duration !== "30") throw new Error("Unsupported UGC duration.");
+      measured = inspectUgcMp4(bytes, settings.aspectRatio ?? "", settings.duration === "30" ? 30 : 15);
+    }
     catch { throw new UgcOutputInvalidError(); }
     return { bucketId: "ugc-generated-videos", objectPath: ugcVideoObjectPath(job), contentType: "video/mp4", byteSize: bytes.length, durationSeconds: measured.durationSeconds };
   }

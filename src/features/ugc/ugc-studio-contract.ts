@@ -1,3 +1,5 @@
+import type { UgcModelIdentity, UgcModelTier } from "@/features/ugc/ugc-model-contract";
+
 export const ugcCreatorConceptIds = ["ada", "deniz", "maya"] as const;
 export const ugcFormats = ["testimonial", "review", "unboxing", "demo", "story", "problem"] as const;
 export const ugcLanguages = ["tr", "en"] as const;
@@ -22,6 +24,7 @@ export type UgcDraftSettings = {
 };
 
 export type UgcDraftInput = {
+  modelTier?: UgcModelTier;
   id: string;
   title: string | null;
   creatorConceptId: (typeof ugcCreatorConceptIds)[number];
@@ -41,6 +44,7 @@ export type UgcProduct = {
 };
 
 export type UgcStudioInitialState = {
+  modelTier?: UgcModelTier;
   id: string;
   title: string | null;
   creatorConceptId: UgcDraftInput["creatorConceptId"];
@@ -53,7 +57,7 @@ export type UgcStudioInitialState = {
   updatedAt: string;
 } | null;
 
-export type UgcSafeErrorCode = "unauthorized" | "invalid_input" | "not_found" | "conflict" | "unavailable";
+export type UgcSafeErrorCode = "unauthorized" | "invalid_input" | "not_found" | "conflict" | "unavailable" | "unsupported_capability";
 
 export type UgcResult<T> = { ok: true; value: T } | { ok: false; code: UgcSafeErrorCode };
 
@@ -79,6 +83,8 @@ export function validateUgcDraftInput(value: unknown): UgcResult<UgcDraftInput> 
   }
   if (!isRecord(value.settings)) return { ok: false, code: "invalid_input" };
   const settings = value.settings;
+  const modelTier = value.modelTier === undefined ? "premium" : value.modelTier;
+  if (modelTier !== "standard" && modelTier !== "premium") return { ok: false, code: "invalid_input" };
   if (!isOneOf(settings.language, ugcLanguages)
     || !isOneOf(settings.tone, ugcTones)
     || !isOneOf(settings.voice, ugcVoices)
@@ -95,6 +101,7 @@ export function validateUgcDraftInput(value: unknown): UgcResult<UgcDraftInput> 
     ok: true,
     value: {
       id: value.id as string,
+      modelTier,
       title: typeof title === "string" ? title.trim() || null : null,
       creatorConceptId: value.creatorConceptId,
       format: value.format,
@@ -119,6 +126,7 @@ export function validateUgcDraftInput(value: unknown): UgcResult<UgcDraftInput> 
 /** Retains the applied SQL contract without concatenating scene instructions and dialogue. */
 export function serializeUgcConfiguration(input: UgcDraftInput) {
   return {
+    modelTier: input.modelTier ?? "premium",
     script: input.spokenDialogue,
     sceneDirection: input.sceneDirection,
     spokenDialogue: input.spokenDialogue,
@@ -182,14 +190,18 @@ export async function prepareUgcJobForUser(
   idempotencyKey: string,
   repository: UgcProjectRepository,
   hashRequest: (snapshot: Record<string, unknown>) => string,
+  resolveModel: (project: UgcOwnedProject) => UgcResult<UgcModelIdentity> = () => ({ ok: false, code: "unavailable" }),
 ): Promise<UgcResult<{ id: string; status: "draft"; submitted: false; createdAt: string }>> {
   if (!userId) return { ok: false, code: "unauthorized" };
   if (!uuidPattern.test(projectId) || !uuidPattern.test(idempotencyKey)) return { ok: false, code: "invalid_input" };
   try {
     const project = await repository.getOwned(userId, projectId);
     if (!project) return { ok: false, code: "not_found" };
-    if (!project.product || !project.spokenDialogue.trim()) return { ok: false, code: "invalid_input" };
+    if (!project.product || (!project.spokenDialogue.trim() && !project.sceneDirection.trim())) return { ok: false, code: "invalid_input" };
+    const model = resolveModel(project);
+    if (!model.ok) return model;
     const snapshot = {
+      model: { ...model.value },
       creatorConcept: { selectionId: project.creatorConceptId, referenceType: "placeholder_visual" },
       format: project.format,
       product: {

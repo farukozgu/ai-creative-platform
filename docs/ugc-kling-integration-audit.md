@@ -1,5 +1,7 @@
 # UGC / existing Kling integration audit
 
+> Historical Kling preparation audit. New UGC preparation selects Seedance 2.5; see the [current provider separation audit](ugc-seedance-integration-audit.md). Keep this document and the legacy adapter for historical pinned Kling tasks. Video Studio's provider code and behavior are unchanged by the separation.
+
 ## Phase 1 findings (before implementation)
 
 The existing integration is Kling through **fal.ai**, not a direct Kling REST/JWT integration. There is no separate Kling access/secret key or authentication implementation to reuse or replace.

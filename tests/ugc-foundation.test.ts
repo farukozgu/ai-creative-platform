@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
-  prepareUgcJobForUser,
+  prepareUgcJobForUser as prepareUgcJobCore,
   saveUgcDraftForUser,
   type UgcOwnedProject,
   type UgcPreparedJob,
@@ -56,6 +56,13 @@ class MemoryRepository implements UgcProjectRepository {
 }
 
 const hash = (snapshot: Record<string, unknown>) => JSON.stringify(snapshot);
+
+// Isolate persistence/idempotency from the server capability preflight tested in ugc-pipeline.
+const prepareUgcJobForUser: typeof prepareUgcJobCore = (user, project, key, repository, digest, resolve) =>
+  prepareUgcJobCore(user, project, key, repository, digest, resolve ?? (draft => ({ ok: true, value: {
+    tier: draft.modelTier ?? "premium", provider: "fal", version: 1,
+    endpointId: draft.modelTier === "standard" ? "bytedance/seedance-2.0/mini/reference-to-video" : "bytedance/seedance-2.5/reference-to-video",
+  } })));
 
 test("UGC draft validation rejects forged, missing, and oversized settings", () => {
   assert.equal(validateUgcDraftInput(payload).ok, true);
@@ -156,4 +163,20 @@ test("both scene and exact dialogue enter immutable hashes without being combine
   project.spokenDialogue = project.script = "Hello world!";
   assert.deepEqual(await prepareUgcJobForUser(userId, projectId, idempotencyKey, repository, hash), { ok: false, code: "conflict" });
   assert.equal(JSON.stringify(job.requestSnapshot), before);
+});
+
+test("tiers hydrate legacy drafts as Premium and participate in immutable snapshot idempotency", async () => {
+  const legacy = validateUgcDraftInput(payload); assert.ok(legacy.ok); assert.equal(legacy.value.modelTier, "premium");
+  const standard = validateUgcDraftInput({ ...payload, modelTier: "standard" }); assert.ok(standard.ok);
+  assert.equal(serializeUgcConfiguration(standard.value).modelTier, "standard");
+  for (const tier of [null, "unknown", {}, 1]) assert.equal(validateUgcDraftInput({ ...payload, modelTier: tier }).ok, false);
+  const repository = new MemoryRepository(); const project = ownedProject(); repository.projects.set(projectId, project);
+  assert.equal((await prepareUgcJobCore(userId, projectId, idempotencyKey, repository, hash)).ok, false);
+  assert.equal(repository.jobs.size, 0); // No implicit unvalidated model resolver.
+  assert.ok((await prepareUgcJobForUser(userId, projectId, idempotencyKey, repository, hash)).ok);
+  const saved = [...repository.jobs.values()][0]; const before = JSON.stringify(saved.requestSnapshot);
+  assert.deepEqual(saved.requestSnapshot.model, { tier: "premium", provider: "fal", version: 1, endpointId: "bytedance/seedance-2.5/reference-to-video" });
+  project.modelTier = "standard";
+  assert.deepEqual(await prepareUgcJobForUser(userId, projectId, idempotencyKey, repository, hash), { ok: false, code: "conflict" });
+  assert.equal(JSON.stringify(saved.requestSnapshot), before);
 });
