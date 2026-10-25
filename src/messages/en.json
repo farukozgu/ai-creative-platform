@@ -1941,6 +1941,7 @@
         "queuedDescription": "Use the run action in history to start this generation.",
         "advancedDetails": "Advanced generation details",
         "statusLabel": "Status",
+        "validationUnverifiedLabel": "Unverified",
         "validationUnverified": "The image was generated, but its fidelity could not be verified.",
         "empty": "No generations yet.",
         "previewAlt": "Generated output preview",

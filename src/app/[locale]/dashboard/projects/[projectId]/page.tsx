@@ -51,24 +51,28 @@ export default async function ProjectPage({ params, searchParams }: ProjectPageP
   setRequestLocale(locale);
   const dateFormatter = new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" });
   const costFormatter = new Intl.NumberFormat(locale, { style: "currency", currency: "USD" });
-  const items: GenerationGalleryItem[] = generations.map((generation, index) => ({
-    id: generation.id,
-    previewUrl: generation.preview_url ?? null,
-    alt: `${t("outputs.previewAlt")} ${index + 1}`,
-    typeLabel: t(`outputs.types.${generation.generation_type}`),
-    status: generation.status,
-    statusLabel: t(`outputs.status.${generation.status}`),
-    createdAt: dateFormatter.format(new Date(generation.created_at)),
-    createdDateTime: generation.created_at,
-    provider: generation.provider,
-    model: generation.model,
-    aspectRatio: generation.aspect_ratio,
-    cost: generation.cost_usd === null ? null : costFormatter.format(generation.cost_usd),
-    direction: generation.creative_direction_snapshot,
-    isFavorite: generation.is_favorite,
-    validationUnverified: Boolean(generation.provider_metadata?.fidelity_validation && typeof generation.provider_metadata.fidelity_validation === "object" && "status" in generation.provider_metadata.fidelity_validation && generation.provider_metadata.fidelity_validation.status === "validation_unavailable"),
-    animateSourceId: getAnimateSourceId({ id: generation.id, generationType: generation.generation_type, status: generation.status, previewUrl: generation.preview_url }),
-  }));
+  const items: GenerationGalleryItem[] = generations.map((generation, index) => {
+    const validation = generation.provider_metadata?.fidelity_validation;
+    const validationUnverified = Boolean(validation && typeof validation === "object" && "status" in validation && validation.status === "validation_unavailable");
+    return {
+      id: generation.id,
+      previewUrl: generation.preview_url ?? null,
+      alt: `${t("outputs.previewAlt")} ${index + 1}`,
+      typeLabel: t(`outputs.types.${generation.generation_type}`),
+      status: generation.status,
+      statusLabel: validationUnverified ? t("outputs.validationUnverifiedLabel") : t(`outputs.status.${generation.status}`),
+      createdAt: dateFormatter.format(new Date(generation.created_at)),
+      createdDateTime: generation.created_at,
+      provider: generation.provider,
+      model: generation.model,
+      aspectRatio: generation.aspect_ratio,
+      cost: generation.cost_usd === null ? null : costFormatter.format(generation.cost_usd),
+      direction: generation.creative_direction_snapshot,
+      isFavorite: generation.is_favorite,
+      validationUnverified,
+      animateSourceId: getAnimateSourceId({ id: generation.id, generationType: generation.generation_type, status: generation.status, previewUrl: generation.preview_url }),
+    };
+  });
   const runActions: { id: string; node: React.ReactNode }[] = [];
 
   return <main className="dashboard-main"><div className="dashboard-main-inner dashboard-container project-page-shell">

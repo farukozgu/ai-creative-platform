@@ -1934,6 +1934,7 @@
         "queuedDescription": "Üretimi başlatmak için geçmişteki çalıştırma eylemini kullan.",
         "advancedDetails": "Gelişmiş üretim ayrıntıları",
         "statusLabel": "Durum",
+        "validationUnverifiedLabel": "Doğrulanamadı",
         "validationUnverified": "Görsel oluşturuldu ancak ürün uygunluğu doğrulanamadı.",
         "empty": "Henüz üretim yok.",
         "previewAlt": "Üretilen çıktı önizlemesi",

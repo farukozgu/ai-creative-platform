@@ -4620,6 +4620,7 @@ html[data-motion="ready"] .signup-form-wrap {
 .dashboard-status > span { width: 0.4rem; height: 0.4rem; flex: none; border-radius: 50%; background: #9a9c92; }
 .dashboard-status[data-status="succeeded"] > span, .dashboard-status[data-status="completed"] > span { background: var(--dashboard-status-success); }
 .dashboard-status[data-status="processing"] > span, .dashboard-status[data-status="active"] > span { background: var(--dashboard-status-progress); }
+.dashboard-status[data-status="unverified"] > span { background: var(--warning); }
 .dashboard-status[data-status="failed"] > span { background: var(--dashboard-status-error); }
 .dashboard-recent-grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr)); }
 .dashboard-project-card { overflow: hidden; border: 1px solid var(--dashboard-border); border-radius: var(--radius-md); background: var(--dashboard-surface); text-decoration: none; transition: border-color var(--transition-fast) ease, transform var(--transition-fast) ease; }
