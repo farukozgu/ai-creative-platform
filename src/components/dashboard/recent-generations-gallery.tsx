@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ProjectImageViewer } from "@/components/projects/project-image-viewer";
+import { ImageDownloadButton } from "@/components/projects/image-download-button";
 import { DashboardIcon } from "@/components/dashboard/dashboard-icons";
 import { Link } from "@/i18n/navigation";
 import type { DashboardGeneration } from "@/lib/generations/get-dashboard-generations";
@@ -92,6 +93,6 @@ export function RecentGenerationsGallery({ generations, messages, locale, favori
           </article>
         </li>;
       })}</ul>}
-    {viewerGeneration?.previewUrl ? <ProjectImageViewer src={viewerGeneration.previewUrl} alt={messages.previewAlt.replace("{title}", viewerGeneration.projectTitle?.trim() || messages.untitled)} open closeLabel={messages.closeFullscreen} zoomInLabel={messages.zoomIn} zoomOutLabel={messages.zoomOut} resetLabel={messages.resetZoom} onOpenChange={(open) => { if (!open) setViewerGenerationId(null); }} /> : null}
+    {viewerGeneration?.previewUrl ? <ProjectImageViewer src={viewerGeneration.previewUrl} alt={messages.previewAlt.replace("{title}", viewerGeneration.projectTitle?.trim() || messages.untitled)} open closeLabel={messages.closeFullscreen} zoomInLabel={messages.zoomIn} zoomOutLabel={messages.zoomOut} resetLabel={messages.resetZoom} downloadControl={<ImageDownloadButton key={viewerGeneration.id} generationId={viewerGeneration.id} />} onOpenChange={(open) => { if (!open) setViewerGenerationId(null); }} /> : null}
   </section>;
 }

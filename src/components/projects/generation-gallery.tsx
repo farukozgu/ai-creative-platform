@@ -9,6 +9,7 @@ import { DashboardIcon } from "@/components/dashboard/dashboard-icons";
 import { filterFavoriteGenerations, type FavoriteGenerationResult } from "@/lib/generations/favorite-generation";
 import { getVideoStudioSourceHref } from "@/lib/generations/video-source-handoff";
 import { Link } from "@/i18n/navigation";
+import { ImageDownloadButton } from "@/components/projects/image-download-button";
 
 export type GenerationGalleryItem = {
   id: string;
@@ -144,6 +145,7 @@ export function GenerationGallery({ items, controls, runActions, onSelectionChan
           <div>
             {selected?.status === "succeeded" && selected.previewUrl ? <FavoriteButton active={selected.isFavorite} disabled={pendingFavoriteIds.has(selected.id)} label={selected.isFavorite ? messages.favoriteRemove : messages.favoriteAdd} onClick={() => void toggleFavorite(selected)} /> : null}
             {selected?.animateSourceId ? <Link href={getVideoStudioSourceHref(selected.animateSourceId)} aria-label={`${messages.animate}: ${selected.alt}`}><DashboardIcon name="video" /><span>{messages.animate}</span></Link> : null}
+            {selected?.status === "succeeded" ? <ImageDownloadButton key={selected.id} generationId={selected.id} /> : null}
             <a href="#project-image-edit">{messages.edit}</a>
             <button type="button" disabled={!selected?.previewUrl} onClick={openFullscreen}>{messages.openFullscreen}</button>
           </div>
@@ -182,6 +184,6 @@ export function GenerationGallery({ items, controls, runActions, onSelectionChan
         {runActions.find((action) => action.id === item.id)?.node}
       </li>)}</ul> : <AppState compact icon="spark" title={filter === "favorites" ? messages.favoritesEmptyHeading : messages.emptyHeading} description={filter === "favorites" ? messages.favoritesEmptyDescription : messages.emptyDescription} />}
     </section>
-    {selected?.previewUrl ? <ProjectImageViewer src={selected.previewUrl} alt={selected.alt} open={viewerOpen} closeLabel={messages.closeFullscreen} zoomInLabel={messages.zoomImage} zoomOutLabel={messages.zoomOutImage} resetLabel={messages.resetImageZoom} onOpenChange={setViewerOpen} /> : null}
+    {selected?.previewUrl ? <ProjectImageViewer src={selected.previewUrl} alt={selected.alt} open={viewerOpen} closeLabel={messages.closeFullscreen} zoomInLabel={messages.zoomImage} zoomOutLabel={messages.zoomOutImage} resetLabel={messages.resetImageZoom} onOpenChange={setViewerOpen} downloadControl={<ImageDownloadButton key={selected.id} generationId={selected.id} />} /> : null}
   </>;
 }

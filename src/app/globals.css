@@ -4040,6 +4040,10 @@ html[data-motion="ready"] .signup-form-wrap {
   left: 50%;
   bottom: max(0.75rem, env(safe-area-inset-bottom));
   display: flex;
+  width: max-content;
+  max-width: calc(100% - 1.5rem);
+  flex-wrap: wrap;
+  justify-content: center;
   align-items: center;
   gap: 0.35rem;
   transform: translateX(-50%);
@@ -4068,6 +4072,9 @@ html[data-motion="ready"] .signup-form-wrap {
 .project-lightbox-close:focus-visible { outline: 2px solid var(--dashboard-surface); outline-offset: 2px; }
 .project-lightbox-controls output { min-width: 3.5rem; text-align: center; font-size: 0.8rem; font-variant-numeric: tabular-nums; }
 .project-lightbox-controls .project-lightbox-reset { width: auto; padding-inline: 0.6rem; font-size: 0.8rem; }
+.image-download-control { display: inline-flex; min-width: 0; flex-wrap: wrap; align-items: center; gap: 0.4rem; }
+.image-download-control > [role="alert"] { flex-basis: 100%; max-width: 24ch; font-size: 0.75rem; }
+.project-lightbox-controls .image-download-control button { width: auto; padding-inline: 0.6rem; font-size: 0.8rem; }
 
 @media (max-width: 480px) {
   .project-lightbox-controls { gap: 0.15rem; }
@@ -6419,6 +6426,7 @@ html[data-motion="ready"] .signup-form-wrap {
   .project-inspector .project-image-edit, .project-inspector-details { margin-inline: 1rem; }
   .project-canvas-toolbar { align-items: flex-start; flex-direction: column; }
   .project-canvas-toolbar > div { width: 100%; flex-wrap: wrap; }
+  .project-canvas-toolbar .image-download-control { flex: 1 1 calc(50% - 0.4rem); }
   .project-canvas-toolbar :is(a, button) { flex: 1 1 calc(50% - 0.4rem); justify-content: center; }
   .project-generation-history .project-generation-history-item { width: 7.5rem; min-width: 7.5rem; flex-basis: 7.5rem; }
   .project-generation-history-heading { align-items: flex-start; flex-direction: column; }
