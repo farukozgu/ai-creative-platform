@@ -9,7 +9,7 @@ import { AspectRatioPicker, type AspectRatioPickerMessages } from "@/components/
 import { DEFAULT_GENERATION_ASPECT_RATIO } from "@/lib/generation/aspect-ratios";
 import type { GenerationAspectRatio } from "@/lib/generation/types";
 import { type CreateQueuedImageGenerationResult } from "./generation-actions";
-import { getActiveGenerationStatuses } from "@/app/[locale]/dashboard/generation-status-actions";
+import { getActiveGenerationStatuses, type ActiveGeneration } from "@/app/[locale]/dashboard/generation-status-actions";
 
 type GenerateImageFormProps = {
   action: (state: CreateQueuedImageGenerationResult | null, formData: FormData) => Promise<CreateQueuedImageGenerationResult>;
@@ -24,6 +24,11 @@ type GenerateImageFormProps = {
     identityGenerationDisabled: string;
     generationUnavailable: string;
     generationFailed: string;
+    outcomeUnknown: string;
+    submissionUnknown: string;
+    retry: string;
+    checkSubmission: string;
+    reconciliationStatus: string;
     invalidAspectRatio: string;
     aspectRatio: AspectRatioPickerMessages;
     progressTitle: string;
@@ -38,8 +43,9 @@ export function GenerateImageForm({ action, initialGenerationId, initialGenerati
   const [generationState, setGenerationState] = useState<GenerationState>(initialGenerationStatus ?? (initialGenerationId ? "queued" : "idle"));
   const [activeGenerationId, setActiveGenerationId] = useState<string | null>(initialGenerationId ?? null);
   const [modalOpen, setModalOpen] = useState(Boolean(initialGenerationId && (initialGenerationStatus === "queued" || initialGenerationStatus === "processing" || !initialGenerationStatus)));
-  const pending = generationState !== "idle" && generationState !== "succeeded" && generationState !== "failed";
-  const [message, setMessage] = useState<string | null>(null);
+  const pending = generationState === "queued" || generationState === "processing" || generationState === "validating" || generationState === "repairing";
+  const [message, setMessage] = useState<string | null>(() => initialGenerationStatus === "reconciliation_required" ? messages.outcomeUnknown : initialGenerationStatus === "failed" ? messages.generationFailed : null);
+  const [submissionUnconfirmed, setSubmissionUnconfirmed] = useState(false);
   const [aspectRatio, setAspectRatio] = useState<GenerationAspectRatio>(DEFAULT_GENERATION_ASPECT_RATIO);
   const pendingRef = useRef(false);
   const submissionIdRef = useRef<string | null>(null);
@@ -49,12 +55,16 @@ export function GenerateImageForm({ action, initialGenerationId, initialGenerati
     let cancelled = false;
     const poll = async () => {
       if (document.hidden) return;
-      const [generation] = await getActiveGenerationStatuses([activeGenerationId]);
+      let generation: ActiveGeneration | undefined;
+      try { [generation] = await getActiveGenerationStatuses([activeGenerationId]); }
+      catch { return; }
       if (cancelled || !generation) return;
       setGenerationState(generation.status);
       if (generation.status === "succeeded" || generation.status === "failed" || generation.status === "reconciliation_required") {
         pendingRef.current = false;
         submissionIdRef.current = null;
+        setSubmissionUnconfirmed(false);
+        setMessage(generation.status === "reconciliation_required" ? messages.outcomeUnknown : generation.status === "failed" ? messages.generationFailed : null);
         setActiveGenerationId(null);
         setModalOpen(false);
         router.refresh();
@@ -63,7 +73,7 @@ export function GenerateImageForm({ action, initialGenerationId, initialGenerati
     const interval = window.setInterval(() => void poll(), 2500);
     void poll();
     return () => { cancelled = true; window.clearInterval(interval); };
-  }, [activeGenerationId, generationState, router]);
+  }, [activeGenerationId, generationState, messages, router]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -78,7 +88,15 @@ export function GenerateImageForm({ action, initialGenerationId, initialGenerati
     setModalOpen(true);
     try {
       const result = await action(null, formData);
-      if (!result.ok) { setGenerationState("failed"); setMessage(messages[result.message]); pendingRef.current = false; submissionIdRef.current = null; return; }
+      if (!result.ok) {
+        setGenerationState("failed");
+        setMessage(messages[result.message]);
+        pendingRef.current = false;
+        setActiveGenerationId(null);
+        setModalOpen(false);
+        return;
+      }
+      setSubmissionUnconfirmed(false);
       setGenerationState(result.status);
       setActiveGenerationId(result.generationId);
       router.replace(`?generation=${encodeURIComponent(result.generationId)}`);
@@ -87,13 +105,24 @@ export function GenerateImageForm({ action, initialGenerationId, initialGenerati
         submissionIdRef.current = null;
         setActiveGenerationId(null);
         setModalOpen(false);
-      } else if (result.status === "failed") {
-        setMessage(messages.generationFailed);
+        setMessage(null);
+      } else if (result.status === "failed" || result.status === "reconciliation_required") {
+        setMessage(result.status === "reconciliation_required" ? messages.outcomeUnknown : messages.generationFailed);
         pendingRef.current = false;
         submissionIdRef.current = null;
+        setActiveGenerationId(null);
+        setModalOpen(false);
       }
       router.refresh();
-    } catch { setGenerationState("failed"); setMessage(messages.generationFailed); pendingRef.current = false; }
+    } catch {
+      setGenerationState("reconciliation_required");
+      setMessage(messages.submissionUnknown);
+      setSubmissionUnconfirmed(true);
+      setActiveGenerationId(null);
+      setModalOpen(false);
+      pendingRef.current = false;
+      // Keep the submission id: the next click will resolve the same request idempotently.
+    }
   }
 
   return <>
@@ -102,9 +131,9 @@ export function GenerateImageForm({ action, initialGenerationId, initialGenerati
       <input type="hidden" name="enhance_with_ai" value="on" />
       <AspectRatioPicker value={aspectRatio} onChange={setAspectRatio} disabled={pending} messages={messages.aspectRatio} />
       <input type="hidden" name="aspect_ratio" value={aspectRatio} />
-      <Button type="submit" variant="primary" size="md" disabled={pending} aria-busy={pending} className="project-generate-button">{pending ? messages.creating : messages.generate}</Button>
+      <Button type="submit" variant="primary" size="md" disabled={pending} aria-busy={pending} className="project-generate-button">{pending ? messages.creating : submissionUnconfirmed ? messages.checkSubmission : generationState === "failed" || generationState === "reconciliation_required" ? messages.retry : messages.generate}</Button>
     </form>
-    <GenerationStatusIndicator status={generationState} label={pending ? messages.activeStatus : generationState === "succeeded" ? messages.successStatus : messages.failedStatus} onClick={() => { if (generationState === "succeeded") { router.refresh(); return; } setModalOpen(true); }} />
-      <GenerationProgressModal open={modalOpen && generationState !== "idle"} onClose={() => setModalOpen(false)} closeLabel={messages.closeProgress} title={generationState === "failed" ? messages.generationFailed : messages.progressTitle} description={messages.progressDescription} statuses={messages.progressStatuses} />
+    <GenerationStatusIndicator status={generationState} label={pending ? messages.activeStatus : generationState === "succeeded" ? messages.successStatus : generationState === "reconciliation_required" ? messages.reconciliationStatus : messages.failedStatus} onClick={() => { if (!pending) { router.refresh(); return; } setModalOpen(true); }} />
+      <GenerationProgressModal open={modalOpen && pending} onClose={() => setModalOpen(false)} closeLabel={messages.closeProgress} title={messages.progressTitle} description={messages.progressDescription} statuses={messages.progressStatuses} />
   </>;
 }

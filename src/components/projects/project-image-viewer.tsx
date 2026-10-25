@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useTranslations } from "next-intl";
 
 type ProjectImageViewerProps = {
   src: string;
@@ -11,6 +12,7 @@ type ProjectImageViewerProps = {
   zoomOutLabel: string;
   resetLabel: string;
   onOpenChange: (open: boolean) => void;
+  downloadControl?: ReactNode;
 };
 
 type Point = { x: number; y: number };
@@ -19,7 +21,8 @@ const MIN_SCALE = 1;
 const MAX_SCALE = 8;
 const IMAGE_GUTTER = 16;
 
-export function ProjectImageViewer({ src, alt, open, closeLabel, zoomInLabel, zoomOutLabel, resetLabel, onOpenChange }: ProjectImageViewerProps) {
+export function ProjectImageViewer({ src, alt, open, closeLabel, zoomInLabel, zoomOutLabel, resetLabel, onOpenChange, downloadControl }: ProjectImageViewerProps) {
+  const t = useTranslations("Dashboard.project.outputs");
   const dialogRef = useRef<HTMLDialogElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
@@ -194,11 +197,12 @@ export function ProjectImageViewer({ src, alt, open, closeLabel, zoomInLabel, zo
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img ref={imageRef} className="project-lightbox-image" src={src} alt={alt} draggable={false} onLoad={(event) => setNaturalSize({ width: event.currentTarget.naturalWidth, height: event.currentTarget.naturalHeight })} style={{ width: fittedSize.width || undefined, height: fittedSize.height || undefined, transform: `translate3d(${pan.x}px, ${pan.y}px, 0) scale(${scale})` }} />
     </div>
-    <div className="project-lightbox-controls" aria-label="Image zoom controls">
+    <div className="project-lightbox-controls" aria-label={t("zoomControls")}>
       <button type="button" aria-label={zoomOutLabel} onClick={() => zoomAt(scaleRef.current / 1.2)}>−</button>
       <output aria-live="polite">{Math.round(scale * 100)}%</output>
       <button type="button" aria-label={zoomInLabel} onClick={() => zoomAt(scaleRef.current * 1.2)}>+</button>
       <button type="button" className="project-lightbox-reset" aria-label={resetLabel} onClick={fit}>{resetLabel}</button>
+      {downloadControl}
     </div>
   </dialog>;
 }

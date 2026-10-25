@@ -93,8 +93,9 @@ test("unavailable validation is persisted as unverified and reaches the existing
   const source = await readFile("src/lib/generation/image-worker-service.ts", "utf8");
   const page = await readFile("src/app/[locale]/dashboard/projects/[projectId]/page.tsx", "utf8");
   const gallery = await readFile("src/components/projects/generation-gallery.tsx", "utf8");
-  const english = JSON.parse(await readFile("src/messages/en.json", "utf8")) as { Dashboard: { project: { outputs: { validationUnverified: string } } } };
-  const turkish = JSON.parse(await readFile("src/messages/tr.json", "utf8")) as { Dashboard: { project: { outputs: { validationUnverified: string } } } };
+  const editPanel = await readFile("src/components/projects/image-edit-panel.tsx", "utf8");
+  const english = JSON.parse(await readFile("src/messages/en.json", "utf8")) as { Dashboard: { project: { outputs: { validationUnverified: string; validationUnverifiedLabel: string } } } };
+  const turkish = JSON.parse(await readFile("src/messages/tr.json", "utf8")) as { Dashboard: { project: { outputs: { validationUnverified: string; validationUnverifiedLabel: string } } } };
   assert.match(source, /selectedValidation\.status === "validation_unavailable" \? null : finalSelection\.qualityGatePassed/);
   assert.match(source, /if \(selectedValidation\.status === "validation_unavailable"\) fidelityStatus = "not_available"/);
   assert.match(source, /\.upload\(outputObjectPath, finalImageData/);
@@ -116,10 +117,19 @@ test("unavailable validation is persisted as unverified and reaches the existing
   assert.match(source, /safeGenerationEvent\("queue", "processor_exit", \{ generationId, status: "succeeded" \}\)/);
   assert.match(source, /return \{ ok: true \}/);
   assert.equal((source.match(/type: "generation_completed"/g) ?? []).length, 1);
-  assert.match(page, /validationUnverified: Boolean\(/);
+  assert.match(page, /editValidationUnverified[\s\S]*validatorStatus[\s\S]*validation_unavailable/);
+  assert.match(page, /const validationUnverified = Boolean\(fidelityValidationUnverified \|\| editValidationUnverified\)/);
+  assert.match(page, /validationUnverified \? t\("outputs\.validationUnverifiedLabel"\)/);
+  assert.match(page, /imageEditAvailable=\{isImageEditAvailableForUser\(userId\)\}/);
+  assert.match(editPanel, /!available \? <p role="status">\{messages\.unavailable\}<\/p>/);
+  assert.match(editPanel, /disabled=\{!available \|\| !hasOutput \|\| pending\}/);
   assert.match(gallery, /item\.status === "succeeded" && item\.validationUnverified/);
+  assert.match(gallery, /data-status=\{selected\?\.validationUnverified \? "unverified"/);
+  assert.match(gallery, /data-status=\{item\.validationUnverified \? "unverified"/);
   assert.ok(english.Dashboard.project.outputs.validationUnverified);
+  assert.ok(english.Dashboard.project.outputs.validationUnverifiedLabel);
   assert.ok(turkish.Dashboard.project.outputs.validationUnverified);
+  assert.ok(turkish.Dashboard.project.outputs.validationUnverifiedLabel);
 });
 
 test("post-storage persistence exposes its exact failure and committed success is authoritative", async () => {

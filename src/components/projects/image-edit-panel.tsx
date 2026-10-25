@@ -8,7 +8,7 @@ import type { CreateImageEditResult } from "@/app/[locale]/dashboard/projects/[p
 import { resolveImageEditCompletion } from "@/components/projects/image-edit-completion";
 import { GenerationStatusIndicator, type GenerationState } from "@/components/projects/generation-status-indicator";
 
-export function ImageEditPanel({ hasOutput, selectedGenerationId, onEditSucceeded, action, messages }: { hasOutput: boolean; selectedGenerationId: string | null; onEditSucceeded: (generationId: string) => void; action: (baseGenerationId: string, instruction: string, submissionId: string) => Promise<CreateImageEditResult>; messages: { title: string; description: string; placeholder: string; helper: string; apply: string; unavailable: string; failed: string; progressTitle: string; progressDescription: string; progressStatuses: readonly [string, string, string, string]; closeProgress: string; activeStatus: string; successStatus: string; failedStatus: string } }) {
+export function ImageEditPanel({ available, hasOutput, selectedGenerationId, onEditSucceeded, action, messages }: { available: boolean; hasOutput: boolean; selectedGenerationId: string | null; onEditSucceeded: (generationId: string) => void; action: (baseGenerationId: string, instruction: string, submissionId: string) => Promise<CreateImageEditResult>; messages: { title: string; description: string; placeholder: string; helper: string; apply: string; unavailable: string; failed: string; progressTitle: string; progressDescription: string; progressStatuses: readonly [string, string, string, string]; closeProgress: string; activeStatus: string; successStatus: string; failedStatus: string } }) {
   const inputId = useId();
   const router = useRouter();
   const instructionRef = useRef<HTMLTextAreaElement>(null);
@@ -55,12 +55,13 @@ export function ImageEditPanel({ hasOutput, selectedGenerationId, onEditSucceede
   }
   return <section id="project-image-edit" className="project-control-section project-image-edit" aria-labelledby={`${inputId}-title`}>
     <h3 id={`${inputId}-title`}>{messages.title}</h3><p>{messages.description}</p>
+    {!available ? <p role="status">{messages.unavailable}</p> : null}
     <form onSubmit={(event) => void submit(event)}>
       <label className="sr-only" htmlFor={inputId}>{messages.title}</label>
-      <textarea ref={instructionRef} id={inputId} className="project-direction-textarea" placeholder={messages.placeholder} disabled={!hasOutput || pending} maxLength={1000} />
+      <textarea ref={instructionRef} id={inputId} className="project-direction-textarea" placeholder={messages.placeholder} disabled={!available || !hasOutput || pending} maxLength={1000} />
       <p>{messages.helper}</p>
       {error ? <p role="alert" className="project-generation-error">{error}</p> : null}
-      <Button type="submit" variant="primary" size="md" className="project-generate-button" disabled={!hasOutput || pending}>{pending ? messages.progressTitle : messages.apply}</Button>
+      <Button type="submit" variant="primary" size="md" className="project-generate-button" disabled={!available || !hasOutput || pending}>{pending ? messages.progressTitle : messages.apply}</Button>
     </form>
     <GenerationStatusIndicator status={generationState} label={generationState === "failed" ? messages.failedStatus : generationState === "succeeded" ? messages.successStatus : messages.activeStatus} onClick={() => { if (generationState === "succeeded") { router.refresh(); return; } setModalOpen(true); }} />
     <GenerationProgressModal open={modalOpen && generationState !== "idle"} onClose={() => setModalOpen(false)} closeLabel={messages.closeProgress} title={generationState === "failed" ? messages.failed : progressTitle} description={messages.progressDescription} statuses={messages.progressStatuses} />

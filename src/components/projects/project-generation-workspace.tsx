@@ -12,13 +12,14 @@ type Props = {
   controls: ReactNode;
   editAction: (baseGenerationId: string, instruction: string, submissionId: string) => Promise<CreateImageEditResult>;
   favoriteAction: (generationId: string, nextValue: boolean) => Promise<FavoriteGenerationResult>;
+  imageEditAvailable: boolean;
   editMessages: React.ComponentProps<typeof ImageEditPanel>["messages"];
   hasOutput: boolean;
   messages: React.ComponentProps<typeof GenerationGallery>["messages"];
   initialSelectedGenerationId?: string | null;
 };
 
-export function ProjectGenerationWorkspace({ items, runActions, controls, editAction, favoriteAction, editMessages, hasOutput, messages, initialSelectedGenerationId }: Props) {
+export function ProjectGenerationWorkspace({ items, runActions, controls, editAction, favoriteAction, editMessages, hasOutput, imageEditAvailable, messages, initialSelectedGenerationId }: Props) {
   const defaultSelected = items.find((item) => item.previewUrl && item.status === "succeeded")?.id ?? null;
   const [selectedGenerationId, setSelectedGenerationId] = useState<string | null>(() => items.some((item) => item.id === initialSelectedGenerationId && item.previewUrl && item.status === "succeeded") ? initialSelectedGenerationId ?? defaultSelected : defaultSelected);
   function selectEditedGeneration(generationId: string) {
@@ -26,6 +27,6 @@ export function ProjectGenerationWorkspace({ items, runActions, controls, editAc
   }
   return <GenerationGallery items={items} runActions={runActions} messages={messages} favoriteAction={favoriteAction} onSelectionChange={setSelectedGenerationId} initialSelectedGenerationId={selectedGenerationId} controls={<>
     {controls}
-    <ImageEditPanel hasOutput={hasOutput} selectedGenerationId={selectedGenerationId} onEditSucceeded={selectEditedGeneration} action={editAction} messages={editMessages} />
+    <ImageEditPanel available={imageEditAvailable} hasOutput={hasOutput} selectedGenerationId={selectedGenerationId} onEditSucceeded={selectEditedGeneration} action={editAction} messages={editMessages} />
   </>} />;
 }

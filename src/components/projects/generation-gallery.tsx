@@ -9,6 +9,7 @@ import { DashboardIcon } from "@/components/dashboard/dashboard-icons";
 import { filterFavoriteGenerations, type FavoriteGenerationResult } from "@/lib/generations/favorite-generation";
 import { getVideoStudioSourceHref } from "@/lib/generations/video-source-handoff";
 import { Link } from "@/i18n/navigation";
+import { ImageDownloadButton } from "@/components/projects/image-download-button";
 
 export type GenerationGalleryItem = {
   id: string;
@@ -140,10 +141,11 @@ export function GenerationGallery({ items, controls, runActions, onSelectionChan
     <div className="project-workspace-layout">
       <section className="project-review-panel project-canvas" aria-label={messages.galleryLabel}>
         <div className="project-canvas-toolbar">
-          <span className="dashboard-status" data-status={selected?.status ?? "draft"}><span aria-hidden="true" />{selected?.statusLabel ?? messages.emptyHeading}</span>
+          <span className="dashboard-status" data-status={selected?.validationUnverified ? "unverified" : selected?.status ?? "draft"}><span aria-hidden="true" />{selected?.statusLabel ?? messages.emptyHeading}</span>
           <div>
             {selected?.status === "succeeded" && selected.previewUrl ? <FavoriteButton active={selected.isFavorite} disabled={pendingFavoriteIds.has(selected.id)} label={selected.isFavorite ? messages.favoriteRemove : messages.favoriteAdd} onClick={() => void toggleFavorite(selected)} /> : null}
             {selected?.animateSourceId ? <Link href={getVideoStudioSourceHref(selected.animateSourceId)} aria-label={`${messages.animate}: ${selected.alt}`}><DashboardIcon name="video" /><span>{messages.animate}</span></Link> : null}
+            {selected?.status === "succeeded" ? <ImageDownloadButton key={selected.id} generationId={selected.id} /> : null}
             <a href="#project-image-edit">{messages.edit}</a>
             <button type="button" disabled={!selected?.previewUrl} onClick={openFullscreen}>{messages.openFullscreen}</button>
           </div>
@@ -176,12 +178,12 @@ export function GenerationGallery({ items, controls, runActions, onSelectionChan
             // eslint-disable-next-line @next/next/no-img-element
             <img src={item.previewUrl} alt="" />
           ) : <span aria-hidden="true" />}</span>
-          <span className="project-generation-history-copy"><strong>{item.typeLabel}</strong><time dateTime={item.createdDateTime}>{item.createdAt}</time><span className="dashboard-status" data-status={item.status}><span aria-hidden="true" />{item.statusLabel}</span></span>
+          <span className="project-generation-history-copy"><strong>{item.typeLabel}</strong><time dateTime={item.createdDateTime}>{item.createdAt}</time><span className="dashboard-status" data-status={item.validationUnverified ? "unverified" : item.status}><span aria-hidden="true" />{item.statusLabel}</span></span>
         </button>
         {item.status === "succeeded" && item.previewUrl ? <FavoriteButton active={item.isFavorite} disabled={pendingFavoriteIds.has(item.id)} className="project-generation-favorite" label={item.isFavorite ? messages.favoriteRemove : messages.favoriteAdd} onClick={() => void toggleFavorite(item)} /> : null}
         {runActions.find((action) => action.id === item.id)?.node}
       </li>)}</ul> : <AppState compact icon="spark" title={filter === "favorites" ? messages.favoritesEmptyHeading : messages.emptyHeading} description={filter === "favorites" ? messages.favoritesEmptyDescription : messages.emptyDescription} />}
     </section>
-    {selected?.previewUrl ? <ProjectImageViewer src={selected.previewUrl} alt={selected.alt} open={viewerOpen} closeLabel={messages.closeFullscreen} zoomInLabel={messages.zoomImage} zoomOutLabel={messages.zoomOutImage} resetLabel={messages.resetImageZoom} onOpenChange={setViewerOpen} /> : null}
+    {selected?.previewUrl ? <ProjectImageViewer src={selected.previewUrl} alt={selected.alt} open={viewerOpen} closeLabel={messages.closeFullscreen} zoomInLabel={messages.zoomImage} zoomOutLabel={messages.zoomOutImage} resetLabel={messages.resetImageZoom} onOpenChange={setViewerOpen} downloadControl={<ImageDownloadButton key={selected.id} generationId={selected.id} />} /> : null}
   </>;
 }
