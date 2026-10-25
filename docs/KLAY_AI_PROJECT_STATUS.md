@@ -157,6 +157,7 @@ Mevcut benchmark araçları ve sentetik pilotlar kalite ölçüm akışını do�
 
 | Öncelik | Somut iş | Bitiş ölçütü / bağımlılık |
 | --- | --- | --- |
+| **P0 / production güvenlik kapısı** | Push sonrası doğrulanan mevcut production dependency bulgularını hedefli düzelt. | `npm audit --omit=dev`: **1 kritik + 5 yüksek**; etkilenen paketler Next.js, sharp, postcss, nanoid, source-map-js ve zod. Doğrudan framework/native image upgrade'i bu özellik PR'ına kontrolsüz eklenmedi; önce kurulu sürüm rehberleri ve kırılma etkisi, sonra dar kapsamlı güncelleme ve regresyon doğrulaması. Bu bulgular kapanmadan production beta hazır sayılmaz. |
 | **P0 / kod tamamlandı** | Composer ve portre girişleriyle ortak OpenAI transport'una açık beta erişimi ve atomic günlük user/global çağrı kotası eklendi. | Yerel SDK/unit testleri, gerçek PostgreSQL 10/10 ve iki oturum kilit kanıtı var. Production kurulum ve ayarları kapalı; ayrı onay gerekiyor. |
 | **P0 / sonuç teslimi tamamlandı** | Galeri ve proje/dashboard tam ekranından güvenli görsel indirme eklendi. | Owner/bucket/path/MIME kontrolü, 60 saniyelik named signed URL, TR/EN hata/yüklenme ve klavye/focus doğrulandı. Canlı authenticated Storage doğrulaması bekliyor. |
 | **P0 / UGC'deki tek açık yarış kanıtı** | Mevcut iki oturumlu planı yalnızca disposable test projesinde uygula ve kısa, temizlenmiş sonuç kaydı ekle. | Farklı backend PID'leri, çakışan transaction'lar, bir claim kazananı, B'de sıfır claim, tek lease/route ve exact fixture temizliği. Bu, UGC'yi açmaz; diğer engeller devam eder. 14/14 ve 26/26'yı sebepsiz yeniden başlatma. |
@@ -199,3 +200,5 @@ Sonraki güncellemelerde değişen özelliği, kaynak dosyalarını, çalıştı
 - `edf827a`: atomic OpenAI beta access and daily request limits.
 - İki geliştirme `origin/codex/composer-beta` branch'ine gönderildi; README ve durum belgesi ayrı dokümantasyon commit'iyle aynı branch'te tutulur. Main'e merge veya deployment yapılmadı.
 - Push sırasında GitHub default branch için dependency güvenlik uyarıları bildirdi. Bunlar yeni geliştirmeden önceki bağımlılık ağacına ait; doğrulanmış production etkisine göre hedefli düzeltme önceliğidir, toplu otomatik paket güncellemesi yapılmadı.
+- Salt okunur production dependency kontrolü 1 kritik ve 5 yüksek bulguyu doğruladı; roadmap'e production öncesi P0 güvenlik kapısı olarak alındı.
+- Reviewable draft PR: [Composer Beta #1](https://github.com/farukozgu/ai-creative-platform/pull/1). GitHub connector'ın PR yazma yetkisi yoktu; mevcut Git Credential Manager oturumu bellekte kullanılarak PR oluşturuldu. Yeni token oluşturulmadı veya kaynak/dokümana kaydedilmedi.
