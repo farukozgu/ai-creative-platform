@@ -7,6 +7,7 @@ import { parseModelAppearanceDraft } from "@/features/models/model-profile";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { generateModelCandidate, type CandidateGenerationStatus } from "@/lib/models/candidate-generation";
 import { candidateOpenAIProvider } from "@/lib/models/candidate-openai-provider";
+import { getOpenAIBetaPolicy } from "@/lib/openai/beta-policy";
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 export type ModelMutationResult = { status: "error" | "invalid" | "success"; id?: string };
 function invalidate(locale: AppLocale, id?: string) { revalidatePath(`/${locale}/dashboard/models`, "page"); if (id) revalidatePath(`/${locale}/dashboard/models/${id}`, "page"); }
@@ -17,6 +18,7 @@ export async function generateModelPortrait(locale: AppLocale, modelId: string):
   if (!isSupportedLocale(locale) || !uuidPattern.test(modelId)) return { status: "invalid" };
   const userId = await getAuthenticatedUserId();
   if (!userId) return { status: "invalid" };
+  if (!getOpenAIBetaPolicy(userId)) return { status: "error" };
   try {
     const status = await generateModelCandidate(getSupabaseAdminClient(), candidateOpenAIProvider, userId, modelId);
     invalidate(locale, modelId);

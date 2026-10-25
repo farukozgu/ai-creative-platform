@@ -116,6 +116,7 @@ import { createModerationInputSummary } from "@/lib/generation/moderation-input-
 import { classifyHumanReferenceFashion, isProviderModerationBlocked, type KlayReferenceClassification } from "@/lib/generation/reference-fashion-classification";
 import { APPAREL_FIT_PRESERVATION_VERSION } from "@/lib/apparel-fit-preservation/apparel-fit-version";
 import { awaitGenerationPipeline } from "@/lib/generation/await-generation-pipeline";
+import { getOpenAIBetaPolicy } from "@/lib/openai/beta-policy";
 import { createImageEdit as createImageEditService } from "@/lib/generation/image-worker-service";
 
 export type RegisterProductAssetResult = {
@@ -267,6 +268,7 @@ export async function createQueuedImageGeneration(
   if (!userId) {
     return { ok: false, message: "creationFailed" };
   }
+  if (!getOpenAIBetaPolicy(userId)) return { ok: false, message: "generationUnavailable" };
 
   try {
     const supabase = await createClient();
