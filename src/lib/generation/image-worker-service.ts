@@ -79,6 +79,7 @@ import {
   admitImageEdit,
   bindImageEditAdmission,
   createImageEditRequestFingerprint,
+  isImageEditAvailableForUser,
   isImageEditExecutionEnabled,
   transitionImageEditAdmission,
   validateImageEditSubmissionId,
@@ -161,6 +162,7 @@ export async function createImageEdit(locale: AppLocale, projectId: string, base
   if (!isSupportedLocale(locale) || !uuidPattern.test(projectId) || !uuidPattern.test(baseGenerationId) || !validateImageEditSubmissionId(submissionId) || typeof instruction !== "string" || instruction.trim().length < 2 || instruction.length > 1000) return { ok: false, error: "Edit instruction is invalid.", code: "missingEditInstruction" };
   const userId = await getAuthenticatedUserId();
   if (!userId) return { ok: false, error: "Edit could not be authorized.", code: "creationFailed" };
+  if (!isImageEditAvailableForUser(userId)) return { ok: false, error: "Image editing is unavailable.", code: "admissionUnavailable" };
   const supabase = await createClient();
   const { data: project } = await supabase.from("projects").select("id,user_id,title").eq("id", projectId).eq("user_id", userId).maybeSingle();
   if (!project || project.user_id !== userId) return { ok: false, error: "Project could not be loaded.", code: "creationFailed" };

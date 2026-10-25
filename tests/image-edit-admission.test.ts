@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
-import { createImageEditRequestFingerprint, isImageEditExecutionEnabled, validateImageEditSubmissionId } from "../src/lib/generation/image-edit-admission-contract";
+import { createImageEditRequestFingerprint, isImageEditAvailableForUser, isImageEditExecutionEnabled, validateImageEditSubmissionId } from "../src/lib/generation/image-edit-admission-contract";
 
 const ownerA = "11111111-1111-4111-8111-111111111111";
 const ownerB = "22222222-2222-4222-8222-222222222222";
@@ -40,6 +41,19 @@ const fingerprint = (instruction: string) => createImageEditRequestFingerprint({
 test("image edit feature gate is disabled by default and uses its own flag", () => {
   assert.equal(isImageEditExecutionEnabled({}), false);
   assert.equal(isImageEditExecutionEnabled({ IMAGE_EDIT_EXECUTION_ENABLED: "true" }), true);
+});
+test("image edit requires both its own flag and an explicitly allowlisted OpenAI beta user", () => {
+  const environment = { IMAGE_EDIT_EXECUTION_ENABLED: "true", OPENAI_BETA_ENABLED: "true", OPENAI_BETA_USER_IDS: ownerA };
+  assert.equal(isImageEditAvailableForUser(ownerA, environment), true);
+  assert.equal(isImageEditAvailableForUser(ownerB, environment), false);
+  assert.equal(isImageEditAvailableForUser(null, environment), false);
+  assert.equal(isImageEditAvailableForUser(ownerA, { ...environment, IMAGE_EDIT_EXECUTION_ENABLED: "false" }), false);
+  assert.equal(isImageEditAvailableForUser(ownerA, { ...environment, OPENAI_BETA_ENABLED: "false" }), false);
+  assert.equal(isImageEditAvailableForUser(ownerA, { ...environment, OPENAI_BETA_USER_IDS: "*" }), false);
+});
+test("the server action checks image-edit access before creating an admission or generation", async () => {
+  const source = await readFile("src/lib/generation/image-worker-service.ts", "utf8");
+  assert.match(source, /if \(!isImageEditExecutionEnabled\(\)\)[\s\S]*?if \(!isImageEditAvailableForUser\(userId\)\)[\s\S]*?admitImageEdit\(/);
 });
 test("submission IDs are UUID-bound and fingerprints bind normalized paid payloads", () => {
   assert.equal(validateImageEditSubmissionId(keyA), true); assert.equal(validateImageEditSubmissionId("not-a-key"), false);

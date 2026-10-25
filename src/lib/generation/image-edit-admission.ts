@@ -1,7 +1,7 @@
 import "server-only";
 
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
-export { createImageEditRequestFingerprint, IMAGE_EDIT_ACTIVE_LIMIT_DEFAULT, isImageEditExecutionEnabled, validateImageEditSubmissionId } from "@/lib/generation/image-edit-admission-contract";
+export { createImageEditRequestFingerprint, IMAGE_EDIT_ACTIVE_LIMIT_DEFAULT, isImageEditAvailableForUser, isImageEditExecutionEnabled, validateImageEditSubmissionId } from "@/lib/generation/image-edit-admission-contract";
 
 export type ImageEditAdmissionState = "admitted" | "preparing_submission" | "possibly_submitted" | "provider_responded" | "output_persisted" | "reconciliation_required" | "failed_pre_provider" | "failed_terminal";
 export type ImageEditAdmissionDecision =
