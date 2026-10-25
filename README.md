@@ -18,7 +18,7 @@ Code lives in `src/app` (routes/actions), `src/components` (UI), `src/features` 
 
 ### Creative Composer and image generation
 
-Creative Composer accepts a product image, optional references, and a preset or creative direction. Its server action creates the generation record and runs the image pipeline synchronously in the same request. The request waits for provider generation, image validation and any eligible repair, then stores the output and returns the completed generation. If execution fails, the action records the failure and returns an error. The server needs provider credentials for generation.
+Creative Composer accepts a product image, optional references, and a preset or creative direction. Its server action creates the generation record and runs the image pipeline synchronously in the same request. The request waits for provider generation, image validation and any eligible repair, then stores the output and returns the completed generation. If execution fails, the action records the failure and returns an error. Generation requires provider credentials, explicit server-side beta access and the atomic request-budget RPC. Image downloads reauthorize ownership on every click and use fresh 60-second private URLs with an attachment filename.
 
 ### Product Understanding
 
@@ -26,7 +26,7 @@ Primary uploads can receive a versioned product profile used for safe routing. N
 
 ### Video, Model Studio, and credits
 
-Video Studio contains source handoff, capability checks, provider/lifecycle/reconciliation foundations, and a Video Library. AI Model Studio includes model creation, references, candidates, identity-fidelity boundaries, and Composer selection. Credits include catalog, entitlement, reservation, refund, expiry, and payment-event adapter foundations. Video inference, Model candidate execution, customer billing, and payment integration remain deferred and disabled.
+Video Studio contains source handoff, capability checks, provider/lifecycle/reconciliation foundations, and a Video Library. AI Model Studio includes model creation, references, candidates, identity-fidelity boundaries, and Composer selection. Its interactive portrait action uses OpenAI behind the same beta access and budget boundary; identity approval and identity-conditioned Composer generation remain disabled. Credits include catalog, entitlement, reservation, refund, expiry, and payment-event adapter foundations. Video inference, customer billing, and payment integration remain deferred and disabled.
 
 ## Supabase and migrations
 
@@ -65,6 +65,9 @@ Copy `.env.example`; never commit real values.
 | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase URL and publishable browser key. |
 | `SUPABASE_SECRET_KEY`, `OPENAI_API_KEY`, `FAL_KEY` | Server-only credentials. |
+| `OPENAI_BETA_ENABLED`, `OPENAI_BETA_USER_IDS` | Explicit opt-in and comma-separated authenticated user UUID allowlist. Missing/invalid configuration denies all OpenAI HTTP requests, including upload analysis and Model Studio portraits. |
+| `OPENAI_BETA_USER_DAILY_IMAGES`, `OPENAI_BETA_USER_DAILY_ANALYSES` | UTC daily request ceilings per user; defaults 4 image requests and 24 analysis requests. Repairs and failed/ambiguous attempts consume quota. |
+| `OPENAI_BETA_GLOBAL_DAILY_IMAGES`, `OPENAI_BETA_GLOBAL_DAILY_ANALYSES` | Shared UTC daily ceilings across users/server instances; defaults 20 images and 120 analyses. These are request limits, not USD quotes or customer credit prices. |
 | `OPENAI_IMAGE_MODEL` | Optional image model override. |
 | `OPENAI_PROMPT_ENHANCEMENT_MODEL`, `OPENAI_REFERENCE_ANALYSIS_MODEL` | Optional analysis/prompt model overrides. |
 | `OPENAI_FIDELITY_VALIDATION_MODEL`, `OPENAI_PRODUCT_UNDERSTANDING_MODEL` | Optional validation/product-analysis model overrides. |
@@ -75,6 +78,8 @@ Copy `.env.example`; never commit real values.
 
 ## Operational status
 
-Image generation runs synchronously from Creative Composer when server-side provider credentials are configured. Video generation, video reconciliation, payment processing, and customer billing remain gated unless explicitly activated. Model Studio execution and identity-conditioned inference are deferred. Migrations in this repository are not claimed to be deployed.
+Image generation runs synchronously from Creative Composer when server-side beta access, credentials and the budget RPC are configured. The common OpenAI transport pins approved request shapes/models, bounds output, disables automatic SDK retries and consumes atomic quota before provider I/O. Missing RPC or quota failure denies the request. `20261025212828_prepare_openai_beta_limits.sql` was installed and behavior-tested only on the explicitly authorized disposable project; production installation, configuration and paid verification require separate approval. Video generation, video reconciliation, payment processing, customer billing and identity-conditioned inference remain gated. UGC Generate remains unconditionally disabled.
+
+Current evidence, migration distinctions and next priorities: [KLAY AI project status](docs/KLAY_AI_PROJECT_STATUS.md). Use explicit test ref `gklpgcyndeghjgemoonk` for routine test operations; the repository's existing CLI link points to production and must not be used as an implicit target. Supabase CLI 2.114.0 and the connected Supabase integration have both been verified without recording credentials.
 
 Passing local tests/builds does not verify remote database policy, migration deployment, provider billing, production configuration, or browser accessibility.
