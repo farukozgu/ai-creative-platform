@@ -3,6 +3,7 @@
 /* eslint-disable @next/next/no-img-element -- the browser creates these transient frame preview data URLs locally. */
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import type { VideoFidelityAnalysisAvailability } from "@/lib/video-fidelity/types";
 import { sampleVideoFrameTimestamps } from "@/lib/video-fidelity/sampling";
@@ -20,15 +21,11 @@ export type VideoFidelityCopy = {
   extractingFrames: string;
   freeStep: string;
   sourceFrame: string;
-  videoFrame: (number: number, timestamp: string) => string;
   frameUnavailable: string;
   analysisDisabled: string;
   pricingUnavailable: string;
-  priceEstimate: (amount: string) => string;
   consentLead: string;
   consentDetails: string;
-  consentLabel: (amount: string) => string;
-  analyze: (amount: string) => string;
   analyzing: string;
   cancel: string;
   profileTitle: string;
@@ -51,7 +48,6 @@ export type VideoFidelityCopy = {
   overallStatuses: Record<"clear_distortion" | "review_recommended" | "no_clear_change_detected" | "inconclusive", string>;
   confidence: Record<"high" | "medium" | "low", string>;
   causes: Record<"product_change" | "camera_angle" | "lighting" | "partial_visibility" | "motion_blur" | "unclear", string>;
-  timestamp: (value: string) => string;
   verticals: Record<"apparel" | "jewelry" | "watches" | "cosmetics" | "footwear" | "bags", string>;
   noText: string;
   prepareError: string;
@@ -185,6 +181,7 @@ function renderTextList(values: readonly string[], fallback: string) {
 }
 
 export function VideoFidelityAnalysis({ videoId, durationSeconds, availability, copy }: VideoFidelityAnalysisProps) {
+  const t = useTranslations("Dashboard.videoDetail.fidelityAnalysis");
   const sessionCacheKey = `klay-video-fidelity-v2:${videoId}`;
   const [preparing, setPreparing] = useState(false);
   const [prepared, setPrepared] = useState<PreparedReview | null>(null);
@@ -312,8 +309,8 @@ export function VideoFidelityAnalysis({ videoId, durationSeconds, availability, 
           </figure>
           {prepared.frames.map((frame, index) => (
             <figure className={styles.frameCard} key={frame.timestampSeconds} id={`fidelity-frame-${index}`}>
-              <img src={frame.dataUrl} alt={copy.videoFrame(index + 1, formatTime(frame.timestampSeconds))} />
-              <figcaption>{copy.videoFrame(index + 1, formatTime(frame.timestampSeconds))}</figcaption>
+              <img src={frame.dataUrl} alt={t("videoFrame", { number: index + 1, timestamp: formatTime(frame.timestampSeconds) })} />
+              <figcaption>{t("videoFrame", { number: index + 1, timestamp: formatTime(frame.timestampSeconds) })}</figcaption>
             </figure>
           ))}
         </div>
@@ -323,15 +320,15 @@ export function VideoFidelityAnalysis({ videoId, durationSeconds, availability, 
         <div className={styles.consentBlock}>
           {availability.enabled && availability.maximumEstimatedCostUsd !== null ? (
             <>
-              <p className={styles.estimate}>{copy.priceEstimate(availability.maximumEstimatedCostUsd.toFixed(2))}</p>
+              <p className={styles.estimate}>{t("priceEstimate", { amount: availability.maximumEstimatedCostUsd.toFixed(2) })}</p>
               <p>{copy.consentLead}</p>
               <p className={styles.muted}>{copy.consentDetails}</p>
               <label className={styles.consentLabel}>
                 <input type="checkbox" checked={consented} onChange={(event) => setConsented(event.target.checked)} />
-                <span>{copy.consentLabel(availability.maximumEstimatedCostUsd.toFixed(2))}</span>
+                <span>{t("consentLabel", { amount: availability.maximumEstimatedCostUsd.toFixed(2) })}</span>
               </label>
               <button type="button" className={libraryStyles.primaryAction} onClick={handleAnalyze} disabled={!consented || analyzing}>
-                {analyzing ? copy.analyzing : copy.analyze(availability.maximumEstimatedCostUsd.toFixed(2))}
+                {analyzing ? copy.analyzing : t("analyze", { amount: availability.maximumEstimatedCostUsd.toFixed(2) })}
               </button>
             </>
           ) : (
@@ -391,9 +388,9 @@ export function VideoFidelityAnalysis({ videoId, durationSeconds, availability, 
                           <span>{copy.confidence[check.confidence]}</span>
                           <span>{copy.causes[check.likelyCause]}</span>
                           {check.timestampsSeconds.map((time) => {
-                            if (!prepared) return <span key={time}>{copy.timestamp(formatTime(time))}</span>;
+                            if (!prepared) return <span key={time}>{t("timestamp", { value: formatTime(time) })}</span>;
                             const nearestIndex = prepared.frames.reduce((best, frame, index) => Math.abs(frame.timestampSeconds - time) < Math.abs(prepared.frames[best].timestampSeconds - time) ? index : best, 0);
-                            return <a key={time} href={`#fidelity-frame-${nearestIndex}`}>{copy.timestamp(formatTime(time))}</a>;
+                            return <a key={time} href={`#fidelity-frame-${nearestIndex}`}>{t("timestamp", { value: formatTime(time) })}</a>;
                           })}
                         </div>
                       ) : null}
