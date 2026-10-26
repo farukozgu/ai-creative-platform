@@ -57,6 +57,7 @@ type VideoGenerationInspectorProps = {
   feedbackMessage: string | null;
   feedbackIsError: boolean;
   isReady: boolean;
+  isSubmitting: boolean;
   generationAvailable: boolean;
   libraryAssets: VideoLibraryAsset[];
   libraryOpen: boolean;
@@ -96,6 +97,7 @@ export function VideoGenerationInspector({
   feedbackMessage,
   feedbackIsError,
   isReady,
+  isSubmitting,
   generationAvailable,
   libraryAssets,
   libraryOpen,
@@ -250,10 +252,12 @@ export function VideoGenerationInspector({
         <Button
           className={styles.generateButton}
           variant={isReady ? "primary" : "secondary"}
+          aria-busy={isSubmitting}
           aria-describedby="video-generate-helper video-studio-feedback"
           onClick={onGenerate}
           disabled={!generationAvailable}
         >
+          {isSubmitting ? <span className={styles.generateSpinner} aria-hidden="true" /> : null}
           {copy.generate}
         </Button>
         <p id="video-generate-helper" className={styles.generateHelper}>

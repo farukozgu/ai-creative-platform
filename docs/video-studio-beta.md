@@ -16,6 +16,12 @@ Canlı bir gönderim denemesinde IEEE-754 `0.14 × 5` ara sonucu `Math.ceil` ön
 
 Maliyet artık ondalık metin gösteriminden tam sayı mikro-dolara çevrilip daima yukarı yuvarlanır. Sunucu, istemci onayının canlı teklifle birebir aynı olmasını ve toplam maliyetin ayrıca onay tavanını aşmamasını ister. Test: `$0.14 × 5 = $0.70`; gerçek bir maliyet `$0.700001` ise reddedilir. Fiyat tavanı gevşetilmedi; ücretli fal çağrısı veya retry yapılmadı.
 
+## Gerçek Kling job ve ilerleme arayüzü
+
+İlk başarılı Standard/5 sn işi Production `generations` tablosunda `succeeded` olarak doğrulandı. Sağlayıcı task ID eklenmiş, MP4 private `generated-videos` alanında, beta rezervasyonu `$0.700000` ile `finalized`; polling/reconciliation üç denemede tamamlanmış. Job'da olay geçmişi veya gerçek yüzde bulunmadığından arayüz yalnız `queued`, `processing`, private çıktı yolu kaydedilmiş/finalizing ve `succeeded` işaretlerini gösterir; yüzde uydurmaz. `failed`, belirsiz gönderim ve durum sorgusu hataları ayrı mesajlanır.
+
+Video Studio açılırken mevcut sunucu onaylı submission ID'siyle eşleşen job okunur; bulunursa durum paneli geri yüklenir ve yeni submit düğmesi kapanır. Erişim doğrulanamazsa yeniden ücretli istek başlatma kapalı kalır. Kaynak hazırlama ve server action gönderimi sırasında düğme loading/disabled olur; mobil görünüm gönderim sırasında loading düğmesini, sonrasında ilerleme panelini gösterir. `Videoyu İzle` bağlantısı yalnız `succeeded` job için gösterilir. Yeni tablo, migration, worker veya scheduler eklenmedi.
+
 ## İlk yerel deneme — güvenli durum incelemesi
 
 26 Ekim 2026'da seçilen hesap için Production `generations` ve `video_beta_reservations` sorgularında video satırı yoktu. Storage'da üç private kaynak JPEG'i 2400×3600 (2:3) olarak duruyordu; `video_source_assets` kaydı oluşmamıştı. Kaynak finalize kodu her kenar için 360–2000 piksel ve desteklenen oran ister; bu yüzden akış finalize aşamasında durdu. Generation REST POST veya bütçe rezervasyon çağrısı görülmedi. Mevcut servis sırası rezervasyon → job kaydı → fal submit olduğundan fal çağrısı, ücret veya provider task ID oluşmadı. Submission UUID onay kontrolüne ulaşılmadı; yerel onay UUID'si değiştirilmedi. Başarısız yüklemeler private Storage'da bırakıldı.
@@ -121,4 +127,4 @@ Bu ilk hata artık otomatik kaynak hazırlamayla giderilmiştir; kullanıcıdan 
 - tests/video-studio-ui.test.ts
 - tests/video-source-preparation.test.ts
 
-Nihai doğrulama: 769/769 ana test, 68/68 pretest, lint, TypeScript, varsayılan Turbopack production build (32 sayfa) ve 35/35 gerçek disposable entegrasyon kontrolü başarılı. JPEG 2400×3600 için üç oran, ürün oranı/köşelerin korunması, değişmeyen orijinal, decode limitleri, preview/provider byte eşitliği ve concurrency test edildi. Gerçek tarayıcıda üç oran arasında hazırlanmış önizleme geçişi ve mobil görünüm kontrol edildi. Gerçek ceket görseli yerelde üç orana hazırlandı; fal inference yapılmadı. Önceki $10 cap transaction testi de geçti.
+Nihai doğrulama: 773/773 ana test, 68/68 pretest, lint, TypeScript, varsayılan Turbopack production build (32 sayfa) ve 35/35 gerçek disposable entegrasyon kontrolü başarılı. JPEG 2400×3600 için üç oran, ürün oranı/köşelerin korunması, değişmeyen orijinal, decode limitleri, preview/provider byte eşitliği ve concurrency test edildi. Gerçek tarayıcıda üç oran arasında hazırlanmış önizleme geçişi ve mobil görünüm kontrol edildi. Gerçek ceket görseli yerelde üç orana hazırlandı; fal inference yapılmadı. Önceki $10 cap transaction testi de geçti. İlerleme evreleri için backend phase mapping ve yenileme sonrası approved job geri yükleme testleri eklendi.

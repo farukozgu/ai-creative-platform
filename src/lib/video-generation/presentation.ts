@@ -1,11 +1,16 @@
 import type { VideoPresentationRecord } from "@/features/video/video-studio-types";
 import type { VideoJobRecord } from "@/lib/video-generation/types";
+import { getVideoProgressPhase } from "@/lib/video-generation/progress-phase";
 
 export function toVideoPresentationRecord(job: VideoJobRecord, playbackUrl: string | null = null): VideoPresentationRecord {
   return {
     id: job.id,
     title: job.prompt.length > 60 ? `${job.prompt.slice(0, 57)}...` : job.prompt,
     status: job.status === "succeeded" ? "ready" : job.status,
+    progressPhase: getVideoProgressPhase(job),
+    providerTaskKnown: Boolean(job.providerRequestId),
+    outputPersisted: Boolean(job.outputObjectPath),
+    errorCode: job.errorCode,
     generationMode: job.mode,
     createdAt: job.createdAt,
     durationSeconds: job.durationSeconds,

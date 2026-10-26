@@ -57,11 +57,16 @@ export type VideoStudioDraft = {
 };
 
 export type VideoStatus = "queued" | "processing" | "ready" | "failed" | "unavailable";
+export type VideoProgressPhase = "queued" | "processing" | "finalizing" | "ready" | "failed" | "ambiguous" | "submission-uncertain";
 
 export type VideoPresentationRecord = {
   id: string;
   title: string;
   status: VideoStatus;
+  progressPhase?: VideoProgressPhase;
+  providerTaskKnown?: boolean;
+  outputPersisted?: boolean;
+  errorCode?: string | null;
   generationMode: VideoPresentationMode;
   createdAt?: string | null;
   durationSeconds?: number | null;

@@ -25,7 +25,7 @@ import type {
   VideoQuality,
 } from "@/features/video/video-studio-types";
 import { createClient } from "@/lib/supabase/client";
-import { createVideoSourceUploadAction, prepareVideoSourceAction, quoteVideoGenerationAction, submitVideoGenerationAction } from "@/app/[locale]/dashboard/video/generation-actions";
+import { createVideoSourceUploadAction, prepareVideoSourceAction, quoteVideoGenerationAction, restoreApprovedVideoGenerationAction, submitVideoGenerationAction } from "@/app/[locale]/dashboard/video/generation-actions";
 import type { VideoPreparationSource } from "@/lib/video-generation/types";
 import { VideoJobProgress } from "./video-job-progress";
 import styles from "@/features/video/video-studio-workspace.module.css";
@@ -52,6 +52,8 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
   const [submissionId, setSubmissionId] = useState(approvedSubmissionId ?? "");
   const [busy, setBusy] = useState(false);
   const [jobId, setJobId] = useState<string | null>(null);
+  const [restoringJob, setRestoringJob] = useState(Boolean(generationAvailable && approvedSubmissionId));
+  const [restoreUnavailable, setRestoreUnavailable] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
   const submitting = useRef(false);
   useEffect(() => { if (!approvedSubmissionId) queueMicrotask(() => setSubmissionId(crypto.randomUUID())); }, [approvedSubmissionId]);
@@ -61,6 +63,17 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
     void quoteVideoGenerationAction(draft.quality, draft.duration).then(value => { if (active) setQuote(value); });
     return () => { active = false; };
   }, [draft.quality, draft.duration, generationAvailable]);
+  useEffect(() => {
+    if (!generationAvailable || !approvedSubmissionId) return;
+    let active = true;
+    void restoreApprovedVideoGenerationAction().then(result => {
+      if (!active) return;
+      if (result.status === "success") { setJobId(result.job.id); setRestoringJob(false); }
+      else if (result.status === "none") setRestoringJob(false);
+      else setRestoreUnavailable(true);
+    }).catch(() => { if (active) setRestoreUnavailable(true); });
+    return () => { active = false; };
+  }, [generationAvailable, approvedSubmissionId]);
   const currentQuote = quote?.quality === draft.quality && quote.duration === draft.duration ? quote : null;
   const [view, setView] = useState<WorkspaceView>("controls");
   const [libraryOpen, setLibraryOpen] = useState(false);
@@ -254,9 +267,13 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
     try {
       const result = await submitVideoGenerationAction({ clientSubmissionId: submissionId, mode: "image", source: preparedFrame.source,
         prompt: draft.prompt, quality: draft.quality, aspectRatio: draft.aspectRatio, durationSeconds: draft.duration, cameraMovement: draft.cameraMovement }, currentQuote.estimatedMaxCostUsd);
-      if (result.ok) setJobId(result.jobId);
-      else setGenerationError(result.code === "approval_required" ? "approval" : result.code === "provider_submission_ambiguous" ? "ambiguous" : "failed");
-    } catch { setGenerationError("failed"); }
+      if (result.ok) { setJobId(result.jobId); setView("preview"); }
+      else {
+        const error = result.code === "approval_required" ? "approval" : result.code === "provider_submission_ambiguous" ? "ambiguous" : "failed";
+        setGenerationError(error);
+        if (error !== "approval") setView("preview");
+      }
+    } catch { setGenerationError("ambiguous"); setView("preview"); }
     finally { setBusy(false); submitting.current = false; }
   }
 
@@ -368,7 +385,8 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
           feedbackMessage={generationError ? t(`beta.${generationError}`) : feedbackMessage ?? (draft.source ? t(preparationFailed ? "preparation.failed" : preparedFrame ? "preparation.ready" : "preparation.preparing") : null)}
           feedbackIsError={Boolean(generationError) || preparationFailed || (draft.feedback !== null && draft.feedback !== "not-connected")}
           isReady={isVideoStudioDraftReady(draft)}
-          generationAvailable={generationAvailable && Boolean(currentQuote) && Boolean(preparedFrame) && !busy && !jobId}
+          isSubmitting={busy}
+          generationAvailable={generationAvailable && Boolean(currentQuote) && Boolean(preparedFrame) && !busy && !restoringJob && !restoreUnavailable && !jobId && generationError !== "ambiguous" && generationError !== "failed"}
           libraryAssets={libraryAssets}
           libraryOpen={libraryOpen}
           libraryStatus={libraryStatus}
@@ -389,7 +407,6 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
       </div>
 
       <div id="video-studio-canvas" className={styles.canvasRegion}>
-        {jobId ? <VideoJobProgress jobId={jobId} /> : null}
         <VideoCanvas
           source={previewSource}
           aspectRatio={draft.aspectRatio}
@@ -403,6 +420,7 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
           generationsEmptyTitle={t("generations.emptyTitle")}
           generationsEmptyDescription={t("generations.emptyDescription")}
         />
+        <VideoJobProgress jobId={jobId} submitting={busy} restoreUnavailable={restoreUnavailable} submissionError={generationError === "ambiguous" || generationError === "failed" ? generationError : null} />
       </div>
     </main>
   );

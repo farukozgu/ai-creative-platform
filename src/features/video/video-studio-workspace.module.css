@@ -577,14 +577,22 @@
 }
 
 .canvasRegion {
+  display: flex;
+  height: calc(100% - var(--video-header-height));
+  min-height: 0;
+  flex-direction: column;
+  gap: 0.75rem;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
   margin-top: var(--video-header-height);
 }
 
 .canvas {
   display: grid;
+  flex: 1 0 auto;
   grid-template-rows: minmax(22rem, 1fr) auto;
   gap: 1rem;
-  height: 100%;
+  height: auto;
   min-width: 0;
   min-height: 0;
   overflow-y: auto;
@@ -736,6 +744,108 @@
   padding-top: 1rem;
 }
 
+.jobProgress {
+  display: grid;
+  min-width: 0;
+  gap: 0.75rem;
+  border: 1px solid var(--dashboard-border);
+  border-radius: var(--radius-md);
+  background: var(--dashboard-surface);
+  padding: 0.875rem 1rem;
+}
+
+.jobProgressHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.jobProgressHeader > div {
+  display: grid;
+  min-width: 0;
+  gap: 0.25rem;
+}
+
+.jobProgressHeader h2 {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.jobProgressHeader p {
+  color: var(--dashboard-muted);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+.progressSteps {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.progressSteps li {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  gap: 0.375rem;
+  color: var(--dashboard-muted);
+  font-size: 0.6875rem;
+  line-height: 1.35;
+}
+
+.progressSteps li > span:first-child {
+  display: grid;
+  width: 1.125rem;
+  height: 1.125rem;
+  flex: none;
+  place-items: center;
+  border: 1px solid var(--dashboard-border-strong);
+  border-radius: 50%;
+  font-size: 0.625rem;
+  font-weight: 700;
+}
+
+.progressSteps li[data-state="complete"] { color: var(--dashboard-foreground); }
+.progressSteps li[data-state="complete"] > span:first-child { border-color: var(--dashboard-accent); background: var(--dashboard-accent-surface); color: var(--dashboard-accent); }
+.progressSteps li[data-state="current"] { color: var(--dashboard-foreground); font-weight: 600; }
+.progressSteps li[data-state="current"] > span:first-child { border-color: var(--dashboard-accent); color: var(--dashboard-accent); }
+
+.progressActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+}
+
+.watchVideo,
+.libraryLink {
+  color: var(--dashboard-accent);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.progressSpinner,
+.generateSpinner {
+  width: 1rem;
+  height: 1rem;
+  flex: none;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: video-spin 0.8s linear infinite;
+}
+
+.progressSpinner { color: var(--dashboard-accent); }
+.generateSpinner { display: inline-block; vertical-align: -0.2em; margin-right: 0.5rem; }
+
+@keyframes video-spin { to { transform: rotate(360deg); } }
+
 .progressVideo {
   display: block;
   width: 100%;
@@ -865,8 +975,13 @@
   }
 
   .canvas {
+    flex: 0 0 auto;
     grid-template-rows: minmax(20rem, 1fr) auto;
   }
+
+  .canvasRegion { height: 100%; margin-top: 0; }
+  .progressSteps { grid-template-columns: minmax(0, 1fr); gap: 0.375rem; }
+  .progressSteps li { align-items: center; font-size: 0.75rem; }
 }
 
 @media (max-width: 767px) {
@@ -908,6 +1023,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .progressSpinner,
+  .generateSpinner { animation: none; }
   .modeSelector button,
   .sourceDropzone,
   .promptEditor,

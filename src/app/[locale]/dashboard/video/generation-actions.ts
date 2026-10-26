@@ -89,6 +89,21 @@ export async function readVideoGenerationStatusAction(jobId: string) {
   return job ? { status: "success" as const, job: toVideoPresentationRecord(job) } : { status: "not_found" as const };
 }
 
+/** Restore only the server-approved beta submission; never create or resubmit a job. */
+export async function restoreApprovedVideoGenerationAction() {
+  const ownerId = await getAuthenticatedUserId();
+  const submissionId = process.env.VIDEO_BETA_APPROVED_SUBMISSION_ID;
+  if (!ownerId || !canAccessVideoBeta(ownerId) || !submissionId) return { status: "unavailable" as const };
+  try {
+    const repository = new SupabaseVideoJobRepository();
+    const existing = (await repository.listOwned(ownerId)).find(job => job.clientSubmissionId === submissionId);
+    if (!existing) return { status: "none" as const };
+    try { await reconcileVideoBeta(ownerId, existing.id); } catch { /* Preserve stored state and let ordinary polling resume. */ }
+    const current = await repository.findOwned(ownerId, existing.id);
+    return current ? { status: "success" as const, job: toVideoPresentationRecord(current) } : { status: "unavailable" as const };
+  } catch { return { status: "unavailable" as const }; }
+}
+
 export async function listVideoGenerationsAction() {
   const ownerId = await getAuthenticatedUserId();
   if (!ownerId) return { status: "unauthorized" as const, records: [] };

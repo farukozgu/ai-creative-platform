@@ -54,6 +54,23 @@ test("Video Studio exposes only the image-to-video workflow", () => {
   assert.doesNotMatch(inspector, /type="submit"/);
 });
 
+test("Video Studio shows truthful job stages and restores the approved submission", () => {
+  const workspace = read("src/features/video/video-studio-workspace.tsx");
+  const progress = read("src/features/video/video-job-progress.tsx");
+  const inspector = read("src/features/video/video-generation-inspector.tsx");
+  const actions = read("src/app/[locale]/dashboard/video/generation-actions.ts");
+  assert.match(workspace, /restoreApprovedVideoGenerationAction/);
+  assert.match(workspace, /setJobId\(result\.job\.id\)/);
+  assert.match(workspace, /!restoringJob && !restoreUnavailable && !jobId/);
+  assert.match(progress, /aria-busy=/);
+  assert.match(progress, /progressPhase/);
+  assert.match(progress, /watchVideo/);
+  assert.doesNotMatch(progress, /[0-9]+%|percentage|progressValue/);
+  assert.match(inspector, /aria-busy=\{isSubmitting\}/);
+  assert.match(actions, /clientSubmissionId === submissionId/);
+  assert.match(actions, /reconcileVideoBeta\(ownerId, existing\.id\)/);
+});
+
 test("Video Studio shell has anchored controls and responsive views", () => {
   const styles = read("src/features/video/video-studio-workspace.module.css");
 
@@ -91,6 +108,7 @@ test("Video Studio copy is complete in both locales", () => {
           generations: Record<string, string>;
           validation: Record<string, string>;
           mobile: Record<string, string>;
+          beta: { progressTitle: string; sending: string; queued: string; processing: string; finalizing: string; ready: string; ambiguous: string; failed: string; unknown: string; watchVideo: string; libraryLink: string; steps: Record<string, string> };
         };
       };
     };
@@ -99,6 +117,9 @@ test("Video Studio copy is complete in both locales", () => {
     assert.ok(navigation.items.video);
     assert.ok(videoStudio.title);
     assert.ok(videoStudio.generate);
+    assert.ok(videoStudio.beta.progressTitle);
+    assert.ok(videoStudio.beta.watchVideo);
+    assert.ok(Object.values(videoStudio.beta.steps).every(Boolean));
     for (const section of [
       videoStudio.source,
       videoStudio.output,
