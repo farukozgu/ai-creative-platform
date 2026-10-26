@@ -2,10 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import { getVideoPlaybackAccessAction, readVideoGenerationStatusAction } from "@/app/[locale]/dashboard/video/generation-actions";
+import { readVideoGenerationStatusAction } from "@/app/[locale]/dashboard/video/generation-actions";
 import type { VideoPresentationRecord, VideoProgressPhase } from "./video-studio-types";
 import { Link } from "@/i18n/navigation";
-import { VideoDownloadButton } from "./video-download-button";
 import styles from "./video-studio-workspace.module.css";
 
 type ProgressStep = "source" | "request" | "provider" | "storage" | "ready";
@@ -18,7 +17,6 @@ function isTerminal(phase: VideoProgressPhase | null) {
 export function VideoJobProgress({ jobId, submitting = false, restoreUnavailable = false, submissionError = null }: { jobId: string | null; submitting?: boolean; restoreUnavailable?: boolean; submissionError?: "ambiguous" | "failed" | null }) {
   const t = useTranslations("Dashboard.videoStudio.beta");
   const [job, setJob] = useState<VideoPresentationRecord | null>(null);
-  const [playback, setPlayback] = useState<string | null>(null);
   const [problem, setProblem] = useState(false);
   useEffect(() => {
     if (!jobId) return;
@@ -30,11 +28,6 @@ export function VideoJobProgress({ jobId, submitting = false, restoreUnavailable
         if (!active) return;
         if (result.status !== "success") throw new Error("Video status unavailable.");
         setJob(result.job); setProblem(false);
-        if (result.job.progressPhase === "ready") {
-          const access = await getVideoPlaybackAccessAction(jobId!);
-          if (active && access.status === "success") setPlayback(access.url);
-          return;
-        }
         if (isTerminal(result.job.progressPhase ?? null)) return;
       } catch { if (active) setProblem(true); }
       if (active) timer = setTimeout(() => { void poll(); }, 8_000);
@@ -91,8 +84,6 @@ export function VideoJobProgress({ jobId, submitting = false, restoreUnavailable
     </ol> : null}
     <div className={styles.progressActions}>
       {phase === "ready" && jobId ? <Link href={`/dashboard/videos/${jobId}`} className={styles.watchVideo}>{t("watchVideo")}</Link> : null}
-      {jobId && phase === "ready" ? <VideoDownloadButton jobId={jobId} label={t("download")} /> : null}
-      {playback && phase === "ready" ? <video className={styles.progressVideo} controls playsInline preload="metadata" src={playback} onError={() => { setPlayback(null); setProblem(true); }} /> : null}
       <Link href="/dashboard/videos" className={styles.libraryLink}>{t("libraryLink")}</Link>
     </div>
   </section>;

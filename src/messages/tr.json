@@ -757,6 +757,7 @@
         "ready": "Videonuz hazır.",
         "unknown": "İstek durumu henüz doğrulanamıyor. Yeni bir üretim başlatmayın; durum kontrolü sürecek.",
         "restoreUnavailable": "Onaylı isteğin mevcut durumu doğrulanamıyor. Yeni bir ücretli istek başlatmayın; daha sonra Video Kütüphanesi'ni kontrol edin.",
+        "submissionUsed": "Bu onaylı test üretimi zaten tamamlandı. Video Studio yeni bir istek başlatmaz; videoyu Video Kütüphanesi'nde açabilirsiniz.",
         "progressTitle": "Üretim durumu",
         "steps": { "source": "Kaynak görsel hazır", "request": "İstek gönderildi", "queued": "Kling kuyruğunda", "processing": "Kling işliyor", "storage": "Video güvenli şekilde kaydediliyor", "saved": "Video güvenli depoya kaydedildi", "ready": "Video hazır" },
         "watchVideo": "Videoyu İzle",

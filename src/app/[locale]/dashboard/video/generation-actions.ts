@@ -14,6 +14,7 @@ import { FalVideoGenerationProvider } from "@/lib/video-generation/fal-provider"
 import { SupabaseVideoSourceResolver } from "@/lib/video-generation/supabase-source-resolver";
 import { prepareOwnedVideoSource } from "@/lib/video-generation/prepared-source";
 import { matchesUsdQuoteConfirmation } from "@/lib/video-generation/money";
+import { shouldRestoreApprovedVideoJob } from "@/lib/video-generation/progress-phase";
 
 export async function quoteVideoGenerationAction(quality: "standard" | "pro", duration: 5 | 10) {
   const ownerId = await getAuthenticatedUserId();
@@ -100,7 +101,8 @@ export async function restoreApprovedVideoGenerationAction() {
     if (!existing) return { status: "none" as const };
     try { await reconcileVideoBeta(ownerId, existing.id); } catch { /* Preserve stored state and let ordinary polling resume. */ }
     const current = await repository.findOwned(ownerId, existing.id);
-    return current ? { status: "success" as const, job: toVideoPresentationRecord(current) } : { status: "unavailable" as const };
+    if (!current) return { status: "unavailable" as const };
+    return shouldRestoreApprovedVideoJob(current) ? { status: "success" as const, job: toVideoPresentationRecord(current) } : { status: "used" as const };
   } catch { return { status: "unavailable" as const }; }
 }
 

@@ -54,6 +54,7 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
   const [jobId, setJobId] = useState<string | null>(null);
   const [restoringJob, setRestoringJob] = useState(Boolean(generationAvailable && approvedSubmissionId));
   const [restoreUnavailable, setRestoreUnavailable] = useState(false);
+  const [submissionUsed, setSubmissionUsed] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
   const submitting = useRef(false);
   useEffect(() => { if (!approvedSubmissionId) queueMicrotask(() => setSubmissionId(crypto.randomUUID())); }, [approvedSubmissionId]);
@@ -70,6 +71,7 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
       if (!active) return;
       if (result.status === "success") { setJobId(result.job.id); setRestoringJob(false); }
       else if (result.status === "none") setRestoringJob(false);
+      else if (result.status === "used") { setSubmissionUsed(true); setRestoringJob(false); }
       else setRestoreUnavailable(true);
     }).catch(() => { if (active) setRestoreUnavailable(true); });
     return () => { active = false; };
@@ -359,6 +361,7 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
             secondsLabel: (seconds) => t("output.seconds", { seconds }),
             generate: busy ? t("beta.submitting") : t("generate"),
             preparationOnly: t("preparationOnly"),
+            libraryLink: t("beta.libraryLink"),
           }}
           source={draft.source}
           prompt={draft.prompt}
@@ -382,11 +385,12 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
           durationOptions={durationValues}
           quoteSummary={currentQuote ? t("beta.quote", { model: t(`quality.options.${draft.quality}.label`), seconds: draft.duration, cost: currentQuote.estimatedMaxCostUsd.toFixed(2) }) : t("beta.quoteUnavailable")}
           submissionId={generationAvailable && submissionId ? t("beta.requestId", { id: submissionId }) : undefined}
-          feedbackMessage={generationError ? t(`beta.${generationError}`) : feedbackMessage ?? (draft.source ? t(preparationFailed ? "preparation.failed" : preparedFrame ? "preparation.ready" : "preparation.preparing") : null)}
+          feedbackMessage={generationError ? t(`beta.${generationError}`) : submissionUsed ? t("beta.submissionUsed") : restoreUnavailable ? t("beta.restoreUnavailable") : feedbackMessage ?? (draft.source ? t(preparationFailed ? "preparation.failed" : preparedFrame ? "preparation.ready" : "preparation.preparing") : null)}
           feedbackIsError={Boolean(generationError) || preparationFailed || (draft.feedback !== null && draft.feedback !== "not-connected")}
           isReady={isVideoStudioDraftReady(draft)}
           isSubmitting={busy}
-          generationAvailable={generationAvailable && Boolean(currentQuote) && Boolean(preparedFrame) && !busy && !restoringJob && !restoreUnavailable && !jobId && generationError !== "ambiguous" && generationError !== "failed"}
+          showLibraryLink={submissionUsed}
+          generationAvailable={generationAvailable && Boolean(currentQuote) && Boolean(preparedFrame) && !busy && !restoringJob && !restoreUnavailable && !submissionUsed && !jobId && generationError !== "ambiguous" && generationError !== "failed"}
           libraryAssets={libraryAssets}
           libraryOpen={libraryOpen}
           libraryStatus={libraryStatus}

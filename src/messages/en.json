@@ -757,6 +757,7 @@
         "ready": "Your video is ready.",
         "unknown": "The request status is not verified yet. Do not start another generation; status checks will continue.",
         "restoreUnavailable": "The approved request status cannot be verified. Do not start another paid request; check Video Library later.",
+        "submissionUsed": "This approved test generation is already complete. Video Studio will not start another request; you can open the video in Video Library.",
         "progressTitle": "Generation status",
         "steps": { "source": "Source image ready", "request": "Request sent", "queued": "In Kling queue", "processing": "Kling processing", "storage": "Saving video securely", "saved": "Video saved to private storage", "ready": "Video ready" },
         "watchVideo": "Watch video",

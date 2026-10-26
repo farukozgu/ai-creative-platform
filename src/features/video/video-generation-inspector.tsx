@@ -1,5 +1,6 @@
 import { DashboardIcon } from "@/components/dashboard/dashboard-icons";
 import { Button } from "@/components/ui/button";
+import { Link } from "@/i18n/navigation";
 import {
   VideoSourceSelector,
   type IncomingVideoSourceStatus,
@@ -39,6 +40,7 @@ export type VideoInspectorCopy = {
   secondsLabel: (seconds: number) => string;
   generate: string;
   preparationOnly: string;
+  libraryLink: string;
 };
 
 type VideoGenerationInspectorProps = {
@@ -58,6 +60,7 @@ type VideoGenerationInspectorProps = {
   feedbackIsError: boolean;
   isReady: boolean;
   isSubmitting: boolean;
+  showLibraryLink: boolean;
   generationAvailable: boolean;
   libraryAssets: VideoLibraryAsset[];
   libraryOpen: boolean;
@@ -98,6 +101,7 @@ export function VideoGenerationInspector({
   feedbackIsError,
   isReady,
   isSubmitting,
+  showLibraryLink,
   generationAvailable,
   libraryAssets,
   libraryOpen,
@@ -271,6 +275,7 @@ export function VideoGenerationInspector({
         >
           {feedbackMessage}
         </p>
+        {showLibraryLink ? <Link className={styles.usedSubmissionLink} href="/dashboard/videos">{copy.libraryLink}</Link> : null}
       </footer>
     </aside>
   );

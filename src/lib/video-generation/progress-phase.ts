@@ -12,3 +12,10 @@ export function getVideoProgressPhase(input: {
   if (input.status === "processing") return input.outputObjectPath ? "finalizing" : "processing";
   return input.providerRequestId ? "queued" : "submission-uncertain";
 }
+
+/** The Studio restores work only while its status still needs attention. */
+export function shouldRestoreApprovedVideoJob(input: { status: VideoGenerationStatus; errorCode: string | null }) {
+  if (input.status === "succeeded") return false;
+  if (input.status === "failed" && input.errorCode !== "provider_submission_ambiguous") return false;
+  return true;
+}
