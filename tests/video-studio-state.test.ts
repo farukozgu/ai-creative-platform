@@ -5,6 +5,8 @@ import {
   appendPromptSuggestion,
   initialVideoStudioDraft,
   isVideoStudioDraftReady,
+  validateVideoSourceAspectRatio,
+  validateVideoSourceDimensions,
   validateVideoSourceFile,
   validateVideoStudioDraft,
   videoStudioReducer,
@@ -83,6 +85,14 @@ test("local source validation reuses product image type and size constraints", (
     validateVideoSourceFile({ type: "image/jpeg", size: 20 * 1024 * 1024 + 1 }),
     "source-too-large",
   );
+});
+
+test("local image dimensions and source ratio are rejected before upload when unsupported", () => {
+  assert.equal(validateVideoSourceDimensions(2400, 3600), "source-dimensions-unsupported");
+  assert.equal(validateVideoSourceDimensions(1200, 1800), "source-aspect-ratio-unsupported");
+  assert.equal(validateVideoSourceDimensions(1080, 1920), null);
+  assert.equal(validateVideoSourceAspectRatio(1080, 1920, "9:16"), null);
+  assert.equal(validateVideoSourceAspectRatio(1080, 1920, "16:9"), "source-aspect-ratio-mismatch");
 });
 
 test("camera, quality, aspect ratio, and duration update independently", () => {

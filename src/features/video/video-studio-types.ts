@@ -19,6 +19,8 @@ export type LocalVideoSource = {
   previewUrl: string;
   mimeType: string;
   size: number;
+  width: number;
+  height: number;
   file: File;
 };
 
@@ -41,6 +43,9 @@ export type VideoStudioFeedback =
   | "invalid-source-type"
   | "source-too-large"
   | "source-unreadable"
+  | "source-dimensions-unsupported"
+  | "source-aspect-ratio-unsupported"
+  | "source-aspect-ratio-mismatch"
   | "not-connected";
 
 export type VideoStudioDraft = {

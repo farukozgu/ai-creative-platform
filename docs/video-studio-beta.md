@@ -10,6 +10,12 @@
 4. Bu onay yeni bir UUID'ye, modele veya süreye geçmez. Belirsiz task için yeni UUID üretip otomatik retry yapılmaz. VIDEO_RECONCILIATION_SCHEDULER_ENABLED ve bearer secret isteğe bağlı iç worker kapısıdır; UI polling aynı fenced reconciliation işlemini tetikler. Scheduler henüz deploy edilmedi.
 5. İlk testten sonra yeni istek için ayrı onay UUID/model/süre/tavan gerekir. Uygulama toplamda $10 lifetime, kullanıcı başına günde $2 ve günde 3 denemeyle sınırlıdır; customer wallet veya subscription kullanılmaz. Müşteri ödeme/kredi sistemlerini açmayın.
 
+## İlk yerel deneme — güvenli durum incelemesi
+
+26 Ekim 2026'da seçilen hesap için Production `generations` ve `video_beta_reservations` sorgularında video satırı yoktu. Storage'da üç private kaynak JPEG'i 2400×3600 (2:3) olarak duruyordu; `video_source_assets` kaydı oluşmamıştı. Kaynak finalize kodu her kenar için 360–2000 piksel ve desteklenen oran ister; bu yüzden akış finalize aşamasında durdu. Generation REST POST veya bütçe rezervasyon çağrısı görülmedi. Mevcut servis sırası rezervasyon → job kaydı → fal submit olduğundan fal çağrısı, ücret veya provider task ID oluşmadı. Submission UUID onay kontrolüne ulaşılmadı; yerel onay UUID'si değiştirilmedi. Başarısız yüklemeler private Storage'da bırakıldı.
+
+Video Studio yerel JPEG/PNG'yi dosya seçerken çözünürlük ve desteklenen oran açısından kontrol eder; üretim öncesi seçilen oranı da eşleştirir. Uygun olmayan görseller artık yüklenmeden TR/EN açıklama alır. Sunucu tarafı doğrulama değişmedi ve hâlâ zorunludur.
+
 ## Testler
 
 - npm test (pretest dahil), npm run lint, TypeScript ve varsayılan npm run build çalıştırıldı; nihai sonuçlar PR'da kaydedilir.

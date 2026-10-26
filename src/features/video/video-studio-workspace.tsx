@@ -12,6 +12,8 @@ import {
   initialVideoStudioDraft,
   isCurrentVideoSourceRequest,
   isVideoStudioDraftReady,
+  validateVideoSourceAspectRatio,
+  validateVideoSourceDimensions,
   validateVideoSourceFile,
   validateVideoStudioDraft,
   videoStudioReducer,
@@ -36,7 +38,7 @@ async function createLocalPreview(file: File) {
     const image = new Image();
     image.src = previewUrl;
     await image.decode();
-    return previewUrl;
+    return { previewUrl, width: image.naturalWidth, height: image.naturalHeight };
   } catch {
     URL.revokeObjectURL(previewUrl);
     return null;
@@ -128,29 +130,37 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
     }
 
     const request = ++sourceRequest.current;
-    const previewUrl = await createLocalPreview(file);
-    if (!previewUrl) {
+    const preview = await createLocalPreview(file);
+    if (!preview) {
       if (isCurrentVideoSourceRequest(request, sourceRequest.current)) {
         dispatch({ type: "set-feedback", feedback: "source-unreadable" });
       }
       return;
     }
     if (!isCurrentVideoSourceRequest(request, sourceRequest.current)) {
-      URL.revokeObjectURL(previewUrl);
+      URL.revokeObjectURL(preview.previewUrl);
+      return;
+    }
+    const dimensionError = validateVideoSourceDimensions(preview.width, preview.height);
+    if (dimensionError) {
+      URL.revokeObjectURL(preview.previewUrl);
+      dispatch({ type: "set-feedback", feedback: dimensionError });
       return;
     }
 
     releaseLocalPreview();
-    localPreviewUrl.current = previewUrl;
+    localPreviewUrl.current = preview.previewUrl;
     dispatch({
       type: "set-source",
       source: {
         kind: "local",
         id: crypto.randomUUID(),
         name: file.name,
-        previewUrl,
+        previewUrl: preview.previewUrl,
         mimeType: file.type,
         size: file.size,
+        width: preview.width,
+        height: preview.height,
         file,
       },
     });
@@ -201,6 +211,12 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
     const validationError = validateVideoStudioDraft(draft);
     if (validationError) { dispatch({ type: "set-feedback", feedback: validationError }); return; }
     if (submitting.current || !currentQuote || !draft.source) return;
+    const sourceRatioError = draft.source.kind === "local"
+      ? validateVideoSourceAspectRatio(draft.source.width, draft.source.height, draft.aspectRatio)
+      : draft.source.aspectRatio && draft.source.aspectRatio !== draft.aspectRatio
+        ? "source-aspect-ratio-mismatch"
+        : null;
+    if (sourceRatioError) { dispatch({ type: "set-feedback", feedback: sourceRatioError }); return; }
     submitting.current = true; setBusy(true); setGenerationError(null);
     try {
       let source: { kind: "generated-image"; generationId: string } | { kind: "uploaded-image"; sourceAssetId: string };

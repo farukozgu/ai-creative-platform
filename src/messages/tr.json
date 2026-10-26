@@ -764,7 +764,7 @@
         "remove": "Kaldır",
         "chooseLibrary": "Klay Kütüphanesi'nden seç",
         "closeLibrary": "Kütüphaneyi kapat",
-        "dropLabel": "JPEG veya PNG · En fazla 20 MB",
+        "dropLabel": "JPEG/PNG · En fazla 20 MB · 360–2000 px · 16:9, 9:16 veya 1:1",
         "selectedAlt": "Seçilen kaynak ürün görseli",
         "localLabel": "Yerel görsel",
         "libraryLabel": "Klay Kütüphanesi",
@@ -842,6 +842,9 @@
         "invalid-source-type": "JPEG veya PNG biçiminde bir görsel seçin.",
         "source-too-large": "Görsel 20 MB veya daha küçük olmalı.",
         "source-unreadable": "Bu görsel tarayıcıda açılamadı. Başka bir dosya deneyin.",
+        "source-dimensions-unsupported": "Görselin genişliği ve yüksekliği 360–2000 piksel arasında olmalı.",
+        "source-aspect-ratio-unsupported": "Görsel 16:9, 9:16 veya 1:1 oranında olmalı.",
+        "source-aspect-ratio-mismatch": "Seçilen çıktı oranı kaynak görselle eşleşmiyor. Kaynak görselinizin oranını seçin.",
         "not-connected": "Taslağınız hazır. Video üretimi sonraki aşamada bağlanacak."
       },
       "mobile": {

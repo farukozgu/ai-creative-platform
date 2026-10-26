@@ -17,7 +17,9 @@ Video Studio artık yerel kodda upload → Kling Standard/Pro → 5/10 saniye �
 
 Yerel kontrollü beta, seçilen hesap için tek Kling Standard/5 sn submission ve $0.70 üst sınırıyla açıldı; gerçek fal inference henüz gönderilmedi. Uygulama genelinin production beta ayarları ve deployment'ı kapalıdır; yalnızca bu bilgisayardaki `.env.local` değiştirildi. fal balance endpoint'i HTTP 403 verdiğinden kullanıcının bildirdiği $10 bakiye bağımsız doğrulanamadı. Main merge ve deployment yapılmadı.
 
-Doğrulama: **763/763** ana test + **68/68** pretest, lint ve TypeScript başarılı. Varsayılan **Turbopack production build başarılı**; 32 statik çıktı üretildi. Test kullanıcıları, job/bütçe satırları ve Storage fixture’ları temizlendi; disposable’da beta migration history sayısı **1** olarak kaldı. Yeni dependency eklenmedi.
+İlk yerel denemede Production'da video job'ı/bütçe rezervasyonu yoktu. Üç özel kaynak upload'ının her biri 2400×3600 JPEG (2:3) idi; finalize katmanı 2000 px kenar üst sınırında reddettiği için source row oluşmadı ve submit/provider adımına ulaşılmadı. fal ücretli isteği/task ID yok. Video Studio artık dosya seçerken çözünürlüğü, üretimden önce oran eşleşmesini kontrol eder ve TR/EN açıklama verir; private upload'lar temizlenmedi.
+
+Doğrulama: **764/764** ana test + **68/68** pretest, lint ve TypeScript başarılı. Varsayılan **Turbopack production build başarılı**; 32 statik çıktı üretildi. Test kullanıcıları, job/bütçe satırları ve Storage fixture’ları temizlendi; disposable'da beta migration history sayısı **1** olarak kaldı. Yeni dependency eklenmedi.
 
 Ayrıntı ve tekrar çalıştırma: [Video Studio beta teslimatı](video-studio-beta.md).
 

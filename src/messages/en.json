@@ -764,7 +764,7 @@
         "remove": "Remove",
         "chooseLibrary": "Choose from Klay Library",
         "closeLibrary": "Close library",
-        "dropLabel": "JPEG or PNG · Up to 20 MB",
+        "dropLabel": "JPEG/PNG · Up to 20 MB · 360–2000 px · 16:9, 9:16, or 1:1",
         "selectedAlt": "Selected source product image",
         "localLabel": "Local image",
         "libraryLabel": "Klay Library",
@@ -842,6 +842,9 @@
         "invalid-source-type": "Choose a JPEG or PNG image.",
         "source-too-large": "The image must be 20 MB or smaller.",
         "source-unreadable": "This image could not be opened in your browser. Try another file.",
+        "source-dimensions-unsupported": "The image width and height must each be between 360 and 2000 pixels.",
+        "source-aspect-ratio-unsupported": "The image must use a 16:9, 9:16, or 1:1 aspect ratio.",
+        "source-aspect-ratio-mismatch": "The selected output ratio does not match the source image. Choose the source image's ratio.",
         "not-connected": "Your draft is ready. Video generation will be connected in a future phase."
       },
       "mobile": {
