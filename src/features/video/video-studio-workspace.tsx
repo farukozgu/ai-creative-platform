@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useReducer, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { VideoPreservationControls } from "./video-preservation-controls";
+import { mapRegionToFrame } from "@/lib/video-generation/preservation";
+import { Button } from "@/components/ui/button";
 
 import { loadVideoSourceLibrary, resolveIncomingVideoSource } from "@/app/[locale]/dashboard/video/actions";
 import { VideoCanvas } from "@/features/video/video-canvas";
@@ -25,7 +28,7 @@ import type {
   VideoQuality,
 } from "@/features/video/video-studio-types";
 import { createClient } from "@/lib/supabase/client";
-import { createVideoSourceUploadAction, prepareVideoSourceAction, quoteVideoGenerationAction, restoreApprovedVideoGenerationAction, submitVideoGenerationAction } from "@/app/[locale]/dashboard/video/generation-actions";
+import { createVideoSourceUploadAction, prepareVideoSourceAction, quoteVideoGenerationAction, restoreApprovedVideoGenerationAction, restoreSourceMotionAction, submitVideoGenerationAction } from "@/app/[locale]/dashboard/video/generation-actions";
 import type { VideoPreparationSource } from "@/lib/video-generation/types";
 import { VideoJobProgress } from "./video-job-progress";
 import styles from "@/features/video/video-studio-workspace.module.css";
@@ -47,26 +50,47 @@ async function createLocalPreview(file: File) {
 
 export function VideoStudioWorkspace({ incomingGenerationId = null, generationAvailable = false, proVideoEntitled = false, approvedSubmissionId = null }: { incomingGenerationId?: string | null; generationAvailable?: boolean; proVideoEntitled?: boolean; approvedSubmissionId?: string | null }) {
   const t = useTranslations("Dashboard.videoStudio");
+  const locale = useLocale();
   const [draft, dispatch] = useReducer(videoStudioReducer, initialVideoStudioDraft);
   const [quote, setQuote] = useState<Awaited<ReturnType<typeof quoteVideoGenerationAction>>>(null);
+  const [quoteLoading, setQuoteLoading] = useState(false);
   const [submissionId, setSubmissionId] = useState(approvedSubmissionId ?? "");
+  const [localSubmissionId, setLocalSubmissionId] = useState("");
   const [busy, setBusy] = useState(false);
   const [jobId, setJobId] = useState<string | null>(null);
-  const [restoringJob, setRestoringJob] = useState(Boolean(generationAvailable && approvedSubmissionId));
+  const [restoringJob, setRestoringJob] = useState(false);
   const [restoreUnavailable, setRestoreUnavailable] = useState(false);
   const [submissionUsed, setSubmissionUsed] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
   const submitting = useRef(false);
+  useEffect(() => {
+    if (!generationAvailable || draft.method !== "source-motion") return;
+    let active = true;
+    queueMicrotask(() => {
+      if (!active) return;
+      let id = crypto.randomUUID() as string;
+      try { id = sessionStorage.getItem("klay-source-motion-submission") ?? id; sessionStorage.setItem("klay-source-motion-submission", id); } catch { /* In-memory idempotency remains. */ }
+      setLocalSubmissionId(id);
+      void restoreSourceMotionAction(id).then(job => { if (active && job) setJobId(job.id); }).catch(() => { if (active) setRestoreUnavailable(true); });
+    });
+    return () => { active = false; };
+  }, [generationAvailable, draft.method]);
   useEffect(() => { if (!approvedSubmissionId) queueMicrotask(() => setSubmissionId(crypto.randomUUID())); }, [approvedSubmissionId]);
   useEffect(() => {
     if (!generationAvailable) return;
     let active = true;
-    void quoteVideoGenerationAction(draft.quality, draft.duration).then(value => { if (active) setQuote(value); });
+    queueMicrotask(() => { if (active) setQuoteLoading(true); });
+    void quoteVideoGenerationAction(draft.quality, draft.duration, { method: draft.method, hasRegion: Boolean(draft.criticalRegion) }).then(value => {
+      if (!active) return;
+      setQuote(value);
+      if (!value?.analysis.enabled) dispatch({ type: "set-analysis", enabled: false });
+    }).catch(() => { if (active) setQuote(null); }).finally(() => { if (active) setQuoteLoading(false); });
     return () => { active = false; };
-  }, [draft.quality, draft.duration, generationAvailable]);
+  }, [draft.quality, draft.duration, draft.method, draft.criticalRegion, generationAvailable]);
   useEffect(() => {
-    if (!generationAvailable || !approvedSubmissionId) return;
+    if (!generationAvailable || !approvedSubmissionId || draft.method !== "kling") return;
     let active = true;
+    queueMicrotask(() => { if (active) setRestoringJob(true); });
     void restoreApprovedVideoGenerationAction().then(result => {
       if (!active) return;
       if (result.status === "success") { setJobId(result.job.id); setRestoringJob(false); }
@@ -75,8 +99,10 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
       else setRestoreUnavailable(true);
     }).catch(() => { if (active) setRestoreUnavailable(true); });
     return () => { active = false; };
-  }, [generationAvailable, approvedSubmissionId]);
-  const currentQuote = quote?.quality === draft.quality && quote.duration === draft.duration ? quote : null;
+  }, [generationAvailable, approvedSubmissionId, draft.method]);
+  const currentQuote = quote?.quality === draft.quality && quote.duration === draft.duration && quote.method === draft.method && quote.hasRegion === Boolean(draft.criticalRegion) ? quote : null;
+  const sourceMotion = draft.method === "source-motion";
+  const analysisAvailable = currentQuote?.analysis ?? { enabled: false, maximumEstimatedCostUsd: null };
   const [view, setView] = useState<WorkspaceView>("controls");
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [libraryStatus, setLibraryStatus] = useState<VideoLibraryStatus>("idle");
@@ -264,14 +290,15 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
   async function handleGenerate() {
     const validationError = validateVideoStudioDraft(draft);
     if (validationError) { dispatch({ type: "set-feedback", feedback: validationError }); return; }
-    if (submitting.current || !currentQuote || !preparedFrame) return;
+    if (submitting.current || !currentQuote || !preparedFrame || (draft.analyzeAfterGeneration && !analysisAvailable.enabled)) return;
     submitting.current = true; setBusy(true); setGenerationError(null);
     try {
-      const result = await submitVideoGenerationAction({ clientSubmissionId: submissionId, mode: "image", source: preparedFrame.source,
-        prompt: draft.prompt, quality: draft.quality, aspectRatio: draft.aspectRatio, durationSeconds: draft.duration, cameraMovement: draft.cameraMovement }, currentQuote.estimatedMaxCostUsd);
+      const result = await submitVideoGenerationAction({ clientSubmissionId: sourceMotion ? localSubmissionId : submissionId, method: draft.method, criticalRegion: draft.criticalRegion,
+        analysisConsent: !sourceMotion && draft.analyzeAfterGeneration && currentQuote.analysis.maximumEstimatedCostUsd !== null ? { model: currentQuote.analysis.model, maximumCostUsd: currentQuote.analysis.maximumEstimatedCostUsd, pricingVersion: currentQuote.analysis.pricingVersion, locale } : null,
+        mode: "image", source: preparedFrame.source, prompt: draft.prompt, quality: sourceMotion ? "standard" : draft.quality, aspectRatio: draft.aspectRatio, durationSeconds: draft.duration, cameraMovement: draft.cameraMovement }, currentQuote.estimatedMaxCostUsd);
       if (result.ok) { setJobId(result.jobId); setView("preview"); }
       else {
-        const error = result.code === "approval_required" ? "approval" : result.code === "provider_submission_ambiguous" ? "ambiguous" : "failed";
+        const error = result.code === "unsafe_motion" ? "unsafeMotion" : result.code === "approval_required" ? "approval" : result.code === "provider_submission_ambiguous" ? "ambiguous" : "failed";
         setGenerationError(error);
         if (error !== "approval") setView("preview");
       }
@@ -281,19 +308,8 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
 
   const promptSuggestions = [
     t("suggestions.image.dolly"),
-    t("suggestions.image.orbit"),
-    t("suggestions.image.fabric"),
-    t("suggestions.image.lighting"),
   ];
-  const cameraValues: VideoCameraMovement[] = [
-    "auto",
-    "dolly-in",
-    "dolly-out",
-    "orbit",
-    "pan-left",
-    "pan-right",
-    "static",
-  ];
+  const cameraValues: VideoCameraMovement[] = sourceMotion ? ["static", "dolly-in", "pan-left", "pan-right"] : ["auto", "dolly-in", "dolly-out", "pan-left", "pan-right", "static"];
   const qualityValues: VideoQuality[] = ["standard", "pro"];
   const aspectRatioValues: VideoAspectRatio[] = ["16:9", "9:16", "1:1"];
   const durationValues: VideoDuration[] = [5, 10];
@@ -324,6 +340,15 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
 
       <div id="video-studio-inspector" className={styles.inspectorRegion}>
         <VideoGenerationInspector
+          isSourceMotion={sourceMotion}
+          preservationControls={<VideoPreservationControls method={draft.method} region={draft.criticalRegion} sourceUrl={draft.source?.previewUrl ?? null}
+            regionResolutionLabel={draft.criticalRegion && preparedFrame ? t("preservation.regionResolution", {
+              width: Math.round(draft.criticalRegion.width * preparedFrame.geometry.contentRect.width * preparedFrame.width),
+              height: Math.round(draft.criticalRegion.height * preparedFrame.geometry.contentRect.height * preparedFrame.height),
+            }) : null}
+            analysis={analysisAvailable} analyze={draft.analyzeAfterGeneration}
+            onMethod={method => { setJobId(null); setGenerationError(null); setRestoreUnavailable(false); setRestoringJob(false); dispatch({ type: "set-method", method }); }}
+            onRegion={region => dispatch({ type: "set-critical-region", region })} onAnalyze={enabled => dispatch({ type: "set-analysis", enabled })} />}
           copy={{
             title: t("title"),
             description: t("description"),
@@ -360,7 +385,7 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
             durationLabel: t("output.duration"),
             secondsLabel: (seconds) => t("output.seconds", { seconds }),
             generate: busy ? t("beta.submitting") : t("generate"),
-            preparationOnly: t("preparationOnly"),
+            preparationOnly: t(sourceMotion ? "preservation.encodingNotice" : "preparationOnly"),
             libraryLink: t("beta.libraryLink"),
           }}
           source={draft.source}
@@ -383,14 +408,14 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
           aspectRatioOptions={aspectRatioValues.map((value) => ({ value, label: value }))}
           duration={draft.duration}
           durationOptions={durationValues}
-          quoteSummary={currentQuote ? t("beta.quote", { model: t(`quality.options.${draft.quality}.label`), seconds: draft.duration, cost: currentQuote.estimatedMaxCostUsd.toFixed(2) }) : t("beta.quoteUnavailable")}
-          submissionId={generationAvailable && submissionId ? t("beta.requestId", { id: submissionId }) : undefined}
-          feedbackMessage={generationError ? t(`beta.${generationError}`) : submissionUsed ? t("beta.submissionUsed") : restoreUnavailable ? t("beta.restoreUnavailable") : feedbackMessage ?? (draft.source ? t(preparationFailed ? "preparation.failed" : preparedFrame ? "preparation.ready" : "preparation.preparing") : null)}
+          quoteSummary={quoteLoading ? t("preservation.quoteLoading") : sourceMotion ? t(currentQuote ? "preservation.localCost" : "preservation.localDisabled") : currentQuote ? t("preservation.combinedQuote", { generation: currentQuote.estimatedMaxCostUsd.toFixed(6), analysis: draft.analyzeAfterGeneration ? (currentQuote.analysis.maximumEstimatedCostUsd ?? 0).toFixed(6) : "0.000000", total: ((Math.round(currentQuote.estimatedMaxCostUsd * 1e6) + (draft.analyzeAfterGeneration ? Math.round((currentQuote.analysis.maximumEstimatedCostUsd ?? 0) * 1e6) : 0)) / 1e6).toFixed(6) }) : t("beta.quoteUnavailable")}
+          submissionId={generationAvailable && (sourceMotion ? localSubmissionId : submissionId) ? t("beta.requestId", { id: sourceMotion ? localSubmissionId : submissionId }) : undefined}
+          feedbackMessage={generationError ? t(`beta.${generationError}`) : !sourceMotion && submissionUsed ? t("beta.submissionUsed") : restoreUnavailable && !sourceMotion ? t("beta.restoreUnavailable") : feedbackMessage ?? (draft.source ? t(preparationFailed ? "preparation.failed" : preparedFrame ? "preparation.ready" : "preparation.preparing") : null)}
           feedbackIsError={Boolean(generationError) || preparationFailed || (draft.feedback !== null && draft.feedback !== "not-connected")}
           isReady={isVideoStudioDraftReady(draft)}
           isSubmitting={busy}
-          showLibraryLink={submissionUsed}
-          generationAvailable={generationAvailable && Boolean(currentQuote) && Boolean(preparedFrame) && !busy && !restoringJob && !restoreUnavailable && !submissionUsed && !jobId && generationError !== "ambiguous" && generationError !== "failed"}
+          showLibraryLink={!sourceMotion && submissionUsed}
+          generationAvailable={generationAvailable && Boolean(currentQuote) && Boolean(preparedFrame) && isVideoStudioDraftReady(draft) && !busy && (sourceMotion || (!restoringJob && !restoreUnavailable && !submissionUsed)) && !jobId && generationError !== "ambiguous" && generationError !== "failed"}
           libraryAssets={libraryAssets}
           libraryOpen={libraryOpen}
           libraryStatus={libraryStatus}
@@ -412,6 +437,8 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
 
       <div id="video-studio-canvas" className={styles.canvasRegion}>
         <VideoCanvas
+          sourceMotion={sourceMotion}
+          criticalRegion={draft.criticalRegion && preparedFrame ? mapRegionToFrame(draft.criticalRegion, preparedFrame.geometry) : null}
           source={previewSource}
           aspectRatio={draft.aspectRatio}
           previewLabel={t("canvas.previewLabel")}
@@ -424,7 +451,8 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
           generationsEmptyTitle={t("generations.emptyTitle")}
           generationsEmptyDescription={t("generations.emptyDescription")}
         />
-        <VideoJobProgress jobId={jobId} submitting={busy} restoreUnavailable={restoreUnavailable} submissionError={generationError === "ambiguous" || generationError === "failed" ? generationError : null} />
+        <VideoJobProgress jobId={jobId} generationMethod={draft.method} submitting={busy} restoreUnavailable={!sourceMotion && restoreUnavailable} submissionError={generationError === "ambiguous" || generationError === "failed" ? generationError : null} />
+        {sourceMotion && (jobId || generationError) ? <Button variant="secondary" onClick={() => { const id = crypto.randomUUID(); setLocalSubmissionId(id); try { sessionStorage.setItem("klay-source-motion-submission", id); } catch { /* Optional cache. */ } setJobId(null); setGenerationError(null); }}>{t("preservation.newLocalRequest")}</Button> : null}
       </div>
     </main>
   );

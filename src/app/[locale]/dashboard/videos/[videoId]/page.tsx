@@ -10,6 +10,8 @@ import { getAuthenticatedUserId } from "@/lib/auth/require-user";
 import { getVideoFidelityAnalysisAvailability } from "@/lib/video-fidelity/availability";
 import type { VideoFidelityCopy } from "@/features/video/video-fidelity-analysis";
 
+export const maxDuration = 90;
+
 type VideoDetailPageProps = {
   params: Promise<{ locale: string; videoId: string }>;
 };
@@ -32,7 +34,7 @@ export default async function VideoDetailPage({ params }: VideoDetailPageProps) 
   if (!record) notFound();
   const userId = await getAuthenticatedUserId();
   const fidelityAvailability = userId
-    ? getVideoFidelityAnalysisAvailability(userId)
+    ? getVideoFidelityAnalysisAvailability(userId, Boolean(record.criticalRegion))
     : { enabled: false, maximumEstimatedCostUsd: null };
 
   setRequestLocale(locale);
@@ -136,5 +138,5 @@ export default async function VideoDetailPage({ params }: VideoDetailPageProps) 
     fidelity: fidelityCopy,
   };
 
-  return <VideoDetail record={record} locale={locale} copy={copy} fidelityAvailability={fidelityAvailability} />;
+  return <VideoDetail record={record.generationMethod === "source-motion" ? { ...record, title: studioT("preservation.sourceMotion") } : record} locale={locale} copy={copy} fidelityAvailability={fidelityAvailability} />;
 }

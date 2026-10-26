@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import { readVideoGenerationStatusAction } from "@/app/[locale]/dashboard/video/generation-actions";
+import { readVideoGenerationStatusAction, resumeVideoFidelityReviewAction } from "@/app/[locale]/dashboard/video/generation-actions";
 import type { VideoPresentationRecord, VideoProgressPhase } from "./video-studio-types";
 import { Link } from "@/i18n/navigation";
 import styles from "./video-studio-workspace.module.css";
@@ -14,7 +14,7 @@ function isTerminal(phase: VideoProgressPhase | null) {
   return phase === "ready" || phase === "failed" || phase === "ambiguous";
 }
 
-export function VideoJobProgress({ jobId, submitting = false, restoreUnavailable = false, submissionError = null }: { jobId: string | null; submitting?: boolean; restoreUnavailable?: boolean; submissionError?: "ambiguous" | "failed" | null }) {
+export function VideoJobProgress({ jobId, submitting = false, restoreUnavailable = false, submissionError = null, generationMethod = "kling" }: { jobId: string | null; submitting?: boolean; restoreUnavailable?: boolean; submissionError?: "ambiguous" | "failed" | null; generationMethod?: "source-motion" | "kling" }) {
   const t = useTranslations("Dashboard.videoStudio.beta");
   const [job, setJob] = useState<VideoPresentationRecord | null>(null);
   const [problem, setProblem] = useState(false);
@@ -28,6 +28,7 @@ export function VideoJobProgress({ jobId, submitting = false, restoreUnavailable
         if (!active) return;
         if (result.status !== "success") throw new Error("Video status unavailable.");
         setJob(result.job); setProblem(false);
+        if (result.job.status === "ready" && result.job.analysisRequested) void resumeVideoFidelityReviewAction(jobId!);
         if (isTerminal(result.job.progressPhase ?? null)) return;
       } catch { if (active) setProblem(true); }
       if (active) timer = setTimeout(() => { void poll(); }, 8_000);
@@ -37,6 +38,7 @@ export function VideoJobProgress({ jobId, submitting = false, restoreUnavailable
   }, [jobId]);
 
   const phase: VideoProgressPhase | "submitting" | null = job?.progressPhase ?? (submitting ? "submitting" : submissionError ?? (restoreUnavailable ? "submission-uncertain" : null));
+  const local = job?.generationMethod === "source-motion" || generationMethod === "source-motion";
   if (!phase) return null;
   const isError = restoreUnavailable || phase === "failed" || phase === "ambiguous" || phase === "submission-uncertain" || submissionError !== null;
   const completedThrough = phase === "ready" ? 4
@@ -52,9 +54,9 @@ export function VideoJobProgress({ jobId, submitting = false, restoreUnavailable
           : isError ? -1 : 0;
   const statusMessage = restoreUnavailable ? t("restoreUnavailable")
     : problem ? t("pollError")
-    : phase === "submitting" ? t("sending")
+    : phase === "submitting" ? t(local ? "localProcessing" : "sending")
       : phase === "queued" ? t("queued")
-        : phase === "processing" ? t("processing")
+          : phase === "processing" ? t(local ? "localProcessing" : "processing")
           : phase === "finalizing" ? t("finalizing")
             : phase === "ready" ? t("ready")
               : phase === "ambiguous" || phase === "submission-uncertain" ? t("ambiguous")
@@ -74,7 +76,7 @@ export function VideoJobProgress({ jobId, submitting = false, restoreUnavailable
         const current = index === currentStep;
         const label = step === "source" ? t("steps.source")
           : step === "request" ? t("steps.request")
-            : step === "provider" ? phase === "queued" ? t("steps.queued") : t("steps.processing")
+            : step === "provider" ? local ? t("localProcessing") : phase === "queued" ? t("steps.queued") : t("steps.processing")
               : step === "storage" ? job?.outputPersisted ? t("steps.saved") : t("steps.storage")
                 : t("steps.ready");
         return <li key={step} data-state={done ? "complete" : current ? "current" : "pending"} aria-current={current ? "step" : undefined}>

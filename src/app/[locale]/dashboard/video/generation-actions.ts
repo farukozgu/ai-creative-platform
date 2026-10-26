@@ -15,12 +15,27 @@ import { SupabaseVideoSourceResolver } from "@/lib/video-generation/supabase-sou
 import { prepareOwnedVideoSource } from "@/lib/video-generation/prepared-source";
 import { matchesUsdQuoteConfirmation } from "@/lib/video-generation/money";
 import { shouldRestoreApprovedVideoJob } from "@/lib/video-generation/progress-phase";
+import { compileProductVideoPrompt, isUnsafeProductMotion, mapRegionToFrame, VIDEO_PRESERVATION_VERSION, type VideoGenerationMethod } from "@/lib/video-generation/preservation";
+import { videoDraftHash } from "@/lib/video-generation/request-identity";
+import { readOwnedPreparedVideoSource } from "@/lib/video-generation/source-context";
+import { submitSourceMotion, expireOwnedSourceMotion } from "@/lib/video-generation/local-runtime";
+import { getVideoFidelityAnalysisAvailability } from "@/lib/video-fidelity/availability";
+import { quoteVideoFidelity } from "@/lib/video-fidelity/pricing";
+import { resumeOwnedVideoReview, videoFidelitySchemaReady } from "@/lib/video-fidelity/reviews";
 
-export async function quoteVideoGenerationAction(quality: "standard" | "pro", duration: 5 | 10) {
+export async function quoteVideoGenerationAction(quality: "standard" | "pro", duration: 5 | 10, options?: { method: VideoGenerationMethod; hasRegion: boolean }) {
   const ownerId = await getAuthenticatedUserId();
   if (!ownerId || !canAccessVideoBeta(ownerId)) return null;
   if (!["standard", "pro"].includes(quality) || ![5, 10].includes(duration)) return null;
-  try { return await getVideoBetaQuote(quality, duration); } catch { return null; }
+  try {
+    const method = options?.method ?? "kling";
+    if (method !== "source-motion" && method !== "kling") return null;
+    const analysis = getVideoFidelityAnalysisAvailability(ownerId, Boolean(options?.hasRegion));
+    const schemaReady = (process.env.VIDEO_SOURCE_MOTION_ENABLED === "true" || analysis.enabled) && await videoFidelitySchemaReady();
+    if (method === "source-motion" && (process.env.VIDEO_SOURCE_MOTION_ENABLED !== "true" || !schemaReady)) return null;
+    const price = method === "kling" ? await getVideoBetaQuote(quality, duration) : { quality, duration, estimatedMaxCostUsd: 0 };
+    return { ...price, method, hasRegion: Boolean(options?.hasRegion), analysis: { ...analysis, enabled: method === "kling" && schemaReady && analysis.enabled } };
+  } catch { return null; }
 }
 
 export async function submitVideoGenerationAction(draft: unknown, confirmedMaxCostUsd: number) {
@@ -30,12 +45,28 @@ export async function submitVideoGenerationAction(draft: unknown, confirmedMaxCo
   const parsed = validateVideoGenerationDraft(draft);
   if (!parsed.ok) return { ok: false as const, code: "invalid_input" as const, field: parsed.field };
   try {
+    if (parsed.value.method === "source-motion" && parsed.value.clientSubmissionId === process.env.VIDEO_BETA_APPROVED_SUBMISSION_ID) return { ok: false as const, code: "approval_required" as const };
+    if (parsed.value.method === "source-motion" && (process.env.VIDEO_SOURCE_MOTION_ENABLED !== "true" || confirmedMaxCostUsd !== 0 || !await videoFidelitySchemaReady())) return { ok: false as const, code: "feature_disabled" as const };
+    if (parsed.value.method !== "source-motion" && isUnsafeProductMotion(parsed.value.prompt, parsed.value.cameraMovement)) return { ok: false as const, code: "unsafe_motion" as const };
+    const analysisQuote = quoteVideoFidelity(Boolean(parsed.value.criticalRegion));
+    if (parsed.value.analysisConsent && (!getVideoFidelityAnalysisAvailability(ownerId, Boolean(parsed.value.criticalRegion)).enabled || !await videoFidelitySchemaReady()
+      || !analysisQuote || parsed.value.analysisConsent.model !== analysisQuote.model || parsed.value.analysisConsent.pricingVersion !== analysisQuote.pricingVersion
+      || !matchesUsdQuoteConfirmation(parsed.value.analysisConsent.maximumCostUsd, analysisQuote.maximumEstimatedCostUsd))) return { ok: false as const, code: "approval_required" as const };
+    if (!parsed.value.source) return { ok: false as const, code: "source_unavailable" as const };
+    const context = await readOwnedPreparedVideoSource(ownerId, parsed.value.source, parsed.value.aspectRatio);
+    const compiled = parsed.value.method === "source-motion" ? { prompt: parsed.value.prompt, negativePrompt: "", cfgScale: 0.5 }
+      : compileProductVideoPrompt({ ...parsed.value, profile: context.profile });
+    const preservation = { version: VIDEO_PRESERVATION_VERSION, method: parsed.value.method ?? "kling", draftHash: videoDraftHash(parsed.value), sourceSha256: context.sourceSha256,
+      geometry: context.geometry, criticalRegion: parsed.value.criticalRegion ?? null, frameRegion: parsed.value.criticalRegion ? mapRegionToFrame(parsed.value.criticalRegion, context.geometry) : null,
+      compiledPrompt: compiled.prompt, negativePrompt: compiled.negativePrompt, cfgScale: compiled.cfgScale, analysisConsent: parsed.value.analysisConsent ?? null };
+    if (parsed.value.method === "source-motion") return submitSourceMotion(ownerId, parsed.value, preservation, context.prepared);
     const quote = await getVideoBetaQuote(parsed.value.quality, parsed.value.durationSeconds);
     if (!matchesUsdQuoteConfirmation(quote.estimatedMaxCostUsd, confirmedMaxCostUsd)
       || !canSubmitVideoBeta(ownerId, parsed.value, quote.estimatedMaxCostUsd)) return { ok: false as const, code: "approval_required" as const };
     const capability = videoEndpointCapabilities[videoTierRouting[parsed.value.quality]];
     return await submitVideoGeneration(ownerId, parsed.value, {
       repository: new SupabaseVideoJobRepository(), provider: new FalVideoGenerationProvider(), billing: new VideoBetaBudget(),
+      preservation,
       sourceResolver: new SupabaseVideoSourceResolver(true),
       capability: { ...capability, productionApproved: true, pricing: { basis: "per-second", audioOffUsdPerSecond: quote.rate, audioOnUsdPerSecond: quote.rate, voiceControlUsdPerSecond: null } },
     });
@@ -83,11 +114,29 @@ export async function finalizeVideoSourceUploadAction(sourceAssetId: string, obj
 export async function readVideoGenerationStatusAction(jobId: string) {
   const ownerId = await getAuthenticatedUserId();
   if (!ownerId) return { status: "unauthorized" as const };
+  await expireOwnedSourceMotion(ownerId);
   if (canAccessVideoBeta(ownerId)) {
     try { await reconcileVideoBeta(ownerId, jobId); } catch { /* Polling may resume after a transient read/storage failure. */ }
   }
   const job = await new SupabaseVideoJobRepository().findOwned(ownerId, jobId);
   return job ? { status: "success" as const, job: toVideoPresentationRecord(job) } : { status: "not_found" as const };
+}
+
+/** Only a previously persisted, explicit consent can start automatic paid analysis. */
+export async function resumeVideoFidelityReviewAction(jobId: string) {
+  const ownerId = await getAuthenticatedUserId();
+  if (!ownerId || !canAccessVideoBeta(ownerId)) return;
+  const job = await new SupabaseVideoJobRepository().findOwned(ownerId, jobId);
+  if (!job?.preservation?.analysisConsent) return;
+  try { await resumeOwnedVideoReview(ownerId, jobId); } catch { /* Analysis failure never changes the video job. */ }
+}
+
+export async function restoreSourceMotionAction(submissionId: string) {
+  const ownerId = await getAuthenticatedUserId();
+  if (!ownerId || !canAccessVideoBeta(ownerId) || !/^[0-9a-f-]{36}$/i.test(submissionId)) return null;
+  await expireOwnedSourceMotion(ownerId);
+  const job = await new SupabaseVideoJobRepository().findBySubmission(ownerId, submissionId);
+  return job?.provider === "local" ? toVideoPresentationRecord(job) : null;
 }
 
 /** Restore only the server-approved beta submission; never create or resubmit a job. */
@@ -110,6 +159,7 @@ export async function listVideoGenerationsAction() {
   const ownerId = await getAuthenticatedUserId();
   if (!ownerId) return { status: "unauthorized" as const, records: [] };
   try {
+    await expireOwnedSourceMotion(ownerId);
     if (canAccessVideoBeta(ownerId)) await reconcileVideoBeta(ownerId, null, 5);
     const jobs = await new SupabaseVideoJobRepository().listOwned(ownerId);
     return { status: "success" as const, records: jobs.map((job) => toVideoPresentationRecord(job)) };

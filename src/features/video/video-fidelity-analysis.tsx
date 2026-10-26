@@ -2,12 +2,10 @@
 
 /* eslint-disable @next/next/no-img-element -- the browser creates these transient frame preview data URLs locally. */
 
-import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useEffect, useRef, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 
 import type { VideoFidelityAnalysisAvailability } from "@/lib/video-fidelity/types";
-import { sampleVideoFrameTimestamps } from "@/lib/video-fidelity/sampling";
-import { parseVideoFidelitySessionCache } from "@/lib/video-fidelity/session-cache";
 import type { VideoFidelityReport } from "@/lib/video-fidelity/types";
 import libraryStyles from "./video-library.module.css";
 import styles from "./video-fidelity-analysis.module.css";
@@ -57,119 +55,22 @@ export type VideoFidelityCopy = {
 };
 
 type Frame = { timestampSeconds: number; dataUrl: string };
-type PreparedReview = { sourcePreview: string; frames: Frame[] };
+type PreparedReview = { sourcePreview: string; frames: Frame[]; closeups: { label: string; timestampSeconds: number | null; dataUrl: string }[] };
 
 type VideoFidelityAnalysisProps = {
+  generationMethod?: "source-motion" | "kling";
+  analysisRequested?: boolean;
   videoId: string;
   durationSeconds: number;
   availability: VideoFidelityAnalysisAvailability;
   copy: VideoFidelityCopy;
 };
 
-function waitForMedia(video: HTMLVideoElement, eventName: "loadedmetadata" | "loadeddata" | "seeked", timeoutMs: number) {
-  if (eventName === "loadedmetadata" && video.readyState >= HTMLMediaElement.HAVE_METADATA) return Promise.resolve();
-  if (eventName === "loadeddata" && video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) return Promise.resolve();
-  return new Promise<void>((resolve, reject) => {
-    const timeout = window.setTimeout(() => finish(new Error("Media operation timed out.")), timeoutMs);
-    const finish = (error?: Error) => {
-      window.clearTimeout(timeout);
-      video.removeEventListener(eventName, onReady);
-      video.removeEventListener("error", onError);
-      if (error) reject(error);
-      else resolve();
-    };
-    const onReady = () => finish();
-    const onError = () => finish(new Error("Media could not be decoded."));
-    video.addEventListener(eventName, onReady, { once: true });
-    video.addEventListener("error", onError, { once: true });
-  });
-}
-
-async function canvasImageData(canvas: HTMLCanvasElement): Promise<string> {
-  const toBlob = (quality: number) => new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", quality));
-  let blob = await toBlob(0.84);
-  if (!blob) throw new Error("Frame could not be encoded.");
-  if (blob.size > 900 * 1024) {
-    blob = await toBlob(0.7);
-    if (!blob) throw new Error("Frame could not be encoded.");
-  }
-  if (blob.size > 900 * 1024) throw new Error("Frame exceeds the safe image size.");
-  return await new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => typeof reader.result === "string" ? resolve(reader.result) : reject(new Error("Frame could not be read."));
-    reader.onerror = () => reject(new Error("Frame could not be read."));
-    reader.readAsDataURL(blob);
-  });
-}
-
-async function prepareSourcePreview(blob: Blob): Promise<string> {
-  const bitmap = await createImageBitmap(blob);
-  try {
-    const scale = Math.min(1, 1024 / Math.max(bitmap.width, bitmap.height));
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.max(1, Math.round(bitmap.width * scale));
-    canvas.height = Math.max(1, Math.round(bitmap.height * scale));
-    const context = canvas.getContext("2d", { alpha: false });
-    if (!context) throw new Error("Image canvas is unavailable.");
-    context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-    return canvasImageData(canvas);
-  } finally {
-    bitmap.close();
-  }
-}
-
 async function prepareReview(videoId: string, durationSeconds: number): Promise<PreparedReview> {
-  const prefix = `/api/dashboard/videos/${encodeURIComponent(videoId)}/fidelity-analysis`;
-  const [sourceResponse, videoResponse] = await Promise.all([
-    fetch(`${prefix}?kind=source`, { credentials: "same-origin", cache: "no-store" }),
-    fetch(`${prefix}?kind=video`, { credentials: "same-origin", cache: "no-store" }),
-  ]);
-  if (!sourceResponse.ok || !videoResponse.ok) throw new Error("Owned media is unavailable.");
-  const [sourceBlob, videoBlob] = await Promise.all([sourceResponse.blob(), videoResponse.blob()]);
-  if (videoBlob.size <= 0 || videoBlob.size > 32 * 1024 * 1024) throw new Error("Video exceeds the local review limit.");
-  const sourcePreview = await prepareSourcePreview(sourceBlob);
-
-  const videoUrl = URL.createObjectURL(videoBlob);
-  const video = document.createElement("video");
-  video.muted = true;
-  video.playsInline = true;
-  video.preload = "auto";
-  const metadataReady = waitForMedia(video, "loadedmetadata", 8000);
-  video.src = videoUrl;
-  try {
-    await metadataReady;
-    if (!Number.isFinite(video.duration) || video.duration <= 0 || video.duration > 15
-      || video.videoWidth <= 0 || video.videoHeight <= 0 || video.videoWidth > 4096 || video.videoHeight > 4096
-      || video.videoWidth * video.videoHeight > 20_000_000) throw new Error("Video dimensions or duration exceed the local review limit.");
-    const frameTimes = sampleVideoFrameTimestamps(durationSeconds);
-    if (frameTimes.length !== 5 || video.duration + 0.3 < frameTimes[frameTimes.length - 1]) throw new Error("Video timeline is unavailable.");
-    await waitForMedia(video, "loadeddata", 8000);
-    const scale = Math.min(1, 1024 / Math.max(video.videoWidth, video.videoHeight));
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.max(1, Math.round(video.videoWidth * scale));
-    canvas.height = Math.max(1, Math.round(video.videoHeight * scale));
-    const context = canvas.getContext("2d", { alpha: false });
-    if (!context) throw new Error("Video frame canvas is unavailable.");
-
-    const frames: Frame[] = [];
-    for (const timestampSeconds of frameTimes) {
-      if (Math.abs(video.currentTime - timestampSeconds) > 0.02) {
-        const seeked = waitForMedia(video, "seeked", 5000);
-        video.currentTime = timestampSeconds;
-        await seeked;
-      }
-      if (Math.abs(video.currentTime - timestampSeconds) > 0.3) throw new Error("A representative video frame could not be sampled.");
-      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
-      frames.push({ timestampSeconds: Math.round(video.currentTime * 10) / 10, dataUrl: await canvasImageData(canvas) });
-    }
-    return { sourcePreview, frames };
-  } finally {
-    video.pause();
-    video.removeAttribute("src");
-    video.load();
-    URL.revokeObjectURL(videoUrl);
-  }
+  if (![5, 10].includes(durationSeconds)) throw new Error("Unsupported video duration.");
+  const response = await fetch(`/api/dashboard/videos/${encodeURIComponent(videoId)}/fidelity-analysis?kind=frames`, { credentials: "same-origin", cache: "no-store" });
+  if (!response.ok) throw new Error("Owned media is unavailable.");
+  return await response.json() as PreparedReview;
 }
 
 function formatTime(value: number) {
@@ -180,9 +81,11 @@ function renderTextList(values: readonly string[], fallback: string) {
   return values.length > 0 ? values.join(" · ") : fallback;
 }
 
-export function VideoFidelityAnalysis({ videoId, durationSeconds, availability, copy }: VideoFidelityAnalysisProps) {
+export function VideoFidelityAnalysis({ videoId, durationSeconds, availability, copy, generationMethod = "kling", analysisRequested = false }: VideoFidelityAnalysisProps) {
   const t = useTranslations("Dashboard.videoDetail.fidelityAnalysis");
-  const sessionCacheKey = `klay-video-fidelity-v2:${videoId}`;
+  const locale = useLocale();
+  const automaticStarted = useRef(false);
+  const [reviewRefresh, setReviewRefresh] = useState(0);
   const [preparing, setPreparing] = useState(false);
   const [prepared, setPrepared] = useState<PreparedReview | null>(null);
   const [prepareError, setPrepareError] = useState(false);
@@ -194,26 +97,37 @@ export function VideoFidelityAnalysis({ videoId, durationSeconds, availability, 
   const [sessionCacheReady, setSessionCacheReady] = useState(false);
 
   useEffect(() => {
+    if (generationMethod === "source-motion") return;
     let active = true;
-    queueMicrotask(() => {
-      if (!active) return;
+    let timer: ReturnType<typeof setTimeout>;
+    const endpoint = `/api/dashboard/videos/${encodeURIComponent(videoId)}/fidelity-analysis`;
+    async function poll() {
       try {
-        const cached = parseVideoFidelitySessionCache(window.sessionStorage.getItem(sessionCacheKey));
-        if (cached?.status === "pending") {
-          setAnalysisStarted(true);
-          setAnalysisOutcome("uncertain");
-        } else if (cached?.status === "complete") {
-          setAnalysisStarted(true);
-          setReport(cached.report);
-        }
-      } catch {
-        // Session storage can be unavailable; the current page still works without it.
-      } finally {
+        const response = await fetch(endpoint + "?kind=review", { cache: "no-store" });
+        if (!response.ok) throw new Error("Review unavailable.");
+        const result = await response.json() as { review: { status: string; report: VideoFidelityReport | null } | null };
+        if (!active) return;
         setSessionCacheReady(true);
-      }
-    });
-    return () => { active = false; };
-  }, [sessionCacheKey]);
+        const review = result.review;
+        if (review?.status === "succeeded" && review.report) { setReport(review.report); setAnalysisStarted(true); setAnalyzing(false); setAnalysisOutcome(null); return; }
+        if (review?.status === "failed" || review?.status === "uncertain") { setAnalysisStarted(true); setAnalyzing(false); setAnalysisOutcome(review.status); return; }
+        if (analysisRequested && !automaticStarted.current) {
+          automaticStarted.current = true;
+          setAnalysisStarted(true); setAnalyzing(true);
+          void fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ resume: true, locale }) })
+            .then(response => response.json()).then((result: { status?: string }) => {
+              if (!active) return;
+              if (result.status === "disabled" || result.status === "failed" || result.status === "uncertain") { setAnalyzing(false); setAnalysisOutcome(result.status); }
+              else timer = setTimeout(() => void poll(), 1000);
+            }).catch(() => { if (active) { setAnalyzing(false); setAnalysisOutcome("uncertain"); timer = setTimeout(() => void poll(), 3000); } });
+          return;
+        }
+        if (review) { setAnalysisStarted(true); setAnalyzing(true); timer = setTimeout(() => void poll(), 3000); }
+      } catch { if (active) { setSessionCacheReady(false); setAnalysisOutcome("disabled"); } }
+    }
+    void poll();
+    return () => { active = false; clearTimeout(timer); };
+  }, [videoId, generationMethod, analysisRequested, locale, reviewRefresh]);
 
   async function handlePrepare() {
     setPreparing(true);
@@ -229,48 +143,17 @@ export function VideoFidelityAnalysis({ videoId, durationSeconds, availability, 
 
   async function handleAnalyze() {
     if (!prepared || !availability.enabled || !availability.maximumEstimatedCostUsd || !consented || analysisStarted) return;
-    setAnalysisStarted(true);
-    setAnalyzing(true);
-    setAnalysisOutcome(null);
-    try {
-      window.sessionStorage.setItem(sessionCacheKey, JSON.stringify({ status: "pending" }));
-    } catch {
-      // A storage restriction must not prevent an explicitly requested review.
-    }
+    setAnalysisStarted(true); setAnalyzing(true); setAnalysisOutcome(null);
     try {
       const response = await fetch(`/api/dashboard/videos/${encodeURIComponent(videoId)}/fidelity-analysis`, {
-        method: "POST",
-        credentials: "same-origin",
-        cache: "no-store",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          consent: true,
-          confirmedMaximumCostUsd: availability.maximumEstimatedCostUsd,
-          source: { dataUrl: prepared.sourcePreview },
-          frames: prepared.frames,
-        }),
+        method: "POST", credentials: "same-origin", cache: "no-store", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ consent: true, confirmedMaximumCostUsd: availability.maximumEstimatedCostUsd, pricingVersion: availability.pricingVersion, locale }),
       });
       const result = await response.json() as { status?: string; report?: VideoFidelityReport };
-      if (response.ok && result.status === "success" && result.report) {
-        setReport(result.report);
-        try {
-          window.sessionStorage.setItem(sessionCacheKey, JSON.stringify({ status: "complete", report: result.report }));
-        } catch {
-          // The report remains available in this view if session storage is full.
-        }
-      } else if (result.status === "disabled") {
-        setAnalysisOutcome("disabled");
-        try { window.sessionStorage.removeItem(sessionCacheKey); } catch { /* Storage is optional. */ }
-      } else if (result.status === "invalid_media" || result.status === "confirmation_required") {
-        setAnalysisOutcome("failed");
-        try { window.sessionStorage.removeItem(sessionCacheKey); } catch { /* Storage is optional. */ }
-      }
-      else setAnalysisOutcome("uncertain");
-    } catch {
-      setAnalysisOutcome("uncertain");
-    } finally {
-      setAnalyzing(false);
-    }
+      if (response.ok && result.status === "success" && result.report) setReport(result.report);
+      else setAnalysisOutcome(result.status === "disabled" ? "disabled" : result.status === "failed" || result.status === "confirmation_required" ? "failed" : "uncertain");
+    } catch { setAnalysisOutcome("uncertain"); }
+    finally { setAnalyzing(false); setReviewRefresh(value => value + 1); }
   }
 
   const profile = report?.sourceProfile;
@@ -292,6 +175,7 @@ export function VideoFidelityAnalysis({ videoId, durationSeconds, availability, 
         </div>
       </div>
 
+      {generationMethod === "source-motion" ? <p className={styles.description}>{t("sourceBased")}</p> : null}
       {!prepared ? (
         <div className={styles.prepareBlock}>
           <p>{copy.freeStep}</p>
@@ -313,22 +197,26 @@ export function VideoFidelityAnalysis({ videoId, durationSeconds, availability, 
               <figcaption>{t("videoFrame", { number: index + 1, timestamp: formatTime(frame.timestampSeconds) })}</figcaption>
             </figure>
           ))}
+          {(prepared.closeups ?? []).map((crop, index) => <figure className={styles.frameCard} key={index}>
+            <img src={crop.dataUrl} alt={crop.timestampSeconds === null ? t("closeupSource") : t("closeupVideo", { time: crop.timestampSeconds })} />
+            <figcaption>{crop.timestampSeconds === null ? t("closeupSource") : t("closeupVideo", { time: crop.timestampSeconds })}</figcaption>
+          </figure>)}
         </div>
       )}
 
-      {prepared && sessionCacheReady && !report && !analysisOutcome && !analysisStarted ? (
+      {generationMethod === "kling" && prepared && sessionCacheReady && !report && !analysisOutcome && !analysisStarted ? (
         <div className={styles.consentBlock}>
           {availability.enabled && availability.maximumEstimatedCostUsd !== null ? (
             <>
-              <p className={styles.estimate}>{t("priceEstimate", { amount: availability.maximumEstimatedCostUsd.toFixed(2) })}</p>
+              <p className={styles.estimate}>{t("priceEstimate", { amount: availability.maximumEstimatedCostUsd.toFixed(6) })}</p>
               <p>{copy.consentLead}</p>
               <p className={styles.muted}>{copy.consentDetails}</p>
               <label className={styles.consentLabel}>
                 <input type="checkbox" checked={consented} onChange={(event) => setConsented(event.target.checked)} />
-                <span>{t("consentLabel", { amount: availability.maximumEstimatedCostUsd.toFixed(2) })}</span>
+                <span>{t("consentLabel", { amount: availability.maximumEstimatedCostUsd.toFixed(6) })}</span>
               </label>
               <button type="button" className={libraryStyles.primaryAction} onClick={handleAnalyze} disabled={!consented || analyzing}>
-                {analyzing ? copy.analyzing : t("analyze", { amount: availability.maximumEstimatedCostUsd.toFixed(2) })}
+                {analyzing ? copy.analyzing : t("analyze", { amount: availability.maximumEstimatedCostUsd.toFixed(6) })}
               </button>
             </>
           ) : (

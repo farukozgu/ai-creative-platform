@@ -7,6 +7,7 @@ import type { VideoPresentationRecord, VideoStatus } from "@/features/video/vide
 import styles from "@/features/video/video-library.module.css";
 
 export type VideoCardCopy = {
+  sourceMotion: string;
   open: string;
   download: string;
   noPreview: string;
@@ -31,6 +32,7 @@ function formatDate(value: string | null | undefined, locale: string) {
 
 export function VideoCard({ record, locale, copy }: VideoCardProps) {
   const createdAt = formatDate(record.createdAt, locale);
+  const title = record.generationMethod === "source-motion" ? copy.sourceMotion : record.title;
 
   return (
     <li>
@@ -38,7 +40,7 @@ export function VideoCard({ record, locale, copy }: VideoCardProps) {
         <Link
           href={`/dashboard/videos/${record.id}`}
           className={styles.cardMedia}
-          aria-label={`${copy.open}: ${record.title}`}
+          aria-label={`${copy.open}: ${title}`}
         >
           {record.thumbnailUrl ? (
             <img src={record.thumbnailUrl} alt={copy.thumbnailAlt} />
@@ -55,13 +57,13 @@ export function VideoCard({ record, locale, copy }: VideoCardProps) {
 
         <div className={styles.cardBody}>
           <div className={styles.cardTitleRow}>
-            <h2><Link href={`/dashboard/videos/${record.id}`}>{record.title}</Link></h2>
+            <h2><Link href={`/dashboard/videos/${record.id}`}>{title}</Link></h2>
             <span className={`${styles.status} ${styles[`status_${record.status}`]}`}>
               {copy.status[record.status]}
             </span>
           </div>
           <p className={styles.cardMeta}>
-            <span>{copy.mode[record.generationMode]}</span>
+            <span>{record.generationMethod === "source-motion" ? copy.sourceMotion : copy.mode[record.generationMode]}</span>
             {record.aspectRatio ? <span>{record.aspectRatio}</span> : null}
             {record.durationSeconds ? <span>{copy.seconds(record.durationSeconds)}</span> : null}
             {createdAt ? <time dateTime={record.createdAt ?? undefined}>{createdAt}</time> : null}

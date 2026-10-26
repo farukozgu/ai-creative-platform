@@ -1,6 +1,6 @@
 import type { ProductProfile } from "@/lib/product-understanding/product-profile";
 
-export const VIDEO_FIDELITY_VERSION = "video-product-fidelity-v2";
+export const VIDEO_FIDELITY_VERSION = "video-product-fidelity-v3";
 
 export const videoFidelityCategories = [
   "branding_text",
@@ -37,6 +37,7 @@ export type VideoFidelitySourceDetails = {
 };
 
 export type VideoFidelityReport = {
+  criticalRegion?: import("@/lib/video-generation/preservation").CriticalProductRegion | null;
   evaluatorVersion: string;
   model: string;
   analyzedAt: string;
@@ -53,6 +54,8 @@ export type VideoFidelityFrameInput = {
 };
 
 export type VideoFidelityAnalysisAvailability = {
+  model?: "gpt-4o-mini";
+  pricingVersion?: string;
   enabled: boolean;
   maximumEstimatedCostUsd: number | null;
 };

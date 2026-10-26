@@ -1,4 +1,6 @@
 import "server-only";
+import sharp from "sharp";
+import { sourceFrameGeometry } from "./source-context";
 import { createHash } from "node:crypto";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { prepareVideoSourceImage } from "./prepare-source-image";
@@ -27,6 +29,9 @@ export async function prepareOwnedVideoSource(ownerId: string, source: VideoPrep
     || downloaded.data.size <= 0 || downloaded.data.size > 25 * 1024 * 1024) throw new Error("Source unavailable.");
   const bytes = Buffer.from(await downloaded.data.arrayBuffer());
   const prepared = await prepareVideoSourceImage(bytes, aspectRatio);
+  const originalMetadata = await sharp(bytes, { limitInputPixels: 40_000_000 }).metadata();
+  const swapped = (originalMetadata.orientation ?? 1) >= 5;
+  const geometry = sourceFrameGeometry(swapped ? originalMetadata.height! : originalMetadata.width!, swapped ? originalMetadata.width! : originalMetadata.height!, prepared.width, prepared.height);
   const hash = createHash("sha256").update(`video-frame-v1:${ownerId}:${bucket}:${path}:${aspectRatio}:${fingerprint(bytes)}`).digest("hex");
   const sourceAssetId = `${hash.slice(0,8)}-${hash.slice(8,12)}-5${hash.slice(13,16)}-a${hash.slice(17,20)}-${hash.slice(20,32)}`;
   const objectPath = `${ownerId}/${sourceAssetId}/prepared-v1.png`;
@@ -47,5 +52,5 @@ export async function prepareOwnedVideoSource(ownerId: string, source: VideoPrep
   const signed = await supabase.storage.from("video-source-images").createSignedUrl(objectPath, 3600);
   if (signed.error || !signed.data) throw new Error("Prepared preview unavailable.");
   return { source: { kind: "uploaded-image" as const, sourceAssetId }, previewUrl: signed.data.signedUrl,
-    aspectRatio, width: prepared.width, height: prepared.height };
+    aspectRatio, width: prepared.width, height: prepared.height, geometry };
 }

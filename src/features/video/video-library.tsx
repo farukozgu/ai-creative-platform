@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { DashboardIcon } from "@/components/dashboard/dashboard-icons";
@@ -12,7 +12,7 @@ import {
 } from "@/features/video/video-library-state";
 import type { VideoPresentationRecord, VideoStatus } from "@/features/video/video-studio-types";
 import { Link } from "@/i18n/navigation";
-import { listVideoGenerationsAction } from "@/app/[locale]/dashboard/video/generation-actions";
+import { listVideoGenerationsAction, resumeVideoFidelityReviewAction } from "@/app/[locale]/dashboard/video/generation-actions";
 import styles from "@/features/video/video-library.module.css";
 
 type VideoLibraryProps = {
@@ -25,6 +25,13 @@ const statuses: VideoStatus[] = ["queued", "processing", "ready", "failed", "una
 
 export function VideoLibrary({ records: initialRecords, locale }: VideoLibraryProps) {
   const [records, setRecords] = useState(initialRecords);
+  const reviewsRequested = useRef(new Set<string>());
+  useEffect(() => {
+    for (const record of records) if (record.status === "ready" && record.analysisRequested && !reviewsRequested.current.has(record.id)) {
+      reviewsRequested.current.add(record.id);
+      void resumeVideoFidelityReviewAction(record.id);
+    }
+  }, [records]);
   useEffect(() => {
     if (!records.some(record => record.status === "queued" || record.status === "processing")) return;
     let active = true;
@@ -43,6 +50,7 @@ export function VideoLibrary({ records: initialRecords, locale }: VideoLibraryPr
   );
   const isEmpty = records.length === 0;
   const cardCopy: VideoCardCopy = {
+    sourceMotion: t("sourceMotion"),
     open: t("card.open"),
     download: t("card.download"),
     noPreview: t("card.noPreview"),

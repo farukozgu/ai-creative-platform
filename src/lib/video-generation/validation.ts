@@ -1,5 +1,6 @@
 import { videoEndpointCapabilities, type VideoEndpointCapability } from "@/lib/video-generation/capabilities";
 import type { VideoGenerationDraft } from "@/lib/video-generation/types";
+import { parseCriticalProductRegion } from "./preservation";
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const qualities = new Set(["standard", "pro"]);
@@ -12,6 +13,14 @@ export type VideoDraftValidation = { ok: true; value: VideoGenerationDraft } | {
 export function validateVideoGenerationDraft(value: unknown): VideoDraftValidation {
   if (!value || typeof value !== "object") return { ok: false, field: "draft", message: "A generation draft is required." };
   const input = value as Record<string, unknown>;
+  if (input.method !== undefined && input.method !== "source-motion" && input.method !== "kling") return { ok: false, field: "method", message: "Unsupported generation method." };
+  const criticalRegion = input.criticalRegion == null ? null : parseCriticalProductRegion(input.criticalRegion);
+  if (input.criticalRegion != null && !criticalRegion) return { ok: false, field: "criticalRegion", message: "Invalid critical product region." };
+  const consent = input.analysisConsent;
+  if (consent && typeof consent === "object" && "locale" in consent && consent.locale !== undefined && consent.locale !== "tr" && consent.locale !== "en") return { ok: false, field: "analysisConsent", message: "Unsupported analysis locale." };
+  if (consent != null && (typeof consent !== "object" || !("model" in consent) || consent.model !== "gpt-4o-mini"
+    || !("maximumCostUsd" in consent) || typeof consent.maximumCostUsd !== "number" || !Number.isFinite(consent.maximumCostUsd) || consent.maximumCostUsd <= 0 || consent.maximumCostUsd > 1
+    || !("pricingVersion" in consent) || typeof consent.pricingVersion !== "string" || consent.pricingVersion.length > 80)) return { ok: false, field: "analysisConsent", message: "Invalid analysis consent." };
   if (typeof input.clientSubmissionId !== "string" || !uuidPattern.test(input.clientSubmissionId)) return { ok: false, field: "clientSubmissionId", message: "A valid submission identifier is required." };
   if (input.mode !== "image") return { ok: false, field: "mode", message: "Only image-to-video generation is supported." };
   if (typeof input.quality !== "string" || !qualities.has(input.quality)) return { ok: false, field: "quality", message: "Select a supported quality preference." };
@@ -19,14 +28,14 @@ export function validateVideoGenerationDraft(value: unknown): VideoDraftValidati
   if (typeof input.durationSeconds !== "number" || !durations.has(input.durationSeconds)) return { ok: false, field: "durationSeconds", message: "Select a supported duration." };
   if (typeof input.cameraMovement !== "string" || !cameraMovements.has(input.cameraMovement)) return { ok: false, field: "cameraMovement", message: "Select a supported camera preference." };
   const prompt = typeof input.prompt === "string" ? input.prompt.trim().replace(/\s+/g, " ") : "";
-  if (!prompt) return { ok: false, field: "prompt", message: "A prompt is required." };
+  if (!prompt && input.method !== "source-motion") return { ok: false, field: "prompt", message: "A prompt is required." };
   if (prompt.length > 2500) return { ok: false, field: "prompt", message: "The prompt must be 2,500 characters or fewer." };
   const source = input.source;
   if (!source || typeof source !== "object") return { ok: false, field: "source", message: "A private source image is required." };
   const candidate = source as Record<string, unknown>;
   const id = candidate.kind === "generated-image" ? candidate.generationId : candidate.sourceAssetId;
   if ((candidate.kind !== "generated-image" && candidate.kind !== "uploaded-image") || typeof id !== "string" || !uuidPattern.test(id)) return { ok: false, field: "source", message: "Select a valid private source image." };
-  return { ok: true, value: { ...input, prompt } as VideoGenerationDraft };
+  return { ok: true, value: { ...input, prompt, criticalRegion, method: input.method ?? "kling", analysisConsent: consent ?? null } as VideoGenerationDraft };
 }
 
 export function validateDraftAgainstCapability(draft: VideoGenerationDraft, capability: VideoEndpointCapability) {

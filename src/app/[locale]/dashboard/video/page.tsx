@@ -7,6 +7,8 @@ import { isSupportedLocale } from "@/i18n/routing";
 import { canAccessVideoBeta } from "@/lib/video-generation/beta-policy";
 import { getAuthenticatedUserId } from "@/lib/auth/require-user";
 
+export const maxDuration = 90;
+
 type VideoStudioPageProps = {
   params: Promise<{ locale: string }>;
   searchParams: Promise<{ source?: string | string[] }>;

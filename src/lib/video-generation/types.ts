@@ -19,6 +19,9 @@ export type VideoPreparationSource =
   | { kind: "generated-image"; generationId: string };
 
 export type VideoGenerationDraft = {
+  method?: import("./preservation").VideoGenerationMethod;
+  criticalRegion?: import("./preservation").CriticalProductRegion | null;
+  analysisConsent?: { model: "gpt-4o-mini"; maximumCostUsd: number; pricingVersion: string; locale?: "tr" | "en" } | null;
   clientSubmissionId: string;
   mode: VideoGenerationMode;
   prompt: string;
@@ -50,6 +53,8 @@ export type ProviderVideoFile = {
 };
 
 export type VideoProviderRequest = {
+  negativePrompt?: string;
+  cfgScale?: number;
   modelId: string;
   endpointId: string;
   mode: VideoGenerationMode;
@@ -68,6 +73,7 @@ export interface VideoGenerationProvider {
 }
 
 export type VideoJobRecord = {
+  preservation?: VideoPreservationSnapshot | null;
   id: string;
   ownerId: string;
   clientSubmissionId: string;
@@ -100,6 +106,20 @@ export type VideoJobRecord = {
   completedAt: string | null;
 };
 
+export type VideoPreservationSnapshot = {
+  version: string;
+  method: import("./preservation").VideoGenerationMethod;
+  draftHash: string;
+  sourceSha256: string;
+  geometry: import("./preservation").SourceFrameGeometry;
+  criticalRegion: import("./preservation").CriticalProductRegion | null;
+  frameRegion: import("./preservation").CriticalProductRegion | null;
+  compiledPrompt: string;
+  negativePrompt: string;
+  cfgScale: number;
+  analysisConsent: NonNullable<VideoGenerationDraft["analysisConsent"]> | null;
+};
+
 export type VideoReconciliationClaim = {
   job: VideoJobRecord;
   leaseToken: string;
@@ -108,6 +128,7 @@ export type VideoReconciliationClaim = {
 };
 
 export interface VideoJobRepository {
+  findBySubmission?(ownerId: string, submissionId: string): Promise<VideoJobRecord | null>;
   createOrGet(input: Omit<VideoJobRecord, "id" | "createdAt" | "startedAt" | "completedAt" | "reconciliationAttempts" | "nextReconciliationAt">): Promise<{ job: VideoJobRecord; created: boolean }>;
   findOwned(ownerId: string, jobId: string): Promise<VideoJobRecord | null>;
   findById(jobId: string): Promise<VideoJobRecord | null>;

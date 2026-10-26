@@ -1,121 +1,57 @@
 import { NextResponse } from "next/server";
-
 import { getAuthenticatedUserId } from "@/lib/auth/require-user";
 import { SupabaseVideoJobRepository } from "@/lib/video-generation/supabase-repository";
-import { analyzeVideoFidelity } from "@/lib/video-fidelity/analyze-video";
-import { getVideoFidelityAnalysisAvailability, VIDEO_FIDELITY_ESTIMATED_MAX_COST_USD } from "@/lib/video-fidelity/availability";
 import { readOwnedVideoFidelityMedia } from "@/lib/video-fidelity/private-media";
-import { prepareVideoFidelityRequest, prepareVideoFidelitySourcePreview, VIDEO_FIDELITY_MAX_REQUEST_BYTES } from "@/lib/video-fidelity/prepare-input";
-import { sampleVideoFrameTimestamps } from "@/lib/video-fidelity/sampling";
+import { prepareVideoFidelitySourcePreview } from "@/lib/video-fidelity/prepare-input";
+import { fidelityPreviewData, prepareOwnedVideoFidelity } from "@/lib/video-fidelity/prepare-owned";
+import { readOwnedVideoReview, resumeOwnedVideoReview } from "@/lib/video-fidelity/reviews";
+import { quoteVideoFidelity } from "@/lib/video-fidelity/pricing";
+import { getVideoFidelityAnalysisAvailability } from "@/lib/video-fidelity/availability";
 
 export const runtime = "nodejs";
-export const maxDuration = 30;
-
+export const maxDuration = 90;
 type RouteContext = { params: Promise<{ videoId: string }> };
-
-async function readBoundedJson(request: Request): Promise<unknown | null> {
-  const declaredLength = Number(request.headers.get("content-length"));
-  if (Number.isFinite(declaredLength) && declaredLength > VIDEO_FIDELITY_MAX_REQUEST_BYTES) return null;
-  if (!request.body) return null;
-  const reader = request.body.getReader();
-  const chunks: Uint8Array[] = [];
-  let bytesRead = 0;
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    bytesRead += value.byteLength;
-    if (bytesRead > VIDEO_FIDELITY_MAX_REQUEST_BYTES) {
-      await reader.cancel();
-      return null;
-    }
-    chunks.push(value);
-  }
-  try {
-    const text = new TextDecoder("utf-8", { fatal: true }).decode(Buffer.concat(chunks));
-    return JSON.parse(text) as unknown;
-  } catch {
-    return null;
-  }
-}
-
-function isSameOriginJsonMutation(request: Request) {
-  const origin = request.headers.get("origin");
-  const contentType = request.headers.get("content-type")?.split(";")[0].trim().toLowerCase();
-  if (!origin || contentType !== "application/json") return false;
-  try {
-    return new URL(origin).origin === new URL(request.url).origin;
-  } catch {
-    return false;
-  }
-}
+const privateHeaders = { "Cache-Control": "private, no-store, max-age=0", "X-Content-Type-Options": "nosniff" };
 
 export async function GET(request: Request, context: RouteContext) {
   const ownerId = await getAuthenticatedUserId();
   if (!ownerId) return NextResponse.json({ status: "unauthorized" }, { status: 401 });
   const { videoId } = await context.params;
+  const job = await new SupabaseVideoJobRepository().findOwned(ownerId, videoId);
+  if (!job) return NextResponse.json({ status: "unavailable" }, { status: 404 });
   const kind = new URL(request.url).searchParams.get("kind");
-  if (kind !== "source" && kind !== "video") return NextResponse.json({ status: "invalid" }, { status: 400 });
   try {
+    if (kind === "review") return NextResponse.json({ status: "success", review: await readOwnedVideoReview(ownerId, videoId) }, { headers: privateHeaders });
+    if (kind === "frames") return NextResponse.json({ status: "success", ...fidelityPreviewData(await prepareOwnedVideoFidelity(ownerId, videoId)) }, { headers: privateHeaders });
+    if (kind !== "source" && kind !== "video") return NextResponse.json({ status: "invalid" }, { status: 400 });
     const media = await readOwnedVideoFidelityMedia(ownerId, videoId, kind);
     if (!media) return NextResponse.json({ status: "unavailable" }, { status: 404 });
-    const responseMedia = kind === "source"
-      ? await prepareVideoFidelitySourcePreview({ data: media.bytes, mimeType: media.mimeType })
-      : media;
+    const responseMedia = kind === "source" ? await prepareVideoFidelitySourcePreview({ data: media.bytes, mimeType: media.mimeType }) : media;
     if (!responseMedia) return NextResponse.json({ status: "unavailable" }, { status: 422 });
-    const responseBytes = "data" in responseMedia ? responseMedia.data : responseMedia.bytes;
-    return new Response(new Uint8Array(responseBytes), {
-      status: 200,
-      headers: {
-        "Content-Type": responseMedia.mimeType,
-        "Content-Length": String(responseBytes.length),
-        "Cache-Control": "private, no-store, max-age=0",
-        "X-Content-Type-Options": "nosniff",
-      },
-    });
-  } catch {
-    return NextResponse.json({ status: "unavailable" }, { status: 503 });
-  }
+    const bytes = "data" in responseMedia ? responseMedia.data : responseMedia.bytes;
+    return new Response(new Uint8Array(bytes), { headers: { ...privateHeaders, "Content-Type": responseMedia.mimeType, "Content-Length": String(bytes.length) } });
+  } catch { return NextResponse.json({ status: "unavailable" }, { status: 503, headers: privateHeaders }); }
 }
 
 export async function POST(request: Request, context: RouteContext) {
-  if (!isSameOriginJsonMutation(request)) return NextResponse.json({ status: "invalid_origin" }, { status: 403 });
+  if (request.headers.get("origin") !== new URL(request.url).origin || request.headers.get("content-type")?.split(";")[0].trim() !== "application/json") return NextResponse.json({ status: "invalid_origin" }, { status: 403 });
   const ownerId = await getAuthenticatedUserId();
   if (!ownerId) return NextResponse.json({ status: "unauthorized" }, { status: 401 });
   const { videoId } = await context.params;
-  const repository = new SupabaseVideoJobRepository();
-  const job = await repository.findOwned(ownerId, videoId);
-  if (!job || job.status !== "succeeded" || job.mode !== "image" || !job.sourceId) {
-    return NextResponse.json({ status: "unavailable" }, { status: 404 });
-  }
-
-  const availability = getVideoFidelityAnalysisAvailability(ownerId);
-  if (!availability.enabled || availability.maximumEstimatedCostUsd !== VIDEO_FIDELITY_ESTIMATED_MAX_COST_USD) {
-    return NextResponse.json({ status: "disabled" }, { status: 409 });
-  }
-  const body = await readBoundedJson(request);
-  const record = body && typeof body === "object" && !Array.isArray(body) ? body as Record<string, unknown> : null;
-  if (!record || record.consent !== true || record.confirmedMaximumCostUsd !== VIDEO_FIDELITY_ESTIMATED_MAX_COST_USD) {
-    return NextResponse.json({ status: "confirmation_required" }, { status: 400 });
-  }
-
-  const prepared = await prepareVideoFidelityRequest(record, job.durationSeconds);
-  if (!prepared) return NextResponse.json({ status: "invalid_media" }, { status: 400 });
-  if (sampleVideoFrameTimestamps(job.durationSeconds).length !== prepared.frames.length) {
-    return NextResponse.json({ status: "invalid_media" }, { status: 400 });
-  }
-
+  const job = await new SupabaseVideoJobRepository().findOwned(ownerId, videoId);
+  if (!job || job.status !== "succeeded" || job.provider !== "fal") return NextResponse.json({ status: "unavailable" }, { status: 404 });
+  if (!request.body) return NextResponse.json({ status: "invalid" }, { status: 400 });
+  const reader = request.body.getReader(); let bytes = 0; const parts: Uint8Array[] = [];
+  while (true) { const item = await reader.read(); if (item.done) break; bytes += item.value.byteLength; if (bytes > 4096) { await reader.cancel(); return NextResponse.json({ status: "invalid" }, { status: 413 }); } parts.push(item.value); }
+  let body: Record<string, unknown>;
+  try { body = JSON.parse(Buffer.concat(parts).toString("utf8")); if (!body || typeof body !== "object" || Array.isArray(body)) throw new Error(); }
+  catch { return NextResponse.json({ status: "invalid" }, { status: 400 }); }
+  const quote = quoteVideoFidelity(Boolean(job.preservation?.criticalRegion));
+  if (!getVideoFidelityAnalysisAvailability(ownerId, Boolean(job.preservation?.criticalRegion)).enabled) return NextResponse.json({ status: "disabled" }, { status: 409 });
+  const automatic = body.resume === true && Boolean(job.preservation?.analysisConsent);
+  if (!automatic && (!quote || body.consent !== true || body.confirmedMaximumCostUsd !== quote.maximumEstimatedCostUsd || body.pricingVersion !== quote.pricingVersion)) return NextResponse.json({ status: "confirmation_required" }, { status: 400 });
   try {
-    const report = await analyzeVideoFidelity({
-      jobId: job.id,
-      sourceAssetId: job.sourceId,
-      sourceImage: prepared.source.data,
-      sourceMimeType: prepared.source.mimeType,
-      frames: prepared.frames,
-      durationSeconds: job.durationSeconds,
-    });
-    return NextResponse.json({ status: "success", report }, { headers: { "Cache-Control": "private, no-store, max-age=0" } });
-  } catch {
-    // A timed-out provider response may have been billed. Never retry this request automatically.
-    return NextResponse.json({ status: "uncertain" }, { status: 502 });
-  }
+    const review = await resumeOwnedVideoReview(ownerId, videoId, automatic ? undefined : { model: "gpt-4o-mini", maximumCostUsd: quote!.maximumEstimatedCostUsd, pricingVersion: quote!.pricingVersion }, body.locale === "en" ? "en" : "tr");
+    return NextResponse.json({ status: review?.status === "succeeded" ? "success" : review?.status ?? "uncertain", report: review?.report ?? null }, { headers: privateHeaders });
+  } catch { return NextResponse.json({ status: "uncertain" }, { status: 502, headers: privateHeaders }); }
 }

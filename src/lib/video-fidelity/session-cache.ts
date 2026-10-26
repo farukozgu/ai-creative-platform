@@ -20,7 +20,7 @@ function isStringArray(value: unknown): value is string[] {
 }
 
 function isReport(value: unknown): value is VideoFidelityReport {
-  if (!isRecord(value) || value.evaluatorVersion !== "video-product-fidelity-v2" || typeof value.model !== "string"
+  if (!isRecord(value) || !["video-product-fidelity-v2", "video-product-fidelity-v3"].includes(String(value.evaluatorVersion)) || typeof value.model !== "string"
     || typeof value.analyzedAt !== "string" || typeof value.summary !== "string"
     || !overallStatuses.has(String(value.overallStatus)) || !Array.isArray(value.checks)
     || value.checks.length !== videoFidelityCategories.length) return false;

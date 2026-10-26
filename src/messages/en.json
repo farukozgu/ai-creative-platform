@@ -736,6 +736,36 @@
       "emptyDescription": "Configure your image using the controls. No generated image yet."
     },
     "videoStudio": {
+      "preservation": {
+        "quoteLoading": "Checking cost and availability…",
+        "methodTitle": "Video method",
+        "sourceMotion": "Motion from Photo",
+        "kling": "Motion with Kling",
+        "sourceDescription": "Gentle camera movement on your original photo, without redrawing the product.",
+        "klingDescription": "Controlled AI motion with Kling 3.0 Standard / Pro.",
+        "encodingNotice": "The product is not redrawn. Scaling and MP4 compression may affect sharpness.",
+        "noGuarantee": "Kling can change small text and details. Exact preservation is not guaranteed.",
+        "regionTitle": "Mark a critical region (optional)",
+        "regionHelp": "Drag over a logo or label in the original image. With a keyboard, press Enter to start and adjust the percentage fields.",
+        "regionSelect": "Select a critical product region",
+        "regionResolution": "Region in the prepared frame: {width} × {height} px. Small details may be unreadable in the video.",
+        "sourceAlt": "Original product for critical region selection",
+        "x": "Left (%)",
+        "y": "Top (%)",
+        "width": "Width (%)",
+        "height": "Height (%)",
+        "declaredText": "Text you can read here (optional)",
+        "unverifiedHint": "This is a user-provided hint, not visually verified evidence.",
+        "clearRegion": "Clear selection",
+        "analysisOptIn": "Check product fidelity after generation",
+        "analysisCost": "Model: {model} · estimated analysis ceiling: ${cost} USD",
+        "analysisDisabled": "Paid analysis is not enabled on the server, or pricing/schema could not be verified.",
+        "analysisConsent": "Selecting this sends the source and sampled frames to OpenAI and confirms the displayed extra cost. Uncertain requests are never automatically repeated.",
+        "localCost": "5/10 seconds · no fal/OpenAI request. Local server processing.",
+        "localDisabled": "Motion from Photo is not enabled for this account yet.",
+        "combinedQuote": "Kling: ${generation} · Analysis: ${analysis} · Total upper estimate: ${total} USD",
+        "newLocalRequest": "New Motion from Photo request"
+      },
       "preparation": {
         "preparing": "Preparing the source frame…",
         "ready": "Source frame ready. The entire product remains in frame.",
@@ -743,6 +773,8 @@
         "description": "Your image is fitted to the selected ratio without cropping or stretching. Empty space uses a matching background."
       },
       "beta": {
+        "localProcessing": "Creating video from the source photo",
+        "unsafeMotion": "This motion may invent hidden surfaces or change the product shape. Choose gentle camera movement.",
         "quote": "{model} · {seconds}s · Estimated ceiling: ${cost} USD",
         "quoteUnavailable": "Verified pricing is unavailable. Generation is disabled.",
         "requestId": "Test request ID: {id}",
@@ -868,6 +900,7 @@
       }
     },
     "videoLibrary": {
+      "sourceMotion": "Motion from Photo",
       "metadataTitle": "Video Library",
       "metadataDescription": "Review and manage videos created in Klay AI.",
       "eyebrow": "VIDEO WORKSPACE",
@@ -981,9 +1014,12 @@
         "unavailable": { "title": "Video unavailable", "description": "The playable asset is not available for this record." }
       },
       "fidelityAnalysis": {
+        "sourceBased": "This video uses 2D movement of the original photo; the product was not redrawn by AI. This does not mean every detail was verified by analysis.",
+        "closeupSource": "Critical region · source",
+        "closeupVideo": "Critical region window · {time}s (alignment unverified)",
         "title": "Product Fidelity Analysis",
         "description": "Compare the source product image with frames from the beginning, middle, and end of the video. Changes in camera angle, lighting, or partial visibility are not product damage.",
-        "freeStep": "First prepare the source image and five representative frames locally in your browser. This free step sends no data to an external service.",
+        "freeStep": "Prepare the source and five representative frames on the secure server. This step sends no data to an external analysis service.",
         "prepare": "Prepare frames",
         "preparing": "Preparing frames…",
         "preparingSource": "Loading the private source image",
@@ -995,7 +1031,7 @@
         "pricingUnavailable": "No verified cost estimate is available for this model. Paid analysis remains disabled.",
         "priceEstimate": "Estimated upper cost: about ${amount} USD",
         "consentLead": "Paid analysis starts only after you confirm below.",
-        "consentDetails": "If you consent, the source image and five compressed video frames are sent to OpenAI for visual comparison. The full MP4 is not sent. Results are shown on this page and are not written to the database.",
+        "consentDetails": "If you consent, the source image and five compressed video frames are sent to OpenAI for visual comparison. The full MP4 is not sent. Results are stored privately for your account.",
         "consentLabel": "I agree to send the source image and five frames to OpenAI and may incur an analysis charge of up to about ${amount} USD.",
         "analyze": "Start paid analysis · up to ${amount} USD",
         "analyzing": "Comparing the product and video frames…",

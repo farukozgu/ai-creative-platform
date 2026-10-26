@@ -84,7 +84,7 @@ export function VideoDetail({ record, locale, copy, fidelityAvailability }: Vide
             {playable ? <VideoDownloadButton jobId={record.id} label={copy.download} /> : null}
           </div>
         </header>
-        {record.status === "queued" || record.status === "processing" ? <VideoJobProgress jobId={record.id} /> : null}
+        {record.status === "queued" || record.status === "processing" ? <VideoJobProgress jobId={record.id} generationMethod={record.generationMethod} /> : null}
 
         <section className={styles.detailLayout}>
           <div className={styles.playerPanel} aria-label={copy.playerLabel}>
@@ -127,6 +127,8 @@ export function VideoDetail({ record, locale, copy, fidelityAvailability }: Vide
             durationSeconds={record.durationSeconds}
             availability={fidelityAvailability}
             copy={copy.fidelity}
+            generationMethod={record.generationMethod}
+            analysisRequested={record.analysisRequested}
           />
         ) : null}
       </div>

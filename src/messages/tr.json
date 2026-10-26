@@ -736,6 +736,36 @@
       "emptyDescription": "Kontrolleri kullanarak görselinizi hazırlayın. Henüz üretilmiş bir görsel yok."
     },
     "videoStudio": {
+      "preservation": {
+        "quoteLoading": "Maliyet ve kullanılabilirlik kontrol ediliyor…",
+        "methodTitle": "Video yöntemi",
+        "sourceMotion": "Fotoğraftan Hareket",
+        "kling": "Kling ile Hareket",
+        "sourceDescription": "Ürün yeniden çizilmeden, kaynak fotoğrafa hafif kamera hareketi.",
+        "klingDescription": "Kling 3.0 Standard / Pro ile kontrollü AI hareketi.",
+        "encodingNotice": "Ürün yeniden çizilmez. Ölçekleme ve MP4 sıkıştırması netliği etkileyebilir.",
+        "noGuarantee": "Kling, küçük yazı ve ayrıntıları değiştirebilir. Birebir koruma garantisi yoktur.",
+        "regionTitle": "Kritik bölgeyi işaretle (isteğe bağlı)",
+        "regionHelp": "Orijinal görselde logo veya etiketi sürükleyerek seçin. Klavyede Enter ile başlayıp yüzdelik alanları ayarlayabilirsiniz.",
+        "regionSelect": "Kritik ürün bölgesini seç",
+        "regionResolution": "Hazırlanmış karede bölge: {width} × {height} px. Küçük ayrıntılar videoda okunamayabilir.",
+        "sourceAlt": "Kritik bölge seçimi için orijinal ürün",
+        "x": "Soldan (%)",
+        "y": "Üstten (%)",
+        "width": "Genişlik (%)",
+        "height": "Yükseklik (%)",
+        "declaredText": "Burada okuduğunuz yazı (isteğe bağlı)",
+        "unverifiedHint": "Bu metin kullanıcı beyanıdır; görselden doğrulanmış bilgi sayılmaz.",
+        "clearRegion": "Seçimi kaldır",
+        "analysisOptIn": "Üretim sonrası sadakat kontrolü",
+        "analysisCost": "Model: {model} · analiz üst tahmini: ${cost} USD",
+        "analysisDisabled": "Ücretli analiz sunucuda etkin değil veya fiyat/şema doğrulanamadı.",
+        "analysisConsent": "Seçerseniz kaynak ve örnek kareler OpenAI'a gönderilir; gösterilen ek maliyeti onaylamış olursunuz. Belirsiz istek otomatik tekrarlanmaz.",
+        "localCost": "5/10 saniye · fal/OpenAI çağrısı yok. Yerel sunucu işlemi.",
+        "localDisabled": "Fotoğraftan Hareket henüz bu hesap için kullanıma açılmadı.",
+        "combinedQuote": "Kling: ${generation} · Analiz: ${analysis} · Toplam üst tahmin: ${total} USD",
+        "newLocalRequest": "Yeni Fotoğraftan Hareket isteği"
+      },
       "preparation": {
         "preparing": "Kaynak kare hazırlanıyor…",
         "ready": "Kaynak kare hazır. Ürünün tamamı korunarak yerleştirildi.",
@@ -743,6 +773,8 @@
         "description": "Görseliniz kırpılmadan ve esnetilmeden seçilen orana yerleştirilir. Boş alanlar uyumlu bir arka planla doldurulur."
       },
       "beta": {
+        "localProcessing": "Fotoğraftan video hazırlanıyor",
+        "unsafeMotion": "Bu hareket ürünün görünmeyen yüzlerini veya şeklini değiştirebilir. Hafif kamera hareketi seçin.",
         "quote": "{model} · {seconds} sn · Tahmini üst sınır: ${cost} USD",
         "quoteUnavailable": "Doğrulanmış maliyet alınamadı. Üretim kapalı.",
         "requestId": "Test istek kimliği: {id}",
@@ -868,6 +900,7 @@
       }
     },
     "videoLibrary": {
+      "sourceMotion": "Fotoğraftan Hareket",
       "metadataTitle": "Video Kütüphanesi",
       "metadataDescription": "Klay AI ile oluşturulan videoları inceleyin ve yönetin.",
       "eyebrow": "VİDEO ÇALIŞMA ALANI",
@@ -979,9 +1012,12 @@
         "unavailable": { "title": "Video kullanılamıyor", "description": "Bu kaydın oynatılabilir varlığı kullanılamıyor." }
       },
       "fidelityAnalysis": {
+        "sourceBased": "Bu video kaynak fotoğraftan 2D hareketle oluşturuldu; ürün AI ile yeniden çizilmedi. Bu bilgi, tüm ayrıntıların analizle doğrulandığı anlamına gelmez.",
+        "closeupSource": "Kritik bölge · kaynak",
+        "closeupVideo": "Kritik bölge penceresi · {time} sn (hizalama doğrulanmadı)",
         "title": "Ürün Sadakati Analizi",
         "description": "Kaynak ürün görselini videonun başlangıç, orta ve bitişinden alınan karelerle karşılaştırın. Kamera açısı, ışık ve kısmi görünürlük değişiklikleri ürün bozulması sayılmaz.",
-        "freeStep": "Önce kaynak görseli ve beş temsilî kareyi tarayıcınızda yerel olarak hazırlayın. Bu ücretsiz adım dış servise veri göndermez.",
+        "freeStep": "Kaynak görseli ve beş temsilî kareyi güvenli sunucuda hazırlayın. Bu adım dış analiz servisine veri göndermez.",
         "prepare": "Kareleri hazırla",
         "preparing": "Kareler hazırlanıyor…",
         "preparingSource": "Özel kaynak görsel alınıyor",
@@ -993,7 +1029,7 @@
         "pricingUnavailable": "Bu model için doğrulanmış maliyet tahmini yok. Ücretli analiz kapalı kaldı.",
         "priceEstimate": "Tahmini üst maliyet: yaklaşık ${amount} USD",
         "consentLead": "Ücretli analiz yalnızca aşağıdaki onaydan sonra başlar.",
-        "consentDetails": "Onay verirseniz kaynak görsel ve beş sıkıştırılmış video karesi OpenAI'a görsel karşılaştırma için gönderilir. Tam MP4 gönderilmez. Sonuç bu sayfada gösterilir ve veritabanına yazılmaz.",
+        "consentDetails": "Onay verirseniz kaynak görsel ve beş sıkıştırılmış video karesi OpenAI'a görsel karşılaştırma için gönderilir. Tam MP4 gönderilmez. Sonuç özel hesabınıza bağlı olarak saklanır.",
         "consentLabel": "Kaynak görseli ve beş kareyi OpenAI'a göndermeyi, yaklaşık ${amount} USD'ye kadar analiz ücreti oluşabileceğini kabul ediyorum.",
         "analyze": "Ücretli analizi başlat · ${amount} USD'ye kadar",
         "analyzing": "Ürün ve video kareleri karşılaştırılıyor…",

@@ -44,6 +44,8 @@ export type VideoInspectorCopy = {
 };
 
 type VideoGenerationInspectorProps = {
+  preservationControls?: React.ReactNode;
+  isSourceMotion?: boolean;
   copy: VideoInspectorCopy;
   source: VideoSource | null;
   prompt: string;
@@ -83,6 +85,8 @@ type VideoGenerationInspectorProps = {
 };
 
 export function VideoGenerationInspector({
+  preservationControls,
+  isSourceMotion = false,
   copy,
   source,
   prompt,
@@ -145,7 +149,8 @@ export function VideoGenerationInspector({
           onSelectLibrary={onSelectLibrary}
         />
 
-        <section className={styles.controlSection} aria-labelledby="video-prompt-heading">
+        {preservationControls}
+        {!isSourceMotion ? <section className={styles.controlSection} aria-labelledby="video-prompt-heading">
           <div className={styles.controlHeading}>
             <h2 id="video-prompt-heading">{copy.promptHeading}</h2>
             <p>{copy.promptDescription}</p>
@@ -168,7 +173,7 @@ export function VideoGenerationInspector({
               </button>
             ))}
           </div>
-        </section>
+        </section> : null}
 
         <fieldset className={styles.controlSection}>
           <legend>{copy.cameraHeading}</legend>
@@ -189,7 +194,7 @@ export function VideoGenerationInspector({
           </div>
         </fieldset>
 
-        <fieldset className={styles.controlSection}>
+        {!isSourceMotion ? <fieldset className={styles.controlSection}>
           <legend>{copy.qualityHeading}</legend>
           <div className={styles.qualityOptions}>
             {qualityOptions.map((option) => (
@@ -209,7 +214,7 @@ export function VideoGenerationInspector({
               </label>
             ))}
           </div>
-        </fieldset>
+        </fieldset> : null}
 
         <fieldset className={styles.controlSection}>
           <legend>{copy.outputHeading}</legend>

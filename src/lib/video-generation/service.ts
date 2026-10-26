@@ -5,12 +5,15 @@ import type { VideoGenerationDraft, VideoGenerationProvider, VideoJobRecord, Vid
 import { validateDraftAgainstCapability, validateVideoGenerationDraft } from "@/lib/video-generation/validation";
 import type { VideoSourceResolver } from "@/lib/video-generation/source";
 import { isSourceUrlFresh, sourceMatchesRequestedRatio } from "@/lib/video-generation/source";
+import { matchesVideoRequest } from "./request-identity";
+import type { VideoPreservationSnapshot } from "./types";
 
 export type SubmitVideoResult =
   | { ok: true; jobId: string; status: VideoJobRecord["status"]; duplicate: boolean }
   | { ok: false; code: "feature_disabled" | "invalid_input" | "unsupported_configuration" | "source_unavailable" | "billing_unavailable" | "persistence_failure" | "provider_submission_ambiguous"; message: string };
 
 export type SubmitVideoDependencies = {
+  preservation?: VideoPreservationSnapshot;
   repository: VideoJobRepository;
   provider: VideoGenerationProvider;
   billing: VideoBillingPolicy;
@@ -31,6 +34,11 @@ export async function submitVideoGeneration(ownerId: string, unknownDraft: unkno
   const parsed = validateVideoGenerationDraft(unknownDraft);
   if (!parsed.ok) return { ok: false, code: "invalid_input", message: parsed.message };
   const draft = parsed.value;
+  if (draft.method === "source-motion") return { ok: false, code: "invalid_input", message: "Local motion cannot enter the paid provider route." };
+  const prior = await dependencies.repository.findBySubmission?.(ownerId, draft.clientSubmissionId);
+  if (prior) return matchesVideoRequest(prior, draft)
+    ? { ok: true, jobId: prior.id, status: prior.status, duplicate: true }
+    : { ok: false, code: "invalid_input", message: "Submission identity changed." };
   if (!dependencies.capability.productionApproved) return { ok: false, code: "unsupported_configuration", message: "The selected video route has not been approved." };
   const supported = validateDraftAgainstCapability(draft, dependencies.capability);
   if (!supported.ok) return { ok: false, code: "unsupported_configuration", message: supported.message };
@@ -51,6 +59,7 @@ export async function submitVideoGeneration(ownerId: string, unknownDraft: unkno
   try {
     created = await dependencies.repository.createOrGet({
       ownerId, clientSubmissionId: draft.clientSubmissionId, mode: draft.mode, prompt: draft.prompt,
+      preservation: dependencies.preservation,
       quality: draft.quality, aspectRatio: draft.aspectRatio, durationSeconds: draft.durationSeconds,
       cameraMovement: draft.cameraMovement, ...sourceColumns(draft), provider: dependencies.capability.provider,
       endpointId: dependencies.capability.endpointId, modelId: dependencies.capability.id, providerRequestId: null,
@@ -63,13 +72,15 @@ export async function submitVideoGeneration(ownerId: string, unknownDraft: unkno
     return { ok: false, code: "persistence_failure", message: "The video request could not be saved and was not submitted." };
   }
   if (!created.created) {
+    if (!matchesVideoRequest(created.job, draft)) return { ok: false, code: "invalid_input", message: "Submission identity changed." };
     if (created.job.billingReservationId !== billing.reservation.id) await dependencies.billing.release(billing.reservation.id);
     return { ok: true, jobId: created.job.id, status: created.job.status, duplicate: true };
   }
 
   let acceptedTaskId: string | null = null;
   try {
-    const providerResult = await dependencies.provider.submit({ modelId: dependencies.capability.id, endpointId: dependencies.capability.endpointId, mode: draft.mode, prompt: draft.prompt, durationSeconds: draft.durationSeconds, aspectRatio: draft.aspectRatio, sourceUrl });
+    const providerResult = await dependencies.provider.submit({ modelId: dependencies.capability.id, endpointId: dependencies.capability.endpointId, mode: draft.mode, prompt: dependencies.preservation?.compiledPrompt ?? draft.prompt,
+      ...(dependencies.preservation ? { negativePrompt: dependencies.preservation.negativePrompt, cfgScale: dependencies.preservation.cfgScale } : {}), durationSeconds: draft.durationSeconds, aspectRatio: draft.aspectRatio, sourceUrl });
     acceptedTaskId = providerResult.requestId;
     const job = await dependencies.repository.attachProviderRequest(created.job.id, providerResult.requestId);
     recordVideoTelemetry({ event: "submitted", jobId: job.id, endpointId: job.endpointId, status: job.status, estimatedProviderCostUsd: estimate });

@@ -131,6 +131,7 @@ export function normalizeVideoFidelityReport(input: {
     if (!hasSourceEvidence(category, sourceProfile, sourceDetails)) status = "unverified";
     if ((status === "clear_distortion" || status === "suspicious_change" || status === "preserved") && timestamps.length === 0) status = "unverified";
     if (status === "preserved" && confidence !== "high") status = "unverified";
+    if (["partial_visibility", "motion_blur"].includes(likelyCause)) status = "unverified";
     if (status === "clear_distortion" && confidence !== "high") status = confidence === "medium" ? "suspicious_change" : "unverified";
     if (status === "clear_distortion" && ["camera_angle", "lighting", "partial_visibility", "motion_blur", "unclear"].includes(likelyCause)) status = "suspicious_change";
 

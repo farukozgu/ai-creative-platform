@@ -6,6 +6,8 @@ import { VideoLibrary } from "@/features/video/video-library";
 import { isSupportedLocale } from "@/i18n/routing";
 import { listVideoGenerationsAction } from "@/app/[locale]/dashboard/video/generation-actions";
 
+export const maxDuration = 90;
+
 type VideoLibraryPageProps = {
   params: Promise<{ locale: string }>;
 };

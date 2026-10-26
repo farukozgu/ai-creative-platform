@@ -12,9 +12,10 @@ import {
 } from "@/lib/assets/product-asset-constraints";
 
 export const initialVideoStudioDraft: VideoStudioDraft = {
+  method: "source-motion", criticalRegion: null, analyzeAfterGeneration: false,
   source: null,
   prompt: "",
-  cameraMovement: "auto",
+  cameraMovement: "dolly-in",
   quality: "standard",
   aspectRatio: "16:9",
   duration: 5,
@@ -22,6 +23,9 @@ export const initialVideoStudioDraft: VideoStudioDraft = {
 };
 
 export type VideoStudioAction =
+  | { type: "set-method"; method: VideoStudioDraft["method"] }
+  | { type: "set-critical-region"; region: VideoStudioDraft["criticalRegion"] }
+  | { type: "set-analysis"; enabled: boolean }
   | { type: "set-source"; source: VideoSource }
   | { type: "remove-source" }
   | { type: "set-prompt"; prompt: string }
@@ -36,16 +40,23 @@ export function videoStudioReducer(
   action: VideoStudioAction,
 ): VideoStudioDraft {
   switch (action.type) {
+    case "set-method": return { ...state, method: action.method, cameraMovement: "dolly-in", analyzeAfterGeneration: false, feedback: null };
+    case "set-critical-region": return { ...state, criticalRegion: action.region, analyzeAfterGeneration: false };
+    case "set-analysis": return { ...state, analyzeAfterGeneration: action.enabled };
     case "set-source":
       return {
         ...state,
         source: action.source,
+        criticalRegion: null,
+        analyzeAfterGeneration: false,
         feedback: null,
       };
     case "remove-source":
       return {
         ...state,
         source: null,
+        criticalRegion: null,
+        analyzeAfterGeneration: false,
         feedback: null,
       };
     case "set-prompt":
@@ -57,11 +68,11 @@ export function videoStudioReducer(
     case "set-camera":
       return { ...state, cameraMovement: action.cameraMovement, feedback: null };
     case "set-quality":
-      return { ...state, quality: action.quality, feedback: null };
+      return { ...state, quality: action.quality, analyzeAfterGeneration: false, feedback: null };
     case "set-aspect-ratio":
-      return { ...state, aspectRatio: action.aspectRatio, feedback: null };
+      return { ...state, aspectRatio: action.aspectRatio, analyzeAfterGeneration: false, feedback: null };
     case "set-duration":
-      return { ...state, duration: action.duration, feedback: null };
+      return { ...state, duration: action.duration, analyzeAfterGeneration: false, feedback: null };
     case "set-feedback":
       return { ...state, feedback: action.feedback };
   }
@@ -91,7 +102,7 @@ export function validateVideoStudioDraft(
   state: VideoStudioDraft,
 ): VideoStudioFeedback | null {
   if (!state.source) return "source-required";
-  if (!state.prompt.trim()) return "prompt-required";
+  if (state.method === "kling" && !state.prompt.trim()) return "prompt-required";
   return null;
 }
 
