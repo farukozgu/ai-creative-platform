@@ -9,6 +9,7 @@ import { SupabaseVideoJobRepository } from "./supabase-repository";
 import { reconcileClaimedVideoGeneration } from "./reconciliation";
 import { FalVideoGenerationProvider } from "./fal-provider";
 import { SupabaseDurableVideoOutputStore } from "./output";
+import { usdProductToMicrosCeil } from "./money";
 
 /** Read-only pricing, never inference. Unknown units/currency or inaccessible prices fail closed. */
 export async function getVideoBetaQuote(quality: VideoGenerationQuality, duration: 5 | 10) {
@@ -27,7 +28,9 @@ export async function getVideoBetaQuote(quality: VideoGenerationQuality, duratio
   // The live API's base unit and the model page's audio-off price can differ.
   // Reserve the larger verified value, not the lower marketing-page estimate.
   const rate = Math.max(price.unit_price, capability.pricing.basis === "per-second" ? capability.pricing.audioOffUsdPerSecond : 0);
-  const estimatedMaxCostUsd = Math.ceil(rate * duration * 1_000_000) / 1_000_000;
+  const estimatedMaxCostMicros = usdProductToMicrosCeil(rate, duration);
+  if (estimatedMaxCostMicros === null) throw new Error("Video pricing unavailable.");
+  const estimatedMaxCostUsd = Number(estimatedMaxCostMicros) / 1_000_000;
   if (estimatedMaxCostUsd > 10) throw new Error("Video pricing exceeds the beta budget.");
   return { quality, duration, estimatedMaxCostUsd, rate, verifiedAt: new Date().toISOString() };
 }

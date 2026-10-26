@@ -8,6 +8,7 @@ import { canAccessVideoBeta, canSubmitVideoBeta } from "../src/lib/video-generat
 import { buildFalVideoRequestInput } from "../src/lib/video-generation/fal-request";
 import type { VideoGenerationDraft } from "../src/lib/video-generation/types";
 import type { FalVideoGenerationProvider } from "../src/lib/video-generation/fal-provider";
+import { matchesUsdQuoteConfirmation, usdProductToMicrosCeil, usdToMicrosCeil } from "../src/lib/video-generation/money";
 
 const owner = "10000000-0000-4000-8000-000000000001";
 const submission = "20000000-0000-4000-8000-000000000001";
@@ -25,9 +26,25 @@ test("paid beta requires the exact approved request and finite cost within a har
   assert.equal(canSubmitVideoBeta(owner, draft, 0.7, env), true);
   for (const patch of [{ VIDEO_GENERATION_ENABLED: "false" }, { VIDEO_BETA_APPROVED_SUBMISSION_ID: "" }, { VIDEO_BETA_APPROVED_MAX_COST_USD: "0" }, { VIDEO_BETA_APPROVED_MAX_COST_USD: "11" }]) assert.equal(canSubmitVideoBeta(owner, draft, 0.7, { ...env, ...patch }), false);
   for (const cost of [0, -1, NaN, Infinity, 0.71]) assert.equal(canSubmitVideoBeta(owner, draft, cost, env), false);
+  assert.equal(canSubmitVideoBeta(owner, draft, 0.700001, env), false);
   assert.equal(canSubmitVideoBeta(owner, { ...draft, clientSubmissionId: owner }, 0.7, env), false);
   assert.equal(canSubmitVideoBeta(owner, { ...draft, quality: "pro" }, 0.7, env), false);
   assert.equal(canSubmitVideoBeta(owner, { ...draft, durationSeconds: 10 }, 0.7, env), false);
+});
+
+test("USD quote math uses conservative integer micro-dollars without floating point overage", () => {
+  assert.equal(usdProductToMicrosCeil(0.14, 5), BigInt(700_000));
+  assert.equal(Number(usdProductToMicrosCeil(0.14, 5)) / 1_000_000, 0.7);
+  assert.equal(usdProductToMicrosCeil(0.1, 3), BigInt(300_000));
+  assert.equal(usdProductToMicrosCeil(0.1400001, 5), BigInt(700_001));
+  assert.equal(usdToMicrosCeil("0.70"), BigInt(700_000));
+  assert.equal(usdToMicrosCeil("0.7000001"), BigInt(700_001));
+  assert.equal(usdToMicrosCeil("10.0000001")! > BigInt(10_000_000), true);
+  assert.equal(usdToMicrosCeil("NaN"), null);
+  assert.equal(matchesUsdQuoteConfirmation(0.7, 0.7), true);
+  assert.equal(matchesUsdQuoteConfirmation(0.700001, 0.7), false);
+  assert.equal(matchesUsdQuoteConfirmation(0.7, 0.7000001), false);
+  assert.equal(matchesUsdQuoteConfirmation(0.7, Infinity), false);
 });
 
 test("actual fal SDK sends one POST on retryable statuses, malformed success and network uncertainty", async () => {

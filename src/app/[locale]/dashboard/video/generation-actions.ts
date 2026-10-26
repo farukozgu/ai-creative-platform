@@ -13,6 +13,7 @@ import { submitVideoGeneration } from "@/lib/video-generation/service";
 import { FalVideoGenerationProvider } from "@/lib/video-generation/fal-provider";
 import { SupabaseVideoSourceResolver } from "@/lib/video-generation/supabase-source-resolver";
 import { prepareOwnedVideoSource } from "@/lib/video-generation/prepared-source";
+import { matchesUsdQuoteConfirmation } from "@/lib/video-generation/money";
 
 export async function quoteVideoGenerationAction(quality: "standard" | "pro", duration: 5 | 10) {
   const ownerId = await getAuthenticatedUserId();
@@ -29,7 +30,7 @@ export async function submitVideoGenerationAction(draft: unknown, confirmedMaxCo
   if (!parsed.ok) return { ok: false as const, code: "invalid_input" as const, field: parsed.field };
   try {
     const quote = await getVideoBetaQuote(parsed.value.quality, parsed.value.durationSeconds);
-    if (!Number.isFinite(confirmedMaxCostUsd) || quote.estimatedMaxCostUsd > confirmedMaxCostUsd
+    if (!matchesUsdQuoteConfirmation(quote.estimatedMaxCostUsd, confirmedMaxCostUsd)
       || !canSubmitVideoBeta(ownerId, parsed.value, quote.estimatedMaxCostUsd)) return { ok: false as const, code: "approval_required" as const };
     const capability = videoEndpointCapabilities[videoTierRouting[parsed.value.quality]];
     return await submitVideoGeneration(ownerId, parsed.value, {

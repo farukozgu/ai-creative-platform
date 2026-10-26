@@ -10,6 +10,12 @@
 4. Bu onay yeni bir UUID'ye, modele veya süreye geçmez. Belirsiz task için yeni UUID üretip otomatik retry yapılmaz. VIDEO_RECONCILIATION_SCHEDULER_ENABLED ve bearer secret isteğe bağlı iç worker kapısıdır; UI polling aynı fenced reconciliation işlemini tetikler. Scheduler henüz deploy edilmedi.
 5. İlk testten sonra yeni istek için ayrı onay UUID/model/süre/tavan gerekir. Uygulama toplamda $10 lifetime, kullanıcı başına günde $2 ve günde 3 denemeyle sınırlıdır; customer wallet veya subscription kullanılmaz. Müşteri ödeme/kredi sistemlerini açmayın.
 
+## Fiyat hassasiyeti düzeltmesi
+
+Canlı bir gönderim denemesinde IEEE-754 `0.14 × 5` ara sonucu `Math.ceil` öncesinde kayan nokta artığı üretip teklifi `$0.700001` yapmış, `$0.70` üst sınırında sunucu onayını durdurmuştur. Bu ret, servis sırasındaki submit/bütçe çağrılarından önce gerçekleşti; Production'da bu submission için job, beta rezervasyonu veya provider task ID yoktur. Arayüz başlangıç UUID'sini sunucunun verdiği mevcut onaylı UUID'den alır; bu görevde UUID değiştirilmedi.
+
+Maliyet artık ondalık metin gösteriminden tam sayı mikro-dolara çevrilip daima yukarı yuvarlanır. Sunucu, istemci onayının canlı teklifle birebir aynı olmasını ve toplam maliyetin ayrıca onay tavanını aşmamasını ister. Test: `$0.14 × 5 = $0.70`; gerçek bir maliyet `$0.700001` ise reddedilir. Fiyat tavanı gevşetilmedi; ücretli fal çağrısı veya retry yapılmadı.
+
 ## İlk yerel deneme — güvenli durum incelemesi
 
 26 Ekim 2026'da seçilen hesap için Production `generations` ve `video_beta_reservations` sorgularında video satırı yoktu. Storage'da üç private kaynak JPEG'i 2400×3600 (2:3) olarak duruyordu; `video_source_assets` kaydı oluşmamıştı. Kaynak finalize kodu her kenar için 360–2000 piksel ve desteklenen oran ister; bu yüzden akış finalize aşamasında durdu. Generation REST POST veya bütçe rezervasyon çağrısı görülmedi. Mevcut servis sırası rezervasyon → job kaydı → fal submit olduğundan fal çağrısı, ücret veya provider task ID oluşmadı. Submission UUID onay kontrolüne ulaşılmadı; yerel onay UUID'si değiştirilmedi. Başarısız yüklemeler private Storage'da bırakıldı.
@@ -87,6 +93,7 @@ Bu ilk hata artık otomatik kaynak hazırlamayla giderilmiştir; kullanıcıdan 
 - src/lib/ugc/ugc-seedance-planner.ts (kaldırıldı)
 - src/lib/ugc/ugc-seedance-provider.ts (kaldırıldı)
 - src/lib/video-generation/beta-policy.ts
+- src/lib/video-generation/money.ts
 - src/lib/video-generation/beta-runtime.ts
 - src/lib/video-generation/capabilities.ts
 - src/lib/video-generation/fal-provider.ts
