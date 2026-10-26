@@ -22,6 +22,16 @@ import { submitSourceMotion, expireOwnedSourceMotion } from "@/lib/video-generat
 import { getVideoFidelityAnalysisAvailability } from "@/lib/video-fidelity/availability";
 import { quoteVideoFidelity } from "@/lib/video-fidelity/pricing";
 import { resumeOwnedVideoReview, videoFidelitySchemaReady } from "@/lib/video-fidelity/reviews";
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
+import { randomUUID } from "node:crypto";
+
+/** Probe only the local-render RPC; a random absent job ID never starts a render. */
+async function sourceMotionSchemaReady(ownerId: string) {
+  try {
+    const result = await getSupabaseAdminClient().rpc("claim_source_motion_render", { p_owner: ownerId, p_job: randomUUID() });
+    return !result.error && result.data === false;
+  } catch { return false; }
+}
 
 export async function quoteVideoGenerationAction(quality: "standard" | "pro", duration: 5 | 10, options?: { method: VideoGenerationMethod; hasRegion: boolean }) {
   const ownerId = await getAuthenticatedUserId();
@@ -31,8 +41,10 @@ export async function quoteVideoGenerationAction(quality: "standard" | "pro", du
     const method = options?.method ?? "kling";
     if (method !== "source-motion" && method !== "kling") return null;
     const analysis = getVideoFidelityAnalysisAvailability(ownerId, Boolean(options?.hasRegion));
-    const schemaReady = (process.env.VIDEO_SOURCE_MOTION_ENABLED === "true" || analysis.enabled) && await videoFidelitySchemaReady();
-    if (method === "source-motion" && (process.env.VIDEO_SOURCE_MOTION_ENABLED !== "true" || !schemaReady)) return null;
+    const schemaReady = method === "source-motion"
+      ? process.env.VIDEO_SOURCE_MOTION_ENABLED === "true" && await sourceMotionSchemaReady(ownerId)
+      : analysis.enabled && await videoFidelitySchemaReady();
+    if (method === "source-motion" && !schemaReady) return null;
     const price = method === "kling" ? await getVideoBetaQuote(quality, duration) : { quality, duration, estimatedMaxCostUsd: 0 };
     return { ...price, method, hasRegion: Boolean(options?.hasRegion), analysis: { ...analysis, enabled: method === "kling" && schemaReady && analysis.enabled } };
   } catch { return null; }
@@ -46,7 +58,7 @@ export async function submitVideoGenerationAction(draft: unknown, confirmedMaxCo
   if (!parsed.ok) return { ok: false as const, code: "invalid_input" as const, field: parsed.field };
   try {
     if (parsed.value.method === "source-motion" && parsed.value.clientSubmissionId === process.env.VIDEO_BETA_APPROVED_SUBMISSION_ID) return { ok: false as const, code: "approval_required" as const };
-    if (parsed.value.method === "source-motion" && (process.env.VIDEO_SOURCE_MOTION_ENABLED !== "true" || confirmedMaxCostUsd !== 0 || !await videoFidelitySchemaReady())) return { ok: false as const, code: "feature_disabled" as const };
+    if (parsed.value.method === "source-motion" && (process.env.VIDEO_SOURCE_MOTION_ENABLED !== "true" || confirmedMaxCostUsd !== 0 || !await sourceMotionSchemaReady(ownerId))) return { ok: false as const, code: "feature_disabled" as const };
     if (parsed.value.method !== "source-motion" && isUnsafeProductMotion(parsed.value.prompt, parsed.value.cameraMovement)) return { ok: false as const, code: "unsafe_motion" as const };
     const analysisQuote = quoteVideoFidelity(Boolean(parsed.value.criticalRegion));
     if (parsed.value.analysisConsent && (!getVideoFidelityAnalysisAvailability(ownerId, Boolean(parsed.value.criticalRegion)).enabled || !await videoFidelitySchemaReady()
