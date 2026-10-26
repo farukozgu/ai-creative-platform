@@ -4,11 +4,11 @@
 
 ## Aktivasyon sözleşmesi
 
-1. Production'da yalnızca database/migrations/20261026122207_prepare_video_beta.sql, açık onaydan sonra uygulanmalıdır. Video foundation/lease/tier/storage şemaları zaten vardır; eski migration'ları tekrar çalıştırmayın. Disposable'da yeni migration bir kez kurulmuştur.
-2. Seçilen kullanıcıyı tek UUID olarak VIDEO_BETA_USER_IDS içinde sunucuda tanımlayın; wildcard veya birden çok kullanıcı reddedilir. VIDEO_BETA_ENABLED=true yalnızca bu kullanıcıya hazırlık/upload/fiyat erişimi verir.
-3. Kullanıcının görselini seçip model, süre, test istek UUID'si ve USD üst sınırını inceleyin. Onaydan sonra VIDEO_BETA_APPROVED_SUBMISSION_ID, VIDEO_BETA_APPROVED_TIER, VIDEO_BETA_APPROVED_DURATION_SECONDS ve VIDEO_BETA_APPROVED_MAX_COST_USD tanımlanır. VIDEO_GENERATION_ENABLED=true ayrıca gerekir. İlk öneri standard / 5 / 0.70 USD'dir; test öncesi canlı fiyat yeniden okunur.
+1. Production'da yalnızca database/migrations/20261026132015_prepare_video_beta.sql uygulandı. Video foundation/lease/tier/storage şemaları önceden vardı; eski migration'lar tekrar çalıştırılmadı. Disposable test migration'ı daha önce bir kez uygulandı.
+2. Yerel `.env.local` dosyasında yalnız seçilen kullanıcı, beta ve video generation için açıldı. Wildcard/çoklu kullanıcı reddedilir. Production deployment ortamında beta hâlâ kapalıdır.
+3. İlk ücretli submission için yerel sunucuya tek bir onaylı submission UUID'si, `standard`, `5` saniye ve `$0.70` üst sınırı verildi. Sayfa her seferinde canlı fal fiyatını yeniden okur; fiyat bilinmiyorsa veya üst sınırı geçiyorsa üretim kapalı kalır. Bu yapılandırma gerçek inference çağrısı yapmaz.
 4. Bu onay yeni bir UUID'ye, modele veya süreye geçmez. Belirsiz task için yeni UUID üretip otomatik retry yapılmaz. VIDEO_RECONCILIATION_SCHEDULER_ENABLED ve bearer secret isteğe bağlı iç worker kapısıdır; UI polling aynı fenced reconciliation işlemini tetikler. Scheduler henüz deploy edilmedi.
-5. Üretimden sonra submission onayı kaldırılabilir; aynı kullanıcının güvenli durum sorguları ve hazır MP4 erişimi devam eder. Müşteri ödeme/kredi sistemlerini açmayın.
+5. İlk testten sonra yeni istek için ayrı onay UUID/model/süre/tavan gerekir. Uygulama toplamda $10 lifetime, kullanıcı başına günde $2 ve günde 3 denemeyle sınırlıdır; customer wallet veya subscription kullanılmaz. Müşteri ödeme/kredi sistemlerini açmayın.
 
 ## Testler
 
@@ -31,7 +31,7 @@
 ## Değişen dosyalar
 
 - .env.example
-- database/migrations/20261026122207_prepare_video_beta.sql
+- database/migrations/20261026132015_prepare_video_beta.sql
 - database/migrations/20261104000000_prepare_ugc_pipeline_claims.sql
 - database/rollouts/kling-only-ugc.sql
 - database/verification/kling_only_ugc.sql
