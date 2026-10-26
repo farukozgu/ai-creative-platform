@@ -14,6 +14,7 @@ function ratioFor(width: number, height: number): VideoGenerationAspectRatio | n
 }
 
 export class SupabaseVideoSourceResolver implements VideoSourceResolver {
+  constructor(private readonly preparedOnly = false) {}
   async resolveOwned(ownerId: string, source: VideoSourceReference): Promise<ResolvedVideoSource | null> {
     const supabase = getSupabaseAdminClient();
     let bucketId: string;
@@ -23,7 +24,9 @@ export class SupabaseVideoSourceResolver implements VideoSourceResolver {
       if (result.error || !result.data) return null;
       bucketId = result.data.bucket_id;
       objectPath = result.data.object_path;
+      if (this.preparedOnly && (bucketId !== "video-source-images" || objectPath !== `${ownerId}/${source.sourceAssetId}/prepared-v1.png`)) return null;
     } else {
+      if (this.preparedOnly) return null;
       const result = await supabase.from("generations").select("project_id, generation_type, status, output_bucket_id, output_object_path").eq("id", source.generationId).maybeSingle();
       if (result.error || !result.data || result.data.generation_type !== "image" || result.data.status !== "succeeded" || !result.data.output_bucket_id || !result.data.output_object_path) return null;
       const project = await supabase.from("projects").select("id").eq("id", result.data.project_id).eq("user_id", ownerId).maybeSingle();

@@ -14,7 +14,15 @@
 
 26 Ekim 2026'da seçilen hesap için Production `generations` ve `video_beta_reservations` sorgularında video satırı yoktu. Storage'da üç private kaynak JPEG'i 2400×3600 (2:3) olarak duruyordu; `video_source_assets` kaydı oluşmamıştı. Kaynak finalize kodu her kenar için 360–2000 piksel ve desteklenen oran ister; bu yüzden akış finalize aşamasında durdu. Generation REST POST veya bütçe rezervasyon çağrısı görülmedi. Mevcut servis sırası rezervasyon → job kaydı → fal submit olduğundan fal çağrısı, ücret veya provider task ID oluşmadı. Submission UUID onay kontrolüne ulaşılmadı; yerel onay UUID'si değiştirilmedi. Başarısız yüklemeler private Storage'da bırakıldı.
 
-Video Studio yerel JPEG/PNG'yi dosya seçerken çözünürlük ve desteklenen oran açısından kontrol eder; üretim öncesi seçilen oranı da eşleştirir. Uygun olmayan görseller artık yüklenmeden TR/EN açıklama alır. Sunucu tarafı doğrulama değişmedi ve hâlâ zorunludur.
+Bu ilk hata artık otomatik kaynak hazırlamayla giderilmiştir; kullanıcıdan dışarıda yeniden boyutlandırma beklenmez.
+
+## Otomatik kaynak hazırlama
+
+- Orijinal JPEG/PNG private Storage'da korunur. Sharp en fazla 25 MB / 40 milyon piksel çözer; çok kareli veya desteklenmeyen formatlar reddedilir. UI dosya sınırı 20 MB'dir. EXIF yönü normalize edilir.
+- Kaynak, seçilen 9:16 → 1080×1920, 16:9 → 1920×1080 veya 1:1 → 1080×1080 kareye `contain` ile yerleştirilir. Ürün kırpılmaz veya esnetilmez. Kenar renklerinin medyanı boş alanlara temiz, düz bir arka plan sağlar.
+- Hazırlanan PNG ayrı, değiştirilmeyen `owner/prepared-id/prepared-v1.png` yolunda mevcut kaynak tablosuna kaydedilir. Kimliği orijinal byte hash'i, sahibi, kaynak yolu, oran ve sürümden türetilir. Storage metadata orijinal dosya bağlantısını saklar. Eşzamanlı/lost-response hazırlamada aynı dosya doğrulanarak kullanılır; overwrite/delete yoktur. Yeni migration gerekmez.
+- Önizleme ve Kling aynı private hazırlanmış kareyi kullanır. Oran değişirken üretim düğmesi yeni kare hazır olana kadar kapanır; eski async sonuçlar ekrana yazılamaz. Yeni beta submission yalnız hazırlanan kaynakları kabul eder; eski kaynak okuma ve Video Library akışları korunur.
+- Hazırlama yalnız Storage/Sharp işlemidir; inference veya müşteri kredi rezervasyonu yapmaz. Üretim allowlist'i, mevcut onay UUID/model/süre/$0.70 ve tüm bütçe/idempotency kapıları değişmedi. UGC Generate kapalıdır. Eski başarısız Production upload'ları silinmedi.
 
 ## Testler
 
@@ -22,7 +30,7 @@ Video Studio yerel JPEG/PNG'yi dosya seçerken çözünürlük ve desteklenen or
 - Gerçek staging runner: Windows PowerShell'de VIDEO_QA_PROJECT_REF=gklpgcyndeghjgemoonk olarak açıkça ayarlayın; node node_modules/tsx/dist/cli.mjs scripts/verify-video-beta-staging.ts çalıştırın. Node 26 kullanıldı. CLI mevcut disposable API key'lerini yalnız process belleğinde okur; yeni key oluşturmaz ve çıktıya secret yazmaz. --serve seçeneği geçici staging hesabıyla 127.0.0.1:3100 QA sunucusu açar; paid generation kapalıdır.
 - database/verification/video_beta_budget.sql yalnız disposable projede transaction içinde $10 sınırını doğrular; verileri rollback eder.
 - Fixture'lar testin finally bloğunda silinir. Zorla process sonlandırılmışsa yalnız bu çalıştırıcının ürettiği exact kullanıcı/job/Storage yolları temizlenmelidir. Gerçek kullanıcı verisine dokunmayın.
-- Görsel sınırı JPEG/PNG, 20 MB UI / 25 MB storage, 360–2000 px, doğrulanmış 16:9/9:16/1:1. EXIF rotasyonlu/animasyonlu dosya reddedilir. Signed input URL erişimi ve oranı submission öncesinde doğrulanır.
+- Orijinal JPEG/PNG farklı oran/çözünürlükte olabilir; 20 MB UI / 25 MB Storage ve 40 MP çözümleme sınırı korunur. Hazırlanmış kare 360–2000 px ve doğrulanmış 16:9/9:16/1:1 içinde kalır. Signed input URL erişimi ve oranı submission öncesinde doğrulanır.
 - MP4 content-type, boyut, container başlangıcı, güvenilir sağlayıcı host'u ve private output yolu kontrol edilir. Kaybolan upload checkpoint'i aynı byte içeriğiyle recover edilir. Gerçek provider kalite/ürün sadakati ilk onaylı testte değerlendirilecektir.
 
 ## Resmî kaynaklar
@@ -90,6 +98,8 @@ Video Studio yerel JPEG/PNG'yi dosya seçerken çözünürlük ve desteklenen or
 - src/lib/video-generation/supabase-repository.ts
 - src/lib/video-generation/supabase-source-resolver.ts
 - src/lib/video-generation/types.ts
+- src/lib/video-generation/prepare-source-image.ts
+- src/lib/video-generation/prepared-source.ts
 - src/messages/en.json
 - src/messages/tr.json
 - tests/profile-first-visit.test.ts
@@ -102,5 +112,6 @@ Video Studio yerel JPEG/PNG'yi dosya seçerken çözünürlük ve desteklenen or
 - tests/video-library-ui.test.ts
 - tests/video-studio-state.test.ts
 - tests/video-studio-ui.test.ts
+- tests/video-source-preparation.test.ts
 
-Nihai doğrulama: 763/763 ana test, 68/68 pretest, lint, TypeScript, Turbopack production build ve 20/20 gerçek disposable entegrasyon kontrolü başarılı. Ayrıca $10 cap transaction testi geçti.
+Nihai doğrulama: 769/769 ana test, 68/68 pretest, lint, TypeScript, varsayılan Turbopack production build (32 sayfa) ve 35/35 gerçek disposable entegrasyon kontrolü başarılı. JPEG 2400×3600 için üç oran, ürün oranı/köşelerin korunması, değişmeyen orijinal, decode limitleri, preview/provider byte eşitliği ve concurrency test edildi. Gerçek tarayıcıda üç oran arasında hazırlanmış önizleme geçişi ve mobil görünüm kontrol edildi. Gerçek ceket görseli yerelde üç orana hazırlandı; fal inference yapılmadı. Önceki $10 cap transaction testi de geçti.

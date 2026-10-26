@@ -14,6 +14,10 @@ export type VideoSourceReference =
   | { kind: "generated-image"; generationId: string }
   | { kind: "uploaded-image"; sourceAssetId: string };
 
+export type VideoPreparationSource =
+  | { kind: "upload"; sourceAssetId: string; objectPath: string }
+  | { kind: "generated-image"; generationId: string };
+
 export type VideoGenerationDraft = {
   clientSubmissionId: string;
   mode: VideoGenerationMode;

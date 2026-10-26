@@ -1,7 +1,7 @@
 /** Explicit disposable-project integration test. No provider inference, production DB or customer credits. */
 import assert from "node:assert/strict";
 import { execSync, spawn } from "node:child_process";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { dirname, resolve } from "node:path";
 import { createRequire } from "node:module";
 import { readFileSync } from "node:fs";
@@ -82,6 +82,28 @@ try {
   const resolved = await resolver.resolveOwned(owner, source); check(resolved?.aspectRatio === "16:9", "decoded source dimensions and ratio");
   check((await fetch(resolved!.providerUrl)).ok, "provider can access signed private input URL");
   check(!(await fetch(client.storage.from("video-source-images").getPublicUrl(ticket.objectPath).data.publicUrl, { signal: AbortSignal.timeout(15_000) })).ok, "anonymous public source access denied");
+  const { prepareOwnedVideoSource } = loadServer<typeof import("../src/lib/video-generation/prepared-source")>("src/lib/video-generation/prepared-source.ts");
+  const original = await sharp({ create: { width: 2400, height: 3600, channels: 3, background: { r: 230, g: 224, b: 214 } } }).jpeg().toBuffer();
+  const originalTicket = await createVideoSourceUploadTicket(owner, "large-jacket.jpg");
+  objects.push({ bucket: "video-source-images", path: originalTicket.objectPath });
+  assert.ifError((await client.storage.from("video-source-images").uploadToSignedUrl(originalTicket.objectPath, originalTicket.token, original, { contentType: "image/jpeg" })).error);
+  const origin = { kind: "upload" as const, sourceAssetId: originalTicket.sourceAssetId, objectPath: originalTicket.objectPath };
+  const preparedResolver = new SupabaseVideoSourceResolver(true);
+  check(!await preparedResolver.resolveOwned(owner, source), "new beta submit refuses unprepared legacy sources; legacy resolver still works");
+  for (const ratio of ["9:16", "16:9", "1:1"] as const) {
+    const frames = await Promise.all([prepareOwnedVideoSource(owner, origin, ratio), prepareOwnedVideoSource(owner, origin, ratio)]);
+    check(frames[0].source.sourceAssetId === frames[1].source.sourceAssetId, `${ratio}: concurrent preparation has one immutable source identity`);
+    const frame = frames[0];
+    const resolvedFrame = await preparedResolver.resolveOwned(owner, frame.source);
+    check(resolvedFrame?.aspectRatio === ratio, `${ratio}: prepared source passes actual provider source validation`);
+    const preview = await fetch(frame.previewUrl); const providerInput = await fetch(resolvedFrame!.providerUrl);
+    const previewBytes = Buffer.from(await preview.arrayBuffer()); const providerBytes = Buffer.from(await providerInput.arrayBuffer());
+    check(preview.ok && providerInput.ok && previewBytes.equals(providerBytes), `${ratio}: preview and provider read the same private bytes`);
+    check(!await preparedResolver.resolveOwned(users[1], frame.source), `${ratio}: prepared source ownership enforced`);
+  }
+  await assert.rejects(prepareOwnedVideoSource(users[1], origin, "9:16")); passed++; console.log("PASS cross-owner original preparation denied");
+  const originalAgain = await admin.storage.from("video-source-images").download(originalTicket.objectPath);
+  check(!originalAgain.error && createHash("sha256").update(Buffer.from(await originalAgain.data!.arrayBuffer())).digest("hex") === createHash("sha256").update(original).digest("hex"), "original 2400x3600 JPEG survives every preparation unchanged");
   const repository = new SupabaseVideoJobRepository();
   const billing = new VideoBetaBudget();
   let posts = 0;
@@ -125,6 +147,18 @@ try {
   }
 } finally {
   server?.kill();
+  // Browser preparation keeps unregistered originals as well as registered frames.
+  // Only namespaces of the synthetic users created by this exact run are disposable.
+  for (const id of users) {
+    const folders = await admin.storage.from("video-source-images").list(id, { limit: 100 });
+    assert.ifError(folders.error);
+    for (const folder of folders.data ?? []) {
+      if (folder.id) continue;
+      const files = await admin.storage.from("video-source-images").list(`${id}/${folder.name}`, { limit: 100 });
+      assert.ifError(files.error);
+      for (const file of files.data ?? []) if (file.id) objects.push({ bucket: "video-source-images", path: `${id}/${folder.name}/${file.name}` });
+    }
+  }
   const extraSources = await admin.from("video_source_assets").select("bucket_id,object_path").in("owner_id", users);
   for (const source of extraSources.data ?? []) objects.push({ bucket: source.bucket_id, path: source.object_path });
   for (const object of objects) assert.ifError((await admin.storage.from(object.bucket).remove([object.path])).error);

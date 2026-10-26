@@ -44,8 +44,6 @@ export type VideoStudioFeedback =
   | "source-too-large"
   | "source-unreadable"
   | "source-dimensions-unsupported"
-  | "source-aspect-ratio-unsupported"
-  | "source-aspect-ratio-mismatch"
   | "not-connected";
 
 export type VideoStudioDraft = {

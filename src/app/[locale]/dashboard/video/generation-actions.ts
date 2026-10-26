@@ -12,6 +12,7 @@ import { getVideoBetaQuote, VideoBetaBudget, reconcileVideoBeta } from "@/lib/vi
 import { submitVideoGeneration } from "@/lib/video-generation/service";
 import { FalVideoGenerationProvider } from "@/lib/video-generation/fal-provider";
 import { SupabaseVideoSourceResolver } from "@/lib/video-generation/supabase-source-resolver";
+import { prepareOwnedVideoSource } from "@/lib/video-generation/prepared-source";
 
 export async function quoteVideoGenerationAction(quality: "standard" | "pro", duration: 5 | 10) {
   const ownerId = await getAuthenticatedUserId();
@@ -33,7 +34,7 @@ export async function submitVideoGenerationAction(draft: unknown, confirmedMaxCo
     const capability = videoEndpointCapabilities[videoTierRouting[parsed.value.quality]];
     return await submitVideoGeneration(ownerId, parsed.value, {
       repository: new SupabaseVideoJobRepository(), provider: new FalVideoGenerationProvider(), billing: new VideoBetaBudget(),
-      sourceResolver: new SupabaseVideoSourceResolver(),
+      sourceResolver: new SupabaseVideoSourceResolver(true),
       capability: { ...capability, productionApproved: true, pricing: { basis: "per-second", audioOffUsdPerSecond: quote.rate, audioOnUsdPerSecond: quote.rate, voiceControlUsdPerSecond: null } },
     });
   } catch { return { ok: false as const, code: "billing_unavailable" as const }; }
@@ -49,6 +50,20 @@ export async function createVideoSourceUploadAction(fileName: string) {
   } catch {
     return { status: "error" as const };
   }
+}
+
+export async function prepareVideoSourceAction(source: unknown, aspectRatio: unknown) {
+  const ownerId = await getAuthenticatedUserId();
+  if (!ownerId || !canAccessVideoBeta(ownerId)) return { status: "unavailable" as const };
+  if (typeof aspectRatio !== "string" || !["9:16", "16:9", "1:1"].includes(aspectRatio) || !source || typeof source !== "object" || !("kind" in source)) return { status: "invalid" as const };
+  const origin = source.kind === "upload" && "sourceAssetId" in source && typeof source.sourceAssetId === "string" && "objectPath" in source && typeof source.objectPath === "string"
+    ? { kind: "upload" as const, sourceAssetId: source.sourceAssetId, objectPath: source.objectPath }
+    : source.kind === "generated-image" && "generationId" in source && typeof source.generationId === "string"
+      ? { kind: "generated-image" as const, generationId: source.generationId } : null;
+  if (!origin) return { status: "invalid" as const };
+  try {
+    return { status: "success" as const, ...await prepareOwnedVideoSource(ownerId, origin, aspectRatio as "9:16" | "16:9" | "1:1") };
+  } catch { return { status: "error" as const }; }
 }
 
 export async function finalizeVideoSourceUploadAction(sourceAssetId: string, objectPath: string) {

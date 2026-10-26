@@ -80,30 +80,11 @@ export function validateVideoSourceFile(file: Pick<File, "size" | "type">) {
   return null;
 }
 
-const supportedVideoRatios: Record<VideoAspectRatio, number> = {
-  "16:9": 16 / 9,
-  "9:16": 9 / 16,
-  "1:1": 1,
-};
-
-function matchesVideoRatio(width: number, height: number, ratio: number) {
-  return Math.abs(width / height - ratio) / ratio <= 0.02;
-}
-
 export function validateVideoSourceDimensions(width: number, height: number) {
-  if (!Number.isInteger(width) || !Number.isInteger(height) || width < 360 || height < 360 || width > 2000 || height > 2000) {
+  if (!Number.isInteger(width) || !Number.isInteger(height) || width < 1 || height < 1 || width * height > 40_000_000) {
     return "source-dimensions-unsupported" as const;
   }
-  if (!Object.values(supportedVideoRatios).some((ratio) => matchesVideoRatio(width, height, ratio))) {
-    return "source-aspect-ratio-unsupported" as const;
-  }
   return null;
-}
-
-export function validateVideoSourceAspectRatio(width: number, height: number, aspectRatio: VideoAspectRatio) {
-  return matchesVideoRatio(width, height, supportedVideoRatios[aspectRatio])
-    ? null
-    : "source-aspect-ratio-mismatch" as const;
 }
 
 export function validateVideoStudioDraft(

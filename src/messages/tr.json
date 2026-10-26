@@ -736,6 +736,12 @@
       "emptyDescription": "Kontrolleri kullanarak görselinizi hazırlayın. Henüz üretilmiş bir görsel yok."
     },
     "videoStudio": {
+      "preparation": {
+        "preparing": "Kaynak kare hazırlanıyor…",
+        "ready": "Kaynak kare hazır. Ürünün tamamı korunarak yerleştirildi.",
+        "failed": "Görsel hazırlanamadı. Dosyayı yeniden seçin veya başka bir oran deneyin. Video üretimi başlamadı.",
+        "description": "Görseliniz kırpılmadan ve esnetilmeden seçilen orana yerleştirilir. Boş alanlar uyumlu bir arka planla doldurulur."
+      },
       "beta": {
         "quote": "{model} · {seconds} sn · Tahmini üst sınır: ${cost} USD",
         "quoteUnavailable": "Doğrulanmış maliyet alınamadı. Üretim kapalı.",
@@ -764,7 +770,7 @@
         "remove": "Kaldır",
         "chooseLibrary": "Klay Kütüphanesi'nden seç",
         "closeLibrary": "Kütüphaneyi kapat",
-        "dropLabel": "JPEG/PNG · En fazla 20 MB · 360–2000 px · 16:9, 9:16 veya 1:1",
+        "dropLabel": "JPEG/PNG · En fazla 20 MB · Seçilen video oranına otomatik hazırlanır",
         "selectedAlt": "Seçilen kaynak ürün görseli",
         "localLabel": "Yerel görsel",
         "libraryLabel": "Klay Kütüphanesi",
@@ -842,9 +848,7 @@
         "invalid-source-type": "JPEG veya PNG biçiminde bir görsel seçin.",
         "source-too-large": "Görsel 20 MB veya daha küçük olmalı.",
         "source-unreadable": "Bu görsel tarayıcıda açılamadı. Başka bir dosya deneyin.",
-        "source-dimensions-unsupported": "Görselin genişliği ve yüksekliği 360–2000 piksel arasında olmalı.",
-        "source-aspect-ratio-unsupported": "Görsel 16:9, 9:16 veya 1:1 oranında olmalı.",
-        "source-aspect-ratio-mismatch": "Seçilen çıktı oranı kaynak görselle eşleşmiyor. Kaynak görselinizin oranını seçin.",
+        "source-dimensions-unsupported": "Görsel en fazla 40 megapiksel olabilir.",
         "not-connected": "Taslağınız hazır. Video üretimi sonraki aşamada bağlanacak."
       },
       "mobile": {

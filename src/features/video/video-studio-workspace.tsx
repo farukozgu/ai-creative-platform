@@ -12,7 +12,6 @@ import {
   initialVideoStudioDraft,
   isCurrentVideoSourceRequest,
   isVideoStudioDraftReady,
-  validateVideoSourceAspectRatio,
   validateVideoSourceDimensions,
   validateVideoSourceFile,
   validateVideoStudioDraft,
@@ -26,7 +25,8 @@ import type {
   VideoQuality,
 } from "@/features/video/video-studio-types";
 import { createClient } from "@/lib/supabase/client";
-import { createVideoSourceUploadAction, finalizeVideoSourceUploadAction, quoteVideoGenerationAction, submitVideoGenerationAction } from "@/app/[locale]/dashboard/video/generation-actions";
+import { createVideoSourceUploadAction, prepareVideoSourceAction, quoteVideoGenerationAction, submitVideoGenerationAction } from "@/app/[locale]/dashboard/video/generation-actions";
+import type { VideoPreparationSource } from "@/lib/video-generation/types";
 import { VideoJobProgress } from "./video-job-progress";
 import styles from "@/features/video/video-studio-workspace.module.css";
 
@@ -71,6 +71,45 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
   );
   const localPreviewUrl = useRef<string | null>(null);
   const sourceRequest = useRef(0);
+  const originalUpload = useRef<{ key: string; promise: Promise<VideoPreparationSource> } | null>(null);
+  const [prepared, setPrepared] = useState<{
+    key: string; aspectRatio: VideoAspectRatio; status: "preparing" | "error" | "ready";
+    frame?: Extract<Awaited<ReturnType<typeof prepareVideoSourceAction>>, { status: "success" }>;
+  } | null>(null);
+
+  useEffect(() => {
+    const source = draft.source;
+    const aspectRatio = draft.aspectRatio;
+    if (!source || !generationAvailable) return;
+    let active = true;
+    queueMicrotask(() => { if (active) { setPrepared({ key: source.id, aspectRatio, status: "preparing" }); setGenerationError(null); } });
+    async function prepare() {
+      let origin: VideoPreparationSource;
+      if (source!.kind === "local") {
+        if (originalUpload.current?.key !== source!.id) {
+          const local = source!;
+          const promise = (async (): Promise<VideoPreparationSource> => {
+            const ticket = await createVideoSourceUploadAction(local.name);
+            if (ticket.status !== "success") throw new Error("Source upload unavailable.");
+            const upload = await createClient().storage.from("video-source-images").uploadToSignedUrl(ticket.objectPath, ticket.token, local.file, { contentType: local.mimeType });
+            if (upload.error) throw new Error("Source upload failed.");
+            return { kind: "upload", sourceAssetId: ticket.sourceAssetId, objectPath: ticket.objectPath };
+          })();
+          originalUpload.current = { key: local.id, promise };
+          void promise.catch(() => { if (originalUpload.current?.promise === promise) originalUpload.current = null; });
+        }
+        origin = await originalUpload.current!.promise;
+      } else origin = { kind: "generated-image", generationId: source!.generationId };
+      const result = await prepareVideoSourceAction(origin, aspectRatio);
+      if (active) setPrepared({ key: source!.id, aspectRatio, status: result.status === "success" ? "ready" : "error", frame: result.status === "success" ? result : undefined });
+    }
+    void prepare().catch(() => { if (active) setPrepared({ key: source.id, aspectRatio, status: "error" }); });
+    return () => { active = false; };
+  }, [draft.source, draft.aspectRatio, generationAvailable]);
+  const currentPreparation = prepared?.key === draft.source?.id && prepared?.aspectRatio === draft.aspectRatio ? prepared : null;
+  const preparedFrame = currentPreparation?.status === "ready" ? currentPreparation.frame : null;
+  const preparationFailed = currentPreparation?.status === "error";
+  const previewSource = draft.source && preparedFrame ? { ...draft.source, previewUrl: preparedFrame.previewUrl } : null;
 
   useEffect(
     () => () => {
@@ -210,26 +249,10 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
   async function handleGenerate() {
     const validationError = validateVideoStudioDraft(draft);
     if (validationError) { dispatch({ type: "set-feedback", feedback: validationError }); return; }
-    if (submitting.current || !currentQuote || !draft.source) return;
-    const sourceRatioError = draft.source.kind === "local"
-      ? validateVideoSourceAspectRatio(draft.source.width, draft.source.height, draft.aspectRatio)
-      : draft.source.aspectRatio && draft.source.aspectRatio !== draft.aspectRatio
-        ? "source-aspect-ratio-mismatch"
-        : null;
-    if (sourceRatioError) { dispatch({ type: "set-feedback", feedback: sourceRatioError }); return; }
+    if (submitting.current || !currentQuote || !preparedFrame) return;
     submitting.current = true; setBusy(true); setGenerationError(null);
     try {
-      let source: { kind: "generated-image"; generationId: string } | { kind: "uploaded-image"; sourceAssetId: string };
-      if (draft.source.kind === "local") {
-        const ticket = await createVideoSourceUploadAction(draft.source.name);
-        if (ticket.status !== "success") throw new Error("source_unavailable");
-        const upload = await createClient().storage.from("video-source-images").uploadToSignedUrl(ticket.objectPath, ticket.token, draft.source.file, { contentType: draft.source.mimeType });
-        if (upload.error) throw new Error("source_unavailable");
-        const finalized = await finalizeVideoSourceUploadAction(ticket.sourceAssetId, ticket.objectPath);
-        if (finalized.status !== "success") throw new Error("source_unavailable");
-        source = finalized.source;
-      } else source = { kind: "generated-image", generationId: draft.source.generationId };
-      const result = await submitVideoGenerationAction({ clientSubmissionId: submissionId, mode: "image", source,
+      const result = await submitVideoGenerationAction({ clientSubmissionId: submissionId, mode: "image", source: preparedFrame.source,
         prompt: draft.prompt, quality: draft.quality, aspectRatio: draft.aspectRatio, durationSeconds: draft.duration, cameraMovement: draft.cameraMovement }, currentQuote.estimatedMaxCostUsd);
       if (result.ok) setJobId(result.jobId);
       else setGenerationError(result.code === "approval_required" ? "approval" : result.code === "provider_submission_ambiguous" ? "ambiguous" : "failed");
@@ -342,10 +365,10 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
           durationOptions={durationValues}
           quoteSummary={currentQuote ? t("beta.quote", { model: t(`quality.options.${draft.quality}.label`), seconds: draft.duration, cost: currentQuote.estimatedMaxCostUsd.toFixed(2) }) : t("beta.quoteUnavailable")}
           submissionId={generationAvailable && submissionId ? t("beta.requestId", { id: submissionId }) : undefined}
-          feedbackMessage={generationError ? t(`beta.${generationError}`) : feedbackMessage}
-          feedbackIsError={Boolean(generationError) || (draft.feedback !== null && draft.feedback !== "not-connected")}
+          feedbackMessage={generationError ? t(`beta.${generationError}`) : feedbackMessage ?? (draft.source ? t(preparationFailed ? "preparation.failed" : preparedFrame ? "preparation.ready" : "preparation.preparing") : null)}
+          feedbackIsError={Boolean(generationError) || preparationFailed || (draft.feedback !== null && draft.feedback !== "not-connected")}
           isReady={isVideoStudioDraftReady(draft)}
-          generationAvailable={generationAvailable && Boolean(currentQuote) && !busy && !jobId}
+          generationAvailable={generationAvailable && Boolean(currentQuote) && Boolean(preparedFrame) && !busy && !jobId}
           libraryAssets={libraryAssets}
           libraryOpen={libraryOpen}
           libraryStatus={libraryStatus}
@@ -368,14 +391,14 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
       <div id="video-studio-canvas" className={styles.canvasRegion}>
         {jobId ? <VideoJobProgress jobId={jobId} /> : null}
         <VideoCanvas
-          source={draft.source}
+          source={previewSource}
           aspectRatio={draft.aspectRatio}
           previewLabel={t("canvas.previewLabel")}
           draftLabel={t("canvas.draftLabel")}
           libraryLabel={t("canvas.libraryLink")}
           sourceAlt={t("canvas.sourceAlt")}
-          imageEmptyTitle={t("canvas.imageEmptyTitle")}
-          imageEmptyDescription={t("canvas.imageEmptyDescription")}
+          imageEmptyTitle={t(draft.source ? preparationFailed ? "preparation.failed" : "preparation.preparing" : "canvas.imageEmptyTitle")}
+          imageEmptyDescription={t(draft.source ? "preparation.description" : "canvas.imageEmptyDescription")}
           generationsTitle={t("generations.title")}
           generationsEmptyTitle={t("generations.emptyTitle")}
           generationsEmptyDescription={t("generations.emptyDescription")}
