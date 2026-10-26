@@ -526,7 +526,7 @@
     "ugcStudio": {
       "model": {
         "label": "UGC modeli",
-        "standard": { "label": "Kling 3.0", "description": "İçerik üreticisi ve ürün referanslarıyla 15 saniyelik klipler planlayın. Dikey, kare ve yatay formatlar." },
+        "standard": { "label": "Kling 3.0 Standard", "description": "İçerik üreticisi ve ürün referanslarıyla 15 saniyelik klipler planlayın. Dikey, kare ve yatay formatlar." },
         "premium": { "label": "Kling 3.0 Pro", "description": "Kling 3.0 Pro ile 15 saniyelik klipler planlayın. Dikey, kare ve yatay formatlar." },
         "limits": "Her iki modelde de üretim kapalıdır. Konuşma, ses yükleme, dudak senkronu ve altyazı desteklenmez. 30 ve 60 saniyelik klipler kullanılamaz.",
         "durationUnsupported": "{duration} saniyelik taslağınız korundu. İstek hazırlamadan önce desteklenen bir süre veya başka bir model seçin."
@@ -736,12 +736,26 @@
       "emptyDescription": "Kontrolleri kullanarak görselinizi hazırlayın. Henüz üretilmiş bir görsel yok."
     },
     "videoStudio": {
+      "beta": {
+        "quote": "{model} · {seconds} sn · Tahmini üst sınır: ${cost} USD",
+        "quoteUnavailable": "Doğrulanmış maliyet alınamadı. Üretim kapalı.",
+        "requestId": "Test istek kimliği: {id}",
+        "submitting": "İstek kaydediliyor…",
+        "approval": "Bu test isteği için sunucu onayı gerekiyor. Üretim başlatılmadı.",
+        "ambiguous": "Gönderim sonucu belirsiz. Aynı isteği yeniden göndermeyin; Video Library durumunu kontrol edin.",
+        "failed": "Video tamamlanamadı. Video Library durumunu kontrol edin; ücretli isteği tekrar göndermeyin.",
+        "processing": "Video hazırlanıyor. Durum otomatik güncellenir.",
+        "ready": "Videonuz hazır.",
+        "pollError": "Durum şu anda alınamıyor. Güvenli durum sorgusu yeniden denenecek.",
+        "download": "MP4 indir",
+        "openVideo": "Videoyu aç"
+      },
       "metadataTitle": "Video Studio",
       "metadataDescription": "Ürün görsellerinden video hazırlamak için Klay AI Video Studio.",
       "title": "Video Studio",
       "description": "Kaynağınızı ve hareket yönünüzü hazırlayın.",
       "generate": "Video Oluştur",
-      "preparationOnly": "Hazırlık modu · Video üretimi henüz bağlı değil.",
+      "preparationOnly": "Yalnızca izin verilen hesapta, sunucuda onaylanan test isteği üretilebilir. Ses kapalıdır.",
       "source": {
         "heading": "Kaynak görsel",
         "description": "Videonun başlangıç karesi olarak kullanılacak ürün görselini seçin.",
@@ -750,7 +764,7 @@
         "remove": "Kaldır",
         "chooseLibrary": "Klay Kütüphanesi'nden seç",
         "closeLibrary": "Kütüphaneyi kapat",
-        "dropLabel": "JPEG, PNG veya WebP · En fazla 20 MB",
+        "dropLabel": "JPEG veya PNG · En fazla 20 MB",
         "selectedAlt": "Seçilen kaynak ürün görseli",
         "localLabel": "Yerel görsel",
         "libraryLabel": "Klay Kütüphanesi",
@@ -797,7 +811,7 @@
         "heading": "Üretim kalitesi",
         "proLocked": "Growth veya üzeri plan gerekir. Pro fiyatlandırması henüz kullanılamıyor.",
         "options": {
-          "standard": { "label": "Kling 3.0", "description": "Dengeli ürün videosu üretimi." },
+          "standard": { "label": "Kling 3.0 Standard", "description": "Dengeli ürün videosu üretimi." },
           "pro": { "label": "Kling 3.0 Pro", "description": "Premium ürün videosu üretimi." },
           "auto": { "label": "Otomatik", "description": "Geçmiş seçim." },
           "best": { "label": "En iyi kalite", "description": "Geçmiş seçim." }
@@ -820,12 +834,12 @@
       "generations": {
         "title": "Üretimler",
         "emptyTitle": "Henüz video üretilmedi",
-        "emptyDescription": "Tamamlanan videolar gelecekte burada görünecek."
+        "emptyDescription": "Tamamlanan videolarınızı Video Kütüphanesi’nde izleyip indirebilirsiniz."
       },
       "validation": {
         "source-required": "Devam etmek için bir kaynak görsel seçin.",
         "prompt-required": "Devam etmek için kısa bir hareket açıklaması yazın.",
-        "invalid-source-type": "JPEG, PNG veya WebP biçiminde bir görsel seçin.",
+        "invalid-source-type": "JPEG veya PNG biçiminde bir görsel seçin.",
         "source-too-large": "Görsel 20 MB veya daha küçük olmalı.",
         "source-unreadable": "Bu görsel tarayıcıda açılamadı. Başka bir dosya deneyin.",
         "not-connected": "Taslağınız hazır. Video üretimi sonraki aşamada bağlanacak."

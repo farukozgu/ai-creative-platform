@@ -1,5 +1,29 @@
 # KLAY AI — Proje durumu ve öncelikli yol haritası
 
+## Video Studio kontrollü beta — 26 Ekim 2026
+
+Video Studio artık yerel kodda upload → Kling Standard/Pro → 5/10 saniye → tek submission → task ID → fenced polling/reconciliation → private MP4 → Video Library oynatma/indirme akışına bağlıdır. **Genel kullanıma açık değildir.** Yeni beta kapıları varsayılan kapalıdır; kullanıcı seçimi tek hesapla sınırlandırılır. Her ücretli işlem için sunucuda ayrı istek UUID'si, model, süre ve USD üst sınırı onaylanmalıdır. Müşteri kredi/ödeme altyapısı bu akışta kullanılmaz.
+
+- fal authentication salt okunur Models API ile HTTP 200 doğrulandı; hiçbir gerçek inference çağrısı yapılmadı. Billing balance API mevcut key için HTTP 403 döndü; bildirilen $10 bakiye bağımsız olarak doğrulanamadı.
+- Resmî endpoint sayfalarında sessiz Standard $0.084/sn, Pro $0.112/sn; canlı authenticated Pricing API iki endpoint için $0.14/sn bildirdi. Çalışan preflight her işlemde canlı USD/seconds fiyatını okur ve belgelenen sessiz fiyatla karşılaştırıp büyük değeri kullanır. Şu an 5 sn üst sınır **$0.70**, 10 sn **$1.40**. Fiyat bilinmiyorsa, yükselmişse veya onay üst sınırını aşıyorsa POST yoktur.
+- SDK submit transport'u tek HTTP POST ile sınırlandı. Network/timeout, 429/5xx ve task ID kaybında otomatik ücretli retry yoktur. Aynı istek UUID'si PostgreSQL unique index ile aynı job'a döner; ortak rezervasyon duplicate işlemde serbest bırakılmaz.
+- Beta USD bütçesi atomic PostgreSQL kilidi kullanır: uygulama genelinde ömür boyu $10, hesap/gün $2 ve 3 deneme. Başarısız/belirsiz işlemler ihtiyatlı olarak limitten düşmeye devam eder. Customer wallet ve subscription settlement çağrısı yoktur.
+- Production ref fnzrnlvpkzwztccqzyzf: salt okunur kontrol yapıldı. Video tabloları, 5/10 tier constraint'leri ve private bucket'lar mevcut; yeni beta tablo/RPC'leri yok. Migration history tablosu bulunmadığından eski migration'lar tekrar çalıştırılmadı.
+- Disposable ref gklpgcyndeghjgemoonk: yalnızca **20261026122207_prepare_video_beta.sql** bir kez uygulandı; history kaydı doğrulandı. 20/20 gerçek Auth/PostgreSQL/RLS/Storage testi, eşzamanlı duplicate submission ve tek reconciliation claim kazananı dahil geçti. Ek transaction testi $10 cap'i doğruladı ve rollback oldu. Sağlayıcı bu testlerde mock'tur; MP4 fal'ın mevcut resmî örnek çıktısıdır, yeni ücretli üretim değildir.
+- Gerçek tarayıcıda TR/EN, açık/koyu tema, masaüstü/mobil, görsel seçimi, klavye/focus, maliyet özeti ve onaysız üretim engeli kontrol edildi. Private MP4 kütüphaneden indirildi; browser decoder readyState=4, error=null, süre 5.041667 sn. Temiz Video Studio tabında console error/warn yoktu.
+- İlk kez giriş yapan hesapta yakalanan profil okuma sorunu giderildi: insert edilen satır doğrudan döner ve boş request-memoized GET yeniden kullanılmaz. Regresyon testi eklendi.
+- Varsayılan Turbopack build aynı kodla normal izinlerde başarılıdır. Önceki takılma sandbox koşuluna özgüydü; Webpack'e geçiş, Next sürüm değişikliği veya yeni runtime dependency yapılmadı.
+- UGC üretimi kapalı. kling-only-ugc.sql ayrıca incelendi: v4 allowlist'i disposable'da henüz yok; mevcut historical snapshot'ları koruyan geçiştir. Bu Video Studio görevinde uygulanmadı; production'da UGC Pipeline kurulmadan uygulanmamalıdır.
+
+İlk ücretli testin kalan kapıları: production beta migration için açık onay, kullanıcının gerçek görseliyle tek Standard/5 sn isteğinin UUID/model/süre/$0.70 üst sınırı onayı. Production deployment ve main merge yapılmadı. Ortamın mevcut .env.local dosyası değiştirilmedi.
+
+Doğrulama: **763/763** ana test + **68/68** pretest, lint ve TypeScript başarılı. Varsayılan **Turbopack production build başarılı**; 32 statik çıktı üretildi. Test kullanıcıları, job/bütçe satırları ve Storage fixture’ları temizlendi; disposable’da beta migration history sayısı **1** olarak kaldı. Yeni dependency eklenmedi.
+
+Ayrıntı ve tekrar çalıştırma: [Video Studio beta teslimatı](video-studio-beta.md).
+
+
+## Önceki Composer Beta teslimatı (tarihsel kayıt)
+
 Son güncelleme: **26 Ekim 2026** · İlk denetim temeli: `c4dbb2e` · Geliştirme branch'i: `codex/composer-beta`. Mevcut kaydedilmemiş UGC çalışmaları korunuyor ve bu geliştirmeye dahil edilmiyor.
 
 ## Güvenlik ve runtime — tamamlandı
@@ -93,7 +117,7 @@ Yerel Next.js proje yapısı ve Server Functions rehberleri `node_modules/next/d
 | Ürün sadakati | Ürün kimliği, apparel artwork/fit, saat/bilek, ayakkabı anatomisi, çanta, insan gerçekçiliği, sahne/kompozisyon ve creative compliance politikaları; validation ve sınırlı repair mevcut. | Otomatik kararlar görsel kalite garantisi değildir. Validator kullanılamazsa `succeeded_unverified` kararı mümkün. Gerçek ürün benchmark'ı ve insan incelemesi gerekli. |
 | Görsel düzenleme | Mevcut sonucu yönlendirmeyle düzenleme, doğrulama/repair, owner/idempotency admission ve galeriye ayrı sonuç ekleme altyapısı vardır. Test projesinde admission migration'ı kayıtlı ve tabloları mevcut. Sunucu sayfayı flag/allowlist durumuna göre kullanılabilir gösterir; action bu iki şartı admission ve generation kaydından önce tekrar kontrol eder. | `validation_unavailable` edit çıktısı galeride “Doğrulanamadı” görünür. İki kapı gerekir: `IMAGE_EDIT_EXECUTION_ENABLED=true` ve kullanıcının OpenAI beta allowlist'inde olması. Bu işte kod kapıları doğrulandı; yerel env açılmadı, ücretli/provider testi yapılmadı. |
 | Model Studio | Görünüm taslağı kaydetme/düzenleme/arşivleme, model kütüphanesi, aday inceleme ve OpenAI portre üretimi gerçek server action'a bağlı. | Onay düğmesi disabled. Kimlik sürümü/reference altyapısı olsa da onay → Composer'da aynı kimlikle üretim zinciri tamamlanmamış. Profil başına tek deneme; başarısız/belirsiz denemelerden sonra yeni deneme akışı yok. |
-| Video Studio | Görselden videoya arayüz, görsel handoff, kaynak doğrulama, job/reconciliation servisleri, özel çıktı erişimi, Video Library. | Üretim kapalı. Standard: Kling 3.0; Pro: Kling 3.0 Pro. Her ikisi `productionApproved: false`; action gerçek submit servisini bağlamıyor ve billing engelinde duruyor. |
+| Video Studio | Görselden videoya arayüz, görsel handoff, kaynak doğrulama, job/reconciliation servisleri, özel çıktı erişimi, Video Library. | Genel üretim kapalı; tek hesaplık Video Beta submission/polling/Storage akışı bağlandı. Standard: Kling 3.0 Standard; Pro: Kling 3.0 Pro. Ayrı server onayı ve USD test bütçesi gerekir. |
 | UGC Studio | Taslak save/load, ürün yükleme/değiştirme, ayrı sahne/diyalog alanları, süre tahmini, Standard/Premium seçimi, hazırlık action'ı ve sonuç listeleme altyapısı. | Creator'lar placeholder. Generate ve diyalog üretimi disabled. Hazırlanan job `draft`, `submitted: false`; hazır job üretilebilen video anlamına gelmez. |
 | Kredi/abonelik | Plan/top-up kataloğu, entitlement, ledger, reserve/settle/release/refund, kaynağa bağlı expiry ve doğrulanmış event adapter kontratları. | Checkout veya imzalı ödeme webhook'u yok; event adapter kapalı. Görsel/model üretiminde müşteri kredisi düşme bağlı değil. Dashboard plan kartı `isDemo: true`. Ticari faturalandırma hazır değil. |
 | Landing/iletişim | TR/EN landing, showcase, responsive UI ve iletişim formu bulunur. | İletişim formu doğrulama sonrası `unavailable` bildirir; mesaj gönderimi yok. |

@@ -2,7 +2,7 @@
 
 import { DashboardIcon } from "@/components/dashboard/dashboard-icons";
 import { Link } from "@/i18n/navigation";
-import { isVideoPlayable } from "@/features/video/video-library-state";
+import { VideoDownloadButton } from "./video-download-button";
 import type { VideoPresentationRecord, VideoStatus } from "@/features/video/video-studio-types";
 import styles from "@/features/video/video-library.module.css";
 
@@ -31,7 +31,6 @@ function formatDate(value: string | null | undefined, locale: string) {
 
 export function VideoCard({ record, locale, copy }: VideoCardProps) {
   const createdAt = formatDate(record.createdAt, locale);
-  const playable = isVideoPlayable(record);
 
   return (
     <li>
@@ -69,7 +68,7 @@ export function VideoCard({ record, locale, copy }: VideoCardProps) {
           </p>
           <div className={styles.cardActions}>
             <Link href={`/dashboard/videos/${record.id}`}>{copy.open}</Link>
-            {playable ? <a href={record.playbackUrl ?? undefined} download>{copy.download}</a> : null}
+            {record.status === "ready" ? <VideoDownloadButton jobId={record.id} label={copy.download} /> : null}
           </div>
         </div>
       </article>

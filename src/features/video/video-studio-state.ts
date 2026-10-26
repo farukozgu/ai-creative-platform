@@ -8,7 +8,6 @@ import type {
   VideoStudioFeedback,
 } from "@/features/video/video-studio-types";
 import {
-  isProductImageMimeType,
   MAX_PRODUCT_IMAGE_FILE_SIZE,
 } from "@/lib/assets/product-asset-constraints";
 
@@ -76,7 +75,7 @@ export function appendPromptSuggestion(current: string, suggestion: string) {
 }
 
 export function validateVideoSourceFile(file: Pick<File, "size" | "type">) {
-  if (!isProductImageMimeType(file.type)) return "invalid-source-type" as const;
+  if (!["image/jpeg", "image/png"].includes(file.type)) return "invalid-source-type" as const;
   if (file.size > MAX_PRODUCT_IMAGE_FILE_SIZE) return "source-too-large" as const;
   return null;
 }

@@ -74,6 +74,8 @@ type VideoGenerationInspectorProps = {
   onAspectRatioChange: (aspectRatio: VideoAspectRatio) => void;
   onDurationChange: (duration: VideoDuration) => void;
   onGenerate: () => void;
+  quoteSummary?: string;
+  submissionId?: string;
 };
 
 export function VideoGenerationInspector({
@@ -89,6 +91,8 @@ export function VideoGenerationInspector({
   aspectRatioOptions,
   duration,
   durationOptions,
+  quoteSummary,
+  submissionId,
   feedbackMessage,
   feedbackIsError,
   isReady,
@@ -241,6 +245,8 @@ export function VideoGenerationInspector({
       </div>
 
       <footer className={styles.inspectorFooter}>
+        {quoteSummary ? <p className={styles.generateHelper} role="status">{quoteSummary}</p> : null}
+        {submissionId ? <small className={styles.generateHelper}>{submissionId}</small> : null}
         <Button
           className={styles.generateButton}
           variant={isReady ? "primary" : "secondary"}

@@ -23,6 +23,9 @@ import type {
   VideoLibraryAsset,
   VideoQuality,
 } from "@/features/video/video-studio-types";
+import { createClient } from "@/lib/supabase/client";
+import { createVideoSourceUploadAction, finalizeVideoSourceUploadAction, quoteVideoGenerationAction, submitVideoGenerationAction } from "@/app/[locale]/dashboard/video/generation-actions";
+import { VideoJobProgress } from "./video-job-progress";
 import styles from "@/features/video/video-studio-workspace.module.css";
 
 type WorkspaceView = "controls" | "preview";
@@ -40,9 +43,23 @@ async function createLocalPreview(file: File) {
   }
 }
 
-export function VideoStudioWorkspace({ incomingGenerationId = null, generationAvailable = false, proVideoEntitled = false }: { incomingGenerationId?: string | null; generationAvailable?: boolean; proVideoEntitled?: boolean }) {
+export function VideoStudioWorkspace({ incomingGenerationId = null, generationAvailable = false, proVideoEntitled = false, approvedSubmissionId = null }: { incomingGenerationId?: string | null; generationAvailable?: boolean; proVideoEntitled?: boolean; approvedSubmissionId?: string | null }) {
   const t = useTranslations("Dashboard.videoStudio");
   const [draft, dispatch] = useReducer(videoStudioReducer, initialVideoStudioDraft);
+  const [quote, setQuote] = useState<Awaited<ReturnType<typeof quoteVideoGenerationAction>>>(null);
+  const [submissionId, setSubmissionId] = useState(approvedSubmissionId ?? "");
+  const [busy, setBusy] = useState(false);
+  const [jobId, setJobId] = useState<string | null>(null);
+  const [generationError, setGenerationError] = useState<string | null>(null);
+  const submitting = useRef(false);
+  useEffect(() => { if (!approvedSubmissionId) queueMicrotask(() => setSubmissionId(crypto.randomUUID())); }, [approvedSubmissionId]);
+  useEffect(() => {
+    if (!generationAvailable) return;
+    let active = true;
+    void quoteVideoGenerationAction(draft.quality, draft.duration).then(value => { if (active) setQuote(value); });
+    return () => { active = false; };
+  }, [draft.quality, draft.duration, generationAvailable]);
+  const currentQuote = quote?.quality === draft.quality && quote.duration === draft.duration ? quote : null;
   const [view, setView] = useState<WorkspaceView>("controls");
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [libraryStatus, setLibraryStatus] = useState<VideoLibraryStatus>("idle");
@@ -180,12 +197,28 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
     setPrompt(appendPromptSuggestion(draft.prompt, suggestion));
   }
 
-  function handleGenerate() {
+  async function handleGenerate() {
     const validationError = validateVideoStudioDraft(draft);
-    dispatch({
-      type: "set-feedback",
-      feedback: validationError ?? "not-connected",
-    });
+    if (validationError) { dispatch({ type: "set-feedback", feedback: validationError }); return; }
+    if (submitting.current || !currentQuote || !draft.source) return;
+    submitting.current = true; setBusy(true); setGenerationError(null);
+    try {
+      let source: { kind: "generated-image"; generationId: string } | { kind: "uploaded-image"; sourceAssetId: string };
+      if (draft.source.kind === "local") {
+        const ticket = await createVideoSourceUploadAction(draft.source.name);
+        if (ticket.status !== "success") throw new Error("source_unavailable");
+        const upload = await createClient().storage.from("video-source-images").uploadToSignedUrl(ticket.objectPath, ticket.token, draft.source.file, { contentType: draft.source.mimeType });
+        if (upload.error) throw new Error("source_unavailable");
+        const finalized = await finalizeVideoSourceUploadAction(ticket.sourceAssetId, ticket.objectPath);
+        if (finalized.status !== "success") throw new Error("source_unavailable");
+        source = finalized.source;
+      } else source = { kind: "generated-image", generationId: draft.source.generationId };
+      const result = await submitVideoGenerationAction({ clientSubmissionId: submissionId, mode: "image", source,
+        prompt: draft.prompt, quality: draft.quality, aspectRatio: draft.aspectRatio, durationSeconds: draft.duration, cameraMovement: draft.cameraMovement }, currentQuote.estimatedMaxCostUsd);
+      if (result.ok) setJobId(result.jobId);
+      else setGenerationError(result.code === "approval_required" ? "approval" : result.code === "provider_submission_ambiguous" ? "ambiguous" : "failed");
+    } catch { setGenerationError("failed"); }
+    finally { setBusy(false); submitting.current = false; }
   }
 
   const promptSuggestions = [
@@ -268,7 +301,7 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
             aspectRatioLabel: t("output.aspectRatio"),
             durationLabel: t("output.duration"),
             secondsLabel: (seconds) => t("output.seconds", { seconds }),
-            generate: t("generate"),
+            generate: busy ? t("beta.submitting") : t("generate"),
             preparationOnly: t("preparationOnly"),
           }}
           source={draft.source}
@@ -291,10 +324,12 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
           aspectRatioOptions={aspectRatioValues.map((value) => ({ value, label: value }))}
           duration={draft.duration}
           durationOptions={durationValues}
-          feedbackMessage={feedbackMessage}
-          feedbackIsError={draft.feedback !== null && draft.feedback !== "not-connected"}
+          quoteSummary={currentQuote ? t("beta.quote", { model: t(`quality.options.${draft.quality}.label`), seconds: draft.duration, cost: currentQuote.estimatedMaxCostUsd.toFixed(2) }) : t("beta.quoteUnavailable")}
+          submissionId={generationAvailable && submissionId ? t("beta.requestId", { id: submissionId }) : undefined}
+          feedbackMessage={generationError ? t(`beta.${generationError}`) : feedbackMessage}
+          feedbackIsError={Boolean(generationError) || (draft.feedback !== null && draft.feedback !== "not-connected")}
           isReady={isVideoStudioDraftReady(draft)}
-          generationAvailable={generationAvailable}
+          generationAvailable={generationAvailable && Boolean(currentQuote) && !busy && !jobId}
           libraryAssets={libraryAssets}
           libraryOpen={libraryOpen}
           libraryStatus={libraryStatus}
@@ -315,6 +350,7 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
       </div>
 
       <div id="video-studio-canvas" className={styles.canvasRegion}>
+        {jobId ? <VideoJobProgress jobId={jobId} /> : null}
         <VideoCanvas
           source={draft.source}
           aspectRatio={draft.aspectRatio}

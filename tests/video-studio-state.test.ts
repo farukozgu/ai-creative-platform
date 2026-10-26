@@ -74,7 +74,7 @@ test("prompt suggestions populate empty prompts, append intentionally, and never
 test("local source validation reuses product image type and size constraints", () => {
   assert.equal(validateVideoSourceFile({ type: "image/jpeg", size: 1024 }), null);
   assert.equal(validateVideoSourceFile({ type: "image/png", size: 1024 }), null);
-  assert.equal(validateVideoSourceFile({ type: "image/webp", size: 1024 }), null);
+  assert.equal(validateVideoSourceFile({ type: "image/webp", size: 1024 }), "invalid-source-type");
   assert.equal(
     validateVideoSourceFile({ type: "image/gif", size: 1024 }),
     "invalid-source-type",

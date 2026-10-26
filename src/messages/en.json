@@ -526,7 +526,7 @@
     "ugcStudio": {
       "model": {
         "label": "UGC model",
-        "standard": { "label": "Kling 3.0", "description": "Plan 15-second clips with creator and product references. Portrait, square and landscape formats." },
+        "standard": { "label": "Kling 3.0 Standard", "description": "Plan 15-second clips with creator and product references. Portrait, square and landscape formats." },
         "premium": { "label": "Kling 3.0 Pro", "description": "Plan 15-second clips with Kling 3.0 Pro. Portrait, square and landscape formats." },
         "limits": "Generation is disabled for both models. Speech, audio uploads, lip sync and subtitles are unsupported. 30- and 60-second clips are unavailable.",
         "durationUnsupported": "Your {duration}-second draft is preserved. Choose a supported duration or another model before preparing a request."
@@ -736,12 +736,26 @@
       "emptyDescription": "Configure your image using the controls. No generated image yet."
     },
     "videoStudio": {
+      "beta": {
+        "quote": "{model} · {seconds}s · Estimated ceiling: ${cost} USD",
+        "quoteUnavailable": "Verified pricing is unavailable. Generation is disabled.",
+        "requestId": "Test request ID: {id}",
+        "submitting": "Saving request…",
+        "approval": "Server approval is required for this test request. Generation has not started.",
+        "ambiguous": "Submission outcome is uncertain. Do not resubmit; check Video Library.",
+        "failed": "Video could not be completed. Check Video Library; do not repeat the paid request.",
+        "processing": "Your video is processing. Status updates automatically.",
+        "ready": "Your video is ready.",
+        "pollError": "Status is temporarily unavailable. Safe polling will resume.",
+        "download": "Download MP4",
+        "openVideo": "Open video"
+      },
       "metadataTitle": "Video Studio",
       "metadataDescription": "Klay AI Video Studio for preparing videos from product images.",
       "title": "Video Studio",
       "description": "Prepare your source and motion direction.",
       "generate": "Generate Video",
-      "preparationOnly": "Preparation mode · Video generation is not connected yet.",
+      "preparationOnly": "Only the allowlisted account and a server-approved test request can generate. Audio is off.",
       "source": {
         "heading": "Source image",
         "description": "Choose the product image that will act as the opening frame.",
@@ -750,7 +764,7 @@
         "remove": "Remove",
         "chooseLibrary": "Choose from Klay Library",
         "closeLibrary": "Close library",
-        "dropLabel": "JPEG, PNG or WebP · Up to 20 MB",
+        "dropLabel": "JPEG or PNG · Up to 20 MB",
         "selectedAlt": "Selected source product image",
         "localLabel": "Local image",
         "libraryLabel": "Klay Library",
@@ -797,7 +811,7 @@
         "heading": "Generation quality",
         "proLocked": "Growth plan or higher required. Pro pricing is not available yet.",
         "options": {
-          "standard": { "label": "Kling 3.0", "description": "Balanced product video generation." },
+          "standard": { "label": "Kling 3.0 Standard", "description": "Balanced product video generation." },
           "pro": { "label": "Kling 3.0 Pro", "description": "Premium product video generation." },
           "auto": { "label": "Auto", "description": "Historical selection." },
           "best": { "label": "Best Quality", "description": "Historical selection." }
@@ -820,12 +834,12 @@
       "generations": {
         "title": "Generations",
         "emptyTitle": "No videos generated yet",
-        "emptyDescription": "Completed videos will appear here in a future phase."
+        "emptyDescription": "Watch and download completed videos in Video Library."
       },
       "validation": {
         "source-required": "Choose a source image to continue.",
         "prompt-required": "Add a short motion prompt to continue.",
-        "invalid-source-type": "Choose a JPEG, PNG, or WebP image.",
+        "invalid-source-type": "Choose a JPEG or PNG image.",
         "source-too-large": "The image must be 20 MB or smaller.",
         "source-unreadable": "This image could not be opened in your browser. Try another file.",
         "not-connected": "Your draft is ready. Video generation will be connected in a future phase."

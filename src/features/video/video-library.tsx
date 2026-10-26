@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { DashboardIcon } from "@/components/dashboard/dashboard-icons";
@@ -12,6 +12,7 @@ import {
 } from "@/features/video/video-library-state";
 import type { VideoPresentationRecord, VideoStatus } from "@/features/video/video-studio-types";
 import { Link } from "@/i18n/navigation";
+import { listVideoGenerationsAction } from "@/app/[locale]/dashboard/video/generation-actions";
 import styles from "@/features/video/video-library.module.css";
 
 type VideoLibraryProps = {
@@ -22,7 +23,16 @@ type VideoLibraryProps = {
 const filters: VideoLibraryFilter[] = ["all", "image"];
 const statuses: VideoStatus[] = ["queued", "processing", "ready", "failed", "unavailable"];
 
-export function VideoLibrary({ records, locale }: VideoLibraryProps) {
+export function VideoLibrary({ records: initialRecords, locale }: VideoLibraryProps) {
+  const [records, setRecords] = useState(initialRecords);
+  useEffect(() => {
+    if (!records.some(record => record.status === "queued" || record.status === "processing")) return;
+    let active = true;
+    const timer = setTimeout(() => { void listVideoGenerationsAction().then(result => {
+      if (active) setRecords(result.status === "success" ? result.records : [...records]);
+    }).catch(() => { if (active) setRecords([...records]); }); }, 8_000);
+    return () => { active = false; clearTimeout(timer); };
+  }, [records]);
   const t = useTranslations("Dashboard.videoLibrary");
   const [filter, setFilter] = useState<VideoLibraryFilter>("all");
   const [query, setQuery] = useState("");

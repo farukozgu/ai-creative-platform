@@ -9,6 +9,8 @@ import type {
 } from "@/features/video/video-studio-types";
 import { Link } from "@/i18n/navigation";
 import styles from "@/features/video/video-library.module.css";
+import { VideoJobProgress } from "./video-job-progress";
+import { VideoDownloadButton } from "./video-download-button";
 
 export type VideoDetailCopy = {
   back: string;
@@ -75,9 +77,10 @@ export function VideoDetail({ record, locale, copy }: VideoDetailProps) {
               <h1>{record.title}</h1>
               <p><span className={`${styles.status} ${styles[`status_${record.status}`]}`}>{copy.status[record.status]}</span></p>
             </div>
-            {playable ? <a className={styles.primaryAction} href={record.playbackUrl ?? undefined} download>{copy.download}</a> : null}
+            {playable ? <VideoDownloadButton jobId={record.id} label={copy.download} /> : null}
           </div>
         </header>
+        {record.status === "queued" || record.status === "processing" ? <VideoJobProgress jobId={record.id} /> : null}
 
         <section className={styles.detailLayout}>
           <div className={styles.playerPanel} aria-label={copy.playerLabel}>
