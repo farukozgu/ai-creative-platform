@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 
-import { estimateVerifiedProviderCost, resolveVideoRoute, videoEndpointCapabilities } from "../src/lib/video-generation/capabilities";
+import { estimateVerifiedProviderCost, resolveVideoRoute, videoTierRouting, videoEndpointCapabilities } from "../src/lib/video-generation/capabilities";
 import { buildFalVideoRequestInput } from "../src/lib/video-generation/fal-request";
 import { canTransitionVideoStatus } from "../src/lib/video-generation/lifecycle";
 import { MAX_VIDEO_RECONCILIATION_ATTEMPTS, reconcileVideoGeneration } from "../src/lib/video-generation/reconciliation";
@@ -81,9 +81,11 @@ test("both customer tiers route to their approved model configuration but remain
   assert.deepEqual(resolveVideoRoute("image", "standard", { VIDEO_GENERATION_ENABLED: "true" }), { ok: false, code: "routing_unapproved" });
   assert.deepEqual(resolveVideoRoute("image", "pro", { VIDEO_GENERATION_ENABLED: "true" }), { ok: false, code: "routing_unapproved" });
   assert.equal(videoEndpointCapabilities.klingV3ProImage.endpointId, "fal-ai/kling-video/v3/pro/image-to-video");
-  assert.equal(videoEndpointCapabilities.seedanceV2StandardImage.endpointId, "bytedance/seedance-2.0/image-to-video");
+  assert.equal(videoEndpointCapabilities.klingV3StandardImage.endpointId, "fal-ai/kling-video/v3/standard/image-to-video");
+  assert.equal(videoTierRouting.standard, "klingV3StandardImage");
+  assert.equal(videoTierRouting.pro, "klingV3ProImage");
   assert.equal(estimateVerifiedProviderCost(approvedImageCapability, 10), 1.12);
-  assert.equal(estimateVerifiedProviderCost(videoEndpointCapabilities.seedanceV2StandardImage, 10), null);
+  assert.equal(estimateVerifiedProviderCost(videoEndpointCapabilities.klingV3StandardImage, 10), null);
 });
 
 test("draft validation sanitizes prompt input and rejects forged source combinations", () => {
@@ -101,10 +103,10 @@ test("capability validation rejects unsupported durations and ratios without con
   assert.equal(validateDraftAgainstCapability({ ...imageDraft, aspectRatio: "1:1" }, { ...approvedImageCapability, aspectRatios: ["16:9"] }).ok, false);
 });
 
-test("Kling and Seedance use different source-image payloads and disable audio", () => {
+test("Kling 3.0 and Pro use start-frame payloads and disable audio", () => {
   const request = { endpointId: "unused", mode: "image" as const, prompt: "Product reveal", durationSeconds: 5 as const, aspectRatio: "16:9" as const, sourceUrl: "https://signed.example/source.png" };
   assert.deepEqual(buildFalVideoRequestInput({ ...request, modelId: "kling-v3-pro-image" }), { start_image_url: request.sourceUrl, prompt: request.prompt, duration: "5", generate_audio: false, enable_safety_checker: true });
-  assert.deepEqual(buildFalVideoRequestInput({ ...request, modelId: "seedance-v2-standard-image" }), { image_url: request.sourceUrl, prompt: request.prompt, duration: "5", aspect_ratio: "16:9", resolution: "720p", generate_audio: false });
+  assert.deepEqual(buildFalVideoRequestInput({ ...request, modelId: "kling-v3-standard-image" }), { start_image_url: request.sourceUrl, prompt: request.prompt, duration: "5", generate_audio: false, enable_safety_checker: true });
   assert.throws(() => buildFalVideoRequestInput({ ...request, modelId: "unknown" }));
 });
 

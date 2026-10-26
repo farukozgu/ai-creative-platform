@@ -61,7 +61,7 @@ const hash = (snapshot: Record<string, unknown>) => JSON.stringify(snapshot);
 const prepareUgcJobForUser: typeof prepareUgcJobCore = (user, project, key, repository, digest, resolve) =>
   prepareUgcJobCore(user, project, key, repository, digest, resolve ?? (draft => ({ ok: true, value: {
     tier: draft.modelTier ?? "premium", provider: "fal", version: 1,
-    endpointId: draft.modelTier === "standard" ? "bytedance/seedance-2.0/mini/reference-to-video" : "bytedance/seedance-2.5/reference-to-video",
+    endpointId: draft.modelTier === "standard" ? "fal-ai/kling-video/v3/standard/image-to-video" : "fal-ai/kling-video/v3/pro/image-to-video",
   } })));
 
 test("UGC draft validation rejects forged, missing, and oversized settings", () => {
@@ -175,7 +175,7 @@ test("tiers hydrate legacy drafts as Premium and participate in immutable snapsh
   assert.equal(repository.jobs.size, 0); // No implicit unvalidated model resolver.
   assert.ok((await prepareUgcJobForUser(userId, projectId, idempotencyKey, repository, hash)).ok);
   const saved = [...repository.jobs.values()][0]; const before = JSON.stringify(saved.requestSnapshot);
-  assert.deepEqual(saved.requestSnapshot.model, { tier: "premium", provider: "fal", version: 1, endpointId: "bytedance/seedance-2.5/reference-to-video" });
+  assert.deepEqual(saved.requestSnapshot.model, { tier: "premium", provider: "fal", version: 1, endpointId: "fal-ai/kling-video/v3/pro/image-to-video" });
   project.modelTier = "standard";
   assert.deepEqual(await prepareUgcJobForUser(userId, projectId, idempotencyKey, repository, hash), { ok: false, code: "conflict" });
   assert.equal(JSON.stringify(saved.requestSnapshot), before);

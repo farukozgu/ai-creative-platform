@@ -526,9 +526,9 @@
     "ugcStudio": {
       "model": {
         "label": "UGC model",
-        "standard": { "label": "Standard", "description": "Plan 15-second clips at 720p with creator and product references. Portrait, square and landscape formats." },
-        "premium": { "label": "Premium", "description": "Plan 15- or 30-second clips at 720p with creator and product references. Portrait, square and landscape formats." },
-        "limits": "Generation is unavailable for both tiers. Native audio is planned; exact speech, Turkish pronunciation, voice identity and lip sync are unverified. Audio uploads, subtitles and 60-second clips are unavailable.",
+        "standard": { "label": "Kling 3.0", "description": "Plan 15-second clips with creator and product references. Portrait, square and landscape formats." },
+        "premium": { "label": "Kling 3.0 Pro", "description": "Plan 15-second clips with Kling 3.0 Pro. Portrait, square and landscape formats." },
+        "limits": "Generation is disabled for both models. Speech, audio uploads, lip sync and subtitles are unsupported. 30- and 60-second clips are unavailable.",
         "durationUnsupported": "Your {duration}-second draft is preserved. Choose a supported duration or another model before preparing a request."
       },
         "metadataTitle": "UGC Studio | Klay AI",
@@ -797,8 +797,8 @@
         "heading": "Generation quality",
         "proLocked": "Growth plan or higher required. Pro pricing is not available yet.",
         "options": {
-          "standard": { "label": "Standard", "description": "Balanced product video generation." },
-          "pro": { "label": "Pro", "description": "Premium product video generation." },
+          "standard": { "label": "Kling 3.0", "description": "Balanced product video generation." },
+          "pro": { "label": "Kling 3.0 Pro", "description": "Premium product video generation." },
           "auto": { "label": "Auto", "description": "Historical selection." },
           "best": { "label": "Best Quality", "description": "Historical selection." }
         }

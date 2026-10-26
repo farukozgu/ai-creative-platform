@@ -2,7 +2,7 @@ import type { VideoGenerationAspectRatio, VideoGenerationDuration, VideoGenerati
 
 export type VideoProviderPricing =
   | { basis: "per-second"; audioOffUsdPerSecond: number; audioOnUsdPerSecond: number; voiceControlUsdPerSecond: number | null }
-  | { basis: "token-formula"; tokenUsdPerThousand: number; formula: string; resolutionNotes: string; audioModifier: "included" };
+  | { basis: "unconfigured" };
 
 export type VideoEndpointCapability = {
   id: string;
@@ -33,22 +33,23 @@ export const videoEndpointCapabilities = {
     productionApproved: false,
     documentationUrl: "https://fal.ai/models/fal-ai/kling-video/v3/pro/image-to-video/api",
   },
-  seedanceV2StandardImage: {
-    id: "seedance-v2-standard-image",
+  klingV3StandardImage: {
+    id: "kling-v3-standard-image",
     provider: "fal",
-    endpointId: "bytedance/seedance-2.0/image-to-video",
+    endpointId: "fal-ai/kling-video/v3/standard/image-to-video",
     modes: ["image"], durations: [5, 10], aspectRatios: ["16:9", "9:16", "1:1"],
-    aspectRatioBehavior: "explicit", resolutions: ["480p", "720p", "1080p"], audio: { supported: true, defaultEnabled: true, customerSetting: "disabled" },
+    aspectRatioBehavior: "source-derived", resolutions: ["source-derived"], audio: { supported: true, defaultEnabled: true, customerSetting: "disabled" },
     requiresSource: true, maxPromptLength: 2500,
-    pricing: { basis: "token-formula", tokenUsdPerThousand: 0.014, formula: "(height × width × duration × 24) / 1024", resolutionNotes: "fal documents 480p, 720p, and 1080p; Klay sends 720p until a controlled resolution policy is approved.", audioModifier: "included" },
+    pricing: { basis: "unconfigured" },
     productionApproved: false,
-    documentationUrl: "https://fal.ai/models/bytedance/seedance-2.0/image-to-video/api",
+    documentationUrl: "https://fal.ai/models/fal-ai/kling-video/v3/standard/image-to-video/api",
   },
+
 } as const satisfies Record<string, VideoEndpointCapability>;
 
 export const videoTierRouting: Record<VideoGenerationQuality, keyof typeof videoEndpointCapabilities> = {
-  standard: "klingV3ProImage",
-  pro: "seedanceV2StandardImage",
+  standard: "klingV3StandardImage",
+  pro: "klingV3ProImage",
 };
 
 export type VideoRoutingResult =

@@ -3,21 +3,19 @@ import "server-only";
 import type { UgcModelIdentity, UgcModelOption, UgcModelTier } from "@/features/ugc/ugc-model-contract";
 import type { UgcOwnedProject, UgcResult } from "@/features/ugc/ugc-studio-contract";
 
+import { videoEndpointCapabilities } from "@/lib/video-generation/capabilities";
+
 const ratios = ["9:16", "1:1", "16:9"] as const;
 export const ugcModelRegistry = {
   standard: {
-    identity: { tier: "standard", provider: "fal", endpointId: "bytedance/seedance-2.0/mini/reference-to-video", version: 1 },
-    planVersion: 3, modelId: "bytedance/seedance-2.0/mini/reference-to-video",
-    documented: { minDuration: 4, maxDuration: 15, maxImages: 9, maxAudioReferences: 3, maxAudioSeconds: 15,
-      maxTotalReferences: 12, resolutions: ["480p", "720p"], generateAudio: true, audioReferences: true },
-    supported: { durations: [15], aspectRatios: ratios, imageReferences: 2, resolution: "720p", audioModes: ["silent", "native", "reference"] },
+    identity: { tier: "standard", provider: "fal", endpointId: videoEndpointCapabilities.klingV3StandardImage.endpointId, version: 1 },
+    modelId: videoEndpointCapabilities.klingV3StandardImage.id,
+    supported: { durations: [15], aspectRatios: ratios, resolution: "source-derived" },
   },
   premium: {
-    identity: { tier: "premium", provider: "fal", endpointId: "bytedance/seedance-2.5/reference-to-video", version: 1 },
-    planVersion: 2, modelId: "seedance-2.5-reference", // Existing internal plan ID, retained for reconciliation.
-    documented: { minDuration: 4, maxDuration: 30, maxImages: 30, maxAudioReferences: 10, maxAudioSeconds: 30.2,
-      maxTotalReferences: 50, resolutions: ["480p", "720p", "1080p"], generateAudio: true, audioReferences: true },
-    supported: { durations: [15, 30], aspectRatios: ratios, imageReferences: 2, resolution: "720p", audioModes: ["silent", "native", "reference"] },
+    identity: { tier: "premium", provider: "fal", endpointId: videoEndpointCapabilities.klingV3ProImage.endpointId, version: 1 },
+    modelId: videoEndpointCapabilities.klingV3ProImage.id,
+    supported: { durations: [15], aspectRatios: ratios, resolution: "source-derived" },
   },
 } as const;
 

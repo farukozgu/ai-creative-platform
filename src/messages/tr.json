@@ -526,9 +526,9 @@
     "ugcStudio": {
       "model": {
         "label": "UGC modeli",
-        "standard": { "label": "Standart", "description": "İçerik üreticisi ve ürün referanslarıyla 720p, 15 saniyelik klipler planlayın. Dikey, kare ve yatay formatlar." },
-        "premium": { "label": "Premium", "description": "İçerik üreticisi ve ürün referanslarıyla 720p, 15 veya 30 saniyelik klipler planlayın. Dikey, kare ve yatay formatlar." },
-        "limits": "Her iki modelde de üretim kapalıdır. Doğal ses için hazırlık vardır; birebir konuşma, Türkçe telaffuz, ses kimliği ve dudak senkronu doğrulanmamıştır. Ses yükleme, altyazı ve 60 saniyelik klipler kullanılamaz.",
+        "standard": { "label": "Kling 3.0", "description": "İçerik üreticisi ve ürün referanslarıyla 15 saniyelik klipler planlayın. Dikey, kare ve yatay formatlar." },
+        "premium": { "label": "Kling 3.0 Pro", "description": "Kling 3.0 Pro ile 15 saniyelik klipler planlayın. Dikey, kare ve yatay formatlar." },
+        "limits": "Her iki modelde de üretim kapalıdır. Konuşma, ses yükleme, dudak senkronu ve altyazı desteklenmez. 30 ve 60 saniyelik klipler kullanılamaz.",
         "durationUnsupported": "{duration} saniyelik taslağınız korundu. İstek hazırlamadan önce desteklenen bir süre veya başka bir model seçin."
       },
         "metadataTitle": "UGC Stüdyosu | Klay AI",
@@ -797,8 +797,8 @@
         "heading": "Üretim kalitesi",
         "proLocked": "Growth veya üzeri plan gerekir. Pro fiyatlandırması henüz kullanılamıyor.",
         "options": {
-          "standard": { "label": "Standart", "description": "Dengeli ürün videosu üretimi." },
-          "pro": { "label": "Pro", "description": "Premium ürün videosu üretimi." },
+          "standard": { "label": "Kling 3.0", "description": "Dengeli ürün videosu üretimi." },
+          "pro": { "label": "Kling 3.0 Pro", "description": "Premium ürün videosu üretimi." },
           "auto": { "label": "Otomatik", "description": "Geçmiş seçim." },
           "best": { "label": "En iyi kalite", "description": "Geçmiş seçim." }
         }
