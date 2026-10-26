@@ -18,6 +18,7 @@ async function readProfile(userId: string): Promise<Profile | null> {
     .from("profiles")
     .select(profileFields)
     .eq("id", userId)
+    .abortSignal(AbortSignal.timeout(10_000))
     .maybeSingle();
 
   if (error) {
@@ -34,7 +35,9 @@ export async function getOrCreateProfile(userId: string): Promise<Profile> {
   }
 
   const supabase = await createClient();
-  const {error} = await supabase.from("profiles").insert({id: userId});
+  const {data, error} = await supabase.from("profiles").insert({id: userId}).select(profileFields).single();
+
+  if (!error && data) return data as Profile;
 
   if (error && error.code !== "23505") {
     throw new Error("Unable to create profile.");
