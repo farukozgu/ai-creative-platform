@@ -34,7 +34,8 @@ export class SupabaseVideoSourceResolver implements VideoSourceResolver {
     const downloaded = await supabase.storage.from(bucketId).download(objectPath);
     if (downloaded.error || !downloaded.data || downloaded.data.size <= 0 || downloaded.data.size > 25 * 1024 * 1024 || !["image/jpeg", "image/png"].includes(downloaded.data.type)) return null;
     const metadata = await sharp(Buffer.from(await downloaded.data.arrayBuffer()), { failOn: "error", limitInputPixels: 40_000_000 }).metadata();
-    if (!metadata.width || !metadata.height || metadata.width < 360 || metadata.height < 360 || metadata.width > 2000 || metadata.height > 2000) return null;
+    if (!metadata.width || !metadata.height || metadata.width < 360 || metadata.height < 360 || metadata.width > 2000 || metadata.height > 2000
+      || !["jpeg", "png"].includes(metadata.format ?? "") || (metadata.pages ?? 1) > 1 || (metadata.orientation ?? 1) !== 1) return null;
     const aspectRatio = ratioFor(metadata.width, metadata.height);
     if (!aspectRatio) return null;
     const signed = await supabase.storage.from(bucketId).createSignedUrl(objectPath, 3600);

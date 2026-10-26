@@ -85,7 +85,7 @@ test("both customer tiers route to their approved model configuration but remain
   assert.equal(videoTierRouting.standard, "klingV3StandardImage");
   assert.equal(videoTierRouting.pro, "klingV3ProImage");
   assert.equal(estimateVerifiedProviderCost(approvedImageCapability, 10), 1.12);
-  assert.equal(estimateVerifiedProviderCost(videoEndpointCapabilities.klingV3StandardImage, 10), null);
+  assert.equal(estimateVerifiedProviderCost(videoEndpointCapabilities.klingV3StandardImage, 10), 0.84);
 });
 
 test("draft validation sanitizes prompt input and rejects forged source combinations", () => {
@@ -110,12 +110,12 @@ test("Kling 3.0 and Pro use start-frame payloads and disable audio", () => {
   assert.throws(() => buildFalVideoRequestInput({ ...request, modelId: "unknown" }));
 });
 
-test("idempotent submissions create one provider job and release the duplicate reservation", async () => {
+test("idempotent submissions preserve the shared reservation and create one provider job", async () => {
   const repository = new MemoryRepository(); const paid = billing(); const mockProvider = provider();
   const dependencies = { repository, billing: paid.value, provider: mockProvider.value, sourceResolver, capability: approvedImageCapability, env: { VIDEO_GENERATION_ENABLED: "true" } };
   const [first, duplicate] = await Promise.all([submitVideoGeneration(ownerId, imageDraft, dependencies), submitVideoGeneration(ownerId, imageDraft, dependencies)]);
   assert.equal(first.ok, true); assert.equal(duplicate.ok, true); assert.equal(mockProvider.submissions(), 1);
-  assert.deepEqual(paid.counts(), { reservations: 2, releases: 1, reconciliations: 0, finalizations: 0 });
+  assert.deepEqual(paid.counts(), { reservations: 2, releases: 0, reconciliations: 0, finalizations: 0 });
 });
 
 test("an ambiguous provider failure is not retried and requires billing reconciliation", async () => {
@@ -197,4 +197,33 @@ test("migration enforces owner RLS, idempotency, private media, and terminal gua
   assert.match(sql, /terminal video generations are immutable/i);
   assert.match(sql, /'generated-videos', 'generated-videos', false/i);
   assert.doesNotMatch(sql, /grant[^;]*insert[^;]*on table public\.generations[^;]*to authenticated/i);
+});
+
+
+test("a private upload survives a lost checkpoint and expired provider result without another provider request", async () => {
+  const repository = new MemoryRepository(); repository.records.set(jobId, job({ status: "processing" }));
+  const result = await reconcileVideoGeneration(jobId, {
+    repository, billing: billing().value,
+    provider: provider({ getStatus: async () => { throw new Error("Expired provider task must not be read"); }, getResult: async () => { throw new Error("Expired provider result must not be read"); } }).value,
+    outputStore: {
+      recover: async () => ({ bucketId: "generated-videos", objectPath: ownerId + "/" + jobId + "/output.mp4", contentType: "video/mp4", sizeBytes: 1024 }),
+      persist: async () => { throw new Error("Existing output must not be reuploaded"); },
+    },
+  });
+  assert.equal(result.status, "succeeded");
+  assert.equal(repository.records.get(jobId)?.outputSizeBytes, 1024);
+});
+
+
+test("a committed task attachment with a lost response is recovered without a second paid submission", async () => {
+  const repository = new MemoryRepository();
+  repository.attachProviderRequest = async (id, requestId) => {
+    const record = repository.records.get(id)!; record.providerRequestId = requestId;
+    throw new Error("Committed update response was lost");
+  };
+  const mock = provider();
+  const result = await submitVideoGeneration(ownerId, imageDraft, { repository, provider: mock.value, billing: billing().value,
+    sourceResolver, capability: approvedImageCapability, env: { VIDEO_GENERATION_ENABLED: "true" } });
+  assert.equal(result.ok, true); assert.equal(mock.submissions(), 1);
+  assert.equal(repository.records.get(jobId)?.status, "queued");
 });

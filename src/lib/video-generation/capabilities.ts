@@ -40,7 +40,7 @@ export const videoEndpointCapabilities = {
     modes: ["image"], durations: [5, 10], aspectRatios: ["16:9", "9:16", "1:1"],
     aspectRatioBehavior: "source-derived", resolutions: ["source-derived"], audio: { supported: true, defaultEnabled: true, customerSetting: "disabled" },
     requiresSource: true, maxPromptLength: 2500,
-    pricing: { basis: "unconfigured" },
+    pricing: { basis: "per-second", audioOffUsdPerSecond: 0.084, audioOnUsdPerSecond: 0.126, voiceControlUsdPerSecond: 0.154 },
     productionApproved: false,
     documentationUrl: "https://fal.ai/models/fal-ai/kling-video/v3/standard/image-to-video/api",
   },

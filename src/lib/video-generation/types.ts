@@ -109,6 +109,7 @@ export interface VideoJobRepository {
   findById(jobId: string): Promise<VideoJobRecord | null>;
   listOwned(ownerId: string): Promise<VideoJobRecord[]>;
   attachProviderRequest(jobId: string, requestId: string): Promise<VideoJobRecord>;
+  markSubmissionAmbiguous?(jobId: string): Promise<void>;
   transition(jobId: string, from: readonly VideoGenerationStatus[], patch: Partial<VideoJobRecord>): Promise<VideoJobRecord | null>;
   scheduleReconciliation(jobId: string, attempts: number, nextAt: string | null): Promise<void>;
 }
@@ -121,6 +122,7 @@ export interface VideoReconciliationRepository extends VideoJobRepository {
 }
 
 export interface DurableVideoOutputStore {
+  recover?(job: VideoJobRecord): Promise<{ bucketId: string; objectPath: string; contentType: "video/mp4"; sizeBytes: number } | null>;
   persist(job: VideoJobRecord, file: ProviderVideoFile): Promise<{
     bucketId: string;
     objectPath: string;

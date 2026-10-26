@@ -51,6 +51,9 @@ function patchRow(patch: Partial<VideoJobRecord>) {
 
 export class SupabaseVideoJobRepository implements VideoReconciliationRepository {
   private client() { return getSupabaseAdminClient(); }
+  toReconciliationClaim(row: Record<string, unknown>): VideoReconciliationClaim {
+    return { job: mapJob(row), leaseToken: String(row.reconciliation_lease_token), leaseVersion: Number(row.reconciliation_lease_version), leaseExpiresAt: String(row.reconciliation_lease_expires_at) };
+  }
 
   async createOrGet(input: Parameters<VideoJobRepository["createOrGet"]>[0]) {
     const supabase = this.client();
@@ -79,6 +82,11 @@ export class SupabaseVideoJobRepository implements VideoReconciliationRepository
     const { data, error } = await this.client().from("generations").update({ provider_request_id: requestId }).eq("generation_type", "video").eq("id", jobId).is("provider_request_id", null).eq("status", "queued").select("*").single();
     if (error || !data) throw new Error("Unable to attach the provider request identifier.");
     return mapJob(data);
+  }
+  async markSubmissionAmbiguous(jobId: string) {
+    const { error } = await this.client().from("generations").update({ status: "failed", error_code: "provider_submission_ambiguous", billing_status: "reconciliation_required" })
+      .eq("generation_type", "video").eq("id", jobId).eq("status", "queued").is("provider_request_id", null);
+    if (error) throw new Error("Unable to save the uncertain submission state.");
   }
   async transition(jobId: string, from: readonly VideoGenerationStatus[], patch: Partial<VideoJobRecord>) {
     const { data, error } = await this.client().from("generations").update(patchRow(patch)).eq("generation_type", "video").eq("id", jobId).in("status", [...from]).select("*").maybeSingle();

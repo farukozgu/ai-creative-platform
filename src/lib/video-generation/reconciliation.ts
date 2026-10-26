@@ -23,7 +23,8 @@ export async function reconcileVideoGeneration(jobId: string, dependencies: Reco
   }
   const attempts = job.reconciliationAttempts + 1;
   try {
-    const providerStatus = await dependencies.provider.getStatus(job.endpointId, job.providerRequestId);
+    const recovered = !job.outputObjectPath ? await dependencies.outputStore.recover?.(job) : null;
+    const providerStatus = recovered ? "completed" : await dependencies.provider.getStatus(job.endpointId, job.providerRequestId);
     if (providerStatus !== "completed") {
       const nextStatus = providerStatus === "processing" ? "processing" : job.status;
       await dependencies.repository.transition(job.id, ["queued", "processing"], { status: nextStatus });
@@ -44,9 +45,8 @@ export async function reconcileVideoGeneration(jobId: string, dependencies: Reco
       workingJob = processing;
     }
     if (!workingJob.outputObjectPath) {
-      const file = await dependencies.provider.getResult(job.endpointId, job.providerRequestId);
       try {
-        const stored = await dependencies.outputStore.persist(workingJob, file);
+        const stored = recovered ?? await dependencies.outputStore.persist(workingJob, await dependencies.provider.getResult(job.endpointId, job.providerRequestId));
         const checkpoint = await dependencies.repository.transition(job.id, ["processing"], {
           status: "processing", outputBucketId: stored.bucketId, outputObjectPath: stored.objectPath,
           outputMimeType: stored.contentType, outputSizeBytes: stored.sizeBytes,
@@ -100,7 +100,8 @@ export async function reconcileClaimedVideoGeneration(claim: VideoReconciliation
   const attempts = job.reconciliationAttempts + 1;
   const schedule = async (delayMs: number) => dependencies.repository.scheduleClaimedReconciliation(claim, attempts, new Date((dependencies.now?.() ?? new Date()).getTime() + delayMs).toISOString());
   try {
-    const providerStatus = await dependencies.provider.getStatus(job.endpointId, job.providerRequestId);
+    const recovered = !job.outputObjectPath ? await dependencies.outputStore.recover?.(job) : null;
+    const providerStatus = recovered ? "completed" : await dependencies.provider.getStatus(job.endpointId, job.providerRequestId);
     if (providerStatus !== "completed") {
       const nextStatus = providerStatus === "processing" ? "processing" : job.status;
       const updated = await dependencies.repository.transitionClaimed(claim, ["queued", "processing"], { status: nextStatus });
@@ -116,9 +117,8 @@ export async function reconcileClaimedVideoGeneration(claim: VideoReconciliation
       workingJob = processing;
     }
     if (!workingJob.outputObjectPath) {
-      const file = await dependencies.provider.getResult(job.endpointId, job.providerRequestId);
       try {
-        const stored = await dependencies.outputStore.persist(workingJob, file);
+        const stored = recovered ?? await dependencies.outputStore.persist(workingJob, await dependencies.provider.getResult(job.endpointId, job.providerRequestId));
         const checkpoint = await dependencies.repository.transitionClaimed(claim, ["processing"], {
           status: "processing", outputBucketId: stored.bucketId, outputObjectPath: stored.objectPath,
           outputMimeType: stored.contentType, outputSizeBytes: stored.sizeBytes,

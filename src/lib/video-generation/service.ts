@@ -63,18 +63,31 @@ export async function submitVideoGeneration(ownerId: string, unknownDraft: unkno
     return { ok: false, code: "persistence_failure", message: "The video request could not be saved and was not submitted." };
   }
   if (!created.created) {
-    await dependencies.billing.release(billing.reservation.id);
+    if (created.job.billingReservationId !== billing.reservation.id) await dependencies.billing.release(billing.reservation.id);
     return { ok: true, jobId: created.job.id, status: created.job.status, duplicate: true };
   }
 
+  let acceptedTaskId: string | null = null;
   try {
     const providerResult = await dependencies.provider.submit({ modelId: dependencies.capability.id, endpointId: dependencies.capability.endpointId, mode: draft.mode, prompt: draft.prompt, durationSeconds: draft.durationSeconds, aspectRatio: draft.aspectRatio, sourceUrl });
+    acceptedTaskId = providerResult.requestId;
     const job = await dependencies.repository.attachProviderRequest(created.job.id, providerResult.requestId);
     recordVideoTelemetry({ event: "submitted", jobId: job.id, endpointId: job.endpointId, status: job.status, estimatedProviderCostUsd: estimate });
     return { ok: true, jobId: job.id, status: job.status, duplicate: false };
   } catch {
+    // Retry only task attachment, never provider submission. A committed DB update
+    // may have lost its response; a known pinned task must remain reconcilable.
+    if (acceptedTaskId) {
+      try {
+        const pinned = await dependencies.repository.attachProviderRequest(created.job.id, acceptedTaskId);
+        return { ok: true, jobId: pinned.id, status: pinned.status, duplicate: false };
+      } catch { /* Read back a possibly committed attachment below. */ }
+      const pinned = await dependencies.repository.findOwned(ownerId, created.job.id);
+      if (pinned?.providerRequestId === acceptedTaskId) return { ok: true, jobId: pinned.id, status: pinned.status, duplicate: false };
+    }
     await dependencies.billing.markForReconciliation(billing.reservation.id);
-    await dependencies.repository.transition(created.job.id, ["queued"], { status: "failed", errorCode: "provider_submission_ambiguous", billingStatus: "reconciliation_required" });
+    if (dependencies.repository.markSubmissionAmbiguous) await dependencies.repository.markSubmissionAmbiguous(created.job.id);
+    else await dependencies.repository.transition(created.job.id, ["queued"], { status: "failed", errorCode: "provider_submission_ambiguous", billingStatus: "reconciliation_required" });
     return { ok: false, code: "provider_submission_ambiguous", message: "The provider submission outcome is uncertain. The request will not be submitted again automatically." };
   }
 }

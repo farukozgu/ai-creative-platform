@@ -18,17 +18,22 @@ export async function createVideoSourceUploadTicket(ownerId: string, fileName: s
 }
 
 export async function finalizeVideoSourceUpload(ownerId: string, sourceAssetId: string, objectPath: string) {
-  if (!uuidPattern.test(sourceAssetId) || objectPath.split("/").length !== 3 || !objectPath.startsWith(`${ownerId}/${sourceAssetId}/`)) return null;
+  if (!uuidPattern.test(sourceAssetId) || ![`${ownerId}/${sourceAssetId}/source.jpg`, `${ownerId}/${sourceAssetId}/source.png`].includes(objectPath)) return null;
   const supabase = getSupabaseAdminClient();
   const { data, error } = await supabase.storage.from("video-source-images").download(objectPath);
   if (error || !data || data.size <= 0 || data.size > 25 * 1024 * 1024 || !allowedSourceTypes.has(data.type)) return null;
   const bytes = Buffer.from(await data.arrayBuffer());
   const metadata = await sharp(bytes, { failOn: "error", limitInputPixels: 40_000_000 }).metadata();
-  if (!metadata.width || !metadata.height || metadata.width < 360 || metadata.height < 360 || metadata.width > 2000 || metadata.height > 2000) return null;
+  if (!metadata.width || !metadata.height || metadata.width < 360 || metadata.height < 360 || metadata.width > 2000 || metadata.height > 2000
+    || !["jpeg", "png"].includes(metadata.format ?? "") || (metadata.pages ?? 1) > 1 || (metadata.orientation ?? 1) !== 1) return null;
   const { data: row, error: insertError } = await supabase.from("video_source_assets").insert({
     id: sourceAssetId, owner_id: ownerId, object_path: objectPath, mime_type: data.type,
     size_bytes: data.size, width: metadata.width, height: metadata.height,
   }).select("id").single();
+  if (insertError?.code === "23505") {
+    const existing = await supabase.from("video_source_assets").select("id").eq("id", sourceAssetId).eq("owner_id", ownerId).eq("object_path", objectPath).maybeSingle();
+    return existing.data ? { kind: "uploaded-image" as const, sourceAssetId } : null;
+  }
   if (insertError || !row) return null;
   return { kind: "uploaded-image", sourceAssetId: row.id } satisfies VideoSourceReference;
 }
@@ -37,7 +42,7 @@ export async function createAuthorizedVideoPlaybackUrl(ownerId: string, jobId: s
   if (!uuidPattern.test(jobId)) return null;
   const supabase = getSupabaseAdminClient();
   const { data: job, error } = await supabase.from("generations").select("output_bucket_id, output_object_path, status").eq("generation_type", "video").eq("id", jobId).eq("owner_id", ownerId).maybeSingle();
-  if (error || !job || job.status !== "succeeded" || job.output_bucket_id !== "generated-videos" || !job.output_object_path) return null;
+  if (error || !job || job.status !== "succeeded" || job.output_bucket_id !== "generated-videos" || job.output_object_path !== `${ownerId}/${jobId}/output.mp4`) return null;
   const signed = await supabase.storage.from(job.output_bucket_id).createSignedUrl(job.output_object_path, 300, download ? { download: true } : undefined);
   return signed.error ? null : signed.data.signedUrl;
 }
