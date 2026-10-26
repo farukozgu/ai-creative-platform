@@ -4,6 +4,8 @@ import test from "node:test";
 
 import { estimateVerifiedProviderCost, resolveVideoRoute, videoTierRouting, videoEndpointCapabilities } from "../src/lib/video-generation/capabilities";
 import { buildFalVideoRequestInput } from "../src/lib/video-generation/fal-request";
+import { compileProductVideoPrompt } from "../src/lib/video-generation/preservation";
+import { videoDraftHash } from "../src/lib/video-generation/request-identity";
 import { canTransitionVideoStatus } from "../src/lib/video-generation/lifecycle";
 import { MAX_VIDEO_RECONCILIATION_ATTEMPTS, reconcileVideoGeneration } from "../src/lib/video-generation/reconciliation";
 import { submitVideoGeneration } from "../src/lib/video-generation/service";
@@ -86,6 +88,40 @@ test("both customer tiers route to their approved model configuration but remain
   assert.equal(videoTierRouting.pro, "klingV3ProImage");
   assert.equal(estimateVerifiedProviderCost(approvedImageCapability, 10), 1.12);
   assert.equal(estimateVerifiedProviderCost(videoEndpointCapabilities.klingV3StandardImage, 10), 0.84);
+});
+
+test("both Kling routes receive the server preservation prompt and camera without duplicate paid submission", async () => {
+  for (const quality of ["standard", "pro"] as const) {
+    const parsed = validateVideoGenerationDraft({ ...imageDraft, method: "kling", quality, cameraMovement: "pan-right" });
+    assert.ok(parsed.ok);
+    if (!parsed.ok) throw new Error("Invalid fixture");
+    const draft = parsed.value;
+    const compiled = compileProductVideoPrompt(draft);
+    const repository = new MemoryRepository();
+    let calls = 0;
+    const mock = provider({ submit: async request => {
+      calls++;
+      const payload = buildFalVideoRequestInput(request);
+      assert.match(String(payload.prompt), /pan right/);
+      assert.match(String(payload.prompt), /sole product identity authority/);
+      assert.match(String(payload.negative_prompt), /morphing letters/);
+      assert.equal(payload.cfg_scale, 0.5);
+      assert.equal(payload.generate_audio, false);
+      assert.equal(payload.end_image_url, undefined);
+      return { requestId: "mock-preservation-task" };
+    } });
+    const dependencies = { repository, provider: mock.value, billing: billing().value, sourceResolver,
+      capability: { ...videoEndpointCapabilities[videoTierRouting[quality]], productionApproved: true },
+      env: { VIDEO_GENERATION_ENABLED: "true" },
+      preservation: { version: compiled.version, method: "kling" as const, draftHash: videoDraftHash(draft), sourceSha256: "fixture",
+        geometry: { originalWidth: 2400, originalHeight: 3600, contentRect: { x: 0, y: 0, width: 1, height: 1 } },
+        criticalRegion: null, frameRegion: null, compiledPrompt: compiled.prompt, negativePrompt: compiled.negativePrompt, cfgScale: compiled.cfgScale, analysisConsent: null } };
+    assert.equal((await submitVideoGeneration(ownerId, draft, dependencies)).ok, true);
+    assert.equal((await submitVideoGeneration(ownerId, draft, dependencies)).ok, true);
+    assert.equal(calls, 1);
+    assert.equal((await submitVideoGeneration(ownerId, { ...draft, cameraMovement: "static" }, dependencies)).ok, false);
+    assert.equal(calls, 1);
+  }
 });
 
 test("draft validation sanitizes prompt input and rejects forged source combinations", () => {

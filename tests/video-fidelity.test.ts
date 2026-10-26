@@ -137,6 +137,13 @@ test("does not claim color or label preservation without visible source evidence
   assert.notEqual(normalized.overallStatus, "no_clear_change_detected");
 });
 
+test("hidden or motion-blurred details cannot be preserved or called a confirmed distortion", () => {
+  for (const likelyCause of ["partial_visibility", "motion_blur"]) for (const status of ["preserved", "clear_distortion"]) {
+    const normalized = report({ sourceProfile: sourceProfile(), checks: checks({ branding_text: { status, confidence: "high", likelyCause, timestampsSeconds: [2.5] } }) });
+    assert.equal(normalized.checks[0].status, "unverified");
+  }
+});
+
 test("restores a bounded session result and treats interrupted paid analysis as uncertain", () => {
   const normalized = report({ sourceProfile: sourceProfile(), checks: checks(), summary: "Visible details match." });
   assert.deepEqual(parseVideoFidelitySessionCache(JSON.stringify({ status: "pending" })), { status: "pending" });

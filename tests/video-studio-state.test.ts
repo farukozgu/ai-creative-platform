@@ -27,7 +27,8 @@ const librarySource: LibraryVideoSource = {
 };
 
 test("Video Studio defaults are provider-neutral and ready for V1 settings", () => {
-  assert.equal(initialVideoStudioDraft.cameraMovement, "auto");
+  assert.equal(initialVideoStudioDraft.method, "source-motion");
+  assert.equal(initialVideoStudioDraft.cameraMovement, "dolly-in");
   assert.equal(initialVideoStudioDraft.quality, "standard");
   assert.equal(initialVideoStudioDraft.aspectRatio, "16:9");
   assert.equal(initialVideoStudioDraft.duration, 5);
