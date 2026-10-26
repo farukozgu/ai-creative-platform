@@ -60,8 +60,8 @@ test("Video Studio shows truthful job stages and restores the approved submissio
   const inspector = read("src/features/video/video-generation-inspector.tsx");
   const actions = read("src/app/[locale]/dashboard/video/generation-actions.ts");
   assert.match(workspace, /restoreApprovedVideoGenerationAction/);
-  assert.match(workspace, /setJobId\(result\.job\.id\)/);
-  assert.match(workspace, /!restoringJob && !restoreUnavailable && !jobId/);
+  assert.match(workspace, /setJobId\(result\.job(?:\.id|Id)\)/);
+  assert.match(workspace, /generationAvailable=\{generationAvailable && Boolean\(currentQuote\) && Boolean\(preparedFrame\) && !busy && !restoringJob && !restoreUnavailable && !submissionUsed && !jobId/);
   assert.match(progress, /aria-busy=/);
   assert.match(progress, /progressPhase/);
   assert.match(progress, /watchVideo/);

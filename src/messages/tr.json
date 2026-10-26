@@ -977,6 +977,82 @@
         "ready": { "title": "Oynatma kullanılamıyor", "description": "Bu kayıt oynatılabilir bir video varlığı içermiyor." },
         "failed": { "title": "Video oluşturulamadı", "description": "Bu üretim için oynatılabilir bir video bulunmuyor." },
         "unavailable": { "title": "Video kullanılamıyor", "description": "Bu kaydın oynatılabilir varlığı kullanılamıyor." }
+      },
+      "fidelityAnalysis": {
+        "title": "Ürün Sadakati Analizi",
+        "description": "Kaynak ürün görselini videonun başlangıç, orta ve bitişinden alınan karelerle karşılaştırın. Kamera açısı, ışık ve kısmi görünürlük değişiklikleri ürün bozulması sayılmaz.",
+        "freeStep": "Önce kaynak görseli ve beş temsilî kareyi tarayıcınızda yerel olarak hazırlayın. Bu ücretsiz adım dış servise veri göndermez.",
+        "prepare": "Kareleri hazırla",
+        "preparing": "Kareler hazırlanıyor…",
+        "preparingSource": "Özel kaynak görsel alınıyor",
+        "extractingFrames": "Videonun başlangıç, orta ve bitişinden kareler çıkarılıyor",
+        "sourceFrame": "Kaynak ürün görseli",
+        "videoFrame": "Kare {number} · {timestamp}",
+        "frameUnavailable": "Bu video karesi okunamadı.",
+        "analysisDisabled": "Kareler yerel olarak hazırlandı. Ücretli analiz, bu hesap için sunucu tarafında etkinleştirilmemiş; hiçbir analiz isteği gönderilmedi.",
+        "pricingUnavailable": "Bu model için doğrulanmış maliyet tahmini yok. Ücretli analiz kapalı kaldı.",
+        "priceEstimate": "Tahmini üst maliyet: yaklaşık ${amount} USD",
+        "consentLead": "Ücretli analiz yalnızca aşağıdaki onaydan sonra başlar.",
+        "consentDetails": "Onay verirseniz kaynak görsel ve beş sıkıştırılmış video karesi OpenAI'a görsel karşılaştırma için gönderilir. Tam MP4 gönderilmez. Sonuç bu sayfada gösterilir ve veritabanına yazılmaz.",
+        "consentLabel": "Kaynak görseli ve beş kareyi OpenAI'a göndermeyi, yaklaşık ${amount} USD'ye kadar analiz ücreti oluşabileceğini kabul ediyorum.",
+        "analyze": "Ücretli analizi başlat · ${amount} USD'ye kadar",
+        "analyzing": "Ürün ve video kareleri karşılaştırılıyor…",
+        "cancel": "Vazgeç",
+        "profileTitle": "Kaynak ürün profili",
+        "profile": {
+          "category": "Kategori",
+          "color": "Renk",
+          "shape": "Siluet ve şekil",
+          "material": "Görünür malzeme",
+          "branding": "Kimlik özellikleri ve marka işaretleri",
+          "readableText": "Okunabilen yazı",
+          "noVisibleBranding": "Kaynak görselde görünür logo, etiket veya okunabilir marka yazısı yok.",
+          "observations": "Kaynakta görülen ayrıntılar"
+        },
+        "verticals": {
+          "apparel": "Giyim",
+          "jewelry": "Takı",
+          "watches": "Saat",
+          "cosmetics": "Kozmetik",
+          "footwear": "Ayakkabı",
+          "bags": "Çanta"
+        },
+        "checksTitle": "Kontroller",
+        "categories": {
+          "brandingText": "Logo, etiket ve yazı",
+          "shapeProportions": "Şekil ve oranlar",
+          "colorMaterial": "Renk ve malzeme görünümü",
+          "constructionDetails": "Fermuar, düğme, cep ve dikiş gibi ayrıntılar",
+          "motionDeformation": "Kamera hareketinde deformasyon"
+        },
+        "overallTitle": "Genel değerlendirme",
+        "statuses": {
+          "preserved": "Korunmuş",
+          "suspicious_change": "Şüpheli değişiklik",
+          "clear_distortion": "Belirgin bozulma",
+          "unverified": "Doğrulanamadı"
+        },
+        "overallStatuses": {
+          "clear_distortion": "Belirgin bozulma tespit edildi",
+          "review_recommended": "İnceleme öneriliyor",
+          "no_clear_change_detected": "Doğrulanabilen ayrıntılarda belirgin değişiklik görülmedi",
+          "inconclusive": "Sonuç kesin değil"
+        },
+        "confidence": { "high": "Yüksek güven", "medium": "Orta güven", "low": "Düşük güven" },
+        "causes": {
+          "product_change": "Ürün değişikliği",
+          "camera_angle": "Kamera açısı veya perspektif",
+          "lighting": "Işık veya yansıma",
+          "partial_visibility": "Kısmi görünürlük",
+          "motion_blur": "Hareket bulanıklığı",
+          "unclear": "Neden belirsiz"
+        },
+        "timestamp": "Videoda {value}",
+        "noText": "Kaynak görselden doğrulanamadı",
+        "prepareError": "Kaynak görsel veya video okunamadı. Video kaydı değişmedi; ücretli analiz gönderilmedi.",
+        "unavailable": "Bu videoya veya kaynak görsele erişilemiyor. Kayıt sahipliği doğrulanamadı.",
+        "uncertain": "Analiz isteğinin sonucu belirsiz olabilir. Ücret alınmış olabilir; tekrar gönderilmedi ve otomatik yeniden deneme yapılmayacak.",
+        "failed": "Analiz tamamlanamadı. Video kaydı korunuyor ve üretim durumuna dokunulmadı."
       }
     },
     "backgroundJobs": { "active": "Görsel hazırlanıyor" },

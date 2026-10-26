@@ -979,6 +979,82 @@
         "ready": { "title": "Playback unavailable", "description": "This record does not include a playable video asset." },
         "failed": { "title": "Video could not be created", "description": "No playable video is available for this generation." },
         "unavailable": { "title": "Video unavailable", "description": "The playable asset is not available for this record." }
+      },
+      "fidelityAnalysis": {
+        "title": "Product Fidelity Analysis",
+        "description": "Compare the source product image with frames from the beginning, middle, and end of the video. Changes in camera angle, lighting, or partial visibility are not product damage.",
+        "freeStep": "First prepare the source image and five representative frames locally in your browser. This free step sends no data to an external service.",
+        "prepare": "Prepare frames",
+        "preparing": "Preparing frames…",
+        "preparingSource": "Loading the private source image",
+        "extractingFrames": "Extracting frames from the start, middle, and end of the video",
+        "sourceFrame": "Source product image",
+        "videoFrame": "Frame {number} · {timestamp}",
+        "frameUnavailable": "This video frame could not be read.",
+        "analysisDisabled": "Frames were prepared locally. Paid analysis is not enabled for this account on the server; no analysis request was sent.",
+        "pricingUnavailable": "No verified cost estimate is available for this model. Paid analysis remains disabled.",
+        "priceEstimate": "Estimated upper cost: about ${amount} USD",
+        "consentLead": "Paid analysis starts only after you confirm below.",
+        "consentDetails": "If you consent, the source image and five compressed video frames are sent to OpenAI for visual comparison. The full MP4 is not sent. Results are shown on this page and are not written to the database.",
+        "consentLabel": "I agree to send the source image and five frames to OpenAI and may incur an analysis charge of up to about ${amount} USD.",
+        "analyze": "Start paid analysis · up to ${amount} USD",
+        "analyzing": "Comparing the product and video frames…",
+        "cancel": "Cancel",
+        "profileTitle": "Source product profile",
+        "profile": {
+          "category": "Category",
+          "color": "Color",
+          "shape": "Silhouette and shape",
+          "material": "Visible material",
+          "branding": "Identity features and visible branding",
+          "readableText": "Readable text",
+          "noVisibleBranding": "No visible logo, label, or readable brand text in the source image.",
+          "observations": "Details visible in the source"
+        },
+        "verticals": {
+          "apparel": "Apparel",
+          "jewelry": "Jewelry",
+          "watches": "Watches",
+          "cosmetics": "Cosmetics",
+          "footwear": "Footwear",
+          "bags": "Bags"
+        },
+        "checksTitle": "Checks",
+        "categories": {
+          "brandingText": "Logo, label, and text",
+          "shapeProportions": "Shape and proportions",
+          "colorMaterial": "Color and material appearance",
+          "constructionDetails": "Zippers, buttons, pockets, and seams",
+          "motionDeformation": "Deformation during camera movement"
+        },
+        "overallTitle": "Overall assessment",
+        "statuses": {
+          "preserved": "Preserved",
+          "suspicious_change": "Suspicious change",
+          "clear_distortion": "Clear distortion",
+          "unverified": "Unverified"
+        },
+        "overallStatuses": {
+          "clear_distortion": "Clear distortion detected",
+          "review_recommended": "Review recommended",
+          "no_clear_change_detected": "No clear change found in verifiable details",
+          "inconclusive": "Inconclusive"
+        },
+        "confidence": { "high": "High confidence", "medium": "Medium confidence", "low": "Low confidence" },
+        "causes": {
+          "product_change": "Product change",
+          "camera_angle": "Camera angle or perspective",
+          "lighting": "Lighting or reflection",
+          "partial_visibility": "Partially visible",
+          "motion_blur": "Motion blur",
+          "unclear": "Cause unclear"
+        },
+        "timestamp": "At {value}",
+        "noText": "Not verified from the source image",
+        "prepareError": "The source image or video could not be read. The video record is unchanged; no paid analysis was sent.",
+        "unavailable": "This video or its source image cannot be accessed. Ownership could not be verified.",
+        "uncertain": "The analysis request may have reached the provider. It may have been charged; it was not resubmitted and no automatic retry will run.",
+        "failed": "Analysis could not be completed. The video record is preserved and its generation status was not changed."
       }
     },
     "backgroundJobs": { "active": "Creating image" },

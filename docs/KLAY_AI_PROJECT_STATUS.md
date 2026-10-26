@@ -25,6 +25,14 @@ Doğrulama: **769/769** ana test + **68/68** pretest, lint, TypeScript, varsayı
 
 Ayrıntı ve tekrar çalıştırma: [Video Studio beta teslimatı](video-studio-beta.md).
 
+### Video Product Fidelity Engine — Phase 1 (26 Ekim 2026)
+
+- Video detayına kaynak profili ve beş MP4 karesini (başlangıç, çeyrekler, orta ve sona yakın) karşılaştıran Ürün Sadakati Analizi eklendi. Ortak Product Profile yanında videoya özel alanlar doğrudan görülen renk, malzeme, siluet, marka işareti, okunabilen yazı ve ayırt edici ayrıntıları taşır. Kontroller yalnız kaynak kanıtı ve gönderilen kare zamanlarını kabul eder; kamera/ışık/kısmi görünürlük gibi olası açıklamalar bozulma diye işaretlenmez, eksik kanıt “doğrulanamadı” kalır.
+- Kareler tarayıcıda yerel olarak çıkarılır; private video ve kaynak medyası yalnız oturum sahibi doğrulandıktan sonra sunulur. Hazırlanmış kare metadatasından orijinal JPEG/PNG bulunursa o kullanılır; eşleşen owner-scoped DB kayıtları olmadan metadata tek başına yetki sayılmaz. Kareler ve rapor aynı sekmenin `sessionStorage` alanında tutulur; yarım kalan analiz belirsiz kalır ve tekrar başlatılmaz. Database kalıcılığı yoktur.
+- OpenAI analizi ilk olarak kapalıdır. Uygun beta model/hesap, API anahtarı ve kullanıcı başına açık checkbox onayı olmadan ücretli çağrı yapılmaz; mevcut sabit model için arayüz yaklaşık **$0.02 üst tahmini** gösterir. Bu teslimatta OpenAI çağrısı, Kling üretimi, migration, production değişikliği veya deployment yapılmadı. UGC Generate kapalı kaldı.
+- Mevcut ceket MP4'ünün Storage içeriği bu çalışma ortamından okunamadığı için marka etiketi hakkında gerçek analiz sonucu yoktur; bozulma tespit edildiğini söylemek mümkün değildir. Production job metadata'sı tamamlanmış Kling Standard/5 sn kaydını ve private MP4'ü doğrulasa da görüntü baytlarına erişim sağlanmadı.
+- Phase 1 test paketi **784/784**, lint ve TypeScript başarılı. `next build --webpack` tamamlandı. Varsayılan Turbopack build ise CSS modülünü işlerken PostCSS child-process bağlantısı kurulmadan `exit code 0` ile çöküyor; aynı hata biçimi Next.js hata kayıtlarında da mevcut. Yeni CSS, yerel PostCSS/Tailwind işleminde başarılı. Bu nedenle hata kaynağının yerel modül sözdiziminden ziyade Turbopack/PostCSS worker katmanı olduğu değerlendirmesi bir çıkarımdır; varsayılan Turbopack build bu ortamda başarılı sayılmıyor. [Next.js hata kaydı](https://github.com/vercel/next.js/discussions/99358).
+
 
 ## Önceki Composer Beta teslimatı (tarihsel kayıt)
 

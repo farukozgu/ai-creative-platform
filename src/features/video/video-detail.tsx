@@ -11,6 +11,8 @@ import { Link } from "@/i18n/navigation";
 import styles from "@/features/video/video-library.module.css";
 import { VideoJobProgress } from "./video-job-progress";
 import { VideoDownloadButton } from "./video-download-button";
+import { VideoFidelityAnalysis, type VideoFidelityCopy } from "./video-fidelity-analysis";
+import type { VideoFidelityAnalysisAvailability } from "@/lib/video-fidelity/types";
 
 export type VideoDetailCopy = {
   back: string;
@@ -35,12 +37,14 @@ export type VideoDetailCopy = {
   camera: Record<VideoCameraMovement, string>;
   quality: Record<NonNullable<VideoPresentationRecord["quality"]>, string>;
   seconds: (value: number) => string;
+  fidelity: VideoFidelityCopy;
 };
 
 type VideoDetailProps = {
   record: VideoPresentationRecord;
   locale: string;
   copy: VideoDetailCopy;
+  fidelityAvailability: VideoFidelityAnalysisAvailability;
 };
 
 function formatDate(value: string | null | undefined, locale: string) {
@@ -50,7 +54,7 @@ function formatDate(value: string | null | undefined, locale: string) {
   return new Intl.DateTimeFormat(locale, { dateStyle: "long", timeStyle: "short" }).format(date);
 }
 
-export function VideoDetail({ record, locale, copy }: VideoDetailProps) {
+export function VideoDetail({ record, locale, copy, fidelityAvailability }: VideoDetailProps) {
   const playable = isVideoPlayable(record);
   const createdAt = formatDate(record.createdAt, locale);
   const metadata = [
@@ -116,6 +120,15 @@ export function VideoDetail({ record, locale, copy }: VideoDetailProps) {
             </aside>
           ) : null}
         </section>
+        {playable && record.durationSeconds && record.durationSeconds <= 10 && record.sourceImage ? (
+          <VideoFidelityAnalysis
+            key={record.id}
+            videoId={record.id}
+            durationSeconds={record.durationSeconds}
+            availability={fidelityAvailability}
+            copy={copy.fidelity}
+          />
+        ) : null}
       </div>
     </main>
   );
