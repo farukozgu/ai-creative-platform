@@ -47,7 +47,6 @@ export type VideoStudioFeedback =
   | "not-connected";
 
 export type VideoStudioDraft = {
-  method: import("@/lib/video-generation/preservation").VideoGenerationMethod;
   criticalRegion: import("@/lib/video-generation/preservation").CriticalProductRegion | null;
   analyzeAfterGeneration: boolean;
   source: VideoSource | null;
@@ -63,7 +62,7 @@ export type VideoStatus = "queued" | "processing" | "ready" | "failed" | "unavai
 export type VideoProgressPhase = "queued" | "processing" | "finalizing" | "ready" | "failed" | "ambiguous" | "submission-uncertain";
 
 export type VideoPresentationRecord = {
-  generationMethod?: import("@/lib/video-generation/preservation").VideoGenerationMethod;
+  generationMethod?: import("@/lib/video-generation/preservation").VideoRecordGenerationMethod;
   criticalRegion?: import("@/lib/video-generation/preservation").CriticalProductRegion | null;
   analysisRequested?: boolean;
   id: string;

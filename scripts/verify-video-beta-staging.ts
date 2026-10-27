@@ -42,8 +42,9 @@ process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = anon;
 process.env.SUPABASE_SECRET_KEY = secret;
 process.env.VIDEO_BETA_ENABLED = "true";
 process.env.VIDEO_GENERATION_ENABLED = "false";
-process.env.VIDEO_BETA_APPROVED_SUBMISSION_ID = "";
-process.env.VIDEO_BETA_APPROVED_MAX_COST_USD = "0";
+process.env.VIDEO_BETA_TRANSACTION_APPROVALS_ENABLED = "false";
+process.env.VIDEO_BETA_MAX_COST_PER_REQUEST_USD = "0";
+process.env.FAL_KEY = "";
 process.env.OPENAI_BETA_ENABLED = "false";
 process.env.OPENAI_API_KEY = "";
 const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, secret, { auth: { persistSession: false, autoRefreshToken: false } });
@@ -111,9 +112,13 @@ try {
     getStatus: async () => "completed" as const, getResult: async () => ({ url: "https://storage.googleapis.com/falserverless/example_outputs/kling-v3/standard-i2v/out.mp4", contentType: "video/mp4", sizeBytes: null }) };
   const draft = { clientSubmissionId: randomUUID(), mode: "image" as const, source, prompt: "Synthetic video integration test", quality: "standard" as const, aspectRatio: "16:9" as const, durationSeconds: 5 as const, cameraMovement: "auto" as const };
   const dependencies = { repository, billing, provider, sourceResolver: resolver, capability: { ...videoEndpointCapabilities.klingV3StandardImage, productionApproved: true }, env: { VIDEO_GENERATION_ENABLED: "true" } };
-  const results = await Promise.all([submitVideoGeneration(owner, draft, dependencies), submitVideoGeneration(owner, draft, dependencies)]);
-  check(results.every(result => result.ok) && posts === 1, "concurrent duplicate submissions yield one provider task (mock only)");
-  assert.ok(results[0].ok); const jobId = results[0].jobId;
+  Object.assign(process.env, { VIDEO_GENERATION_ENABLED: "true", VIDEO_BETA_TRANSACTION_APPROVALS_ENABLED: "true",
+    VIDEO_BETA_MAX_COST_PER_REQUEST_USD: "0.70", VIDEO_BETA_ALLOWED_TIERS: "standard", VIDEO_BETA_ALLOWED_DURATIONS: "5" });
+  const results = await Promise.all([submitVideoGeneration(owner, draft, dependencies), submitVideoGeneration(owner, draft, dependencies)])
+    .finally(() => { process.env.VIDEO_GENERATION_ENABLED = "false"; process.env.VIDEO_BETA_TRANSACTION_APPROVALS_ENABLED = "false"; });
+  const successful = results.find(result => result.ok);
+  check(successful?.ok && posts === 1, "concurrent duplicate submissions yield one provider task (mock only)");
+  const jobId = successful.jobId;
   const job = await repository.findOwned(owner, jobId); check(job?.providerRequestId, "provider task ID persisted in PostgreSQL");
   const claims = await Promise.all([admin.rpc("claim_video_beta_reconciliations", { p_owner: owner, p_job: jobId, p_limit: 1 }), admin.rpc("claim_video_beta_reconciliations", { p_owner: owner, p_job: jobId, p_limit: 1 })]);
   check(claims.every(c => !c.error) && claims.reduce((n, c) => n + (c.data?.length ?? 0), 0) === 1, "concurrent PostgreSQL reconciliation claims have one winner");
@@ -135,9 +140,12 @@ try {
   const foreign = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, anon, { auth: { persistSession: false } });
   const other = await admin.auth.admin.getUserById(users[1]); assert.ifError((await foreign.auth.signInWithPassword({ email: other.data.user!.email!, password })).error);
   const hidden = await foreign.from("generations").select("id").eq("id", jobId); check(!hidden.error && hidden.data.length === 0, "authenticated owner RLS hides foreign jobs");
-  const denied = await client.rpc("reserve_video_beta_budget", { p_owner: owner, p_submission: randomUUID(), p_cost: 0.7, p_tier: "standard", p_duration: 5 });
+  const denied = await client.rpc("reserve_video_beta_budget_once", { p_owner: owner, p_submission: randomUUID(), p_cost: 0.7, p_tier: "standard", p_duration: 5 });
   check(denied.error, "browser cannot reserve USD budget through RPC");
-  const budgetRace = await Promise.all(Array.from({ length: 8 }, () => admin.rpc("reserve_video_beta_budget", { p_owner: users[1], p_submission: randomUUID(), p_cost: 0.7, p_tier: "standard", p_duration: 5 })));
+  const repeatedId = randomUUID();
+  const repeatedRace = await Promise.all(Array.from({ length: 8 }, () => admin.rpc("reserve_video_beta_budget_once", { p_owner: owner, p_submission: repeatedId, p_cost: 0.1, p_tier: "standard", p_duration: 5 })));
+  check(repeatedRace.every(result => !result.error) && repeatedRace.filter(result => typeof result.data === "string").length === 1, "same UUID has exactly one atomic reservation");
+  const budgetRace = await Promise.all(Array.from({ length: 8 }, () => admin.rpc("reserve_video_beta_budget_once", { p_owner: users[1], p_submission: randomUUID(), p_cost: 0.7, p_tier: "standard", p_duration: 5 })));
   check(budgetRace.filter(r => !r.error).length === 2, "concurrent budget calls respect 2 USD daily ceiling");
   console.log(`Video beta staging: ${passed}/${passed}. Paid inference calls: 0. Production mutations: 0.`);
   if (process.argv.includes("--serve")) {

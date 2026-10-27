@@ -50,7 +50,7 @@ export function VideoLibrary({ records: initialRecords, locale }: VideoLibraryPr
   );
   const isEmpty = records.length === 0;
   const cardCopy: VideoCardCopy = {
-    sourceMotion: t("sourceMotion"),
+    legacyLocal: t("legacyLocal"),
     open: t("card.open"),
     download: t("card.download"),
     noPreview: t("card.noPreview"),

@@ -47,7 +47,6 @@ export async function verifyPreservationBrowser({ email, password, synthetic, jo
         check(true, "browser shows source, five frames and three labeled closeups");
         await page.screenshot({ path: join(artifactDir, "detail-frames-en-mobile.png"), fullPage: true });
         await page.goto("http://127.0.0.1:3100/tr/dashboard/video");
-        check(await page.locator('input[name="video-generation-method"][value="source-motion"]').isChecked(), "real Studio defaults to source motion");
         const fixturePath = join(directory, "product.png"); writeFileSync(fixturePath, synthetic);
         await page.locator('input[type="file"]').setInputFiles(fixturePath);
         await page.getByText(tr.Dashboard.videoStudio.preservation.regionTitle, { exact: true }).click();
@@ -55,12 +54,12 @@ export async function verifyPreservationBrowser({ email, password, synthetic, jo
         await page.keyboard.press("Enter");
         await page.getByLabel(tr.Dashboard.videoStudio.preservation.declaredText, { exact: true }).fill("TEST 42");
         check(await page.locator('input[type="number"]').count() === 4, "critical region can be selected and edited by keyboard");
+        check(await page.locator('input[name="video-quality"][value="standard"]').isChecked(), "Kling Standard is the initial model tier");
+        check(await page.locator('input[name="video-duration"][value="5"]').isChecked(), "five seconds is the initial duration");
+        check(await page.locator('input[name="video-generation-method"]').count() === 0, "Studio exposes no alternate local video method");
         await page.screenshot({ path: join(artifactDir, "studio-region-tr-mobile.png"), fullPage: true });
         await page.getByRole("button", { name: tr.Dashboard.videoStudio.generate, exact: true }).waitFor();
-        await page.waitForFunction(label => [...document.querySelectorAll("button")].some(button => button.textContent?.trim() === label && !button.disabled), tr.Dashboard.videoStudio.generate, { timeout: 45000 });
-        await page.getByRole("button", { name: tr.Dashboard.videoStudio.generate, exact: true }).click();
-        await page.getByRole("link", { name: tr.Dashboard.videoStudio.beta.watchVideo, exact: true }).waitFor({ timeout: 60000 });
-        check(true, "browser upload → preparation → local generation → watch link completes without AI");
+        check(true, "source upload, Kling options and critical-region editing are available without submitting a request");
         check(errors.length === 0, "no browser runtime/hydration errors: " + errors.join("; "));
         console.log(`Browser artifacts: ${artifactDir}`);
       } finally { await browser.close(); }

@@ -19,6 +19,8 @@ export type VideoPreparationSource =
   | { kind: "generated-image"; generationId: string };
 
 export type VideoGenerationDraft = {
+  shotMode?: "single" | "multi";
+  director?: import("../video-director/core").VideoDirectorSelection;
   method?: import("./preservation").VideoGenerationMethod;
   criticalRegion?: import("./preservation").CriticalProductRegion | null;
   analysisConsent?: { model: "gpt-4o-mini"; maximumCostUsd: number; pricingVersion: string; locale?: "tr" | "en" } | null;
@@ -52,7 +54,13 @@ export type ProviderVideoFile = {
   sizeBytes: number | null;
 };
 
+/** A provider explicitly rejected this submission; it was not accepted as a queued job. */
+export class DefiniteVideoProviderFailure extends Error {
+  constructor() { super("The video provider rejected the submitted request."); this.name = "DefiniteVideoProviderFailure"; }
+}
+
 export type VideoProviderRequest = {
+  multiPrompt?: import("../video-director/core").KlingMultiPrompt;
   negativePrompt?: string;
   cfgScale?: number;
   modelId: string;
@@ -67,7 +75,7 @@ export type VideoProviderRequest = {
 export interface VideoGenerationProvider {
   readonly name: "fal";
   submit(request: VideoProviderRequest): Promise<{ requestId: string }>;
-  getStatus(endpointId: string, requestId: string): Promise<"queued" | "processing" | "completed">;
+  getStatus(endpointId: string, requestId: string): Promise<"queued" | "processing" | "completed" | "failed">;
   getResult(endpointId: string, requestId: string): Promise<ProviderVideoFile>;
   cancel?(endpointId: string, requestId: string): Promise<void>;
 }
@@ -107,8 +115,10 @@ export type VideoJobRecord = {
 };
 
 export type VideoPreservationSnapshot = {
+  payloadSummary?: { mode: "single" | "multi"; shotType: "customize" | null; durations: number[]; promptHashes: string[]; directorVersion: string | null; presetId: string | null; presetVersion: number | null };
+  director?: { plan: import("../video-director/core").VideoDirectorPlan; multiPrompt?: import("../video-director/core").KlingMultiPrompt };
   version: string;
-  method: import("./preservation").VideoGenerationMethod;
+  method: import("./preservation").HistoricalVideoGenerationMethod;
   draftHash: string;
   sourceSha256: string;
   geometry: import("./preservation").SourceFrameGeometry;

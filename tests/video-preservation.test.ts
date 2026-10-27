@@ -1,8 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { execFileSync } from "node:child_process";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import sharp from "sharp";
+import ffmpegPath from "ffmpeg-static";
 import { compileProductVideoPrompt, mapRegionToFrame, parseCriticalProductRegion } from "../src/lib/video-generation/preservation";
-import { renderSourceMotion, extractVideoFrames, sourceMotionTransform } from "../src/lib/video-generation/source-motion";
+import { extractVideoFrames } from "../src/lib/video-fidelity/video-frame-extractor";
 import { miniVisionTokens, quoteVideoFidelity } from "../src/lib/video-fidelity/pricing";
 import { restoredReviewStatus, runVideoFidelityReview } from "../src/lib/video-fidelity/review-service";
 import type { VideoFidelityReport } from "../src/lib/video-fidelity/types";
@@ -12,8 +17,10 @@ import { initialVideoStudioDraft, videoStudioReducer } from "../src/features/vid
 
 test("product preservation compiles camera direction and rejects invented surfaces before a provider call", () => {
   const compiled = compileProductVideoPrompt({ prompt: "Gentle product shot.", cameraMovement: "pan-left" });
-  assert.match(compiled.prompt, /pan left/); assert.match(compiled.prompt, /exact silhouette/);
+  assert.match(compiled.prompt, /pan left/); assert.match(compiled.prompt, /silhouette, geometry and proportions/);
   assert.match(compiled.negativePrompt, /rewritten text/); assert.equal(compiled.cfgScale, 0.5);
+  for (const feature of ["color distribution", "surface texture", "pattern and print", "exact visible lettering", "silhouette, geometry and proportions"]) assert.match(compiled.prompt, new RegExp(feature));
+  for (const risk of ["changed brand mark", "altered color", "changed pattern", "changed surface texture", "stretched or compressed geometry"]) assert.match(compiled.negativePrompt, new RegExp(risk));
   for (const prompt of ["Rotate 360 degrees", "Morph the jacket", "Ürünün arkasını göster"]) assert.throws(() => compileProductVideoPrompt({ prompt, cameraMovement: "static" }));
   assert.throws(() => compileProductVideoPrompt({ prompt: "Slow motion", cameraMovement: "orbit" }));
 });
@@ -24,14 +31,6 @@ test("critical region validation and contain-coordinate mapping preserve origina
   const region = parseCriticalProductRegion({ x: 0.4, y: 0.1, width: 0.2, height: 0.1, declaredText: "USER HINT" })!;
   const frame = mapRegionToFrame(region, { originalWidth: 2400, originalHeight: 3600, contentRect: { x: 0, y: 0.078125, width: 1, height: 0.84375 } });
   assert.equal(frame.x, 0.4); assert.equal(frame.y, 0.1625); assert.equal(frame.declaredText, "USER HINT");
-});
-
-test("all photo motion transforms keep the entire source inside the frame", () => {
-  for (const preset of ["static", "dolly-in", "pan-left", "pan-right"] as const) for (let index = 0; index <= 100; index++) {
-    const { scale, x, y } = sourceMotionTransform(preset, index / 100);
-    assert.ok((1 - scale) / 2 + x >= 0); assert.ok((1 + scale) / 2 + x <= 1);
-    assert.ok((1 - scale) / 2 + y >= 0); assert.ok((1 + scale) / 2 + y <= 1);
-  }
 });
 
 test("analysis prices use mini vision tile rates, integer rounding and an expiring verified version", () => {
@@ -45,17 +44,31 @@ test("analysis prices use mini vision tile rates, integer rounding and an expiri
   assert.throws(() => miniVisionTokens({ width: 8192, height: 8192, detail: "high" }));
 });
 
-test("submission digest includes method, critical region and the separately approved analysis ceiling", () => {
+test("submission digest includes critical region and the separately approved analysis ceiling", () => {
   const draft: VideoGenerationDraft = { clientSubmissionId: "submission", mode: "image", quality: "standard", aspectRatio: "9:16", durationSeconds: 5, cameraMovement: "static", prompt: "Gentle", source: { kind: "uploaded-image", sourceAssetId: "source" } };
-  assert.notEqual(videoDraftHash(draft), videoDraftHash({ ...draft, method: "source-motion" }));
   assert.notEqual(videoDraftHash(draft), videoDraftHash({ ...draft, criticalRegion: { x: 0.1, y: 0.1, width: 0.1, height: 0.1, declaredText: "Hint" } }));
   assert.notEqual(videoDraftHash(draft), videoDraftHash({ ...draft, analysisConsent: { model: "gpt-4o-mini", pricingVersion: "verified", maximumCostUsd: 0.02 } }));
 });
 
 test("changing critical evidence or duration invalidates the previous paid-analysis checkbox consent", () => {
-  const state = { ...initialVideoStudioDraft, method: "kling" as const, analyzeAfterGeneration: true };
+  const state = { ...initialVideoStudioDraft, analyzeAfterGeneration: true };
   assert.equal(videoStudioReducer(state, { type: "set-critical-region", region: { x: 0.1, y: 0.1, width: 0.1, height: 0.1, declaredText: "hint" } }).analyzeAfterGeneration, false);
   assert.equal(videoStudioReducer(state, { type: "set-duration", duration: 10 }).analyzeAfterGeneration, false);
+});
+
+test("shared fidelity decoder extracts a frame from an MP4 within its input bounds", { timeout: 45_000 }, async () => {
+  assert.ok(ffmpegPath);
+  const directory = await mkdtemp(join(tmpdir(), "klay-fidelity-decoder-test-"));
+  try {
+    const output = join(directory, "fixture.mp4");
+    execFileSync(ffmpegPath, ["-hide_banner", "-loglevel", "error", "-f", "lavfi", "-i", "color=c=black:s=160x90:r=1:d=1", "-frames:v", "1", "-c:v", "libx264", "-pix_fmt", "yuv420p", "-movflags", "+faststart", "-y", output], { windowsHide: true });
+    const video = await readFile(output);
+    const frames = await extractVideoFrames(video, 1, [0]);
+    assert.equal(frames.length, 1);
+    assert.equal(frames[0]?.timestampSeconds, 0);
+    assert.ok((await sharp(frames[0]!.data).metadata()).width);
+    await assert.rejects(extractVideoFrames(Buffer.from("not an mp4"), 1, [0]));
+  } finally { await rm(directory, { recursive: true, force: true }); }
 });
 
 test("duplicate analysis requests get one claim, one submission marker and one paid attempt", async () => {
@@ -95,20 +108,3 @@ test("reload stops waiting for expired analysis preparation and never retries an
   assert.equal(restoredReviewStatus("succeeded", expired, now), "succeeded");
   assert.equal(restoredReviewStatus("queued", null, now), "queued");
 });
-
-for (const aspectRatio of ["9:16", "16:9", "1:1"] as const) for (const durationSeconds of [5, 10] as const) {
-  test(`real local H.264 renderer and decoder: ${aspectRatio}, ${durationSeconds}s`, { timeout: 90_000 }, async () => {
-    const source = await sharp(Buffer.from('<svg width="480" height="720"><rect width="480" height="720" fill="white"/><rect x="20" y="20" width="440" height="680" stroke="black" stroke-width="4" fill="#333"/><rect x="160" y="90" width="160" height="55" fill="white"/><text x="175" y="125" font-family="Arial" font-size="26">TEST 42</text></svg>')).png().toBuffer();
-    const preset = aspectRatio === "9:16" ? "dolly-in" : aspectRatio === "16:9" ? "pan-left" : "pan-right";
-    const mp4 = await renderSourceMotion({ source, aspectRatio, durationSeconds, preset });
-    assert.equal(mp4.toString("ascii", 4, 8), "ftyp");
-    const frames = await extractVideoFrames(mp4, durationSeconds, [0, durationSeconds / 2, durationSeconds * 0.95]);
-    assert.equal(frames.length, 3);
-    for (const frame of frames) {
-      const meta = await sharp(frame.data).metadata();
-      const expected = aspectRatio === "9:16" ? 9 / 16 : aspectRatio === "16:9" ? 16 / 9 : 1;
-      assert.ok(Math.abs(meta.width! / meta.height! - expected) < 0.003);
-      assert.ok(frame.data.length > 1000);
-    }
-  });
-}

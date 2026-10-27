@@ -736,14 +736,58 @@
       "emptyDescription": "Kontrolleri kullanarak görselinizi hazırlayın. Henüz üretilmiş bir görsel yok."
     },
     "videoStudio": {
+      "advancedSettings": "Gelişmiş ayarlar",
+      "configurationUnavailable": "Yönetici ayarlarında etkin değil.",
+      "singleImageNotice": "Tek görselden 360° dönüş, görünmeyen yüzlerin tahmin edilmesini gerektirir; ürünün tüm açılardan doğruluğu garanti edilmez.",
+      "director": {
+        "title": "AI Video Director",
+        "description": "Ürünün özgün görünümüne uygun bir reklam filmi için preset seçin.",
+        "preset": "Video preseti",
+        "shotMode": "Çekim yapısı",
+        "single": "Tek çekim",
+        "multi": "Çoklu çekim",
+        "presets": {
+          "luxury-fashion-film": {
+            "title": "Luxury Fashion Film",
+            "description": "Ölçülü editoryal kadraj, yumuşak vurgular ve sakin bir kampanya finali."
+          },
+          "macro-detail-reveal": {
+            "title": "Macro Detail Reveal",
+            "description": "Görünür malzeme ve işçiliğe kontrollü bir yakın bakış."
+          },
+          "minimal-studio": {
+            "title": "Minimal Studio",
+            "description": "Dengeli boşluk ve sabit ışıkla ürünü öne çıkaran durağan kadraj."
+          }
+        },
+        "consent": "Bir AI plan isteği için en fazla {cost} USD maliyeti onaylıyorum. Önbellekteki planlar yeni AI isteği başlatmaz.",
+        "unavailable": "AI planlama şu anda kullanılamıyor. AI isteği olmadan koruma odaklı bir plan hazırlayabilirsin.",
+        "prepare": "AI planı hazırla",
+        "planHeading": "Çekim planı",
+        "preparing": "Plan hazırlanıyor…",
+        "fallbackButton": "Koruma odaklı planı kullan",
+        "separateApproval": "Planlama video üretmez. Video üretimi için ayrıca maliyet onayı gerekir.",
+        "aiPlan": "AI yaratıcı planı",
+        "fallbackPlan": "Koruma odaklı yaratıcı plan",
+        "fallbackNotice": "Koruma odaklı preset planı gösteriliyor. İsteğini plana eklemez veya üründe yeni detay varsaymaz.",
+        "shot": "Çekim {number} · {seconds} sn",
+        "fullPlan": "Çekim yönergelerinin tamamını göster",
+        "camera": "Kamera",
+        "lighting": "Işık",
+        "composition": "Kompozisyon",
+        "motion": "Hareket",
+        "pace": "Tempo",
+        "focus": "Ürün detayı",
+        "review": "Üretimden önce planı incele. Kaynak, istek veya ayarlar değişirse yeni plan hazırlamalısın.",
+        "planRequired": "Üretimden önce çekim planını hazırla.",
+          "planLocked": "Önceki video isteği tamamlanmadı veya durumu doğrulanıyor. Yeni plan için ayrı bir video isteği oluşturun.",
+          "planNeedsSource": "Plan hazırlamak için önce bir kaynak görsel seçin.",
+          "planNeedsPreparedSource": "Plan hazırlamak için kaynak görselin hazırlanması gerekiyor.",
+          "planNeedsReadyDraft": "Plan hazırlamak için video ayarlarını tamamlayın.",
+        "error": "Plan hazırlanamadı veya onayın süresi doldu. Ayarları kontrol edip koruma odaklı planı dene."
+      },
       "preservation": {
         "quoteLoading": "Maliyet ve kullanılabilirlik kontrol ediliyor…",
-        "methodTitle": "Video yöntemi",
-        "sourceMotion": "Fotoğraftan Hareket",
-        "kling": "Kling ile Hareket",
-        "sourceDescription": "Ürün yeniden çizilmeden, kaynak fotoğrafa hafif kamera hareketi.",
-        "klingDescription": "Kling 3.0 Standard / Pro ile kontrollü AI hareketi.",
-        "encodingNotice": "Ürün yeniden çizilmez. Ölçekleme ve MP4 sıkıştırması netliği etkileyebilir.",
         "noGuarantee": "Kling, küçük yazı ve ayrıntıları değiştirebilir. Birebir koruma garantisi yoktur.",
         "regionTitle": "Kritik bölgeyi işaretle (isteğe bağlı)",
         "regionHelp": "Orijinal görselde logo veya etiketi sürükleyerek seçin. Klavyede Enter ile başlayıp yüzdelik alanları ayarlayabilirsiniz.",
@@ -761,10 +805,7 @@
         "analysisCost": "Model: {model} · analiz üst tahmini: ${cost} USD",
         "analysisDisabled": "Ücretli analiz sunucuda etkin değil veya fiyat/şema doğrulanamadı.",
         "analysisConsent": "Seçerseniz kaynak ve örnek kareler OpenAI'a gönderilir; gösterilen ek maliyeti onaylamış olursunuz. Belirsiz istek otomatik tekrarlanmaz.",
-        "localCost": "5/10 saniye · fal/OpenAI çağrısı yok. Yerel sunucu işlemi.",
-        "localDisabled": "Fotoğraftan Hareket henüz bu hesap için kullanıma açılmadı.",
-        "combinedQuote": "Kling: ${generation} · Analiz: ${analysis} · Toplam üst tahmin: ${total} USD",
-        "newLocalRequest": "Yeni Fotoğraftan Hareket isteği"
+        "combinedQuote": "Kling: ${generation} · Analiz: ${analysis} · Toplam üst tahmin: ${total} USD"
       },
       "preparation": {
         "preparing": "Kaynak kare hazırlanıyor…",
@@ -773,14 +814,35 @@
         "description": "Görseliniz kırpılmadan ve esnetilmeden seçilen orana yerleştirilir. Boş alanlar uyumlu bir arka planla doldurulur."
       },
       "beta": {
-        "localProcessing": "Fotoğraftan video hazırlanıyor",
         "unsafeMotion": "Bu hareket ürünün görünmeyen yüzlerini veya şeklini değiştirebilir. Hafif kamera hareketi seçin.",
         "quote": "{model} · {seconds} sn · Tahmini üst sınır: ${cost} USD",
         "quoteUnavailable": "Doğrulanmış maliyet alınamadı. Üretim kapalı.",
-        "requestId": "Test istek kimliği: {id}",
+        "prepareQuote": "Güncel maliyeti doğrula",
+        "checkingPrevious": "Önceki video isteğinin durumu doğrulanıyor. Yeni üretim güvenli biçimde devam edebilmek için bu kontrolü bekliyor.",
+        "newSubmissionFirst": "Önceki video isteği korunuyor. Yeni üretime geçmek için ayrı bir video isteği oluştur.",
+        "videoUnavailable": "Video üretimi şu anda bu hesap veya seçenekler için etkin değil.",
+        "preparingSubmission": "Yeni video isteği hazırlanıyor…",
+        "selectSourceFirst": "Devam etmek için önce bir ürün görseli seç.",
+        "preparingSource": "Kaynak görsel hazırlanıyor; hazır olduğunda çekim planı oluşturabilirsin.",
+        "sourcePrepareFailed": "Kaynak görsel hazırlanamadı. Yeniden seçip hazırlamayı tamamla.",
+        "completeSettingsFirst": "Önce video isteği ayarlarını tamamla.",
+        "prepareDirectorFirst": "Önce çekim planını hazırla. Preset veya çekim yapısı değiştiğinde eski plan ve maliyet onayı geçersiz olur.",
+        "verifyCostFirst": "Çekim planı hazır. Devam etmek için gönderilecek Kling isteğinin güncel maliyetini doğrula.",
+        "confirmCostFirst": "Maliyet doğrulandı. Video oluşturmak için gösterilen tutarı açıkça onayla.",
+        "payloadPreview": "Gönderilecek Kling isteği",
+        "shotCount": "{count} çekim",
+        "preparingQuote": "Maliyet doğrulanıyor…",
+        "confirmCost": "Bu video için en fazla {cost} USD maliyeti onaylıyorum.",
+        "newSubmission": "Yeni video isteği oluştur",
+        "recoveryStorage": "İstek güvenli biçimde geri yüklenemiyor. Video Library durumunu kontrol edin.",
         "submitting": "Kling'e gönderiliyor…",
-        "approval": "Bu test isteği için sunucu onayı gerekiyor. Üretim başlatılmadı.",
+        "approval": "Bu video isteği için gerekli onay doğrulanamadı. Üretim başlatılmadı.",
+        "budgetLimit": "Kullanılabilir video bütçesi sınırı dolu; ayrılmış önceki tutarlar hesaba katılıyor. Yeni üretim başlatılmadı. Rezervasyon sonucu netleşmeden yeniden göndermeyin.",
+        "billingUnavailable": "Video bütçesi doğrulanamadı. Yeni üretim başlatılmadı; biraz sonra tekrar deneyin.",
+        "sourceUnavailable": "Kaynak görsele erişilemedi. Üretim başlatılmadı; görseli yeniden seçin.",
         "ambiguous": "Gönderim sonucu belirsiz. Aynı isteği yeniden göndermeyin; Video Library durumunu kontrol edin.",
+        "providerRejected": "Kling çekim talimatını reddetti. Planı gözden geçirip yeni bir istek oluşturun; bu istek otomatik yeniden gönderilmedi.",
+        "invalidPrompt": "Çekim planı Kling'in sınırlarını karşılamıyor. İstek gönderilmedi; planı yeniden hazırlayın.",
         "failed": "Video tamamlanamadı. Video Library durumunu kontrol edin; ücretli isteği tekrar göndermeyin.",
         "sending": "İstek Kling'e gönderiliyor. Bu sırada tekrar tıklamanız gerekmez.",
         "queued": "İstek Kling'e ulaştı; kuyrukta sıra bekliyor.",
@@ -788,8 +850,8 @@
         "finalizing": "Video güvenli depoya kaydedildi; son kontroller yapılıyor.",
         "ready": "Videonuz hazır.",
         "unknown": "İstek durumu henüz doğrulanamıyor. Yeni bir üretim başlatmayın; durum kontrolü sürecek.",
-        "restoreUnavailable": "Onaylı isteğin mevcut durumu doğrulanamıyor. Yeni bir ücretli istek başlatmayın; daha sonra Video Kütüphanesi'ni kontrol edin.",
-        "submissionUsed": "Bu onaylı test üretimi zaten tamamlandı. Video Studio yeni bir istek başlatmaz; videoyu Video Kütüphanesi'nde açabilirsiniz.",
+        "restoreUnavailable": "Önceki isteğin durumu doğrulanamıyor. Video Kütüphanesi'ni kontrol edin; yeni bir istek ayrı maliyet oluşturabilir.",
+        "submissionUsed": "Bu istek kimliği kullanıldı. Video Kütüphanesi'ni kontrol edin veya yeni bir istek oluşturun.",
         "progressTitle": "Üretim durumu",
         "steps": { "source": "Kaynak görsel hazır", "request": "İstek gönderildi", "queued": "Kling kuyruğunda", "processing": "Kling işliyor", "storage": "Video güvenli şekilde kaydediliyor", "saved": "Video güvenli depoya kaydedildi", "ready": "Video hazır" },
         "watchVideo": "Videoyu İzle",
@@ -803,7 +865,6 @@
       "title": "Video Studio",
       "description": "Kaynağınızı ve hareket yönünüzü hazırlayın.",
       "generate": "Video Oluştur",
-      "preparationOnly": "Yalnızca izin verilen hesapta, sunucuda onaylanan test isteği üretilebilir. Ses kapalıdır.",
       "source": {
         "heading": "Kaynak görsel",
         "description": "Videonun başlangıç karesi olarak kullanılacak ürün görselini seçin.",
@@ -828,8 +889,8 @@
       },
       "prompt": {
         "image": {
-          "heading": "Hareket açıklaması",
-          "description": "Mevcut görselin nasıl canlanacağını anlatın.",
+          "heading": "Hareket açıklaması (isteğe bağlı)",
+          "description": "Kamera ve ürün hareketi için kısa bir yaratıcı yön ekleyin.",
           "placeholder": "Örn. Ürüne doğru yavaş sinematik yaklaşma ve yumuşak yansıma geçişleri…"
         },
         "inspirationLabel": "Açıklama önerileri"
@@ -900,7 +961,7 @@
       }
     },
     "videoLibrary": {
-      "sourceMotion": "Fotoğraftan Hareket",
+      "legacyLocal": "Eski yerel video",
       "metadataTitle": "Video Kütüphanesi",
       "metadataDescription": "Klay AI ile oluşturulan videoları inceleyin ve yönetin.",
       "eyebrow": "VİDEO ÇALIŞMA ALANI",
@@ -1012,7 +1073,6 @@
         "unavailable": { "title": "Video kullanılamıyor", "description": "Bu kaydın oynatılabilir varlığı kullanılamıyor." }
       },
       "fidelityAnalysis": {
-        "sourceBased": "Bu video kaynak fotoğraftan 2D hareketle oluşturuldu; ürün AI ile yeniden çizilmedi. Bu bilgi, tüm ayrıntıların analizle doğrulandığı anlamına gelmez.",
         "closeupSource": "Kritik bölge · kaynak",
         "closeupVideo": "Kritik bölge penceresi · {time} sn (hizalama doğrulanmadı)",
         "title": "Ürün Sadakati Analizi",

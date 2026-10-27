@@ -61,7 +61,7 @@ export class UgcKlingVideoProvider implements UgcVideoProvider {
     const observed = await this.getStatus(task.providerRequestId);
     return {
       kind: "observed" as const,
-      status: observed === "queued" ? task.status : "processing" as const,
+      status: observed === "queued" ? task.status : observed === "failed" ? "failed" as const : "processing" as const,
       outputReady: observed === "completed",
     };
   }

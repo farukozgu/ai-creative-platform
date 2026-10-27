@@ -7,7 +7,7 @@ import type { VideoPresentationRecord, VideoStatus } from "@/features/video/vide
 import styles from "@/features/video/video-library.module.css";
 
 export type VideoCardCopy = {
-  sourceMotion: string;
+  legacyLocal: string;
   open: string;
   download: string;
   noPreview: string;
@@ -32,7 +32,8 @@ function formatDate(value: string | null | undefined, locale: string) {
 
 export function VideoCard({ record, locale, copy }: VideoCardProps) {
   const createdAt = formatDate(record.createdAt, locale);
-  const title = record.generationMethod === "source-motion" ? copy.sourceMotion : record.title;
+  const legacyLocal = record.generationMethod === "legacy-local";
+  const title = legacyLocal ? copy.legacyLocal : record.title;
 
   return (
     <li>
@@ -63,7 +64,7 @@ export function VideoCard({ record, locale, copy }: VideoCardProps) {
             </span>
           </div>
           <p className={styles.cardMeta}>
-            <span>{record.generationMethod === "source-motion" ? copy.sourceMotion : copy.mode[record.generationMode]}</span>
+            <span>{legacyLocal ? copy.legacyLocal : copy.mode[record.generationMode]}</span>
             {record.aspectRatio ? <span>{record.aspectRatio}</span> : null}
             {record.durationSeconds ? <span>{copy.seconds(record.durationSeconds)}</span> : null}
             {createdAt ? <time dateTime={record.createdAt ?? undefined}>{createdAt}</time> : null}

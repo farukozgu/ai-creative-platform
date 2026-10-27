@@ -4,7 +4,7 @@ import createNextIntlPlugin from "next-intl/plugin";
 const nextConfig: NextConfig = {
   distDir: process.env.KLAY_VIDEO_QA === "true" ? ".next-video-qa" : ".next",
   serverExternalPackages: ["sharp", "ffmpeg-static"],
-  outputFileTracingIncludes: { "/*/dashboard/video": ["./node_modules/ffmpeg-static/ffmpeg*"], "/*/dashboard/videos/*": ["./node_modules/ffmpeg-static/ffmpeg*"], "/api/dashboard/videos/*/fidelity-analysis": ["./node_modules/ffmpeg-static/ffmpeg*"] },
+  outputFileTracingIncludes: { "/api/dashboard/videos/*/fidelity-analysis": ["./node_modules/ffmpeg-static/ffmpeg*"] },
   experimental: {globalNotFound: true},
 };
 

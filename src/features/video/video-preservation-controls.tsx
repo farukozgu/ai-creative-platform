@@ -2,14 +2,14 @@
 /* eslint-disable @next/next/no-img-element -- private source previews may be blob URLs. */
 import { useRef } from "react";
 import { useTranslations } from "next-intl";
-import type { CriticalProductRegion, VideoGenerationMethod } from "@/lib/video-generation/preservation";
+import type { CriticalProductRegion } from "@/lib/video-generation/preservation";
 import styles from "./video-studio-workspace.module.css";
 
-type Props = { method: VideoGenerationMethod; region: CriticalProductRegion | null; sourceUrl: string | null; regionResolutionLabel?: string | null;
+type Props = { region: CriticalProductRegion | null; sourceUrl: string | null; regionResolutionLabel?: string | null;
   analysis: { enabled: boolean; maximumEstimatedCostUsd: number | null; model?: string }; analyze: boolean;
-  onMethod: (method: VideoGenerationMethod) => void; onRegion: (region: CriticalProductRegion | null) => void; onAnalyze: (value: boolean) => void };
+  onRegion: (region: CriticalProductRegion | null) => void; onAnalyze: (value: boolean) => void };
 
-export function VideoPreservationControls({ method, region, sourceUrl, regionResolutionLabel, analysis, analyze, onMethod, onRegion, onAnalyze }: Props) {
+export function VideoPreservationControls({ region, sourceUrl, regionResolutionLabel, analysis, analyze, onRegion, onAnalyze }: Props) {
   const t = useTranslations("Dashboard.videoStudio.preservation");
   const start = useRef<{ x: number; y: number } | null>(null);
   function point(event: React.PointerEvent<HTMLButtonElement>) {
@@ -24,14 +24,7 @@ export function VideoPreservationControls({ method, region, sourceUrl, regionRes
     onRegion(next);
   }
   return <section className={styles.controlSection}>
-    <fieldset className={styles.methodSelector}>
-      <legend>{t("methodTitle")}</legend>
-      {(["source-motion", "kling"] as const).map(value => <label key={value}>
-        <input type="radio" name="video-generation-method" value={value} checked={method === value} onChange={() => onMethod(value)} />
-        <span><strong>{t(value === "source-motion" ? "sourceMotion" : "kling")}</strong><small>{t(value === "source-motion" ? "sourceDescription" : "klingDescription")}</small></span>
-      </label>)}
-    </fieldset>
-    <p className={styles.fieldDescription}>{t(method === "source-motion" ? "encodingNotice" : "noGuarantee")}</p>
+    <p className={styles.fieldDescription}>{t("noGuarantee")}</p>
     {sourceUrl ? <details className={styles.regionEditor}>
       <summary>{t("regionTitle")}</summary>
       <p className={styles.fieldDescription}>{t("regionHelp")}</p>
@@ -51,10 +44,10 @@ export function VideoPreservationControls({ method, region, sourceUrl, regionRes
         <button type="button" onClick={() => onRegion(null)}>{t("clearRegion")}</button>
       </> : null}
     </details> : null}
-    {method === "kling" ? <div className={styles.analysisOptIn}>
+    <div className={styles.analysisOptIn}>
       <label><input type="checkbox" checked={analyze && analysis.enabled} disabled={!analysis.enabled} onChange={event => onAnalyze(event.target.checked)} />{t("analysisOptIn")}</label>
       <p className={styles.fieldDescription}>{analysis.enabled && analysis.maximumEstimatedCostUsd !== null ? t("analysisCost", { model: analysis.model ?? "gpt-4o-mini", cost: analysis.maximumEstimatedCostUsd.toFixed(6) }) : t("analysisDisabled")}</p>
       <p className={styles.fieldDescription}>{t("analysisConsent")}</p>
-    </div> : null}
+    </div>
   </section>;
 }

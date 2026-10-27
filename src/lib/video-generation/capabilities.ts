@@ -1,4 +1,5 @@
 import type { VideoGenerationAspectRatio, VideoGenerationDuration, VideoGenerationMode, VideoGenerationQuality } from "@/lib/video-generation/types";
+import { usdProductToMicrosCeil } from "./money";
 
 export type VideoProviderPricing =
   | { basis: "per-second"; audioOffUsdPerSecond: number; audioOnUsdPerSecond: number; voiceControlUsdPerSecond: number | null }
@@ -80,7 +81,7 @@ export function resolveVideoRoute(
 }
 
 export function estimateVerifiedProviderCost(capability: VideoEndpointCapability, duration: number) {
-  return capability.pricing.basis === "per-second"
-    ? Number((capability.pricing.audioOffUsdPerSecond * duration).toFixed(6))
-    : null;
+  if (capability.pricing.basis !== "per-second") return null;
+  const micros = usdProductToMicrosCeil(capability.pricing.audioOffUsdPerSecond, duration);
+  return micros === null ? null : Number(micros) / 1_000_000;
 }

@@ -58,7 +58,6 @@ type Frame = { timestampSeconds: number; dataUrl: string };
 type PreparedReview = { sourcePreview: string; frames: Frame[]; closeups: { label: string; timestampSeconds: number | null; dataUrl: string }[] };
 
 type VideoFidelityAnalysisProps = {
-  generationMethod?: "source-motion" | "kling";
   analysisRequested?: boolean;
   videoId: string;
   durationSeconds: number;
@@ -81,7 +80,7 @@ function renderTextList(values: readonly string[], fallback: string) {
   return values.length > 0 ? values.join(" · ") : fallback;
 }
 
-export function VideoFidelityAnalysis({ videoId, durationSeconds, availability, copy, generationMethod = "kling", analysisRequested = false }: VideoFidelityAnalysisProps) {
+export function VideoFidelityAnalysis({ videoId, durationSeconds, availability, copy, analysisRequested = false }: VideoFidelityAnalysisProps) {
   const t = useTranslations("Dashboard.videoDetail.fidelityAnalysis");
   const locale = useLocale();
   const automaticStarted = useRef(false);
@@ -97,7 +96,6 @@ export function VideoFidelityAnalysis({ videoId, durationSeconds, availability, 
   const [sessionCacheReady, setSessionCacheReady] = useState(false);
 
   useEffect(() => {
-    if (generationMethod === "source-motion") return;
     let active = true;
     let timer: ReturnType<typeof setTimeout>;
     const endpoint = `/api/dashboard/videos/${encodeURIComponent(videoId)}/fidelity-analysis`;
@@ -127,7 +125,7 @@ export function VideoFidelityAnalysis({ videoId, durationSeconds, availability, 
     }
     void poll();
     return () => { active = false; clearTimeout(timer); };
-  }, [videoId, generationMethod, analysisRequested, locale, reviewRefresh]);
+  }, [videoId, analysisRequested, locale, reviewRefresh]);
 
   async function handlePrepare() {
     setPreparing(true);
@@ -175,7 +173,6 @@ export function VideoFidelityAnalysis({ videoId, durationSeconds, availability, 
         </div>
       </div>
 
-      {generationMethod === "source-motion" ? <p className={styles.description}>{t("sourceBased")}</p> : null}
       {!prepared ? (
         <div className={styles.prepareBlock}>
           <p>{copy.freeStep}</p>
@@ -204,7 +201,7 @@ export function VideoFidelityAnalysis({ videoId, durationSeconds, availability, 
         </div>
       )}
 
-      {generationMethod === "kling" && prepared && sessionCacheReady && !report && !analysisOutcome && !analysisStarted ? (
+      {prepared && sessionCacheReady && !report && !analysisOutcome && !analysisStarted ? (
         <div className={styles.consentBlock}>
           {availability.enabled && availability.maximumEstimatedCostUsd !== null ? (
             <>

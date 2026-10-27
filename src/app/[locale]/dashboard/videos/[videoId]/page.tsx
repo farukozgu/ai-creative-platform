@@ -38,9 +38,10 @@ export default async function VideoDetailPage({ params }: VideoDetailPageProps) 
     : { enabled: false, maximumEstimatedCostUsd: null };
 
   setRequestLocale(locale);
-  const [t, studioT] = await Promise.all([
+  const [t, studioT, libraryT] = await Promise.all([
     getTranslations({ locale, namespace: "Dashboard.videoDetail" }),
     getTranslations({ locale, namespace: "Dashboard.videoStudio" }),
+    getTranslations({ locale, namespace: "Dashboard.videoLibrary" }),
   ]);
   const fidelityCopy: VideoFidelityCopy = {
     title: t("fidelityAnalysis.title"),
@@ -138,5 +139,5 @@ export default async function VideoDetailPage({ params }: VideoDetailPageProps) 
     fidelity: fidelityCopy,
   };
 
-  return <VideoDetail record={record.generationMethod === "source-motion" ? { ...record, title: studioT("preservation.sourceMotion") } : record} locale={locale} copy={copy} fidelityAvailability={fidelityAvailability} />;
+  return <VideoDetail record={record.generationMethod === "legacy-local" ? { ...record, title: libraryT("legacyLocal") } : record} locale={locale} copy={copy} fidelityAvailability={fidelityAvailability} />;
 }

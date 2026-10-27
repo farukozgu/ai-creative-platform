@@ -2,7 +2,7 @@ import "server-only";
 import { cropProductRegion } from "./crop-region";
 import sharp from "sharp";
 import { readOwnedPreparedVideoSource } from "@/lib/video-generation/source-context";
-import { extractVideoFrames } from "@/lib/video-generation/source-motion";
+import { extractVideoFrames } from "@/lib/video-fidelity/video-frame-extractor";
 import { mapRegionToFrame } from "@/lib/video-generation/preservation";
 import { SupabaseVideoJobRepository } from "@/lib/video-generation/supabase-repository";
 import { readOwnedVideoFidelityMedia } from "./private-media";

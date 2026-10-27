@@ -11,8 +11,9 @@ import { MAX_VIDEO_RECONCILIATION_ATTEMPTS, reconcileVideoGeneration } from "../
 import { submitVideoGeneration } from "../src/lib/video-generation/service";
 import { isSourceUrlFresh } from "../src/lib/video-generation/source";
 import type { VideoBillingPolicy } from "../src/lib/video-generation/billing";
-import type { VideoGenerationDraft, VideoGenerationProvider, VideoJobRecord, VideoJobRepository } from "../src/lib/video-generation/types";
+import { DefiniteVideoProviderFailure, type VideoGenerationDraft, type VideoGenerationProvider, type VideoJobRecord, type VideoJobRepository } from "../src/lib/video-generation/types";
 import { validateDraftAgainstCapability, validateVideoGenerationDraft } from "../src/lib/video-generation/validation";
+import { compileDirectorPlan, fallbackDirectorPlan } from "../src/lib/video-director/core";
 
 const ownerId = "10000000-0000-4000-8000-000000000001";
 const submissionId = "20000000-0000-4000-8000-000000000002";
@@ -78,6 +79,69 @@ function provider(overrides: Partial<VideoGenerationProvider> = {}) {
   return { value, submissions: () => submissions };
 }
 
+test("Director multi-shot submission keeps the billing boundary, source and idempotency for both tiers", async () => {
+  for (const quality of ["standard", "pro"] as const) {
+    const parsed = validateVideoGenerationDraft({ ...imageDraft, quality, shotMode: "multi", director: { presetId: "minimal-studio", shotMode: "multi", receipt: "server-verified-fixture" } });
+    assert.ok(parsed.ok);
+    const draft = parsed.value;
+    const input = { draft, presetId: "minimal-studio" as const, shotMode: "multi" as const, profile: null };
+    const plan = fallbackDirectorPlan(input), compiled = compileDirectorPlan(plan, input);
+    const repository = new MemoryRepository(), budget = billing(); let calls = 0;
+    const mock = provider({ submit: async request => {
+      calls++;
+      const payload = buildFalVideoRequestInput(request);
+      assert.equal(payload.prompt, undefined); assert.equal(payload.shot_type, "customize");
+      assert.equal(payload.start_image_url, "https://signed.example/source.png");
+      assert.equal(payload.enable_safety_checker, true); assert.equal(payload.generate_audio, false);
+      assert.equal(request.multiPrompt?.reduce((sum, shot) => sum + Number(shot.duration), 0), 5);
+      return { requestId: "director-task" };
+    } });
+    const deps = { repository, provider: mock.value, billing: budget.value, sourceResolver,
+      capability: { ...videoEndpointCapabilities[videoTierRouting[quality]], productionApproved: true }, env: { VIDEO_GENERATION_ENABLED: "true" },
+      preservation: { version: compiled.version, method: "kling" as const, draftHash: videoDraftHash(draft), sourceSha256: "fixture",
+        geometry: { originalWidth: 1000, originalHeight: 562, contentRect: { x: 0, y: 0, width: 1, height: 1 } },
+        criticalRegion: null, frameRegion: null, compiledPrompt: compiled.prompt, negativePrompt: compiled.negativePrompt, cfgScale: compiled.cfgScale,
+        analysisConsent: null, director: { plan, multiPrompt: compiled.multiPrompt } } };
+    assert.equal((await submitVideoGeneration(ownerId, draft, { ...deps, preservation: undefined })).ok, false);
+    assert.equal(budget.counts().reservations, 0);
+    assert.equal((await submitVideoGeneration(ownerId, draft, { ...deps, preservation: { ...deps.preservation, director: { plan } } })).ok, false);
+    assert.equal(budget.counts().reservations, 0);
+    const malformed = { ...deps.preservation, director: { plan, multiPrompt: [{ prompt: "invalid shot", duration: "1" }] } };
+    assert.equal((await submitVideoGeneration(ownerId, draft, { ...deps, preservation: malformed })).ok, false);
+    assert.equal(budget.counts().reservations, 0);
+    const oversized = { ...deps.preservation, director: { plan, multiPrompt: [
+      { prompt: "x".repeat(513), duration: "2" }, { prompt: "detail", duration: "2" }, { prompt: "closing", duration: "1" },
+    ] } };
+    assert.equal((await submitVideoGeneration(ownerId, draft, { ...deps, preservation: oversized })).ok, false);
+    assert.equal(budget.counts().reservations, 0); assert.equal(calls, 0);
+    assert.equal((await submitVideoGeneration(ownerId, draft, deps)).ok, true);
+    const duplicate = await submitVideoGeneration(ownerId, draft, deps);
+    assert.ok(duplicate.ok && duplicate.duplicate); assert.equal(calls, 1);
+    assert.equal(repository.records.get(jobId)?.preservation?.director?.plan.presetId, "minimal-studio");
+  }
+});
+
+test("concurrent use of one reserved submission never causes two paid calls, including lost reservation replies", async () => {
+  for (const lostReply of [false, true]) {
+    const repository = new MemoryRepository(), consumed = new Set<string>();
+    let paidCalls = 0;
+    const once = billing({ reserve: async (_owner, id) => {
+      if (consumed.has(id)) return { ok: false, code: "billing_unavailable" };
+      consumed.add(id);
+      if (lostReply) return { ok: false, code: "billing_unavailable" };
+      return { ok: true, reservation: { id: "once-reservation", status: "reserved" } };
+    } });
+    const mock = provider({ submit: async () => { paidCalls++; return { requestId: "one-task" }; } });
+    const deps = { repository, provider: mock.value, billing: once.value, sourceResolver, capability: approvedImageCapability,
+      env: { VIDEO_GENERATION_ENABLED: "true" } };
+    const outcomes = await Promise.all([submitVideoGeneration(ownerId, imageDraft, deps), submitVideoGeneration(ownerId, imageDraft, deps)]);
+    assert.ok(outcomes.some(result => !result.ok));
+    assert.equal(paidCalls, lostReply ? 0 : 1);
+    await submitVideoGeneration(ownerId, imageDraft, deps);
+    assert.equal(paidCalls, lostReply ? 0 : 1);
+  }
+});
+
 test("both customer tiers route to their approved model configuration but remain closed", () => {
   assert.deepEqual(resolveVideoRoute("image", "standard", {}), { ok: false, code: "feature_disabled" });
   assert.deepEqual(resolveVideoRoute("image", "standard", { VIDEO_GENERATION_ENABLED: "true" }), { ok: false, code: "routing_unapproved" });
@@ -129,6 +193,7 @@ test("draft validation sanitizes prompt input and rejects forged source combinat
   assert.equal(parsed.ok, true);
   if (parsed.ok) assert.equal(parsed.value.prompt, "A polished product reveal with soft motion");
   assert.equal(validateVideoGenerationDraft({ ...imageDraft, mode: "text", source: null }).ok, false);
+  assert.equal(validateVideoGenerationDraft({ ...imageDraft, method: "source-motion" }).ok, false);
   assert.equal(validateVideoGenerationDraft({ ...imageDraft, source: null }).ok, false);
   assert.equal(validateVideoGenerationDraft({ ...imageDraft, durationSeconds: 12 }).ok, false);
 });
@@ -154,6 +219,17 @@ test("idempotent submissions preserve the shared reservation and create one prov
   assert.deepEqual(paid.counts(), { reservations: 2, releases: 0, reconciliations: 0, finalizations: 0 });
 });
 
+test("exhausted beta budget returns an explicit limit error before creating a job or calling Fal", async () => {
+  const repository = new MemoryRepository(), paid = billing({ reserve: async () => ({ ok: false, code: "insufficient_balance" }) });
+  const mockProvider = provider();
+  const result = await submitVideoGeneration(ownerId, imageDraft, {
+    repository, provider: mockProvider.value, billing: paid.value, sourceResolver,
+    capability: approvedImageCapability, env: { VIDEO_GENERATION_ENABLED: "true" },
+  });
+  assert.deepEqual(result.ok ? null : result.code, "budget_limit_reached");
+  assert.equal(repository.records.size, 0); assert.equal(mockProvider.submissions(), 0);
+});
+
 test("an ambiguous provider failure is not retried and requires billing reconciliation", async () => {
   const repository = new MemoryRepository(); const paid = billing();
   const result = await submitVideoGeneration(ownerId, imageDraft, {
@@ -163,6 +239,19 @@ test("an ambiguous provider failure is not retried and requires billing reconcil
   assert.deepEqual(result.ok ? null : result.code, "provider_submission_ambiguous");
   assert.equal(repository.records.get(jobId)?.status, "failed");
   assert.equal(paid.counts().reconciliations, 1);
+});
+
+test("Fal terminal client rejection fails the job without resubmission or automatic refund", async () => {
+  const repository = new MemoryRepository(), paid = billing(); let calls = 0;
+  const result = await submitVideoGeneration(ownerId, imageDraft, {
+    repository, billing: paid.value, provider: provider({ submit: async () => { calls++; throw new DefiniteVideoProviderFailure(); } }).value,
+    sourceResolver, capability: approvedImageCapability, env: { VIDEO_GENERATION_ENABLED: "true" },
+  });
+  assert.deepEqual(result.ok ? null : result.code, "provider_failure");
+  assert.equal(calls, 1); assert.equal(repository.records.get(jobId)?.status, "failed");
+  assert.equal(repository.records.get(jobId)?.errorCode, "provider_failure");
+  assert.equal(repository.records.get(jobId)?.billingStatus, "reconciliation_required");
+  assert.equal(paid.counts().reconciliations, 1); assert.equal(paid.counts().releases, 0);
 });
 
 test("persistence failure releases the reservation and never reaches the provider", async () => {
@@ -205,6 +294,21 @@ test("reconciliation stops at the retry limit without another provider call", as
     billing: billing().value, outputStore: { persist: async () => { throw new Error("not called"); } },
   });
   assert.equal(result.status, "failed"); assert.equal(statusReads, 0); assert.equal(repository.records.get(jobId)?.errorCode, "retry_limit_reached");
+});
+
+test("terminal Fal failure ends reconciliation and leaves the reserved billing record for review", async () => {
+  const repository = new MemoryRepository(); repository.records.set(jobId, job({ status: "processing" }));
+  const paid = billing();
+  const result = await reconcileVideoGeneration(jobId, {
+    repository, provider: provider({ getStatus: async () => "failed" }).value, billing: paid.value,
+    outputStore: { persist: async () => { throw new Error("not called"); } },
+  });
+  assert.equal(result.status, "failed");
+  assert.equal(repository.records.get(jobId)?.errorCode, "provider_failure");
+  assert.equal(repository.records.get(jobId)?.billingStatus, "reconciliation_required");
+  assert.equal(repository.records.get(jobId)?.billingReservationId, "reservation-1");
+  assert.equal(repository.records.get(jobId)?.status, "failed");
+  assert.equal(paid.counts().releases, 0); assert.equal(paid.counts().finalizations, 0);
 });
 
 test("billing failure keeps the durable output checkpointed for a retry", async () => {

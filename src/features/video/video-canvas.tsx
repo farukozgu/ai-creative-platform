@@ -11,7 +11,6 @@ import styles from "@/features/video/video-studio-workspace.module.css";
 
 type VideoCanvasProps = {
   criticalRegion?: import("@/lib/video-generation/preservation").CriticalProductRegion | null;
-  sourceMotion?: boolean;
   source: VideoSource | null;
   aspectRatio: VideoAspectRatio;
   previewLabel: string;
@@ -27,7 +26,6 @@ type VideoCanvasProps = {
 
 export function VideoCanvas({
   criticalRegion,
-  sourceMotion = false,
   source,
   aspectRatio,
   previewLabel,
@@ -40,7 +38,7 @@ export function VideoCanvas({
   generationsEmptyTitle,
   generationsEmptyDescription,
 }: VideoCanvasProps) {
-  const region = criticalRegion && sourceMotion ? { ...criticalRegion, x: 0.03 + criticalRegion.x * 0.94, y: 0.03 + criticalRegion.y * 0.94, width: criticalRegion.width * 0.94, height: criticalRegion.height * 0.94 } : criticalRegion;
+  const region = criticalRegion;
   return (
     <section className={styles.canvas} aria-label={previewLabel}>
       <div className={styles.canvasPanel}>
@@ -53,7 +51,7 @@ export function VideoCanvas({
           </div>
         </header>
         <div className={styles.preview}>
-          <div className={styles.mediaFrame} data-aspect-ratio={aspectRatio} data-source-motion={sourceMotion || undefined}>
+          <div className={styles.mediaFrame} data-aspect-ratio={aspectRatio}>
             {source ? (
               <img src={source.previewUrl} alt={sourceAlt} />
             ) : (

@@ -8,7 +8,6 @@ import {
 } from "@/features/video/video-source-selector";
 import type {
   VideoAspectRatio,
-  VideoCameraMovement,
   VideoDuration,
   VideoLibraryAsset,
   VideoQuality,
@@ -30,34 +29,30 @@ export type VideoInspectorCopy = {
   promptHeading: string;
   promptDescription: string;
   promptPlaceholder: string;
-  inspirationLabel: string;
-  cameraHeading: string;
-  cameraDescription: string;
   qualityHeading: string;
   outputHeading: string;
   aspectRatioLabel: string;
   durationLabel: string;
   secondsLabel: (seconds: number) => string;
   generate: string;
-  preparationOnly: string;
   libraryLink: string;
 };
 
 type VideoGenerationInspectorProps = {
+  approvalControls?: React.ReactNode;
+  presetControls?: React.ReactNode;
+  directorControls?: React.ReactNode;
+  advancedSettings?: React.ReactNode;
   preservationControls?: React.ReactNode;
-  isSourceMotion?: boolean;
   copy: VideoInspectorCopy;
   source: VideoSource | null;
   prompt: string;
-  promptSuggestions: string[];
-  cameraMovement: VideoCameraMovement;
-  cameraOptions: Option<VideoCameraMovement>[];
   quality: VideoQuality;
   qualityOptions: Option<VideoQuality>[];
   aspectRatio: VideoAspectRatio;
   aspectRatioOptions: Option<VideoAspectRatio>[];
   duration: VideoDuration;
-  durationOptions: VideoDuration[];
+  durationOptions: Option<VideoDuration>[];
   feedbackMessage: string | null;
   feedbackIsError: boolean;
   isReady: boolean;
@@ -74,33 +69,27 @@ type VideoGenerationInspectorProps = {
   onRetryLibrary: () => void;
   onSelectLibrary: (asset: VideoLibraryAsset) => void;
   onPromptChange: (prompt: string) => void;
-  onSuggestion: (suggestion: string) => void;
-  onCameraChange: (movement: VideoCameraMovement) => void;
   onQualityChange: (quality: VideoQuality) => void;
   onAspectRatioChange: (aspectRatio: VideoAspectRatio) => void;
   onDurationChange: (duration: VideoDuration) => void;
   onGenerate: () => void;
-  quoteSummary?: string;
-  submissionId?: string;
 };
 
 export function VideoGenerationInspector({
+  approvalControls,
+  presetControls,
+  directorControls,
+  advancedSettings,
   preservationControls,
-  isSourceMotion = false,
   copy,
   source,
   prompt,
-  promptSuggestions,
-  cameraMovement,
-  cameraOptions,
   quality,
   qualityOptions,
   aspectRatio,
   aspectRatioOptions,
   duration,
   durationOptions,
-  quoteSummary,
-  submissionId,
   feedbackMessage,
   feedbackIsError,
   isReady,
@@ -117,8 +106,6 @@ export function VideoGenerationInspector({
   onRetryLibrary,
   onSelectLibrary,
   onPromptChange,
-  onSuggestion,
-  onCameraChange,
   onQualityChange,
   onAspectRatioChange,
   onDurationChange,
@@ -149,8 +136,9 @@ export function VideoGenerationInspector({
           onSelectLibrary={onSelectLibrary}
         />
 
-        {preservationControls}
-        {!isSourceMotion ? <section className={styles.controlSection} aria-labelledby="video-prompt-heading">
+        {presetControls}
+
+        <section className={styles.controlSection} aria-labelledby="video-prompt-heading">
           <div className={styles.controlHeading}>
             <h2 id="video-prompt-heading">{copy.promptHeading}</h2>
             <p>{copy.promptDescription}</p>
@@ -162,42 +150,15 @@ export function VideoGenerationInspector({
             rows={5}
             onChange={(event) => onPromptChange(event.target.value)}
           />
-          <div className={styles.suggestions} aria-label={copy.inspirationLabel}>
-            {promptSuggestions.map((suggestion) => (
-              <button
-                key={suggestion}
-                type="button"
-                onClick={() => onSuggestion(suggestion)}
-              >
-                {suggestion}
-              </button>
-            ))}
-          </div>
-        </section> : null}
+        </section>
 
         <fieldset className={styles.controlSection}>
-          <legend>{copy.cameraHeading}</legend>
-          <p className={styles.fieldDescription}>{copy.cameraDescription}</p>
-          <div className={styles.compactOptions}>
-            {cameraOptions.map((option) => (
-              <label key={option.value} title={option.description}>
-                <input
-                  type="radio"
-                  name="video-camera"
-                  value={option.value}
-                  checked={cameraMovement === option.value}
-                  onChange={() => onCameraChange(option.value)}
-                />
-                <span>{option.label}</span>
-              </label>
-            ))}
-          </div>
-        </fieldset>
-
-        {!isSourceMotion ? <fieldset className={styles.controlSection}>
           <legend>{copy.qualityHeading}</legend>
           <div className={styles.qualityOptions}>
-            {qualityOptions.map((option) => (
+            {qualityOptions.length === 1 ? <div className={styles.activeOption}>
+              <strong>{qualityOptions[0]?.label}</strong>
+              <small>{qualityOptions[0]?.description}</small>
+            </div> : qualityOptions.map((option) => (
               <label key={option.value} aria-disabled={option.disabled || undefined} title={option.disabled ? option.description : undefined}>
                 <input
                   type="radio"
@@ -214,7 +175,7 @@ export function VideoGenerationInspector({
               </label>
             ))}
           </div>
-        </fieldset> : null}
+        </fieldset>
 
         <fieldset className={styles.controlSection}>
           <legend>{copy.outputHeading}</legend>
@@ -239,39 +200,39 @@ export function VideoGenerationInspector({
             <span>{copy.durationLabel}</span>
             <div className={styles.outputOptions}>
               {durationOptions.map((option) => (
-                <label key={option}>
+                <label key={option.value} aria-disabled={option.disabled || undefined} title={option.disabled ? option.description : undefined}>
                   <input
                     type="radio"
                     name="video-duration"
-                    value={option}
-                    checked={duration === option}
-                    onChange={() => onDurationChange(option)}
+                    value={option.value}
+                    checked={duration === option.value}
+                    disabled={option.disabled}
+                    onChange={() => onDurationChange(option.value)}
                   />
-                  <span>{copy.secondsLabel(option)}</span>
+                  <span>{option.label}</span>
                 </label>
               ))}
             </div>
+            {durationOptions.some(option => option.disabled) ? <p className={styles.fieldDescription}>{durationOptions.find(option => option.disabled)?.description}</p> : null}
           </div>
         </fieldset>
+        {directorControls}
+        {advancedSettings ?? preservationControls}
       </div>
 
       <footer className={styles.inspectorFooter}>
-        {quoteSummary ? <p className={styles.generateHelper} role="status">{quoteSummary}</p> : null}
-        {submissionId ? <small className={styles.generateHelper}>{submissionId}</small> : null}
+        {approvalControls}
         <Button
           className={styles.generateButton}
           variant={isReady ? "primary" : "secondary"}
           aria-busy={isSubmitting}
-          aria-describedby="video-generate-helper video-studio-feedback"
+          aria-describedby="video-studio-feedback"
           onClick={onGenerate}
           disabled={!generationAvailable}
         >
           {isSubmitting ? <span className={styles.generateSpinner} aria-hidden="true" /> : null}
           {copy.generate}
         </Button>
-        <p id="video-generate-helper" className={styles.generateHelper}>
-          {copy.preparationOnly}
-        </p>
         <p
           id="video-studio-feedback"
           className={styles.feedback}

@@ -22,10 +22,9 @@ begin
   denied:=false; begin update public.video_fidelity_reviews set maximum_cost_usd=0.03 where job_id=k; exception when others then denied:=true; end;
   insert into preservation_checks values('consent immutable',denied);
   insert into public.generations(id,owner_id,generation_type,status,provider,model,creative_direction_snapshot,client_submission_id,video_mode,quality,aspect_ratio,duration_seconds,camera_movement,source_kind,source_id,endpoint_id,billing_status,provider_metadata)
-    values(l,u,'video','queued','local','source-motion-v1','fixture',gen_random_uuid(),'image','standard','9:16',5,'static','uploaded-image',gen_random_uuid(),'local/source-motion','not_configured','{"videoPreservation":{"method":"source-motion"}}');
-  insert into preservation_checks values('local render atomic claim',public.claim_source_motion_render(u,l)),('local duplicate claim denied',not public.claim_source_motion_render(u,l)),('local has no provider task or reservation',(select provider_request_id is null and billing_reservation_id is null from public.generations where id=l));
+    values(l,u,'video','queued','fal','kling-v3-standard-image','fixture',gen_random_uuid(),'image','standard','9:16',5,'static','uploaded-image',gen_random_uuid(),'fal-ai/kling-video/v3/standard/image-to-video','not_configured','{"videoPreservation":{"method":"kling","version":"product-preservation-v2"}}');
   denied:=false; begin update public.generations set provider_metadata='{}' where id=l; exception when others then denied:=true; end;
-  insert into preservation_checks values('snapshot immutable',denied);
+  insert into preservation_checks values('Kling preservation snapshot immutable',denied);
   perform set_config('request.jwt.claim.sub',u::text,true);
   perform set_config('request.jwt.claims',json_build_object('sub',u,'role','authenticated')::text,true);
 end; $$;

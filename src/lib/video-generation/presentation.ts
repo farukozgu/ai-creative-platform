@@ -4,7 +4,7 @@ import { getVideoProgressPhase } from "@/lib/video-generation/progress-phase";
 
 export function toVideoPresentationRecord(job: VideoJobRecord, playbackUrl: string | null = null): VideoPresentationRecord {
   return {
-    generationMethod: job.provider === "local" ? "source-motion" : "kling",
+    generationMethod: job.provider === "local" ? "legacy-local" : "kling",
     criticalRegion: job.preservation?.criticalRegion ?? null,
     analysisRequested: Boolean(job.preservation?.analysisConsent),
     id: job.id,

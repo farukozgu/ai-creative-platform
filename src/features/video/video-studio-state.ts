@@ -12,7 +12,7 @@ import {
 } from "@/lib/assets/product-asset-constraints";
 
 export const initialVideoStudioDraft: VideoStudioDraft = {
-  method: "source-motion", criticalRegion: null, analyzeAfterGeneration: false,
+  criticalRegion: null, analyzeAfterGeneration: false,
   source: null,
   prompt: "",
   cameraMovement: "dolly-in",
@@ -23,7 +23,6 @@ export const initialVideoStudioDraft: VideoStudioDraft = {
 };
 
 export type VideoStudioAction =
-  | { type: "set-method"; method: VideoStudioDraft["method"] }
   | { type: "set-critical-region"; region: VideoStudioDraft["criticalRegion"] }
   | { type: "set-analysis"; enabled: boolean }
   | { type: "set-source"; source: VideoSource }
@@ -40,7 +39,6 @@ export function videoStudioReducer(
   action: VideoStudioAction,
 ): VideoStudioDraft {
   switch (action.type) {
-    case "set-method": return { ...state, method: action.method, cameraMovement: "dolly-in", analyzeAfterGeneration: false, feedback: null };
     case "set-critical-region": return { ...state, criticalRegion: action.region, analyzeAfterGeneration: false };
     case "set-analysis": return { ...state, analyzeAfterGeneration: action.enabled };
     case "set-source":
@@ -102,7 +100,7 @@ export function validateVideoStudioDraft(
   state: VideoStudioDraft,
 ): VideoStudioFeedback | null {
   if (!state.source) return "source-required";
-  if (state.method === "kling" && !state.prompt.trim()) return "prompt-required";
+  if (!state.prompt.trim()) return "prompt-required";
   return null;
 }
 

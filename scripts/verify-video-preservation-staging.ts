@@ -1,6 +1,6 @@
 /** Explicit disposable project only. Synthetic accounts/media; FAL and OpenAI keys are erased. */
 import assert from "node:assert/strict";
-import { execSync } from "node:child_process";
+import { execFileSync, execSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { createRequire } from "node:module";
 import { dirname, resolve, join } from "node:path";
@@ -11,6 +11,7 @@ import { createClient } from "@supabase/supabase-js";
 import { loadEnvConfig } from "@next/env";
 import ts from "typescript";
 import sharp from "sharp";
+import ffmpegPath from "ffmpeg-static";
 
 const requirePackage = createRequire(import.meta.url);
 const cache = new Map<string, Record<string, unknown>>();
@@ -30,7 +31,7 @@ async function main() {
   const secret = keys.find(key => key.name === "service_role")?.api_key, anon = keys.find(key => key.name === "anon")?.api_key;
   assert.ok(secret && anon);
   Object.assign(process.env, { NEXT_PUBLIC_SUPABASE_URL: `https://${ref}.supabase.co`, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: anon, SUPABASE_SECRET_KEY: secret,
-    FAL_KEY: "", OPENAI_API_KEY: "", OPENAI_BETA_ENABLED: "false", VIDEO_FIDELITY_ENABLED: "false", VIDEO_GENERATION_ENABLED: "false", VIDEO_SOURCE_MOTION_ENABLED: "true", VIDEO_BETA_ENABLED: "true", VIDEO_BETA_APPROVED_SUBMISSION_ID: "", KLAY_VIDEO_QA: "true" });
+    FAL_KEY: "", OPENAI_API_KEY: "", OPENAI_BETA_ENABLED: "false", VIDEO_FIDELITY_ENABLED: "false", VIDEO_GENERATION_ENABLED: "false", VIDEO_BETA_ENABLED: "true", VIDEO_BETA_TRANSACTION_APPROVALS_ENABLED: "false", KLAY_VIDEO_QA: "true" });
   const url = `https://${ref}.supabase.co`;
   const admin = createClient(url, secret, { auth: { persistSession: false, autoRefreshToken: false } });
   const users: string[] = [];
@@ -56,49 +57,44 @@ async function main() {
     check(context.original.equals(synthetic), "original private pixels recovered from owned prepared provenance");
     await assert.rejects(readOwnedPreparedVideoSource(users[1], prepared.source, "9:16")); passed++; console.log("PASS cross-owner prepared source rejected");
     const { videoDraftHash } = loadServer<typeof import("../src/lib/video-generation/request-identity")>("src/lib/video-generation/request-identity.ts");
-    const draft: import("../src/lib/video-generation/types").VideoGenerationDraft = { clientSubmissionId: randomUUID(), method: "source-motion", mode: "image", prompt: "Long source description without spaces: " + "productdetail".repeat(70), quality: "standard", aspectRatio: "9:16", durationSeconds: 5, cameraMovement: "dolly-in", source: prepared.source,
+    const draft: import("../src/lib/video-generation/types").VideoGenerationDraft = { clientSubmissionId: randomUUID(), method: "kling", mode: "image", prompt: "Gentle static product shot.", quality: "standard", aspectRatio: "9:16", durationSeconds: 5, cameraMovement: "static", source: prepared.source,
       criticalRegion: { x: 0.4375, y: 0.1528, width: 0.125, height: 0.0444, declaredText: "TEST 42" }, analysisConsent: null };
-    const snapshot = { version: "product-preservation-v1", method: "source-motion" as const, draftHash: videoDraftHash(draft), sourceSha256: context.sourceSha256, geometry: context.geometry, criticalRegion: draft.criticalRegion!, frameRegion: null, compiledPrompt: "", negativePrompt: "", cfgScale: 0.5, analysisConsent: null };
-    const { submitSourceMotion } = loadServer<typeof import("../src/lib/video-generation/local-runtime")>("src/lib/video-generation/local-runtime.ts");
-    const submitted = await submitSourceMotion(owner, draft, snapshot, context.prepared);
-    check(submitted.ok, "real local renderer stores a private MP4 and successful job");
-    if (!submitted.ok) throw new Error("Local generation failed");
-    const duplicate = await submitSourceMotion(owner, draft, snapshot, context.prepared);
-    check(duplicate.ok && duplicate.duplicate && duplicate.jobId === submitted.jobId, "duplicate submission returns the existing local video");
-    const conflict = await submitSourceMotion(owner, { ...draft, durationSeconds: 10 }, snapshot, context.prepared);
-    check(!conflict.ok, "changed recipe with the same UUID rejected");
-    const row = await admin.from("generations").select("provider_request_id,billing_reservation_id,billing_status").eq("id", submitted.jobId).single();
-    check(!row.error && row.data.provider_request_id === null && row.data.billing_reservation_id === null && row.data.billing_status === "not_configured", "no FAL task or paid reservation for source motion");
+    const preservation = { version: "product-preservation-v2", method: "kling" as const, draftHash: videoDraftHash(draft), sourceSha256: context.sourceSha256, geometry: context.geometry, criticalRegion: draft.criticalRegion!, frameRegion: null, compiledPrompt: "Synthetic Kling test fixture.", negativePrompt: "", cfgScale: 0.5, analysisConsent: null };
     const { prepareOwnedVideoFidelity } = loadServer<typeof import("../src/lib/video-fidelity/prepare-owned")>("src/lib/video-fidelity/prepare-owned.ts");
-    const frames = await prepareOwnedVideoFidelity(owner, submitted.jobId);
+    const { SupabaseVideoJobRepository } = loadServer<typeof import("../src/lib/video-generation/supabase-repository")>("src/lib/video-generation/supabase-repository.ts");
+    const repo = new SupabaseVideoJobRepository();
+    const mockJob = await repo.createOrGet({ ownerId: owner, clientSubmissionId: draft.clientSubmissionId, mode: draft.mode, prompt: draft.prompt, quality: draft.quality, aspectRatio: draft.aspectRatio, durationSeconds: draft.durationSeconds,
+      cameraMovement: draft.cameraMovement, sourceKind: "uploaded-image", sourceId: prepared.source.sourceAssetId, provider: "fal", modelId: "mock-kling", endpointId: "mock-kling", providerRequestId: "mock-provider-task", status: "queued", errorCode: null,
+      outputBucketId: null, outputObjectPath: null, outputMimeType: null, outputSizeBytes: null, estimatedProviderCostUsd: 0, actualProviderCostUsd: null, billingReservationId: null, billingStatus: "not_configured", preservation });
+    check(mockJob.created, "synthetic Kling job fixture is persisted without provider submission");
+    if (!ffmpegPath) throw new Error("FFmpeg fixture generator unavailable.");
+    const fixturePath = join(directory, "mock-kling.mp4");
+    execFileSync(ffmpegPath, ["-hide_banner", "-loglevel", "error", "-f", "lavfi", "-i", "color=c=black:s=1080x1920:r=24:d=5", "-c:v", "libx264", "-pix_fmt", "yuv420p", "-movflags", "+faststart", "-y", fixturePath], { windowsHide: true });
+    const mockMp4 = readFileSync(fixturePath);
+    assert.ifError((await admin.storage.from("generated-videos").upload(`${owner}/${mockJob.job.id}/output.mp4`, mockMp4, { contentType: "video/mp4" })).error);
+    await repo.transition(mockJob.job.id, ["queued"], { status: "processing" });
+    await repo.transition(mockJob.job.id, ["processing"], { status: "succeeded", outputBucketId: "generated-videos", outputObjectPath: `${owner}/${mockJob.job.id}/output.mp4`, outputMimeType: "video/mp4", outputSizeBytes: mockMp4.length });
+    const frames = await prepareOwnedVideoFidelity(owner, mockJob.job.id);
     check(frames.frames.length === 5 && frames.closeups.length === 3, "five server-decoded frames and three critical-region crops");
     const { readOwnedVideoFidelityMedia } = loadServer<typeof import("../src/lib/video-fidelity/private-media")>("src/lib/video-fidelity/private-media.ts");
-    check(await readOwnedVideoFidelityMedia(users[1], submitted.jobId, "video") === null, "private MP4 rejects the other owner");
-    const { SupabaseVideoJobRepository } = loadServer<typeof import("../src/lib/video-generation/supabase-repository")>("src/lib/video-generation/supabase-repository.ts");
-    const repo = new SupabaseVideoJobRepository(); const job = (await repo.findOwned(owner, submitted.jobId))!;
-    const mock = await repo.createOrGet({ ...job, clientSubmissionId: randomUUID(), provider: "fal", modelId: "mock-kling", endpointId: "mock-kling", providerRequestId: "mock-task", preservation: undefined, status: "queued", outputBucketId: null, outputObjectPath: null, outputMimeType: null, outputSizeBytes: null });
-    const localFile = await admin.storage.from("generated-videos").download(`${owner}/${submitted.jobId}/output.mp4`);
-    assert.ok(localFile.data); const mockMp4 = Buffer.from(await localFile.data.arrayBuffer());
-    assert.ifError((await admin.storage.from("generated-videos").upload(`${owner}/${mock.job.id}/output.mp4`, mockMp4, { contentType: "video/mp4" })).error);
-    await repo.transition(mock.job.id, ["queued"], { status: "processing" });
-    await repo.transition(mock.job.id, ["processing"], { status: "succeeded", outputBucketId: "generated-videos", outputObjectPath: `${owner}/${mock.job.id}/output.mp4`, outputMimeType: "video/mp4", outputSizeBytes: mockMp4.length });
+    check(await readOwnedVideoFidelityMedia(users[1], mockJob.job.id, "video") === null, "private MP4 rejects the other owner");
     const version = "video-product-fidelity-v3";
-    assert.ifError((await admin.from("video_fidelity_reviews").insert({ job_id: mock.job.id, owner_id: owner, evaluator_version: version, model: "gpt-4o-mini", maximum_cost_usd: 0.02, pricing_version: "test" })).error);
-    const claims = await Promise.all([0, 1].map(() => admin.rpc("claim_video_fidelity_review", { p_owner: owner, p_job: mock.job.id, p_version: version })));
+    assert.ifError((await admin.from("video_fidelity_reviews").insert({ job_id: mockJob.job.id, owner_id: owner, evaluator_version: version, model: "gpt-4o-mini", maximum_cost_usd: 0.02, pricing_version: "test" })).error);
+    const claims = await Promise.all([0, 1].map(() => admin.rpc("claim_video_fidelity_review", { p_owner: owner, p_job: mockJob.job.id, p_version: version })));
     check(claims.filter(c => c.data).length === 1 && claims.every(c => !c.error), "two concurrent database requests produce one review claim");
     const token = claims.find(c => c.data)!.data;
-    assert.equal((await admin.rpc("mark_video_fidelity_submitting", { p_owner: owner, p_job: mock.job.id, p_version: version, p_token: token })).data, true);
+    assert.equal((await admin.rpc("mark_video_fidelity_submitting", { p_owner: owner, p_job: mockJob.job.id, p_version: version, p_token: token })).data, true);
     const mockReport = { evaluatorVersion: version, model: "mock-provider-no-paid-call", analyzedAt: new Date().toISOString(), sourceProfile: null, sourceDetails: null,
       overallStatus: "review_recommended", summary: "MOCK QA report, not real analysis. " + "LongDetail".repeat(45), checks: ["branding_text", "shape_proportions", "color_material", "construction_details", "motion_deformation"].map(category => ({ category, status: category === "branding_text" ? "suspicious_change" : "unverified", confidence: "low", likelyCause: "unclear", timestampsSeconds: [2.5], reason: "MOCK fixture only. " + "DetailWithoutSpaces".repeat(28) })) };
-    assert.ifError((await admin.from("video_fidelity_reviews").update({ status: "succeeded", report: mockReport }).eq("job_id", mock.job.id).eq("evaluator_version", version).eq("claim_token", token)).error);
+    assert.ifError((await admin.from("video_fidelity_reviews").update({ status: "succeeded", report: mockReport }).eq("job_id", mockJob.job.id).eq("evaluator_version", version).eq("claim_token", token)).error);
     const visible = await ownerClient.from("video_fidelity_reviews").select("job_id");
-    check(!visible.error && visible.data.length === 1 && visible.data[0].job_id === mock.job.id, "authenticated owner can read the durable review");
-    const forbidden = await ownerClient.from("video_fidelity_reviews").insert({ job_id: mock.job.id, owner_id: owner });
+    check(!visible.error && visible.data.length === 1 && visible.data[0].job_id === mockJob.job.id, "authenticated owner can read the durable review");
+    const forbidden = await ownerClient.from("video_fidelity_reviews").insert({ job_id: mockJob.job.id, owner_id: owner });
     check(Boolean(forbidden.error), "authenticated client cannot write consent or review status");
 
     if (process.env.VIDEO_QA_PLAYWRIGHT_MODULE) {
       const { verifyPreservationBrowser } = await import("./verify-video-preservation-browser.mjs");
-      await verifyPreservationBrowser({ email, password, synthetic, jobId: submitted.jobId, reviewJobId: mock.job.id, directory, check });
+      await verifyPreservationBrowser({ email, password, synthetic, jobId: mockJob.job.id, reviewJobId: mockJob.job.id, directory, check });
     }
     console.log(`Preservation staging: ${passed}/${passed}. No paid provider request; production untouched.`);
   } finally {

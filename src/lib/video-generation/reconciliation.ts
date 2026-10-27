@@ -25,6 +25,11 @@ export async function reconcileVideoGeneration(jobId: string, dependencies: Reco
   try {
     const recovered = !job.outputObjectPath ? await dependencies.outputStore.recover?.(job) : null;
     const providerStatus = recovered ? "completed" : await dependencies.provider.getStatus(job.endpointId, job.providerRequestId);
+    if (providerStatus === "failed") {
+      await dependencies.repository.transition(job.id, ["queued", "processing"], { status: "failed", errorCode: "provider_failure", billingStatus: "reconciliation_required" });
+      recordVideoTelemetry({ event: "failed", jobId: job.id, endpointId: job.endpointId, status: "failed", failureCategory: "provider_failure", reconciliationAttempts: attempts });
+      return { status: "failed" as const };
+    }
     if (providerStatus !== "completed") {
       const nextStatus = providerStatus === "processing" ? "processing" : job.status;
       await dependencies.repository.transition(job.id, ["queued", "processing"], { status: nextStatus });
@@ -102,6 +107,12 @@ export async function reconcileClaimedVideoGeneration(claim: VideoReconciliation
   try {
     const recovered = !job.outputObjectPath ? await dependencies.outputStore.recover?.(job) : null;
     const providerStatus = recovered ? "completed" : await dependencies.provider.getStatus(job.endpointId, job.providerRequestId);
+    if (providerStatus === "failed") {
+      const updated = await dependencies.repository.transitionClaimed(claim, ["queued", "processing"], { status: "failed", errorCode: "provider_failure", billingStatus: "reconciliation_required" });
+      if (!updated) return { status: "unchanged" as const };
+      await dependencies.repository.scheduleClaimedReconciliation(claim, attempts, null);
+      return { status: "failed" as const };
+    }
     if (providerStatus !== "completed") {
       const nextStatus = providerStatus === "processing" ? "processing" : job.status;
       const updated = await dependencies.repository.transitionClaimed(claim, ["queued", "processing"], { status: nextStatus });

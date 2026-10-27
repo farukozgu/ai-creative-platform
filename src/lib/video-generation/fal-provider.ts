@@ -3,7 +3,7 @@ import "server-only";
 import { createFalClient, type FalClient } from "@fal-ai/client";
 
 import { buildFalVideoRequestInput } from "@/lib/video-generation/fal-request";
-import type { ProviderVideoFile, VideoGenerationProvider, VideoProviderRequest } from "@/lib/video-generation/types";
+import { DefiniteVideoProviderFailure, type ProviderVideoFile, type VideoGenerationProvider, type VideoProviderRequest } from "@/lib/video-generation/types";
 
 type FalOutput = { video?: { url?: unknown; content_type?: unknown; file_size?: unknown } };
 
@@ -34,10 +34,13 @@ export class FalVideoGenerationProvider implements VideoGenerationProvider {
         const target = new URL(String(url));
         if (target.origin !== "https://queue.fal.run" || target.pathname !== `/${request.endpointId}` || target.search || init?.method !== "POST") throw new Error("Unexpected video submission.");
         try { return await this.http(url, { ...init, redirect: "error", signal: AbortSignal.timeout(40_000) }); }
-        catch { throw new Error("Video submission outcome is uncertain."); }
+        catch (error) { if (error instanceof DefiniteVideoProviderFailure) throw error; throw new Error("Video submission outcome is uncertain."); }
       },
       responseHandler: async response => {
-        if (!response.ok) throw new Error("Video submission outcome is uncertain.");
+        if (!response.ok) {
+          if (response.status >= 400 && response.status < 500 && response.status !== 408 && response.status !== 429) throw new DefiniteVideoProviderFailure();
+          throw new Error("Video submission outcome is uncertain.");
+        }
         try { return await response.json() as unknown; } catch { throw new Error("Invalid video submission response."); }
       },
     });
@@ -52,9 +55,11 @@ export class FalVideoGenerationProvider implements VideoGenerationProvider {
 
   async getStatus(endpointId: string, requestId: string) {
     const status = await this.client.queue.status(endpointId, { requestId, logs: false });
-    if (status.status === "IN_QUEUE") return "queued" as const;
-    if (status.status === "IN_PROGRESS") return "processing" as const;
-    if (status.status === "COMPLETED") return "completed" as const;
+    const providerStatus = (status as unknown as { status?: unknown }).status;
+    if (providerStatus === "IN_QUEUE") return "queued" as const;
+    if (providerStatus === "IN_PROGRESS") return "processing" as const;
+    if (providerStatus === "COMPLETED") return "completed" as const;
+    if (providerStatus === "FAILED" || providerStatus === "CANCELLED" || providerStatus === "CANCELED") return "failed" as const;
     throw new Error("The provider returned an unknown video task status.");
   }
 

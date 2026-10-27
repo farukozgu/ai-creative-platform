@@ -1,5 +1,7 @@
 # Video Studio ürün detaylarını koruma — ilk sürüm
 
+> Tarihsel uygulama notu: Fotoğraftan Hareket yolu 27 Ekim 2026'da kaldırıldı. Aşağıdaki yerel render ayrıntıları ve kabul kanıtı kaldırılmadan önceki durumu kaydeder; güncel Video Studio üretimi yalnız Kling Standard/Pro kullanır. Uygulanmış migration'lar korunmuştur.
+
 26 Ekim 2026 · PR #2 · Ücretli sağlayıcı çağrısı yapılmadan geliştirildi.
 
 ## Çalışan yollar

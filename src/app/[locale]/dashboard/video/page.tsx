@@ -4,7 +4,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { VideoStudioWorkspace } from "@/features/video/video-studio-workspace";
 import { isSupportedLocale } from "@/i18n/routing";
-import { canAccessVideoBeta } from "@/lib/video-generation/beta-policy";
+import { canAccessVideoBeta, getVideoStudioOptions } from "@/lib/video-generation/beta-policy";
 import { getAuthenticatedUserId } from "@/lib/auth/require-user";
 
 export const maxDuration = 90;
@@ -36,5 +36,5 @@ export default async function VideoStudioPage({ params, searchParams }: VideoStu
   setRequestLocale(locale);
   const ownerId = await getAuthenticatedUserId();
   const beta = ownerId ? canAccessVideoBeta(ownerId) : false;
-  return <VideoStudioWorkspace incomingGenerationId={incomingGenerationId} generationAvailable={beta} proVideoEntitled={beta} approvedSubmissionId={beta ? process.env.VIDEO_BETA_APPROVED_SUBMISSION_ID ?? null : null} />;
+  return <VideoStudioWorkspace incomingGenerationId={incomingGenerationId} generationAvailable={beta} recoveryScope={beta ? ownerId : null} studioOptions={getVideoStudioOptions()} />;
 }

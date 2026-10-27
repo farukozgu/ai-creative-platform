@@ -1,6 +1,7 @@
 import { videoEndpointCapabilities, type VideoEndpointCapability } from "@/lib/video-generation/capabilities";
 import type { VideoGenerationDraft } from "@/lib/video-generation/types";
 import { parseCriticalProductRegion } from "./preservation";
+import { isVideoPresetId } from "../video-director/presets";
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const qualities = new Set(["standard", "pro"]);
@@ -13,7 +14,17 @@ export type VideoDraftValidation = { ok: true; value: VideoGenerationDraft } | {
 export function validateVideoGenerationDraft(value: unknown): VideoDraftValidation {
   if (!value || typeof value !== "object") return { ok: false, field: "draft", message: "A generation draft is required." };
   const input = value as Record<string, unknown>;
-  if (input.method !== undefined && input.method !== "source-motion" && input.method !== "kling") return { ok: false, field: "method", message: "Unsupported generation method." };
+  if (input.shotMode !== undefined && input.shotMode !== "single" && input.shotMode !== "multi") return { ok: false, field: "shotMode", message: "Invalid shot mode." };
+  if (input.director !== undefined) {
+    const selection = input.director;
+    if (!selection || typeof selection !== "object" || !("presetId" in selection) || !isVideoPresetId(selection.presetId)
+      || !("shotMode" in selection) || !["single", "multi"].includes(String(selection.shotMode))
+      || !("receipt" in selection) || typeof selection.receipt !== "string" || !selection.receipt || selection.receipt.length > 14000)
+      return { ok: false, field: "director", message: "A verified director plan is required." };
+  }
+  if (input.director && typeof input.director === "object" && "shotMode" in input.director && input.shotMode !== undefined && input.director.shotMode !== input.shotMode)
+    return { ok: false, field: "director", message: "Shot mode does not match the director plan." };
+  if (input.method !== undefined && input.method !== "kling") return { ok: false, field: "method", message: "Unsupported generation method." };
   const criticalRegion = input.criticalRegion == null ? null : parseCriticalProductRegion(input.criticalRegion);
   if (input.criticalRegion != null && !criticalRegion) return { ok: false, field: "criticalRegion", message: "Invalid critical product region." };
   const consent = input.analysisConsent;
@@ -28,7 +39,7 @@ export function validateVideoGenerationDraft(value: unknown): VideoDraftValidati
   if (typeof input.durationSeconds !== "number" || !durations.has(input.durationSeconds)) return { ok: false, field: "durationSeconds", message: "Select a supported duration." };
   if (typeof input.cameraMovement !== "string" || !cameraMovements.has(input.cameraMovement)) return { ok: false, field: "cameraMovement", message: "Select a supported camera preference." };
   const prompt = typeof input.prompt === "string" ? input.prompt.trim().replace(/\s+/g, " ") : "";
-  if (!prompt && input.method !== "source-motion") return { ok: false, field: "prompt", message: "A prompt is required." };
+  if (!prompt) return { ok: false, field: "prompt", message: "A prompt is required." };
   if (prompt.length > 2500) return { ok: false, field: "prompt", message: "The prompt must be 2,500 characters or fewer." };
   const source = input.source;
   if (!source || typeof source !== "object") return { ok: false, field: "source", message: "A private source image is required." };

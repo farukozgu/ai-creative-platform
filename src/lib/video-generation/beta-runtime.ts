@@ -1,7 +1,7 @@
 import "server-only";
 
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
-import { canAccessVideoBeta } from "./beta-policy";
+import { canSubmitVideoBeta } from "./beta-policy";
 import { videoEndpointCapabilities, videoTierRouting } from "./capabilities";
 import type { FencedVideoBillingPolicy, VideoBillingDecision } from "./billing";
 import type { VideoGenerationDraft, VideoGenerationQuality, VideoReconciliationClaim } from "./types";
@@ -13,6 +13,7 @@ import { usdProductToMicrosCeil } from "./money";
 
 /** Read-only pricing, never inference. Unknown units/currency or inaccessible prices fail closed. */
 export async function getVideoBetaQuote(quality: VideoGenerationQuality, duration: 5 | 10) {
+  if (!["standard", "pro"].includes(quality) || ![5, 10].includes(duration)) throw new Error("Invalid video options.");
   const capability = videoEndpointCapabilities[videoTierRouting[quality]];
   if (!process.env.FAL_KEY) throw new Error("Video pricing unavailable.");
   const response = await fetch(`https://api.fal.ai/v1/models/pricing?endpoint_id=${encodeURIComponent(capability.endpointId)}`, {
@@ -31,18 +32,21 @@ export async function getVideoBetaQuote(quality: VideoGenerationQuality, duratio
   const estimatedMaxCostMicros = usdProductToMicrosCeil(rate, duration);
   if (estimatedMaxCostMicros === null) throw new Error("Video pricing unavailable.");
   const estimatedMaxCostUsd = Number(estimatedMaxCostMicros) / 1_000_000;
-  if (estimatedMaxCostUsd > 10) throw new Error("Video pricing exceeds the beta budget.");
+  if (!Number.isSafeInteger(Number(estimatedMaxCostMicros)) || estimatedMaxCostUsd >= 1_000_000) throw new Error("Video pricing exceeds storage precision.");
   return { quality, duration, estimatedMaxCostUsd, rate, verifiedAt: new Date().toISOString() };
 }
 
 /** USD test allowance only. Never calls the customer wallet, subscription or payment APIs. */
 export class VideoBetaBudget implements FencedVideoBillingPolicy {
   async reserve(ownerId: string, submissionId: string, cost: number, draft: VideoGenerationDraft): Promise<VideoBillingDecision> {
-    if (!canAccessVideoBeta(ownerId)) return { ok: false, code: "billing_unavailable" };
-    const { data, error } = await getSupabaseAdminClient().rpc("reserve_video_beta_budget", {
+    if (submissionId !== draft.clientSubmissionId || !canSubmitVideoBeta(ownerId, draft, cost)) return { ok: false, code: "billing_unavailable" };
+    const rpc = process.env.VIDEO_STUDIO_ENABLED === "true" ? "reserve_video_studio_budget_once" : "reserve_video_beta_budget_once";
+    const { data, error } = await getSupabaseAdminClient().rpc(rpc, {
       p_owner: ownerId, p_submission: submissionId, p_cost: cost, p_tier: draft.quality, p_duration: draft.durationSeconds,
     });
-    return error || typeof data !== "string" ? { ok: false, code: "billing_unavailable" } : { ok: true, reservation: { id: data, status: "reserved" } };
+    if (error) return { ok: false, code: "billing_unavailable" };
+    if (data === null) return { ok: false, code: "insufficient_balance" };
+    return typeof data === "string" ? { ok: true, reservation: { id: data, status: "reserved" } } : { ok: false, code: "billing_unavailable" };
   }
   async finalize(): Promise<void> { throw new Error("Beta completion requires a fenced claim."); }
   async release(): Promise<void> { /* A failed/ambiguous attempt conservatively retains its allowance. */ }

@@ -15,6 +15,21 @@ export function usdToMicrosCeil(value: number | string): bigint | null {
   return (adjustedNumerator + denominator - BigInt(1)) / denominator;
 }
 
+/** A spending ceiling must never be rounded up to authorize a larger amount. */
+export function usdToMicrosFloor(value: number | string): bigint | null {
+  const text = typeof value === "number" ? (Number.isFinite(value) ? String(value) : "") : value.trim();
+  const match = /^([+-]?)(\d+)(?:\.(\d*))?(?:e([+-]?\d+))?$/i.exec(text);
+  if (!match || match[1] === "-") return null;
+  const fraction = match[3] ?? "";
+  const exponent = Number(match[4] ?? 0);
+  if (!Number.isSafeInteger(exponent) || Math.abs(exponent) > 100) return null;
+  const digits = BigInt(`${match[2]}${fraction}`);
+  const decimalPlaces = fraction.length - exponent;
+  const denominator = BigInt(10) ** BigInt(Math.max(0, decimalPlaces));
+  const numerator = digits * BigInt(1_000_000) * (decimalPlaces < 0 ? BigInt(10) ** BigInt(-decimalPlaces) : BigInt(1));
+  return numerator / denominator;
+}
+
 /** Multiply a decimal USD-per-unit rate by a positive integer, rounding up to micro-dollars. */
 export function usdProductToMicrosCeil(rate: number, units: number): bigint | null {
   if (!Number.isSafeInteger(units) || units <= 0) return null;

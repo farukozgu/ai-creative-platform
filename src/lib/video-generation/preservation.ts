@@ -1,8 +1,12 @@
 import type { ProductProfile } from "@/lib/product-understanding/product-profile";
 import { compileProductProfilePrompt } from "@/lib/product-understanding/compile-product-profile-prompt";
+import { creativeRequest } from "@/lib/video-director/creative-request";
 
-export const VIDEO_PRESERVATION_VERSION = "product-preservation-v1";
-export type VideoGenerationMethod = "source-motion" | "kling";
+export const VIDEO_PRESERVATION_VERSION = "product-preservation-v2";
+export type VideoGenerationMethod = "kling";
+/** Used only to render records written by the removed local renderer. */
+export type HistoricalVideoGenerationMethod = VideoGenerationMethod | "source-motion";
+export type VideoRecordGenerationMethod = VideoGenerationMethod | "legacy-local";
 export type CriticalProductRegion = { x: number; y: number; width: number; height: number; declaredText: string };
 export type SourceFrameGeometry = { originalWidth: number; originalHeight: number; contentRect: { x: number; y: number; width: number; height: number } };
 
@@ -26,7 +30,7 @@ export function isUnsafeProductMotion(prompt: string, camera: string) {
   return camera === "orbit" || /\b(orbit|360|spin|rotate|rotation|morph|transform|unbutton|unzip|remove|redesign)\b|döndür|dönüş|şeklini değiş|şekil değiş|arkasını göster|etiketi değiş|çıkar|soyun/iu.test(prompt);
 }
 
-export const productVideoNegativePrompt = "changed logo, rewritten text, illegible label, morphing letters, redesigned product, altered proportions, extra or missing buttons, extra or missing belt, broken seams, warped hardware, melting texture, garment deformation, new hidden surfaces, scene cuts, blur";
+export const productVideoNegativePrompt = "changed logo, changed brand mark, rewritten text, misspelled text, illegible label, morphing letters, altered color, changed hue, changed pattern, changed print, altered material, changed surface texture, redesigned product, altered silhouette, changed proportions, stretched or compressed geometry, extra or missing parts, extra or missing buttons, extra or missing belt, broken seams, warped hardware, melting texture, garment deformation, new hidden surfaces, object rotation, scene cuts, blur";
 
 /** User direction is subordinate to source identity. No extra provider or analysis call. */
 export function compileProductVideoPrompt(input: { prompt: string; cameraMovement: string; profile?: ProductProfile | null; criticalRegion?: CriticalProductRegion | null }) {
@@ -37,11 +41,11 @@ export function compileProductVideoPrompt(input: { prompt: string; cameraMovemen
   const evidence = input.profile ? compileProductProfilePrompt(input.profile) : null;
   const prompt = [
     "Single continuous product shot. The source image is the sole product identity authority.",
-    "Keep the product stationary. Preserve exact silhouette, proportions, visible color/material, logos, label letter shapes, seams, pockets, buttons, belt and hardware. Do not redraw text or invent hidden details. No object rotation, cloth motion, deformation or scene changes.",
+    "Keep the product stationary and visually consistent with the source in every frame. Preserve its visible silhouette, geometry and proportions; original color and color distribution; material appearance, surface texture, pattern and print; logo, brand mark and exact visible lettering; seams, pockets, buttons, belt, hardware and all other visible construction details. Do not add, remove, duplicate, relocate, redesign, recolor, reshape, stretch, compress, smooth away or reinterpret any visible product feature. Do not redraw, translate or invent text, logos, details, or hidden surfaces. No object rotation, cloth motion, deformation, lighting change on the product, or scene changes.",
     cameras[input.cameraMovement] ?? cameras.auto,
     ...(evidence?.identity ?? []).slice(0, 5), ...(evidence?.forbidden ?? []).slice(0, 4),
-    input.criticalRegion ? "The user-marked logo/label region is identity-critical: preserve its original appearance and placement. Any user-supplied text is an unverified hint, never permission to replace the source text." : "",
-    `Motion direction (only when compatible with these preservation rules): ${input.prompt}`,
+    input.criticalRegion ? "The user-marked logo/label region is identity-critical: keep its source appearance, letterforms, color and exact placement legible and unchanged across the shot. Any user-supplied text is an unverified hint, never permission to replace the source text." : "",
+    `Motion direction (only when compatible with these preservation rules): ${creativeRequest(input.prompt)}`,
   ].filter(Boolean).join("\n");
   if (prompt.length > 2500) throw new Error("preservation_prompt_too_long");
   return { prompt, negativePrompt: productVideoNegativePrompt, cfgScale: 0.5, version: VIDEO_PRESERVATION_VERSION };

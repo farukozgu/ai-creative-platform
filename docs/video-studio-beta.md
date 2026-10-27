@@ -1,5 +1,21 @@
 # Video Studio beta teslimatı
 
+## İşlem bazlı onay güncellemesi
+
+Tek bir ortam değişkenine sabitlenmiş submission UUID'si yerine her yeni istek için yeni UUID, sunucunun imzaladığı iki dakikalık güncel fiyat teklifi ve kullanıcı onayı kullanılır. İmza sahibi, UUID, tüm taslak (Director planı ve isteğe bağlı analiz dahil) ve tutara bağlıdır. Gönderim öncesinde fiyat yeniden okunur; kullanıcı onayı tek başına harcama yetkisi değildir.
+
+Aktivasyondan önce `database/migrations/20261026215607_video_beta_submission_once.sql` disposable bir veritabanında, özellikle eşzamanlı aynı UUID, kaybolan rezervasyon yanıtı, bütçe sınırları ve yetki testleriyle doğrulanmalıdır. Migration mevcut `reserve_video_beta_budget` fonksiyonuna aynı transaction advisory lock altında yalnız yeni UUID için geçer; mevcut limitleri, kayıtları ve migration geçmişini değiştirmez. Migration hazırlandı; kalıcı veya production veritabanına uygulanmadı.
+
+Kontrollü aktivasyon için mevcut tek hesaplı `VIDEO_BETA_USER_IDS`, `VIDEO_BETA_ENABLED` ve `VIDEO_GENERATION_ENABLED` kapılarına ek olarak sunucuda `VIDEO_BETA_TRANSACTION_APPROVALS_ENABLED=true`, pozitif `VIDEO_BETA_MAX_COST_PER_REQUEST_USD` (en fazla 2 USD), `VIDEO_BETA_ALLOWED_TIERS` (`standard`, `pro`) ve `VIDEO_BETA_ALLOWED_DURATIONS` (`5`, `10`) açıkça yapılandırılmalıdır. İmzalama mevcut sunucuya özel `SUPABASE_SECRET_KEY` kullanır. Yeni ayarlar yoksa işlem kapalıdır; eski `VIDEO_BETA_APPROVED_*` değerleri harcama yetkisi vermez.
+
+`scripts/verify-video-beta-sql.mjs`, `VIDEO_QA_PGLITE_MODULE` ile sağlanan geçici test aracı üzerinden yalnız bellek içi PostgreSQL fixture'ı açar; production'a bağlanmaz. Bu kontrolün yanı sıra bağımsız iki veritabanı oturumuyla eşzamanlılık testi ayrı bir disposable ortamda yapılmalıdır.
+
+Mevcut SQL açıkça kullanıcı başına UTC gününde 2 USD/3 rezervasyon ve tüm rezervasyonlarda 10 USD lifetime limiti uygular. Tek hesaplı allowlist yeni trafiği aynı kullanıcıya sınırlar; mevcut SQL'de ayrı sayılan bağımsız bir global günlük limit tanımı bulunmamaktadır. Bu sınırların staging ve operasyonel bütçe politikasıyla ayrıca doğrulanması gerekir.
+
+Sekme oturumundaki gönderilmiş UUID ile sahipliği doğrulanmış job yeniden yüklenir; kayıt yoksa en yeni devam eden veya belirsiz job sahiplik kontrolüyle bulunur. En yeni job tamamlanmışsa yeni bir taslak açılır. Belirsiz sonuç otomatik gönderilmez. Yeni UUID yalnız yeni taslakta veya kullanıcının yeni istek seçimiyle oluşturulur. Farklı bir istek yeni ücret doğurabilir. Storage kapalıysa recovery korunamadığından ücretli gönderim başlatılmaz. Önceki işler Video Kütüphanesi'nde kalır.
+
+Bu güncellemenin dosyaları: `.env.example`, `database/migrations/20261026215607_video_beta_submission_once.sql`, `src/app/[locale]/dashboard/video/{page,generation-actions}.ts(x)`, `src/features/video/{video-studio-workspace,video-generation-inspector}.tsx`, `src/lib/video-generation/{beta-policy,beta-runtime,quote-receipt,capabilities,money}.ts`, `src/messages/{tr,en}.json`, `tests/{video-beta,video-transaction-approval,video-generation-backend,video-studio-ui,video-director}.test.ts`, `scripts/{verify-video-beta-staging,verify-video-preservation-staging}.ts`, `scripts/{verify-video-beta-sql,verify-video-transaction-browser}.mjs` ve bu belge.
+
 26 Ekim 2026. Üretim ve müşteri kredileri varsayılan kapalıdır. [Güncel durum](KLAY_AI_PROJECT_STATUS.md) başındaki Video Studio bölümü bu teslimatın sınırlarını ve kanıtlarını içerir.
 
 ## Aktivasyon sözleşmesi
@@ -128,3 +144,14 @@ Bu ilk hata artık otomatik kaynak hazırlamayla giderilmiştir; kullanıcıdan 
 - tests/video-source-preparation.test.ts
 
 Nihai doğrulama: 773/773 ana test, 68/68 pretest, lint, TypeScript, varsayılan Turbopack production build (32 sayfa) ve 35/35 gerçek disposable entegrasyon kontrolü başarılı. JPEG 2400×3600 için üç oran, ürün oranı/köşelerin korunması, değişmeyen orijinal, decode limitleri, preview/provider byte eşitliği ve concurrency test edildi. Gerçek tarayıcıda üç oran arasında hazırlanmış önizleme geçişi ve mobil görünüm kontrol edildi. Gerçek ceket görseli yerelde üç orana hazırlandı; fal inference yapılmadı. Önceki $10 cap transaction testi de geçti. İlerleme evreleri için backend phase mapping ve yenileme sonrası approved job geri yükleme testleri eklendi.
+# Normal Video Studio operator configuration
+
+The legacy beta settings remain effective until an operator explicitly enables `VIDEO_STUDIO_ENABLED=true`. Normal mode supports Standard/Pro and 5/10 seconds by default. `VIDEO_STUDIO_ACCESS_MODE=allowlist` uses `VIDEO_STUDIO_USER_IDS`; `authenticated` explicitly admits all authenticated users. `VIDEO_GENERATION_ENABLED=true` and separate `VIDEO_STUDIO_SPENDING_ENABLED=true` are both required. None of these settings are client-controlled.
+
+Prepare/review `20261027131744_configure_video_studio_budget.sql` before activation; do not replay previous migrations. Its new RPC fails closed until the migration exists. It uses the same reservation ledger and advisory transaction lock, preserves historical spend, and rejects every reused owner/submission pair. Legacy RPCs and fenced completion/recovery stay compatible.
+
+Only a privileged database administrator can update the singleton `video_studio_budget_settings` row. The application service role has SELECT and reservation EXECUTE only; anon/authenticated have neither. Defaults remain $2/request, $2/user/day, 3 requests/user/day, $10/global/day and $10/global lifetime. Larger limits require `allow_high_limits=true`; NULL explicitly means unlimited only with that flag. Changing limits never clears existing reservations. Per-request server ceiling defaults to $2 separately; a higher value or `unlimited` also requires `VIDEO_STUDIO_ALLOW_HIGH_LIMITS=true`. Both server and database limits must allow a request. No customer wallet or payment system is enabled by this configuration.
+
+Every quote and submit re-reads fal pricing without cache. A short-lived signed receipt binds owner, fresh submission UUID, complete draft, compiled payload and exact cost; changed prices require a new explicit confirmation. Reservation remains atomic and precedes the provider POST. Uncertain/failed reservations are retained conservatively.
+
+Kling Standard and Pro document `elements` with `frontal_image_url` and 1–3 different-angle `reference_image_urls`, referenced as `@Element1` in prompts: [Standard API](https://fal.ai/models/fal-ai/kling-video/v3/standard/image-to-video/api), [Pro API](https://fal.ai/models/fal-ai/kling-video/v3/pro/image-to-video/api). This makes multi-angle input technically available, but does not establish 360° geometric accuracy. The Studio continues to use one private source image and does not send elements. A future implementation needs owned multi-image uploads, private URL lifetimes, source/plan/signature binding, and real fidelity evaluation before activation. Single-image 360° motion infers unseen surfaces; current unsafe-motion rejection stays in place.
