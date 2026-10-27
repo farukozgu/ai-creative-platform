@@ -138,7 +138,7 @@ export function VideoSourceSelector({
         ref={inputRef}
         className="sr-only"
         type="file"
-        accept="image/jpeg,image/png,image/webp"
+        accept="image/jpeg,image/png"
         aria-label={source ? copy.replace : copy.upload}
         onChange={chooseFile}
       />

@@ -4,6 +4,7 @@ import { FalVideoGenerationProvider } from "@/lib/video-generation/fal-provider"
 import { videoEndpointCapabilities } from "@/lib/video-generation/capabilities";
 import type { VideoGenerationProvider } from "@/lib/video-generation/types";
 import type { UgcProviderJobStatus, UgcProviderRequest, UgcProviderSubmission, UgcVideoProvider } from "@/lib/ugc/ugc-video-provider";
+import type { UgcModelTier } from "@/features/ugc/ugc-model-contract";
 
 type TaskReader = Pick<VideoGenerationProvider, "getStatus" | "getResult">;
 
@@ -20,11 +21,15 @@ export type UgcKlingTaskReference = {
 /** Internal task transport only. Callers must first load an owned, pinned UGC task. */
 export class UgcKlingVideoProvider implements UgcVideoProvider {
   readonly provider = videoEndpointCapabilities.klingV3ProImage.provider;
-  readonly endpointId = videoEndpointCapabilities.klingV3ProImage.endpointId;
-  readonly modelId = videoEndpointCapabilities.klingV3ProImage.id;
+  readonly endpointId: string;
+  readonly modelId: string;
   readonly generationEnabled = false;
 
-  constructor(private readonly getTaskReader: () => TaskReader) {}
+  constructor(private readonly getTaskReader: () => TaskReader, tier: UgcModelTier = "premium") {
+    const capability = tier === "standard" ? videoEndpointCapabilities.klingV3StandardImage : videoEndpointCapabilities.klingV3ProImage;
+    this.endpointId = capability.endpointId;
+    this.modelId = capability.id;
+  }
 
   async submit(request: UgcProviderRequest): Promise<UgcProviderSubmission> {
     void request;
@@ -56,7 +61,7 @@ export class UgcKlingVideoProvider implements UgcVideoProvider {
     const observed = await this.getStatus(task.providerRequestId);
     return {
       kind: "observed" as const,
-      status: observed === "queued" ? task.status : "processing" as const,
+      status: observed === "queued" ? task.status : observed === "failed" ? "failed" as const : "processing" as const,
       outputReady: observed === "completed",
     };
   }
@@ -67,7 +72,7 @@ export class UgcKlingVideoProvider implements UgcVideoProvider {
 }
 
 /** Shares the existing server-only client/auth; preparing or blocking a job needs no key. */
-export function createUgcVideoProvider(): UgcKlingVideoProvider {
+export function createUgcVideoProvider(tier: UgcModelTier = "premium"): UgcKlingVideoProvider {
   let reader: TaskReader | undefined;
-  return new UgcKlingVideoProvider(() => reader ??= new FalVideoGenerationProvider());
+  return new UgcKlingVideoProvider(() => reader ??= new FalVideoGenerationProvider(), tier);
 }

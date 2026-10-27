@@ -111,7 +111,7 @@ test("both localized UGC forms render labeled textareas, estimates, warnings and
       "./ugc-studio-workspace.module.css": { __esModule: true, default: new Proxy({}, { get: (_target, key) => String(key) }) },
     });
     const Workspace = loaded.UgcStudioWorkspace as typeof UgcStudioWorkspace;
-    const registry = load("src/lib/ugc/ugc-model-registry.ts", {}) as typeof import("../src/lib/ugc/ugc-model-registry");
+    const registry = load("src/lib/ugc/ugc-model-registry.ts", { "@/lib/video-generation/capabilities": load("src/lib/video-generation/capabilities.ts", {}) }) as typeof import("../src/lib/ugc/ugc-model-registry");
     const props = {
       modelOptions: registry.getUgcModelOptions(),
       initialDraft: { ...draft, product: null, updatedAt: "now", spokenDialogue: "Merhaba ".repeat(100) }, initialResults: [], schemaAvailable: true,

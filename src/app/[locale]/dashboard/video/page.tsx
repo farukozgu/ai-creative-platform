@@ -4,10 +4,10 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { VideoStudioWorkspace } from "@/features/video/video-studio-workspace";
 import { isSupportedLocale } from "@/i18n/routing";
-import { isVideoGenerationAvailable } from "@/lib/video-generation/capabilities";
+import { canAccessVideoBeta, getVideoStudioOptions } from "@/lib/video-generation/beta-policy";
 import { getAuthenticatedUserId } from "@/lib/auth/require-user";
-import { canUseVideoTier } from "@/lib/credit-economy/entitlements";
-import { getActiveSubscription } from "@/lib/credit-economy/subscription-repository";
+
+export const maxDuration = 90;
 
 type VideoStudioPageProps = {
   params: Promise<{ locale: string }>;
@@ -35,6 +35,6 @@ export default async function VideoStudioPage({ params, searchParams }: VideoStu
     : null;
   setRequestLocale(locale);
   const ownerId = await getAuthenticatedUserId();
-  const subscription = ownerId ? await getActiveSubscription(ownerId) : null;
-  return <VideoStudioWorkspace incomingGenerationId={incomingGenerationId} generationAvailable={isVideoGenerationAvailable()} proVideoEntitled={canUseVideoTier(subscription, "pro")} />;
+  const beta = ownerId ? canAccessVideoBeta(ownerId) : false;
+  return <VideoStudioWorkspace incomingGenerationId={incomingGenerationId} generationAvailable={beta} recoveryScope={beta ? ownerId : null} studioOptions={getVideoStudioOptions()} />;
 }

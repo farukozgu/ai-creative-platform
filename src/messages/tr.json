@@ -526,9 +526,9 @@
     "ugcStudio": {
       "model": {
         "label": "UGC modeli",
-        "standard": { "label": "Standart", "description": "İçerik üreticisi ve ürün referanslarıyla 720p, 15 saniyelik klipler planlayın. Dikey, kare ve yatay formatlar." },
-        "premium": { "label": "Premium", "description": "İçerik üreticisi ve ürün referanslarıyla 720p, 15 veya 30 saniyelik klipler planlayın. Dikey, kare ve yatay formatlar." },
-        "limits": "Her iki modelde de üretim kapalıdır. Doğal ses için hazırlık vardır; birebir konuşma, Türkçe telaffuz, ses kimliği ve dudak senkronu doğrulanmamıştır. Ses yükleme, altyazı ve 60 saniyelik klipler kullanılamaz.",
+        "standard": { "label": "Kling 3.0 Standard", "description": "İçerik üreticisi ve ürün referanslarıyla 15 saniyelik klipler planlayın. Dikey, kare ve yatay formatlar." },
+        "premium": { "label": "Kling 3.0 Pro", "description": "Kling 3.0 Pro ile 15 saniyelik klipler planlayın. Dikey, kare ve yatay formatlar." },
+        "limits": "Her iki modelde de üretim kapalıdır. Konuşma, ses yükleme, dudak senkronu ve altyazı desteklenmez. 30 ve 60 saniyelik klipler kullanılamaz.",
         "durationUnsupported": "{duration} saniyelik taslağınız korundu. İstek hazırlamadan önce desteklenen bir süre veya başka bir model seçin."
       },
         "metadataTitle": "UGC Stüdyosu | Klay AI",
@@ -736,12 +736,135 @@
       "emptyDescription": "Kontrolleri kullanarak görselinizi hazırlayın. Henüz üretilmiş bir görsel yok."
     },
     "videoStudio": {
+      "advancedSettings": "Gelişmiş ayarlar",
+      "configurationUnavailable": "Yönetici ayarlarında etkin değil.",
+      "singleImageNotice": "Tek görselden 360° dönüş, görünmeyen yüzlerin tahmin edilmesini gerektirir; ürünün tüm açılardan doğruluğu garanti edilmez.",
+      "director": {
+        "title": "AI Video Director",
+        "description": "Ürünün özgün görünümüne uygun bir reklam filmi için preset seçin.",
+        "preset": "Video preseti",
+        "shotMode": "Çekim yapısı",
+        "single": "Tek çekim",
+        "multi": "Çoklu çekim",
+        "presets": {
+          "luxury-fashion-film": {
+            "title": "Luxury Fashion Film",
+            "description": "Ölçülü editoryal kadraj, yumuşak vurgular ve sakin bir kampanya finali."
+          },
+          "macro-detail-reveal": {
+            "title": "Macro Detail Reveal",
+            "description": "Görünür malzeme ve işçiliğe kontrollü bir yakın bakış."
+          },
+          "minimal-studio": {
+            "title": "Minimal Studio",
+            "description": "Dengeli boşluk ve sabit ışıkla ürünü öne çıkaran durağan kadraj."
+          }
+        },
+        "consent": "Bir AI plan isteği için en fazla {cost} USD maliyeti onaylıyorum. Önbellekteki planlar yeni AI isteği başlatmaz.",
+        "unavailable": "AI planlama şu anda kullanılamıyor. AI isteği olmadan koruma odaklı bir plan hazırlayabilirsin.",
+        "prepare": "AI planı hazırla",
+        "planHeading": "Çekim planı",
+        "preparing": "Plan hazırlanıyor…",
+        "fallbackButton": "Koruma odaklı planı kullan",
+        "separateApproval": "Planlama video üretmez. Video üretimi için ayrıca maliyet onayı gerekir.",
+        "aiPlan": "AI yaratıcı planı",
+        "fallbackPlan": "Koruma odaklı yaratıcı plan",
+        "fallbackNotice": "Koruma odaklı preset planı gösteriliyor. İsteğini plana eklemez veya üründe yeni detay varsaymaz.",
+        "shot": "Çekim {number} · {seconds} sn",
+        "fullPlan": "Çekim yönergelerinin tamamını göster",
+        "camera": "Kamera",
+        "lighting": "Işık",
+        "composition": "Kompozisyon",
+        "motion": "Hareket",
+        "pace": "Tempo",
+        "focus": "Ürün detayı",
+        "review": "Üretimden önce planı incele. Kaynak, istek veya ayarlar değişirse yeni plan hazırlamalısın.",
+        "planRequired": "Üretimden önce çekim planını hazırla.",
+          "planLocked": "Önceki video isteği tamamlanmadı veya durumu doğrulanıyor. Yeni plan için ayrı bir video isteği oluşturun.",
+          "planNeedsSource": "Plan hazırlamak için önce bir kaynak görsel seçin.",
+          "planNeedsPreparedSource": "Plan hazırlamak için kaynak görselin hazırlanması gerekiyor.",
+          "planNeedsReadyDraft": "Plan hazırlamak için video ayarlarını tamamlayın.",
+        "error": "Plan hazırlanamadı veya onayın süresi doldu. Ayarları kontrol edip koruma odaklı planı dene."
+      },
+      "preservation": {
+        "quoteLoading": "Maliyet ve kullanılabilirlik kontrol ediliyor…",
+        "noGuarantee": "Kling, küçük yazı ve ayrıntıları değiştirebilir. Birebir koruma garantisi yoktur.",
+        "regionTitle": "Kritik bölgeyi işaretle (isteğe bağlı)",
+        "regionHelp": "Orijinal görselde logo veya etiketi sürükleyerek seçin. Klavyede Enter ile başlayıp yüzdelik alanları ayarlayabilirsiniz.",
+        "regionSelect": "Kritik ürün bölgesini seç",
+        "regionResolution": "Hazırlanmış karede bölge: {width} × {height} px. Küçük ayrıntılar videoda okunamayabilir.",
+        "sourceAlt": "Kritik bölge seçimi için orijinal ürün",
+        "x": "Soldan (%)",
+        "y": "Üstten (%)",
+        "width": "Genişlik (%)",
+        "height": "Yükseklik (%)",
+        "declaredText": "Burada okuduğunuz yazı (isteğe bağlı)",
+        "unverifiedHint": "Bu metin kullanıcı beyanıdır; görselden doğrulanmış bilgi sayılmaz.",
+        "clearRegion": "Seçimi kaldır",
+        "analysisOptIn": "Üretim sonrası sadakat kontrolü",
+        "analysisCost": "Model: {model} · analiz üst tahmini: ${cost} USD",
+        "analysisDisabled": "Ücretli analiz sunucuda etkin değil veya fiyat/şema doğrulanamadı.",
+        "analysisConsent": "Seçerseniz kaynak ve örnek kareler OpenAI'a gönderilir; gösterilen ek maliyeti onaylamış olursunuz. Belirsiz istek otomatik tekrarlanmaz.",
+        "combinedQuote": "Kling: ${generation} · Analiz: ${analysis} · Toplam üst tahmin: ${total} USD"
+      },
+      "preparation": {
+        "preparing": "Kaynak kare hazırlanıyor…",
+        "ready": "Kaynak kare hazır. Ürünün tamamı korunarak yerleştirildi.",
+        "failed": "Görsel hazırlanamadı. Dosyayı yeniden seçin veya başka bir oran deneyin. Video üretimi başlamadı.",
+        "description": "Görseliniz kırpılmadan ve esnetilmeden seçilen orana yerleştirilir. Boş alanlar uyumlu bir arka planla doldurulur."
+      },
+      "beta": {
+        "unsafeMotion": "Bu hareket ürünün görünmeyen yüzlerini veya şeklini değiştirebilir. Hafif kamera hareketi seçin.",
+        "quote": "{model} · {seconds} sn · Tahmini üst sınır: ${cost} USD",
+        "quoteUnavailable": "Doğrulanmış maliyet alınamadı. Üretim kapalı.",
+        "prepareQuote": "Güncel maliyeti doğrula",
+        "checkingPrevious": "Önceki video isteğinin durumu doğrulanıyor. Yeni üretim güvenli biçimde devam edebilmek için bu kontrolü bekliyor.",
+        "newSubmissionFirst": "Önceki video isteği korunuyor. Yeni üretime geçmek için ayrı bir video isteği oluştur.",
+        "videoUnavailable": "Video üretimi şu anda bu hesap veya seçenekler için etkin değil.",
+        "preparingSubmission": "Yeni video isteği hazırlanıyor…",
+        "selectSourceFirst": "Devam etmek için önce bir ürün görseli seç.",
+        "preparingSource": "Kaynak görsel hazırlanıyor; hazır olduğunda çekim planı oluşturabilirsin.",
+        "sourcePrepareFailed": "Kaynak görsel hazırlanamadı. Yeniden seçip hazırlamayı tamamla.",
+        "completeSettingsFirst": "Önce video isteği ayarlarını tamamla.",
+        "prepareDirectorFirst": "Önce çekim planını hazırla. Preset veya çekim yapısı değiştiğinde eski plan ve maliyet onayı geçersiz olur.",
+        "verifyCostFirst": "Çekim planı hazır. Devam etmek için gönderilecek Kling isteğinin güncel maliyetini doğrula.",
+        "confirmCostFirst": "Maliyet doğrulandı. Video oluşturmak için gösterilen tutarı açıkça onayla.",
+        "payloadPreview": "Gönderilecek Kling isteği",
+        "shotCount": "{count} çekim",
+        "preparingQuote": "Maliyet doğrulanıyor…",
+        "confirmCost": "Bu video için en fazla {cost} USD maliyeti onaylıyorum.",
+        "newSubmission": "Yeni video isteği oluştur",
+        "recoveryStorage": "İstek güvenli biçimde geri yüklenemiyor. Video Library durumunu kontrol edin.",
+        "submitting": "Kling'e gönderiliyor…",
+        "approval": "Bu video isteği için gerekli onay doğrulanamadı. Üretim başlatılmadı.",
+        "budgetLimit": "Kullanılabilir video bütçesi sınırı dolu; ayrılmış önceki tutarlar hesaba katılıyor. Yeni üretim başlatılmadı. Rezervasyon sonucu netleşmeden yeniden göndermeyin.",
+        "billingUnavailable": "Video bütçesi doğrulanamadı. Yeni üretim başlatılmadı; biraz sonra tekrar deneyin.",
+        "sourceUnavailable": "Kaynak görsele erişilemedi. Üretim başlatılmadı; görseli yeniden seçin.",
+        "ambiguous": "Gönderim sonucu belirsiz. Aynı isteği yeniden göndermeyin; Video Library durumunu kontrol edin.",
+        "providerRejected": "Kling çekim talimatını reddetti. Planı gözden geçirip yeni bir istek oluşturun; bu istek otomatik yeniden gönderilmedi.",
+        "invalidPrompt": "Çekim planı Kling'in sınırlarını karşılamıyor. İstek gönderilmedi; planı yeniden hazırlayın.",
+        "failed": "Video tamamlanamadı. Video Library durumunu kontrol edin; ücretli isteği tekrar göndermeyin.",
+        "sending": "İstek Kling'e gönderiliyor. Bu sırada tekrar tıklamanız gerekmez.",
+        "queued": "İstek Kling'e ulaştı; kuyrukta sıra bekliyor.",
+        "processing": "Kling videonuzu işliyor. Durum otomatik güncellenir.",
+        "finalizing": "Video güvenli depoya kaydedildi; son kontroller yapılıyor.",
+        "ready": "Videonuz hazır.",
+        "unknown": "İstek durumu henüz doğrulanamıyor. Yeni bir üretim başlatmayın; durum kontrolü sürecek.",
+        "restoreUnavailable": "Önceki isteğin durumu doğrulanamıyor. Video Kütüphanesi'ni kontrol edin; yeni bir istek ayrı maliyet oluşturabilir.",
+        "submissionUsed": "Bu istek kimliği kullanıldı. Video Kütüphanesi'ni kontrol edin veya yeni bir istek oluşturun.",
+        "progressTitle": "Üretim durumu",
+        "steps": { "source": "Kaynak görsel hazır", "request": "İstek gönderildi", "queued": "Kling kuyruğunda", "processing": "Kling işliyor", "storage": "Video güvenli şekilde kaydediliyor", "saved": "Video güvenli depoya kaydedildi", "ready": "Video hazır" },
+        "watchVideo": "Videoyu İzle",
+        "libraryLink": "Video Kütüphanesi",
+        "pollError": "Durum bilgisi geçici olarak alınamıyor. Son doğrulanan aşama korunuyor; sorgulama yeniden sürecek.",
+        "download": "MP4 indir",
+        "openVideo": "Videoyu aç"
+      },
       "metadataTitle": "Video Studio",
       "metadataDescription": "Ürün görsellerinden video hazırlamak için Klay AI Video Studio.",
       "title": "Video Studio",
       "description": "Kaynağınızı ve hareket yönünüzü hazırlayın.",
       "generate": "Video Oluştur",
-      "preparationOnly": "Hazırlık modu · Video üretimi henüz bağlı değil.",
       "source": {
         "heading": "Kaynak görsel",
         "description": "Videonun başlangıç karesi olarak kullanılacak ürün görselini seçin.",
@@ -750,7 +873,7 @@
         "remove": "Kaldır",
         "chooseLibrary": "Klay Kütüphanesi'nden seç",
         "closeLibrary": "Kütüphaneyi kapat",
-        "dropLabel": "JPEG, PNG veya WebP · En fazla 20 MB",
+        "dropLabel": "JPEG/PNG · En fazla 20 MB · Seçilen video oranına otomatik hazırlanır",
         "selectedAlt": "Seçilen kaynak ürün görseli",
         "localLabel": "Yerel görsel",
         "libraryLabel": "Klay Kütüphanesi",
@@ -766,8 +889,8 @@
       },
       "prompt": {
         "image": {
-          "heading": "Hareket açıklaması",
-          "description": "Mevcut görselin nasıl canlanacağını anlatın.",
+          "heading": "Hareket açıklaması (isteğe bağlı)",
+          "description": "Kamera ve ürün hareketi için kısa bir yaratıcı yön ekleyin.",
           "placeholder": "Örn. Ürüne doğru yavaş sinematik yaklaşma ve yumuşak yansıma geçişleri…"
         },
         "inspirationLabel": "Açıklama önerileri"
@@ -797,8 +920,8 @@
         "heading": "Üretim kalitesi",
         "proLocked": "Growth veya üzeri plan gerekir. Pro fiyatlandırması henüz kullanılamıyor.",
         "options": {
-          "standard": { "label": "Standart", "description": "Dengeli ürün videosu üretimi." },
-          "pro": { "label": "Pro", "description": "Premium ürün videosu üretimi." },
+          "standard": { "label": "Kling 3.0 Standard", "description": "Dengeli ürün videosu üretimi." },
+          "pro": { "label": "Kling 3.0 Pro", "description": "Premium ürün videosu üretimi." },
           "auto": { "label": "Otomatik", "description": "Geçmiş seçim." },
           "best": { "label": "En iyi kalite", "description": "Geçmiş seçim." }
         }
@@ -820,14 +943,15 @@
       "generations": {
         "title": "Üretimler",
         "emptyTitle": "Henüz video üretilmedi",
-        "emptyDescription": "Tamamlanan videolar gelecekte burada görünecek."
+        "emptyDescription": "Tamamlanan videolarınızı Video Kütüphanesi’nde izleyip indirebilirsiniz."
       },
       "validation": {
         "source-required": "Devam etmek için bir kaynak görsel seçin.",
         "prompt-required": "Devam etmek için kısa bir hareket açıklaması yazın.",
-        "invalid-source-type": "JPEG, PNG veya WebP biçiminde bir görsel seçin.",
+        "invalid-source-type": "JPEG veya PNG biçiminde bir görsel seçin.",
         "source-too-large": "Görsel 20 MB veya daha küçük olmalı.",
         "source-unreadable": "Bu görsel tarayıcıda açılamadı. Başka bir dosya deneyin.",
+        "source-dimensions-unsupported": "Görsel en fazla 40 megapiksel olabilir.",
         "not-connected": "Taslağınız hazır. Video üretimi sonraki aşamada bağlanacak."
       },
       "mobile": {
@@ -837,6 +961,7 @@
       }
     },
     "videoLibrary": {
+      "legacyLocal": "Eski yerel video",
       "metadataTitle": "Video Kütüphanesi",
       "metadataDescription": "Klay AI ile oluşturulan videoları inceleyin ve yönetin.",
       "eyebrow": "VİDEO ÇALIŞMA ALANI",
@@ -946,6 +1071,84 @@
         "ready": { "title": "Oynatma kullanılamıyor", "description": "Bu kayıt oynatılabilir bir video varlığı içermiyor." },
         "failed": { "title": "Video oluşturulamadı", "description": "Bu üretim için oynatılabilir bir video bulunmuyor." },
         "unavailable": { "title": "Video kullanılamıyor", "description": "Bu kaydın oynatılabilir varlığı kullanılamıyor." }
+      },
+      "fidelityAnalysis": {
+        "closeupSource": "Kritik bölge · kaynak",
+        "closeupVideo": "Kritik bölge penceresi · {time} sn (hizalama doğrulanmadı)",
+        "title": "Ürün Sadakati Analizi",
+        "description": "Kaynak ürün görselini videonun başlangıç, orta ve bitişinden alınan karelerle karşılaştırın. Kamera açısı, ışık ve kısmi görünürlük değişiklikleri ürün bozulması sayılmaz.",
+        "freeStep": "Kaynak görseli ve beş temsilî kareyi güvenli sunucuda hazırlayın. Bu adım dış analiz servisine veri göndermez.",
+        "prepare": "Kareleri hazırla",
+        "preparing": "Kareler hazırlanıyor…",
+        "preparingSource": "Özel kaynak görsel alınıyor",
+        "extractingFrames": "Videonun başlangıç, orta ve bitişinden kareler çıkarılıyor",
+        "sourceFrame": "Kaynak ürün görseli",
+        "videoFrame": "Kare {number} · {timestamp}",
+        "frameUnavailable": "Bu video karesi okunamadı.",
+        "analysisDisabled": "Kareler yerel olarak hazırlandı. Ücretli analiz, bu hesap için sunucu tarafında etkinleştirilmemiş; hiçbir analiz isteği gönderilmedi.",
+        "pricingUnavailable": "Bu model için doğrulanmış maliyet tahmini yok. Ücretli analiz kapalı kaldı.",
+        "priceEstimate": "Tahmini üst maliyet: yaklaşık ${amount} USD",
+        "consentLead": "Ücretli analiz yalnızca aşağıdaki onaydan sonra başlar.",
+        "consentDetails": "Onay verirseniz kaynak görsel ve beş sıkıştırılmış video karesi OpenAI'a görsel karşılaştırma için gönderilir. Tam MP4 gönderilmez. Sonuç özel hesabınıza bağlı olarak saklanır.",
+        "consentLabel": "Kaynak görseli ve beş kareyi OpenAI'a göndermeyi, yaklaşık ${amount} USD'ye kadar analiz ücreti oluşabileceğini kabul ediyorum.",
+        "analyze": "Ücretli analizi başlat · ${amount} USD'ye kadar",
+        "analyzing": "Ürün ve video kareleri karşılaştırılıyor…",
+        "cancel": "Vazgeç",
+        "profileTitle": "Kaynak ürün profili",
+        "profile": {
+          "category": "Kategori",
+          "color": "Renk",
+          "shape": "Siluet ve şekil",
+          "material": "Görünür malzeme",
+          "branding": "Kimlik özellikleri ve marka işaretleri",
+          "readableText": "Okunabilen yazı",
+          "noVisibleBranding": "Kaynak görselde görünür logo, etiket veya okunabilir marka yazısı yok.",
+          "observations": "Kaynakta görülen ayrıntılar"
+        },
+        "verticals": {
+          "apparel": "Giyim",
+          "jewelry": "Takı",
+          "watches": "Saat",
+          "cosmetics": "Kozmetik",
+          "footwear": "Ayakkabı",
+          "bags": "Çanta"
+        },
+        "checksTitle": "Kontroller",
+        "categories": {
+          "brandingText": "Logo, etiket ve yazı",
+          "shapeProportions": "Şekil ve oranlar",
+          "colorMaterial": "Renk ve malzeme görünümü",
+          "constructionDetails": "Fermuar, düğme, cep ve dikiş gibi ayrıntılar",
+          "motionDeformation": "Kamera hareketinde deformasyon"
+        },
+        "overallTitle": "Genel değerlendirme",
+        "statuses": {
+          "preserved": "Korunmuş",
+          "suspicious_change": "Şüpheli değişiklik",
+          "clear_distortion": "Belirgin bozulma",
+          "unverified": "Doğrulanamadı"
+        },
+        "overallStatuses": {
+          "clear_distortion": "Belirgin bozulma tespit edildi",
+          "review_recommended": "İnceleme öneriliyor",
+          "no_clear_change_detected": "Doğrulanabilen ayrıntılarda belirgin değişiklik görülmedi",
+          "inconclusive": "Sonuç kesin değil"
+        },
+        "confidence": { "high": "Yüksek güven", "medium": "Orta güven", "low": "Düşük güven" },
+        "causes": {
+          "product_change": "Ürün değişikliği",
+          "camera_angle": "Kamera açısı veya perspektif",
+          "lighting": "Işık veya yansıma",
+          "partial_visibility": "Kısmi görünürlük",
+          "motion_blur": "Hareket bulanıklığı",
+          "unclear": "Neden belirsiz"
+        },
+        "timestamp": "Videoda {value}",
+        "noText": "Kaynak görselden doğrulanamadı",
+        "prepareError": "Kaynak görsel veya video okunamadı. Video kaydı değişmedi; ücretli analiz gönderilmedi.",
+        "unavailable": "Bu videoya veya kaynak görsele erişilemiyor. Kayıt sahipliği doğrulanamadı.",
+        "uncertain": "Analiz isteğinin sonucu belirsiz olabilir. Ücret alınmış olabilir; tekrar gönderilmedi ve otomatik yeniden deneme yapılmayacak.",
+        "failed": "Analiz tamamlanamadı. Video kaydı korunuyor ve üretim durumuna dokunulmadı."
       }
     },
     "backgroundJobs": { "active": "Görsel hazırlanıyor" },

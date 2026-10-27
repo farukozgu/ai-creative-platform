@@ -10,8 +10,6 @@ import type * as Planner from "../src/lib/ugc/ugc-request-planner";
 import type * as Submission from "../src/lib/ugc/ugc-fal-submission";
 import type * as Pipeline from "../src/lib/ugc/ugc-pipeline";
 import type * as Media from "../src/lib/ugc/ugc-private-media";
-import type * as Seedance from "../src/lib/ugc/ugc-seedance-planner";
-import type * as SeedanceProvider from "../src/lib/ugc/ugc-seedance-provider";
 import type { UgcClaim, UgcClaimPatch, UgcPipelineJob, UgcPipelineRepository, UgcStoredVideo, UgcLegacyKlingTaskPlan } from "../src/lib/ugc/ugc-pipeline-types";
 
 const requirePackage = createRequire(import.meta.url);
@@ -103,9 +101,7 @@ class MemoryRepository implements UgcPipelineRepository {
 }
 function planMatchesSnapshot(plan: Planner.UgcVisualPlan | UgcLegacyKlingTaskPlan, snapshot: Record<string, unknown>) {
   const model = snapshot.model as { tier?: string } | undefined;
-  return plan.version === 1 ? model === undefined
-    : plan.version === 2 ? model === undefined || model.tier === "premium"
-      : model?.tier === "standard";
+  return plan.version === 1 ? model === undefined : stable(plan.model) === stable(snapshot.model);
 }
 function dependencies(repository: MemoryRepository): Pipeline.UgcPipelineDependencies {
   return { repository, planRequest: harness().planner.planUgcKlingRequest, media: { resolveInput: async () => ({ start_image_url: "https://signed.invalid/source", prompt: "motion", duration: "15", generate_audio: false, enable_safety_checker: true, elements: [] }), recover: async () => null, persist: async () => output },
@@ -152,6 +148,22 @@ test("documented Kling payload uses signed references without ratio, voice or di
   assert.equal(input.elements[0].reference_image_urls.length, 1);
   for (const invented of ["aspect_ratio", "voice", "language", "spoken_dialogue", "lip_sync"]) assert.ok(!(invented in input));
   assert.throws(() => submission.buildUgcKlingInput(planned.plan, new Map()));
+});
+
+test("immutable Kling provider selection dispatches to the existing Kling planner", async () => {
+  const { pipeline } = harness();
+  const repository = new MemoryRepository();
+  const value = job();
+  value.requestSnapshot.providerSelection = "kling-v3-pro-image";
+  rehash(value);
+  repository.records.set(jobId, value);
+  const deps = dependencies(repository);
+  let submissions = 0;
+  deps.transport.submit = async input => { submissions++; assert.ok("start_image_url" in input); return "kling-task"; };
+  const result = await pipeline.verifyUgcSubmission(ownerId, jobId, deps);
+  assert.equal("kind" in result && result.kind, "accepted");
+  assert.equal(submissions, 1); // Injected test transport only; requestUgcGeneration remains disabled.
+  assert.equal(repository.records.get(jobId)?.providerPlan?.version, 1);
 });
 
 test("JSONB key reordering preserves canonical snapshot and plan identity", () => {
@@ -367,275 +379,23 @@ test("forward-only migration contains bounded atomic/fenced claims and service-o
   assert.doesNotMatch(sql.replace(/--[^\n]*/g, ""), /cron|http_post|billing|credits/i);
 });
 
-function seedanceJob() {
-  const value = job();
-  delete value.requestSnapshot.referenceImages;
-  const product = { objectPath: imagePath, sha256: "a".repeat(64), width: 720, height: 1280 };
-  value.requestSnapshot.seedanceReferences = { product, creator: { ...product, objectPath: imagePath.replace(jobId, "40000000-0000-4000-8000-000000000001") } };
-  return rehash(value);
-}
-
-test("Seedance pins its independent route, positional references and separate immutable brief", () => {
-  const { load, submission } = harness();
-  const { planUgcSeedanceRequest, ugcSeedanceRoute } = load("@/lib/ugc/ugc-seedance-planner") as typeof Seedance;
-  const value = seedanceJob(); const before = JSON.stringify(value);
-  const result = planUgcSeedanceRequest(value); assert.ok(result.ok);
-  assert.equal(result.plan.endpointId, "bytedance/seedance-2.5/reference-to-video");
-  assert.equal(result.plan.endpointId, ugcSeedanceRoute.endpointId);
-  assert.equal(result.plan.version, 2); assert.equal(result.plan.generateAudio, false);
-  assert.equal(result.plan.brief.sceneDirection, value.requestSnapshot.sceneDirection);
-  assert.equal(result.plan.brief.spokenDialogue, "");
-  assert.ok(result.plan.prompt.includes("@Image1")); assert.ok(result.plan.prompt.includes("@Image2"));
-  const urls = new Map(result.plan.images.map((image, index) => [image.objectPath, `https://private.invalid/${index}?token=secret`]));
-  const input = submission.buildUgcSeedanceInput(result.plan, urls);
-  assert.deepEqual(Array.from(input.image_urls), Array.from(urls.values()));
-  assert.equal(input.aspect_ratio, "9:16"); assert.equal(input.duration, "15"); assert.equal(input.codec, "H264");
-  for (const unsupported of ["elements", "start_image_url", "voice", "language", "audio_urls", "video_urls"]) assert.ok(!(unsupported in input));
-  assert.equal(input.generate_audio, false); assert.equal(input.task, "reference");
-  assert.equal(JSON.stringify(value), before);
-  assert.ok(!JSON.stringify(result.plan).includes("https://"));
-  assert.throws(() => submission.buildUgcSeedanceInput(result.plan, new Map()));
-  assert.throws(() => submission.buildUgcSeedanceInput({ ...result.plan, durationSeconds: 60 } as unknown as Seedance.UgcSeedanceVisualPlan, urls));
-  assert.ok(!planUgcSeedanceRequest({ ...value, requestHash: "f".repeat(64) }).ok);
-  // Changes to a returned plan cannot mutate the source snapshot.
-  result.plan.images[0].sha256 = "f".repeat(64);
-  assert.equal(JSON.stringify(value), before);
-});
-
-test("Seedance rejects speech, captions, long durations, legacy elements, extra modalities and unowned references", () => {
-  const { load } = harness();
-  const { planUgcSeedanceRequest } = load("@/lib/ugc/ugc-seedance-planner") as typeof Seedance;
-  const check = (value: UgcPipelineJob, issue: Planner.UgcPlanningIssue) => {
-    const result = planUgcSeedanceRequest(rehash(value));
-    assert.ok(!result.ok && result.issues.includes(issue), issue);
-  };
-  for (const duration of ["60"]) {
-    const value = seedanceJob(); (value.requestSnapshot.settings as Record<string, unknown>).duration = duration;
-    check(value, "unsupported_duration");
-  }
-  for (const language of ["tr", "en"]) {
-    const value = seedanceJob(); value.requestSnapshot.script = value.requestSnapshot.spokenDialogue = "Keep these exact words.";
-    (value.requestSnapshot.settings as Record<string, unknown>).language = language;
-    for (const issue of ["exact_dialogue_unverified", "voice_selection_unverified", "lip_sync_unverified"] as const) check(value, issue);
-    if (language === "tr") check(value, "turkish_speech_unsupported");
-  }
-  const captions = seedanceJob(); (captions.requestSnapshot.settings as Record<string, unknown>).subtitles = true;
-  check(captions, "subtitles_unsupported");
-  const placeholder = seedanceJob(); placeholder.requestSnapshot.creatorConcept = { selectionId: "ada", referenceType: "placeholder_visual" };
-  check(placeholder, "creator_reference_unavailable");
-  const old = seedanceJob(); old.requestSnapshot.referenceImages = job().requestSnapshot.referenceImages;
-  check(old, "reference_inputs_unsupported");
-  const audio = seedanceJob(); (audio.requestSnapshot.seedanceReferences as Record<string, unknown>).audio = [];
-  check(audio, "reference_inputs_unsupported");
-  const unowned = seedanceJob(); (unowned.requestSnapshot.seedanceReferences as { creator: { objectPath: string } }).creator.objectPath = "other/private.webp";
-  check(unowned, "reference_images_unavailable");
-  const longPrompt = seedanceJob(); longPrompt.requestSnapshot.sceneDirection = "x".repeat(3000);
-  check(longPrompt, "prompt_too_long");
-  // Legacy UI draft bytes/hash stay intact and are rejected, never silently upgraded.
-  const legacy = job(); const before = JSON.stringify(legacy); check(legacy, "reference_inputs_unsupported");
-  assert.equal(JSON.stringify(legacy), before);
-});
-
-test("Seedance adapter blocks concurrent submissions without constructing transport and scopes pinned task reads", async () => {
-  const { load } = harness();
-  const { UgcSeedanceVideoProvider, createUgcVideoProvider } = load("@/lib/ugc/ugc-seedance-provider") as typeof SeedanceProvider;
-  let reads = 0; let status: "queued" | "processing" | "completed" = "queued";
-  const provider: SeedanceProvider.UgcSeedanceVideoProvider = new UgcSeedanceVideoProvider(() => { reads++; return {
-    getStatus: async (endpoint, task) => { assert.equal(endpoint, provider.endpointId); assert.equal(task, "task-1"); return status; },
-    getResult: async endpoint => { assert.equal(endpoint, provider.endpointId); return { url: "https://v3.fal.media/output.mp4", contentType: "video/mp4", sizeBytes: null }; },
-  }; });
-  const request = { idempotencyKey: jobId, projectId, requestHash: "a".repeat(64), snapshot: seedanceJob().requestSnapshot };
-  const blocked = await Promise.all(Array.from({ length: 10 }, () => provider.submit(request)));
-  assert.ok(blocked.every(result => result.kind === "blocked")); assert.equal(reads, 0);
-  // No FAL_KEY in harness: factory + blocked submit cannot construct a real client.
-  assert.equal((await createUgcVideoProvider().submit(request)).kind, "blocked");
-  const task: SeedanceProvider.UgcSeedanceTaskReference = { ownerId, provider: provider.provider, modelId: provider.modelId,
-    endpointId: provider.endpointId, providerRequestId: "task-1", status: "processing" };
-  assert.equal((await provider.inspectOwnedTask("other", task)).kind, "blocked");
-  assert.equal((await provider.inspectOwnedTask(ownerId, { ...task, endpointId: "fal-ai/kling-video/v3/pro/image-to-video" })).kind, "blocked");
-  for (const state of ["draft", "failed", "succeeded", "provider_submission_ambiguous"] as const) await provider.inspectOwnedTask(ownerId, { ...task, status: state });
-  assert.equal(reads, 0);
-  const pending = await provider.inspectOwnedTask(ownerId, task); assert.ok(pending.kind === "observed" && pending.status === "processing");
-  status = "completed";
-  const ready = await provider.inspectOwnedTask(ownerId, task); assert.ok(ready.kind === "observed" && ready.outputReady && ready.status === "processing");
-  await provider.getResult("task-1");
-  await assert.rejects(provider.getStatus("bad task"));
-});
-
-test("Seedance reuses one-shot SDK protection for retryable errors without live requests", async () => {
-  const { load, submission } = harness();
-  const { planUgcSeedanceRequest } = load("@/lib/ugc/ugc-seedance-planner") as typeof Seedance;
-  const planned = planUgcSeedanceRequest(seedanceJob()); assert.ok(planned.ok);
-  const input = submission.buildUgcSeedanceInput(planned.plan, new Map(planned.plan.images.map(image => [image.objectPath, "https://private.invalid/image"])));
-  for (const status of [0, 429, 502, 503, 504, 200]) {
-    let calls = 0;
-    await assert.rejects(submission.submitUgcSeedanceOnce(input, { credentials: "fake-never-live", fetch: async (url, init) => {
-      calls++; assert.equal(String(url), `https://queue.fal.run/${planned.plan.endpointId}`);
-      assert.equal(init?.redirect, "error");
-      if (!status) throw new TypeError("fetch failed");
-      return new Response(status === 200 ? "invalid-json" : "{}", { status });
-    } }));
-    assert.equal(calls, 1);
-  }
-});
-
-test("default Seedance pipeline preserves safe claims, ambiguity, pinned reconciliation and private success ordering", async () => {
-  for (const ambiguous of [false, true]) {
-    const { load, pipeline, submission } = harness();
-    const repository = new MemoryRepository(); const value = seedanceJob(); repository.records.set(jobId, value);
-    const deps = dependencies(repository); delete deps.planRequest;
-    deps.media.resolveInput = async (_job, plan) => {
-      assert.equal(plan.version, 2); if (plan.version !== 2) throw new Error("Wrong provider");
-      return submission.buildUgcSeedanceInput(plan, new Map(plan.images.map(image => [image.objectPath, "https://private.invalid/image"])));
-    };
-    let posts = 0; let persisted = 0;
-    deps.transport.submit = async input => { posts++; assert.ok("image_urls" in input); if (ambiguous) throw new Error("timeout"); return "seedance-task"; };
-    deps.transport.getStatus = async endpoint => { assert.equal(endpoint, "bytedance/seedance-2.5/reference-to-video"); return "completed"; };
-    deps.media.persist = async () => { assert.notEqual(repository.records.get(jobId)?.status, "succeeded"); persisted++; return output; };
-    await Promise.all(Array.from({ length: 8 }, () => pipeline.verifyUgcSubmission(ownerId, jobId, deps)));
-    assert.equal(posts, 1);
-    await pipeline.verifyUgcSubmission(ownerId, jobId, deps); assert.equal(posts, 1);
-    if (ambiguous) {
-      assert.equal(repository.records.get(jobId)?.status, "provider_submission_ambiguous");
-      assert.equal((await pipeline.verifyUgcReconciliation(ownerId, jobId, deps)).kind, "unchanged");
-      assert.equal(persisted, 0);
-    } else {
-      assert.equal((await pipeline.verifyUgcReconciliation(ownerId, jobId, deps)).kind, "succeeded");
-      assert.equal(persisted, 1); assert.equal(repository.patches.at(-1)?.output?.objectPath, output.objectPath);
-      // Changing a saved endpoint cannot reroute an owned task to a different model.
-      const { planUgcSeedanceRequest } = load("@/lib/ugc/ugc-seedance-planner") as typeof Seedance;
-      const planned = planUgcSeedanceRequest(value); assert.ok(planned.ok);
-      value.status = "processing"; value.providerRequestId = "task"; value.providerPlan = planned.plan;
-      (value.providerPlan as { endpointId: string }).endpointId = "wrong-route";
-      assert.equal((await pipeline.verifyUgcReconciliation(ownerId, jobId, deps)).kind, "invalid_plan");
-    }
-    assert.equal((await pipeline.requestUgcGeneration()).code, "generation_disabled");
-  }
-});
-
-test("Seedance private image resolver verifies bytes and signs only owned references", async () => {
-  const bytes = await sharp({ create: { width: 720, height: 1280, channels: 3, background: "white" } }).webp().toBuffer();
-  let signed = 0;
-  const { load } = harness({ "@/lib/supabase/admin": { getSupabaseAdminClient: () => ({ storage: { from: () => ({
-    download: async () => ({ data: new Blob([Uint8Array.from(bytes)], { type: "image/webp" }), error: null }),
-    createSignedUrl: async () => { signed++; return { data: { signedUrl: "https://project.supabase.co/storage/v1/object/sign/ugc-product-assets/source?token=secret" }, error: null }; },
-  }) } }) } });
-  const { planUgcSeedanceRequest } = load("@/lib/ugc/ugc-seedance-planner") as typeof Seedance;
-  const { SupabaseUgcPrivateMedia } = load("@/lib/ugc/ugc-private-media") as typeof Media;
-  const media = new SupabaseUgcPrivateMedia(fakeFetch);
-  const planned = planUgcSeedanceRequest(seedanceJob()); assert.ok(planned.ok);
-  await assert.rejects(media.resolveInput(seedanceJob(), planned.plan)); assert.equal(signed, 0);
-  for (const image of planned.plan.images) image.sha256 = createHash("sha256").update(bytes).digest("hex");
-  const input = await media.resolveInput(seedanceJob(), planned.plan);
-  assert.equal(input.image_urls.length, 2); assert.equal(signed, 2); assert.ok(!("elements" in input));
-  planned.plan.images[0].objectPath = "other/private.webp";
-  await assert.rejects(media.resolveInput(seedanceJob(), planned.plan)); assert.equal(signed, 2);
-});
-
-test("Seedance 30s planning preserves all three ratios and private output duration validation", async () => {
-  const { load, submission } = harness();
-  const { planUgcSeedanceRequest } = load("@/lib/ugc/ugc-seedance-planner") as typeof Seedance;
-  const { inspectUgcMp4 } = load("@/lib/ugc/ugc-private-media") as typeof Media;
-  for (const ratio of ["9:16", "1:1", "16:9"]) {
-    const value = seedanceJob(); Object.assign(value.requestSnapshot.settings as object, { duration: "30", aspectRatio: ratio }); rehash(value);
-    const before = JSON.stringify(value); const result = planUgcSeedanceRequest(value); assert.ok(result.ok);
-    assert.equal(result.plan.durationSeconds, 30); assert.equal(result.plan.aspectRatio, ratio);
-    const input = submission.buildUgcSeedanceInput(result.plan, new Map(result.plan.images.map(image => [image.objectPath, "https://private.invalid/image"])));
-    assert.equal(input.duration, "30"); assert.equal(input.aspect_ratio, ratio); assert.equal(JSON.stringify(value), before);
-  }
-  assert.equal(inspectUgcMp4(mp4(30), "9:16", 30).durationSeconds, 30);
-  assert.throws(() => inspectUgcMp4(mp4(15), "9:16", 30));
-  assert.throws(() => inspectUgcMp4(mp4(30), "9:16", 15));
-  assert.throws(() => inspectUgcMp4(mp4(60), "9:16", 60 as 30));
-  let uploads = 0;
-  const h = harness({ "@/lib/supabase/admin": { getSupabaseAdminClient: () => ({ storage: { from: () => ({
-    upload: async () => { uploads++; return { error: null }; },
-  }) } }) } });
-  const { SupabaseUgcPrivateMedia } = h.load("@/lib/ugc/ugc-private-media") as typeof Media;
-  const media = new SupabaseUgcPrivateMedia(async () => new Response(mp4(30), { headers: { "content-type": "video/mp4" } }));
-  const value = seedanceJob(); (value.requestSnapshot.settings as Record<string, unknown>).duration = "30"; rehash(value);
-  const file = { url: "https://v3.fal.media/output.mp4", contentType: "video/mp4", sizeBytes: null };
-  assert.equal((await media.persist(value, file)).durationSeconds, 30); assert.equal(uploads, 1);
-  await assert.rejects(media.persist(seedanceJob(), file)); assert.equal(uploads, 1);
-});
-
-test("Seedance audio planning accepts native audio and rejects unprovisioned private references before claims", async () => {
-  const { load, submission } = harness();
-  const { planUgcSeedanceRequest } = load("@/lib/ugc/ugc-seedance-planner") as typeof Seedance;
-  const reference = { objectPath: `${ownerId}/${projectId}/${jobId}.mp3`, sha256: "b".repeat(64),
-    byteSize: 1000, durationSeconds: 10, contentType: "audio/mpeg" };
-  for (const mode of ["silent", "native"]) {
-    const value = seedanceJob(); value.requestSnapshot.seedanceAudio = { mode }; rehash(value);
-    const before = JSON.stringify(value); const result = planUgcSeedanceRequest(value); assert.ok(result.ok);
-    const urls = new Map(result.plan.images.map(image => [image.objectPath, "https://private.invalid/image"] as const));
-    const input = submission.buildUgcSeedanceInput(result.plan, urls);
-    assert.equal(input.generate_audio, mode !== "silent"); assert.equal(result.plan.audio?.mode, mode);
-    assert.equal("audio_urls" in input, false);
-    assert.equal(JSON.stringify(value), before);
-    assert.throws(() => submission.buildUgcSeedanceInput({ ...result.plan, generateAudio: !result.plan.generateAudio }, urls));
-    value.requestSnapshot.script = value.requestSnapshot.spokenDialogue = "Say these exact words."; rehash(value);
-    const speech = planUgcSeedanceRequest(value); assert.ok(!speech.ok && speech.issues.includes("exact_dialogue_unverified"));
-  }
-  const referenceJob = seedanceJob(); referenceJob.requestSnapshot.seedanceAudio = { mode: "reference", references: [reference] }; rehash(referenceJob);
-  const referenceResult = planUgcSeedanceRequest(referenceJob);
-  assert.ok(!referenceResult.ok && referenceResult.issues.includes("audio_reference_storage_unavailable"));
-  for (const audio of [
-    { mode: "native", voice: "warm" }, { mode: "reference", references: [] },
-    { mode: "silent", references: [reference] }, { mode: "reference", references: [{ ...reference, objectPath: `other/${projectId}/${jobId}.mp3` }] },
-    { mode: "reference", references: [{ ...reference, durationSeconds: 30.3 }] },
-    { mode: "reference", references: [{ ...reference, byteSize: 15 * 1024 * 1024 + 1 }] },
-    { mode: "reference", references: Array.from({ length: 11 }, () => ({ ...reference, durationSeconds: 1.8 })) },
-    { mode: "reference", references: [{ ...reference, durationSeconds: 20 }, { ...reference, durationSeconds: 20 }] },
-  ]) {
-    const value = seedanceJob(); value.requestSnapshot.seedanceAudio = audio; rehash(value);
-    assert.equal(planUgcSeedanceRequest(value).ok, false);
-  }
-});
-
-test("historical silent Seedance plans retain canonical identity and SQL pins every immutable route", () => {
-  const { load } = harness();
-  const { planUgcSeedanceRequest } = load("@/lib/ugc/ugc-seedance-planner") as typeof Seedance;
-  const original = planUgcSeedanceRequest(seedanceJob()); assert.ok(original.ok);
-  assert.ok(!("audio" in original.plan)); assert.equal(original.plan.generateAudio, false);
-  const sql = readFileSync("database/migrations/20261104000000_prepare_ugc_pipeline_claims.sql", "utf8");
-  assert.match(sql, /version' = '1'[\s\S]*kling-v3-pro-image[\s\S]*durationSeconds' = '15'/);
-  assert.match(sql, /version' = '2'[\s\S]*seedance-2\.5-reference[\s\S]*bytedance\/seedance-2\.5\/reference-to-video/);
-  assert.match(sql, /version' = '3'[\s\S]*bytedance\/seedance-2\.0\/mini\/reference-to-video/);
-  assert.match(sql, /ugc_pipeline_plan_matches_snapshot/);
-  assert.match(sql, /Pin legacy UGC Kling task IDs/);
-  assert.match(sql, /provider_submission_ambiguous' and provider_request_id is not null/);
-  assert.match(sql, /create trigger ugc_pipeline_guard before insert or update/);
-  assert.match(sql, /grant execute on function public\.ugc_pipeline_plan_matches_snapshot\(jsonb, jsonb\) to service_role/);
-  assert.match(sql, /Duplicate UGC provider task IDs must be reviewed/);
-  assert.match(sql, /finish_ugc_claim[\s\S]*status = 'provider_submission_ambiguous' and provider_request_id is not null/);
-  assert.match(sql, /if j\.status = 'provider_submission_ambiguous' and p_status = 'queued'/);
-  assert.match(sql, /claim_ugc_submission[\s\S]*provider route does not match immutable request/);
-  const verify = readFileSync("database/verification/ugc_pipeline_preparation.sql", "utf8");
-  assert.match(verify, /optional_reference_audio/);
-  assert.match(verify, /atomic_submission_claim/);
-  assert.match(verify, /reconciliation_lease_fencing/);
-  assert.match(verify, /ambiguous_task_completion/);
-  assert.match(verify, /optional capability is absent/i);
-  assert.equal((verify.match(/select check_name, status, details from checks/g) ?? []).length, 1);
-  assert.equal((verify.match(/select check_name, status, details from checks/g) ?? []).length, 1);
-  assert.match(sql, /durationSeconds' in \('15', '30'\)/);
-  assert.match(sql, /abs\(\(p_output->>'durationSeconds'\)::numeric - \(j.provider_plan->>'durationSeconds'\)::numeric\)/);
-});
-
-test("server registry pins documented Mini endpoint and preflights combinations before job persistence", async () => {
+test("server registry pins Kling routes and preflights combinations before job persistence", async () => {
   const { load } = harness();
   const registry = load("@/lib/ugc/ugc-model-registry") as typeof import("../src/lib/ugc/ugc-model-registry");
   const contract = load("@/features/ugc/ugc-studio-contract") as typeof import("../src/features/ugc/ugc-studio-contract");
-  assert.equal(registry.ugcModelRegistry.standard.identity.endpointId, "bytedance/seedance-2.0/mini/reference-to-video");
-  assert.equal(registry.ugcModelRegistry.standard.documented.maxDuration, 15);
-  const snapshot = seedanceJob().requestSnapshot;
-  const project = { id: projectId, ownerId, title: null, modelTier: "standard" as const, creatorConceptId: "ada" as const,
+  assert.equal(registry.ugcModelRegistry.standard.identity.endpointId, "fal-ai/kling-video/v3/standard/image-to-video");
+  assert.deepEqual(Array.from(registry.ugcModelRegistry.premium.supported.durations), [15]);
+  const snapshot = job().requestSnapshot;
+  const project = { id: projectId, ownerId, title: null, modelTier: "standard" as "standard" | "premium", creatorConceptId: "ada" as const,
     format: "demo" as const, script: "", spokenDialogue: "", sceneDirection: "Lift the product.",
     settings: snapshot.settings as import("../src/features/ugc/ugc-studio-contract").UgcDraftSettings,
     product: { objectPath: imagePath, contentType: "image/webp" as const, byteSize: 1000, fileName: "product.webp" }, createdAt: "now", updatedAt: "now" };
   let writes = 0;
+  const snapshots: Record<string, unknown>[] = [];
+  const requestHashes: string[] = [];
   const repository = { getOwned: async () => project, prepareJob: async (input: Record<string, unknown>) => {
-    writes++; assert.equal((input.requestSnapshot as { model: { tier: string } }).model.tier, "standard");
+    writes++; snapshots.push(input.requestSnapshot as Record<string, unknown>);
+    requestHashes.push(String(input.requestHash));
     return { ok: true, value: { ...input, id: jobId, createdAt: "now" } };
   } } as unknown as import("../src/features/ugc/ugc-studio-contract").UgcProjectRepository;
   project.settings.duration = "30";
@@ -648,102 +408,17 @@ test("server registry pins documented Mini endpoint and preflights combinations 
   project.settings.subtitles = false;
   assert.ok((await contract.prepareUgcJobForUser(ownerId, projectId, jobId, repository, stable, registry.resolveUgcPreparationModel)).ok);
   assert.equal(writes, 1);
+  assert.equal(JSON.stringify(snapshots[0].model), JSON.stringify(registry.ugcModelRegistry.standard.identity));
+  assert.equal(snapshots[0].providerSelection, undefined);
+  assert.equal(requestHashes[0], stable(snapshots[0]));
+  project.modelTier = "premium";
+  assert.ok((await contract.prepareUgcJobForUser(ownerId, projectId, jobId, repository, stable, registry.resolveUgcPreparationModel)).ok);
+  assert.equal(writes, 2);
+  assert.equal(JSON.stringify(snapshots[1].model), JSON.stringify(registry.ugcModelRegistry.premium.identity));
+  assert.equal(snapshots[1].providerSelection, undefined);
+  assert.equal(requestHashes[1], stable(snapshots[1]));
   const publicOptions = JSON.stringify(registry.getUgcModelOptions());
   assert.ok(!/endpoint|price|credit|token|credential/.test(publicOptions));
-});
-
-test("Mini planning pins model identity, rejects long clips and emits only documented payload fields", async () => {
-  const { load, submission, planner } = harness();
-  const registry = load("@/lib/ugc/ugc-model-registry") as typeof import("../src/lib/ugc/ugc-model-registry");
-  const seedance = load("@/lib/ugc/ugc-seedance-planner") as typeof Seedance;
-  const value = seedanceJob(); value.requestSnapshot.model = { ...registry.ugcModelRegistry.standard.identity }; rehash(value);
-  const before = JSON.stringify(value); const planned = seedance.planUgcModelRequest(value); assert.ok(planned.ok);
-  assert.equal(planned.plan.version, 3); assert.equal(planned.plan.durationSeconds, 15);
-  assert.equal(planned.plan.endpointId, registry.ugcModelRegistry.standard.identity.endpointId);
-  const input = submission.buildUgcSeedanceInput(planned.plan, new Map(planned.plan.images.map(image => [image.objectPath, "https://private.invalid/image"])));
-  assert.equal(input.duration, "15"); assert.equal(input.image_urls.length, 2);
-  assert.ok(!("task" in input)); assert.ok(!("bitrate_mode" in input));
-  assert.equal(JSON.stringify(value), before);
-  assert.equal(seedance.planUgcSeedanceRequest(value).ok, false); // No silent fallback to Premium.
-  assert.throws(() => submission.submitUgcSeedanceOnce(input, { credentials: "fake", fetch: fakeFetch }));
-  let posts = 0;
-  assert.equal(await submission.submitUgcMiniOnce(input, { credentials: "fake", fetch: async (url, init) => {
-    posts++; assert.equal(String(url), `https://queue.fal.run/${planned.plan.endpointId}`); assert.equal(init?.method, "POST");
-    return Response.json({ request_id: "mini-test-only" });
-  } }), "mini-test-only");
-  assert.equal(posts, 1);
-  for (const duration of ["30", "60"]) {
-    (value.requestSnapshot.settings as Record<string, unknown>).duration = duration; rehash(value);
-    const rejected = seedance.planUgcModelRequest(value); assert.ok(!rejected.ok && rejected.issues.includes("unsupported_duration"));
-  }
-  (value.requestSnapshot.settings as Record<string, unknown>).duration = "15";
-  value.requestSnapshot.model = { ...registry.ugcModelRegistry.standard.identity, version: 2 }; rehash(value);
-  assert.equal(seedance.planUgcModelRequest(value).ok, false);
-  const historical = seedanceJob();
-  const original = seedance.planUgcSeedanceRequest(historical); assert.ok(original.ok);
-  const routed = seedance.planUgcModelRequest(historical); assert.ok(routed.ok);
-  assert.equal(planner.canonicalUgcJson(routed.plan), planner.canonicalUgcJson(original.plan));
-  assert.ok(!("model" in original.plan));
-});
-
-test("Mini reference audio obeys lower limits while Premium keeps its existing capabilities", () => {
-  const { load } = harness();
-  const registry = load("@/lib/ugc/ugc-model-registry") as typeof import("../src/lib/ugc/ugc-model-registry");
-  const seedance = load("@/lib/ugc/ugc-seedance-planner") as typeof Seedance;
-  const ref = { objectPath: `${ownerId}/${projectId}/${jobId}.mp3`, sha256: "a".repeat(64), byteSize: 1000, durationSeconds: 5, contentType: "audio/mpeg" };
-  for (const refs of [[ref], [ref, ref, ref], [ref, ref, ref, ref], [{ ...ref, durationSeconds: 16 }]]) {
-    const value = seedanceJob(); value.requestSnapshot.model = { ...registry.ugcModelRegistry.standard.identity };
-    value.requestSnapshot.seedanceAudio = { mode: "reference", references: refs }; rehash(value);
-    const miniResult = seedance.planUgcModelRequest(value);
-    assert.equal(miniResult.ok, false);
-    if (refs.length <= 3 && refs.reduce((sum, item) => sum + item.durationSeconds, 0) <= 15) {
-      assert.ok(!miniResult.ok && miniResult.issues.includes("audio_reference_storage_unavailable"));
-    }
-    value.requestSnapshot.model = { ...registry.ugcModelRegistry.premium.identity }; rehash(value);
-    const premiumResult = seedance.planUgcModelRequest(value);
-    assert.ok(!premiumResult.ok && premiumResult.issues.includes("audio_reference_storage_unavailable"));
-  }
-});
-
-test("Mini default pipeline preserves duplicate claims and reconciles only its pinned model", async () => {
-  const { load, pipeline, submission } = harness();
-  const registry = load("@/lib/ugc/ugc-model-registry") as typeof import("../src/lib/ugc/ugc-model-registry");
-  const value = seedanceJob(); value.requestSnapshot.model = { ...registry.ugcModelRegistry.standard.identity }; rehash(value);
-  const repository = new MemoryRepository(); repository.records.set(jobId, value);
-  const deps = dependencies(repository); delete deps.planRequest;
-  deps.media.resolveInput = async (_job, plan) => {
-    assert.equal(plan.version, 3); if (plan.version !== 3) throw new Error("Wrong model");
-    return submission.buildUgcSeedanceInput(plan, new Map(plan.images.map(image => [image.objectPath, "https://private.invalid/image"])));
-  };
-  let posts = 0; deps.transport.submit = async input => { posts++; assert.ok(!("task" in input)); return "mini-task"; };
-  deps.transport.getStatus = async endpoint => { assert.equal(endpoint, registry.ugcModelRegistry.standard.identity.endpointId); return "completed"; };
-  deps.transport.getResult = async endpoint => { assert.equal(endpoint, registry.ugcModelRegistry.standard.identity.endpointId); return { url: "https://v3.fal.media/output.mp4", contentType: "video/mp4", sizeBytes: 1024 }; };
-  await Promise.all(Array.from({ length: 8 }, () => pipeline.verifyUgcSubmission(ownerId, jobId, deps)));
-  assert.equal(posts, 1);
-  assert.equal((await pipeline.verifyUgcReconciliation(ownerId, jobId, deps)).kind, "succeeded");
-  assert.equal(repository.patches.at(-1)?.output?.objectPath, output.objectPath);
-  assert.equal((await pipeline.requestUgcGeneration()).code, "generation_disabled");
-});
-
-test("Premium pipeline keeps its pinned route and SQL identity rejects tier changes", async () => {
-  const { load, pipeline, submission } = harness();
-  const registry = load("@/lib/ugc/ugc-model-registry") as typeof import("../src/lib/ugc/ugc-model-registry");
-  const value = seedanceJob(); value.requestSnapshot.model = { ...registry.ugcModelRegistry.premium.identity }; rehash(value);
-  const repository = new MemoryRepository(); repository.records.set(jobId, value);
-  const deps = dependencies(repository); delete deps.planRequest;
-  deps.media.resolveInput = async (_job, plan) => {
-    assert.equal(plan.version, 2); if (plan.version !== 2) throw new Error("Wrong tier");
-    assert.equal(plan.endpointId, "bytedance/seedance-2.5/reference-to-video");
-    return submission.buildUgcSeedanceInput(plan, new Map(plan.images.map(image => [image.objectPath, "https://private.invalid/image"])));
-  };
-  let posts = 0; deps.transport.submit = async () => { posts++; return "premium-task"; };
-  const submitted = await pipeline.verifyUgcSubmission(ownerId, jobId, deps);
-  assert.ok("kind" in submitted && submitted.kind === "accepted");
-  assert.equal(posts, 1);
-  const mini = { ...value, requestSnapshot: { ...value.requestSnapshot, model: { ...registry.ugcModelRegistry.standard.identity } } };
-  const premiumPlan = (repository.records.get(jobId)?.providerPlan);
-  assert.ok(premiumPlan);
-  assert.equal(planMatchesSnapshot(premiumPlan, mini.requestSnapshot), false);
 });
 
 test("historical Kling task IDs without a stored plan reconcile on the migration-pinned route", async () => {
@@ -760,4 +435,90 @@ test("historical Kling task IDs without a stored plan reconcile on the migration
   assert.equal(endpoint, "fal-ai/kling-video/v3/pro/image-to-video");
   const persisted = repository.records.get(jobId)?.providerPlan;
   assert.ok(persisted?.version === 1 && persisted.legacyTask === true);
+});
+
+
+test("both new Kling tiers pin snapshot identity, payload and reconciliation endpoint", async () => {
+  for (const tier of ["standard", "premium"] as const) {
+    const { planner, pipeline, submission, load } = harness();
+    const registry = load("@/lib/ugc/ugc-model-registry") as typeof import("../src/lib/ugc/ugc-model-registry");
+    const value = job(); value.requestSnapshot.model = { ...registry.ugcModelRegistry[tier].identity }; rehash(value);
+    const before = JSON.stringify(value);
+    const result = planner.planUgcModelRequest(value); assert.ok(result.ok);
+    assert.equal(result.plan.version, 4);
+    assert.equal(result.plan.endpointId, registry.ugcModelRegistry[tier].identity.endpointId);
+    assert.equal(JSON.stringify(value), before);
+    const urls = new Map([[imagePath, "https://signed.invalid/source"]]);
+    const payload = submission.buildUgcKlingInput(result.plan, urls);
+    assert.equal(payload.start_image_url, "https://signed.invalid/source");
+    assert.equal(payload.generate_audio, false); assert.equal(payload.duration, "15");
+    assert.equal(payload.elements.length, 2); assert.ok(!("image_urls" in payload));
+    assert.throws(() => submission.buildUgcKlingInput({ ...result.plan, endpointId: "wrong" }, urls));
+    for (const duration of ["30", "60"]) {
+      const invalid = structuredClone(value); (invalid.requestSnapshot.settings as Record<string, unknown>).duration = duration; rehash(invalid);
+      assert.equal(planner.planUgcModelRequest(invalid).ok, false);
+    }
+    assert.equal(planner.planUgcKlingRequest(value).ok, false);
+    const repository = new MemoryRepository(); repository.records.set(jobId, value);
+    const deps = dependencies(repository); delete deps.planRequest;
+    deps.media.resolveInput = async (_job, plan) => submission.buildUgcKlingInput(plan, urls);
+    let posts = 0;
+    deps.transport.submit = async () => { posts++; return "kling-task"; };
+    deps.transport.getStatus = async endpoint => { assert.equal(endpoint, result.plan.endpointId); return "completed"; };
+    const accepted = await pipeline.verifyUgcSubmission(ownerId, jobId, deps);
+    assert.ok("kind" in accepted); assert.equal(accepted.kind, "accepted");
+    const duplicate = await pipeline.verifyUgcSubmission(ownerId, jobId, deps);
+    assert.ok("kind" in duplicate); assert.equal(duplicate.kind, "duplicate");
+    assert.equal(posts, 1);
+    assert.equal((await pipeline.verifyUgcReconciliation(ownerId, jobId, deps)).kind, "succeeded");
+  }
+});
+
+test("removed model snapshots fail before claims or provider requests", async () => {
+  const { pipeline, planner } = harness();
+  for (const endpointId of ["bytedance/seedance-2.0/mini/reference-to-video", "bytedance/seedance-2.5/reference-to-video"]) {
+    const value = job(); value.requestSnapshot.model = { tier: "premium", provider: "fal", version: 1, endpointId }; rehash(value);
+    const repository = new MemoryRepository(); repository.records.set(jobId, value);
+    const deps = dependencies(repository); delete deps.planRequest;
+    let posts = 0; deps.transport.submit = async () => { posts++; return "forbidden"; };
+    assert.equal(planner.planUgcModelRequest(value).ok, false);
+    const rejected = await pipeline.verifyUgcSubmission(ownerId, jobId, deps);
+    assert.ok("ok" in rejected && rejected.ok === false);
+    assert.equal(posts, 0); assert.equal(repository.claims.size, 0);
+    const before = JSON.stringify(value.requestSnapshot);
+    value.status = "processing"; value.providerRequestId = "removed-task";
+    value.providerPlan = { version: 2, endpointId } as unknown as Planner.UgcVisualPlan;
+    deps.transport.getStatus = async () => { throw new Error("Removed provider must not be polled"); };
+    assert.equal((await pipeline.verifyUgcReconciliation(ownerId, jobId, deps)).kind, "invalid_plan");
+    assert.equal(JSON.stringify(value.requestSnapshot), before);
+  }
+});
+
+test("verification submissions route both Kling tiers and retain one-shot SDK protection", async () => {
+  const { load, submission } = harness();
+  const registry = load("@/lib/ugc/ugc-model-registry") as typeof import("../src/lib/ugc/ugc-model-registry");
+  for (const tier of ["standard", "premium"] as const) {
+    const value = job(); value.requestSnapshot.model = { ...registry.ugcModelRegistry[tier].identity }; rehash(value);
+    for (const status of [200, 429, 503]) {
+      let posts = 0;
+      const submit = submission.submitUgcModelOnce(value, new Map([[imagePath, "https://signed.invalid/source"]]), {
+        credentials: "fake-never-live", fetch: async (url, init) => {
+          posts++; assert.equal(String(url), "https://queue.fal.run/" + registry.ugcModelRegistry[tier].identity.endpointId);
+          assert.equal(init?.method, "POST");
+          return new Response(JSON.stringify({ request_id: "kling-task" }), { status, headers: { "content-type": "application/json" } });
+        },
+      });
+      if (status === 200) assert.equal(await submit, "kling-task"); else await assert.rejects(submit);
+      assert.equal(posts, 1);
+    }
+  }
+});
+
+test("Kling rollout admits v4 plans and refuses removed versions for new submission claims", () => {
+  const sql = readFileSync("database/rollouts/kling-only-ugc.sql", "utf8");
+  assert.match(sql, /version' = '4'/);
+  assert.match(sql, /kling-v3-standard-image/);
+  assert.match(sql, /p_plan->'model' = p_snapshot->'model'/);
+  assert.match(sql, /not in \('1', '4'\)/);
+  assert.match(sql, /for update skip locked/);
 });

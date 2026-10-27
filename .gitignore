@@ -44,3 +44,5 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+# Isolated disposable Video Studio browser QA build output
+.next-video-qa/

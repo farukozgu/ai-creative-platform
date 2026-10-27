@@ -91,6 +91,19 @@ test("claimed reconciliation releases the lease on retry and preserves checkpoin
   assert.equal(repository.claims.has(jobId), false);
 });
 
+test("claimed terminal Fal failures become failed once and release the reconciliation lease", async () => {
+  const repository = new MemoryReconciliationRepository(); repository.records.set(jobId, job({ status: "processing" }));
+  const [claim] = await repository.claimDueVideoReconciliations(1, 120);
+  const result = await reconcileClaimedVideoGeneration(claim, {
+    repository, provider: { ...queuedProvider, getStatus: async () => "failed" }, billing: new DisabledVideoBillingPolicy(),
+    outputStore: { persist: async () => { throw new Error("not called"); } },
+  });
+  assert.equal(result.status, "failed");
+  assert.equal(repository.records.get(jobId)?.errorCode, "provider_failure");
+  assert.equal(repository.records.get(jobId)?.billingStatus, "reconciliation_required");
+  assert.equal(repository.claims.has(jobId), false);
+});
+
 test("duplicate scheduler invocations process a claim once and return bounded statistics", async () => {
   const repository = new MemoryReconciliationRepository(); repository.records.set(jobId, job());
   const dependencies = { repository, provider: queuedProvider, billing: new DisabledVideoBillingPolicy(), outputStore: { persist: async () => { throw new Error("not called"); } }, now: () => new Date(repository.now) };

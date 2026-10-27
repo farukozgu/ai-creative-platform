@@ -19,6 +19,8 @@ export type LocalVideoSource = {
   previewUrl: string;
   mimeType: string;
   size: number;
+  width: number;
+  height: number;
   file: File;
 };
 
@@ -41,9 +43,12 @@ export type VideoStudioFeedback =
   | "invalid-source-type"
   | "source-too-large"
   | "source-unreadable"
+  | "source-dimensions-unsupported"
   | "not-connected";
 
 export type VideoStudioDraft = {
+  criticalRegion: import("@/lib/video-generation/preservation").CriticalProductRegion | null;
+  analyzeAfterGeneration: boolean;
   source: VideoSource | null;
   prompt: string;
   cameraMovement: VideoCameraMovement;
@@ -54,11 +59,19 @@ export type VideoStudioDraft = {
 };
 
 export type VideoStatus = "queued" | "processing" | "ready" | "failed" | "unavailable";
+export type VideoProgressPhase = "queued" | "processing" | "finalizing" | "ready" | "failed" | "ambiguous" | "submission-uncertain";
 
 export type VideoPresentationRecord = {
+  generationMethod?: import("@/lib/video-generation/preservation").VideoRecordGenerationMethod;
+  criticalRegion?: import("@/lib/video-generation/preservation").CriticalProductRegion | null;
+  analysisRequested?: boolean;
   id: string;
   title: string;
   status: VideoStatus;
+  progressPhase?: VideoProgressPhase;
+  providerTaskKnown?: boolean;
+  outputPersisted?: boolean;
+  errorCode?: string | null;
   generationMode: VideoPresentationMode;
   createdAt?: string | null;
   durationSeconds?: number | null;

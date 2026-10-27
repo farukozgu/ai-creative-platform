@@ -1,3 +1,5 @@
+> Bu belge tarihsel kayıttır. Seedance uygulama entegrasyonu kaldırıldı; güncel yönlendirme ve veritabanı geçişi için [Kling video yönlendirmesi](kling-only-video-routing.md) belgesine bakın.
+
 # UGC / existing Kling integration audit
 
 > Historical Kling preparation audit. New UGC preparation selects Seedance 2.5; see the [current provider separation audit](ugc-seedance-integration-audit.md). Keep this document and the legacy adapter for historical pinned Kling tasks. Video Studio's provider code and behavior are unchanged by the separation.

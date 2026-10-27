@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 
 import { isAuthorizedVideoSchedulerRequest } from "@/lib/video-generation/scheduler-auth";
 import { isVideoReconciliationSchedulerEnabled } from "@/lib/video-generation/scheduler";
+import { reconcileVideoBeta } from "@/lib/video-generation/beta-runtime";
+import { canAccessVideoBeta } from "@/lib/video-generation/beta-policy";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -18,7 +20,8 @@ export async function POST(request: Request) {
   if (!isVideoReconciliationSchedulerEnabled()) {
     return NextResponse.json({ error: "scheduler_disabled" }, { status: 503 });
   }
-  // No configured production billing policy exists yet. Do not claim jobs or
-  // contact fal.ai until one is explicitly installed and reviewed.
-  return NextResponse.json({ error: "billing_unavailable" }, { status: 503 });
+  const owner = process.env.VIDEO_BETA_USER_IDS?.trim() ?? "";
+  if (!canAccessVideoBeta(owner)) return NextResponse.json({ error: "beta_disabled" }, { status: 503 });
+  try { return NextResponse.json({ claimed: await reconcileVideoBeta(owner, null, 5) }); }
+  catch { return NextResponse.json({ error: "reconciliation_unavailable" }, { status: 503 }); }
 }

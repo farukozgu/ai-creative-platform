@@ -3,11 +3,10 @@ import "server-only";
 import { createHash } from "node:crypto";
 import sharp from "sharp";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
-import { buildUgcKlingInput, buildUgcSeedanceInput } from "@/lib/ugc/ugc-fal-submission";
-import type { UgcFalInput, UgcKlingInput, UgcSeedanceInput } from "@/lib/ugc/ugc-fal-submission";
-import type { UgcSeedanceVisualPlan, UgcMiniVisualPlan } from "@/lib/ugc/ugc-seedance-planner";
+import { buildUgcKlingInput } from "@/lib/ugc/ugc-fal-submission";
+import type { UgcFalInput } from "@/lib/ugc/ugc-fal-submission";
 import { canonicalUgcJson, isOwnedUgcImage, isUgcUuid } from "@/lib/ugc/ugc-request-planner";
-import type { UgcSnapshotJob, UgcVisualPlan, UgcKlingVisualPlan, UgcJobIdentity } from "@/lib/ugc/ugc-request-planner";
+import type { UgcSnapshotJob, UgcVisualPlan, UgcJobIdentity } from "@/lib/ugc/ugc-request-planner";
 import type { UgcStoredVideo } from "@/lib/ugc/ugc-pipeline-types";
 import { UgcOutputInvalidError } from "@/lib/ugc/ugc-pipeline-types";
 import { validateProviderVideo, MAX_DURABLE_VIDEO_BYTES } from "@/lib/video-generation/output";
@@ -99,16 +98,10 @@ async function readBounded(response: Response, maximum: number) {
 export class SupabaseUgcPrivateMedia {
   constructor(private readonly download: typeof fetch = fetch) {}
 
-  async resolveInput(job: UgcSnapshotJob, plan: UgcKlingVisualPlan): Promise<UgcKlingInput>;
-  async resolveInput(job: UgcSnapshotJob, plan: UgcSeedanceVisualPlan): Promise<UgcSeedanceInput>;
-  async resolveInput(job: UgcSnapshotJob, plan: UgcMiniVisualPlan): Promise<UgcSeedanceInput>;
   async resolveInput(job: UgcSnapshotJob, plan: UgcVisualPlan): Promise<UgcFalInput>;
   async resolveInput(job: UgcSnapshotJob, plan: UgcVisualPlan): Promise<UgcFalInput> {
-    // Planning supports audio references; private audio provisioning/decoding does not yet exist.
-    // Never sign arbitrary URLs or widen the image-only bucket to bypass this boundary.
-    if (plan.version !== 1 && plan.audio?.mode === "reference") throw new Error("UGC private audio reference storage unavailable.");
     const admin = getSupabaseAdminClient();
-    const images = plan.version !== 1 ? plan.images : [plan.startImage, ...plan.elements.flatMap(element => [element.frontal, ...element.references])];
+    const images = [plan.startImage, ...plan.elements.flatMap(element => [element.frontal, ...element.references])];
     const urls = new Map<string, string>();
     const pinnedImages = new Map<string, string>();
     for (const image of images) {
@@ -133,7 +126,7 @@ export class SupabaseUgcPrivateMedia {
       if (url.protocol !== "https:" || url.origin !== storageOrigin || !url.pathname.startsWith("/storage/v1/object/sign/ugc-product-assets/")) throw new Error("Invalid signed UGC source.");
       urls.set(image.objectPath, signed.data.signedUrl);
     }
-    return plan.version !== 1 ? buildUgcSeedanceInput(plan, urls) : buildUgcKlingInput(plan, urls);
+    return buildUgcKlingInput(plan, urls);
   }
 
   private stored(job: UgcSnapshotJob, bytes: Buffer): UgcStoredVideo {

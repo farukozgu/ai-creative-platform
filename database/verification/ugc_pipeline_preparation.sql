@@ -1,6 +1,13 @@
 -- READ ONLY. Run only in staging after both UGC migrations have been applied.
 -- Core deployment checks are mandatory. Optional reference audio is reported separately
 -- and does not fail core video readiness while the feature remains disabled.
+-- Catalog/source checks confirm installed definitions and grants only. They do not
+-- execute claims, malformed-output cases, rollback scenarios or concurrent sessions.
+-- Read-only data checks inspect current rows/bucket configuration; helper evaluation
+-- here is not a behavioral or concurrency test of the pipeline RPCs.
+-- Separate disposable-PostgreSQL tests must cover migration rollback after a late
+-- failure; null/missing/string/object fields and fractional/overflow byte sizes with
+-- no row changes after rejection; valid 15/30s completion; competing/stale claim sessions.
 with checks(check_name, status, details) as (
   values
     ('pipeline_columns',
@@ -11,6 +18,7 @@ with checks(check_name, status, details) as (
     ('plan_model_allowlist',
       case when exists (select 1 from pg_constraint c where c.conrelid = to_regclass('public.ugc_video_jobs') and c.conname = 'ugc_pipeline_plan_check'
         and pg_get_constraintdef(c.oid) like '%kling-v3-pro-image%'
+        and pg_get_constraintdef(c.oid) like '%kling-v3-standard-image%'
         and pg_get_constraintdef(c.oid) like '%seedance-2.5-reference%'
         and pg_get_constraintdef(c.oid) like '%bytedance/seedance-2.0/mini/reference-to-video%'
         and pg_get_constraintdef(c.oid) like '%bytedance/seedance-2.5/reference-to-video%'
@@ -19,12 +27,13 @@ with checks(check_name, status, details) as (
         and pg_get_constraintdef(c.oid) like '%resolution%'
         and pg_get_constraintdef(c.oid) like '%generateAudio%'
         and pg_get_constraintdef(c.oid) like '%tier%') then 'PASS' else 'FAIL' end,
-      'Kling v1, Seedance Mini v3 and Seedance Premium v2 allowlists exist'),
+      'Kling v1/v4 routes and historical plan allowlists exist'),
     ('snapshot_route_binding',
       case when exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
         where n.nspname = 'public' and p.proname = 'ugc_pipeline_plan_matches_snapshot'
             and p.provolatile = 'i' and p.proconfig @> array['search_path=""']
             and pg_get_functiondef(p.oid) like '%kling-v3-pro-image%'
+            and pg_get_functiondef(p.oid) like '%kling-v3-standard-image%'
             and pg_get_functiondef(p.oid) like '%seedance-2.5-reference%'
             and pg_get_functiondef(p.oid) like '%bytedance/seedance-2.0/mini/reference-to-video%'
             and pg_get_functiondef(p.oid) like '%bytedance/seedance-2.5/reference-to-video%'
@@ -100,8 +109,14 @@ with checks(check_name, status, details) as (
           and pg_get_functiondef(p.oid) like '%p_output->>''objectPath'' is distinct from%'
           and pg_get_functiondef(p.oid) like '%p_output->>''byteSize''%'
           and pg_get_functiondef(p.oid) like '%j.provider_plan->>''durationSeconds''%'
+          and pg_get_functiondef(p.oid) like '%jsonb_typeof(p_output->''byteSize'') is distinct from ''number''%'
+          and pg_get_functiondef(p.oid) like '%jsonb_typeof(p_output->''durationSeconds'') is distinct from ''number''%'
+          and pg_get_functiondef(p.oid) like '%exception when invalid_text_representation or numeric_value_out_of_range%'
+          and pg_get_functiondef(p.oid) like '%abs(output_duration - planned_duration)%'
+          and pg_get_functiondef(p.oid) like '%then output_bytes else null%'
+          and pg_get_functiondef(p.oid) like '%then output_duration else null%'
           and pg_get_functiondef(p.oid) like '%j.provider_request_id is null%') then 'PASS' else 'FAIL' end,
-      'Completion validates owned private MP4 metadata and pinned duration before terminal write'),
+      'Definition includes output type checks, guarded parsing and private metadata validation before terminal write'),
     ('task_and_active_project_uniqueness',
       case when exists (select 1 from pg_indexes where schemaname = 'public' and tablename = 'ugc_video_jobs'
           and indexname = 'ugc_pipeline_provider_task_unique' and indexdef like '%UNIQUE%')
@@ -137,4 +152,7 @@ with checks(check_name, status, details) as (
             and pg_get_functiondef(p.oid) like '%idempotency_key%') then 'PASS' else 'FAIL' end,
       'Installed foundation still enforces owner idempotency and immutable snapshots')
 )
-select check_name, status, details from checks order by check_name;
+select check_name, status, details,
+  case when check_name in ('historical_ugc_task_routes', 'private_product_and_result_buckets', 'optional_reference_audio')
+    then 'read_only_data' else 'static_catalog' end as check_type
+from checks order by check_name;

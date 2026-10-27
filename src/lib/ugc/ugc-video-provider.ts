@@ -21,7 +21,7 @@ export interface UgcVideoProvider {
   readonly provider: string;
   submit(request: UgcProviderRequest): Promise<UgcProviderSubmission>;
   // Provider completion still requires private output persistence before job success.
-  getStatus(providerRequestId: string): Promise<"queued" | "processing" | "completed">;
+  getStatus(providerRequestId: string): Promise<"queued" | "processing" | "completed" | "failed">;
   getResult(providerRequestId: string): Promise<ProviderVideoFile>;
 }
 

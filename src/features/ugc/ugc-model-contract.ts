@@ -9,5 +9,5 @@ export type UgcModelIdentity = {
 
 /** Safe presentation projection supplied by the server; no routing, prices or credentials. */
 export type UgcModelOption = {
-  tier: UgcModelTier; durations: readonly number[]; aspectRatios: readonly string[]; resolution: "720p";
+  tier: UgcModelTier; durations: readonly number[]; aspectRatios: readonly string[]; resolution: "source-derived";
 };
