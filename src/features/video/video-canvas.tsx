@@ -10,6 +10,7 @@ import type {
 import styles from "@/features/video/video-studio-workspace.module.css";
 
 type VideoCanvasProps = {
+  criticalRegion?: import("@/lib/video-generation/preservation").CriticalProductRegion | null;
   source: VideoSource | null;
   aspectRatio: VideoAspectRatio;
   previewLabel: string;
@@ -24,6 +25,7 @@ type VideoCanvasProps = {
 };
 
 export function VideoCanvas({
+  criticalRegion,
   source,
   aspectRatio,
   previewLabel,
@@ -36,6 +38,7 @@ export function VideoCanvas({
   generationsEmptyTitle,
   generationsEmptyDescription,
 }: VideoCanvasProps) {
+  const region = criticalRegion;
   return (
     <section className={styles.canvas} aria-label={previewLabel}>
       <div className={styles.canvasPanel}>
@@ -60,6 +63,7 @@ export function VideoCanvas({
                 <p>{imageEmptyDescription}</p>
               </div>
             )}
+            {source && region ? <span className={styles.regionBox} aria-hidden="true" style={{ left: `${region.x * 100}%`, top: `${region.y * 100}%`, width: `${region.width * 100}%`, height: `${region.height * 100}%` }} /> : null}
           </div>
         </div>
       </div>

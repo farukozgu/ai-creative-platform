@@ -1,3 +1,5 @@
+> Bu belge tarihsel kayıttır. Seedance uygulama entegrasyonu kaldırıldı; güncel yönlendirme ve veritabanı geçişi için [Kling video yönlendirmesi](kling-only-video-routing.md) belgesine bakın.
+
 # UGC Standard / Premium preparation
 
 Verified read-only on 2026-10-25. Generate UGC remains disabled in the UI, provider adapter and production entry point. No paid calls, SQL execution/application, billing, cron, workers or dependencies were added. Video Studio, Creative Composer and Model Studio are unchanged.

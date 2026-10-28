@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
 import { runInNewContext } from "node:vm";
 import test from "node:test";
 import ts from "typescript";
@@ -16,16 +17,29 @@ import type { SupabaseUgcProjectRepository } from "../src/lib/ugc/ugc-projects";
 import type { UgcStudioWorkspace } from "../src/features/ugc/ugc-studio-workspace";
 
 function load(file: string, dependencies: Record<string, unknown>) {
-  const exports: Record<string, unknown> = {};
-  const compiled = ts.transpileModule(readFileSync(file, "utf8"), {
-    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true },
-  }).outputText;
-  runInNewContext(compiled, { exports, require(name: string) {
-    if (name === "server-only") return {};
-    if (name in dependencies) return dependencies[name];
-    throw new Error(`Unexpected dependency: ${name}`);
-  } });
-  return exports;
+  const cache = new Map<string, Record<string, unknown>>();
+  function loadFile(filePath: string): Record<string, unknown> {
+    const canonicalPath = resolve(filePath);
+    const cached = cache.get(canonicalPath);
+    if (cached) return cached;
+    const exports: Record<string, unknown> = {};
+    cache.set(canonicalPath, exports);
+    const compiled = ts.transpileModule(readFileSync(canonicalPath, "utf8"), {
+      compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true },
+    }).outputText;
+    runInNewContext(compiled, { exports, require(name: string) {
+      if (name === "server-only") return {};
+      if (name in dependencies) return dependencies[name];
+      if (name.startsWith("./") || name.startsWith("../")) {
+        const basePath = resolve(dirname(canonicalPath), name);
+        const resolvedPath = [basePath, `${basePath}.ts`, `${basePath}.tsx`, `${basePath}.js`].find(existsSync);
+        if (resolvedPath) return loadFile(resolvedPath);
+      }
+      throw new Error(`Unexpected dependency ${name} imported from ${canonicalPath}`);
+    } });
+    return exports;
+  }
+  return loadFile(file);
 }
 
 const id = "20000000-0000-4000-8000-000000000001";
@@ -111,7 +125,7 @@ test("both localized UGC forms render labeled textareas, estimates, warnings and
       "./ugc-studio-workspace.module.css": { __esModule: true, default: new Proxy({}, { get: (_target, key) => String(key) }) },
     });
     const Workspace = loaded.UgcStudioWorkspace as typeof UgcStudioWorkspace;
-    const registry = load("src/lib/ugc/ugc-model-registry.ts", {}) as typeof import("../src/lib/ugc/ugc-model-registry");
+    const registry = load("src/lib/ugc/ugc-model-registry.ts", { "@/lib/video-generation/capabilities": load("src/lib/video-generation/capabilities.ts", {}) }) as typeof import("../src/lib/ugc/ugc-model-registry");
     const props = {
       modelOptions: registry.getUgcModelOptions(),
       initialDraft: { ...draft, product: null, updatedAt: "now", spokenDialogue: "Merhaba ".repeat(100) }, initialResults: [], schemaAvailable: true,

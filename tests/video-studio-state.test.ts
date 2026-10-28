@@ -5,6 +5,7 @@ import {
   appendPromptSuggestion,
   initialVideoStudioDraft,
   isVideoStudioDraftReady,
+  validateVideoSourceDimensions,
   validateVideoSourceFile,
   validateVideoStudioDraft,
   videoStudioReducer,
@@ -26,7 +27,8 @@ const librarySource: LibraryVideoSource = {
 };
 
 test("Video Studio defaults are provider-neutral and ready for V1 settings", () => {
-  assert.equal(initialVideoStudioDraft.cameraMovement, "auto");
+  assert.equal("method" in initialVideoStudioDraft, false);
+  assert.equal(initialVideoStudioDraft.cameraMovement, "dolly-in");
   assert.equal(initialVideoStudioDraft.quality, "standard");
   assert.equal(initialVideoStudioDraft.aspectRatio, "16:9");
   assert.equal(initialVideoStudioDraft.duration, 5);
@@ -74,7 +76,7 @@ test("prompt suggestions populate empty prompts, append intentionally, and never
 test("local source validation reuses product image type and size constraints", () => {
   assert.equal(validateVideoSourceFile({ type: "image/jpeg", size: 1024 }), null);
   assert.equal(validateVideoSourceFile({ type: "image/png", size: 1024 }), null);
-  assert.equal(validateVideoSourceFile({ type: "image/webp", size: 1024 }), null);
+  assert.equal(validateVideoSourceFile({ type: "image/webp", size: 1024 }), "invalid-source-type");
   assert.equal(
     validateVideoSourceFile({ type: "image/gif", size: 1024 }),
     "invalid-source-type",
@@ -83,6 +85,14 @@ test("local source validation reuses product image type and size constraints", (
     validateVideoSourceFile({ type: "image/jpeg", size: 20 * 1024 * 1024 + 1 }),
     "source-too-large",
   );
+});
+
+test("original source sizes and ratios are accepted for automatic preparation within the decode limit", () => {
+  assert.equal(validateVideoSourceDimensions(2400, 3600), null);
+  assert.equal(validateVideoSourceDimensions(1200, 1800), null);
+  assert.equal(validateVideoSourceDimensions(1080, 1920), null);
+  assert.equal(validateVideoSourceDimensions(8000, 6000), "source-dimensions-unsupported");
+  assert.equal(validateVideoSourceDimensions(0, 0), "source-dimensions-unsupported");
 });
 
 test("camera, quality, aspect ratio, and duration update independently", () => {

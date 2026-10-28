@@ -383,6 +383,7 @@
 }
 
 .detailLayout {
+  min-width: 0;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(17rem, 21rem);
   align-items: start;
@@ -391,6 +392,7 @@
 
 .playerPanel,
 .metadataPanel {
+  min-width: 0;
   border: 1px solid var(--dashboard-border);
   border-radius: var(--radius-lg);
   background: var(--dashboard-surface);
@@ -416,10 +418,12 @@
 }
 
 .playerStage[data-aspect-ratio="16:9"] { width: min(100%, 64rem); aspect-ratio: 16 / 9; }
-.playerStage[data-aspect-ratio="9:16"] { width: min(100%, 23rem); aspect-ratio: 9 / 16; }
+.playerStage[data-aspect-ratio="9:16"] { width: min(100%, 23rem, calc(68svh * 9 / 16)); aspect-ratio: 9 / 16; }
 .playerStage[data-aspect-ratio="1:1"] { width: min(100%, 38rem); aspect-ratio: 1; }
 
 .playerStage video {
+  display: block;
+  min-height: 0;
   width: 100%;
   height: 100%;
   object-fit: contain;

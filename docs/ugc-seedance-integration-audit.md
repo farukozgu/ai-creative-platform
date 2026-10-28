@@ -1,3 +1,5 @@
+> Bu belge tarihsel kayıttır. Seedance uygulama entegrasyonu kaldırıldı; güncel yönlendirme ve veritabanı geçişi için [Kling video yönlendirmesi](kling-only-video-routing.md) belgesine bakın.
+
 # UGC Seedance integration preparation — disabled
 
 > Tier architecture update: see [Standard / Premium audit](ugc-model-tiers-audit.md) for the new Mini registry/selector, immutable model identity, limits and remaining SQL blocker. Premium's validated subset below remains available for planning; production remains disabled.

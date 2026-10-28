@@ -38,7 +38,7 @@ function loadModule(file: string, dependencies: Record<string, unknown>) {
   return exports;
 }
 
-test("all current UGC durations remain unsupported without truncation or snapshot mutation", () => {
+test("Kling preflight accepts its documented 15-second ceiling and blocks longer UGC durations", () => {
   for (const duration of ["15", "30", "60"]) {
     const job = fixture(duration);
     const original = JSON.stringify(job);
@@ -49,14 +49,17 @@ test("all current UGC durations remain unsupported without truncation or snapsho
     assert.equal(plan.modelId, videoEndpointCapabilities.klingV3ProImage.id);
     assert.equal(plan.submitted, false);
     assert.equal(plan.generationEnabled, false);
-    for (const blocker of ["unsupported_duration", "creator_reference_unavailable", "prepared_start_frame_required", "source_ratio_verification_required", "speech_pipeline_required", "subtitle_pipeline_required"]) {
+    for (const blocker of ["creator_reference_unavailable", "prepared_start_frame_required", "source_ratio_verification_required", "speech_pipeline_required", "subtitle_pipeline_required"]) {
       assert.ok(plan.blockers.includes(blocker as (typeof plan.blockers)[number]));
     }
+    assert.equal(plan.blockers.includes("unsupported_duration"), duration !== "15");
     assert.equal(JSON.stringify(job), original);
     assert.equal(plan.requestHash, job.requestHash);
     assert.deepEqual(plan.output, { bucketId: "ugc-generated-videos", objectPath: `${ownerId}/${projectId}/${jobId}.mp4`, contentType: "video/mp4" });
   }
-  assert.ok(!prepareUgcKlingIntegration(fixture("15", false)).blockers.includes("subtitle_pipeline_required"));
+  const silentFifteen = prepareUgcKlingIntegration(fixture("15", false));
+  assert.ok(!silentFifteen.blockers.includes("subtitle_pipeline_required"));
+  assert.ok(!silentFifteen.blockers.includes("unsupported_duration"));
 });
 
 test("invalid settings and cross-owner sources cannot become prepared provider input", () => {

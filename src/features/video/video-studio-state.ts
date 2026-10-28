@@ -8,14 +8,14 @@ import type {
   VideoStudioFeedback,
 } from "@/features/video/video-studio-types";
 import {
-  isProductImageMimeType,
   MAX_PRODUCT_IMAGE_FILE_SIZE,
 } from "@/lib/assets/product-asset-constraints";
 
 export const initialVideoStudioDraft: VideoStudioDraft = {
+  criticalRegion: null, analyzeAfterGeneration: false,
   source: null,
   prompt: "",
-  cameraMovement: "auto",
+  cameraMovement: "dolly-in",
   quality: "standard",
   aspectRatio: "16:9",
   duration: 5,
@@ -23,6 +23,8 @@ export const initialVideoStudioDraft: VideoStudioDraft = {
 };
 
 export type VideoStudioAction =
+  | { type: "set-critical-region"; region: VideoStudioDraft["criticalRegion"] }
+  | { type: "set-analysis"; enabled: boolean }
   | { type: "set-source"; source: VideoSource }
   | { type: "remove-source" }
   | { type: "set-prompt"; prompt: string }
@@ -37,16 +39,22 @@ export function videoStudioReducer(
   action: VideoStudioAction,
 ): VideoStudioDraft {
   switch (action.type) {
+    case "set-critical-region": return { ...state, criticalRegion: action.region, analyzeAfterGeneration: false };
+    case "set-analysis": return { ...state, analyzeAfterGeneration: action.enabled };
     case "set-source":
       return {
         ...state,
         source: action.source,
+        criticalRegion: null,
+        analyzeAfterGeneration: false,
         feedback: null,
       };
     case "remove-source":
       return {
         ...state,
         source: null,
+        criticalRegion: null,
+        analyzeAfterGeneration: false,
         feedback: null,
       };
     case "set-prompt":
@@ -58,11 +66,11 @@ export function videoStudioReducer(
     case "set-camera":
       return { ...state, cameraMovement: action.cameraMovement, feedback: null };
     case "set-quality":
-      return { ...state, quality: action.quality, feedback: null };
+      return { ...state, quality: action.quality, analyzeAfterGeneration: false, feedback: null };
     case "set-aspect-ratio":
-      return { ...state, aspectRatio: action.aspectRatio, feedback: null };
+      return { ...state, aspectRatio: action.aspectRatio, analyzeAfterGeneration: false, feedback: null };
     case "set-duration":
-      return { ...state, duration: action.duration, feedback: null };
+      return { ...state, duration: action.duration, analyzeAfterGeneration: false, feedback: null };
     case "set-feedback":
       return { ...state, feedback: action.feedback };
   }
@@ -76,8 +84,15 @@ export function appendPromptSuggestion(current: string, suggestion: string) {
 }
 
 export function validateVideoSourceFile(file: Pick<File, "size" | "type">) {
-  if (!isProductImageMimeType(file.type)) return "invalid-source-type" as const;
+  if (!["image/jpeg", "image/png"].includes(file.type)) return "invalid-source-type" as const;
   if (file.size > MAX_PRODUCT_IMAGE_FILE_SIZE) return "source-too-large" as const;
+  return null;
+}
+
+export function validateVideoSourceDimensions(width: number, height: number) {
+  if (!Number.isInteger(width) || !Number.isInteger(height) || width < 1 || height < 1 || width * height > 40_000_000) {
+    return "source-dimensions-unsupported" as const;
+  }
   return null;
 }
 

@@ -1,8 +1,7 @@
 import "server-only";
 
 import { createHash } from "node:crypto";
-import { canonicalUgcJson, planUgcKlingRequest } from "@/lib/ugc/ugc-request-planner";
-import { planUgcModelRequest } from "@/lib/ugc/ugc-seedance-planner";
+import { canonicalUgcJson, planUgcKlingRequest, planUgcModelRequest } from "@/lib/ugc/ugc-request-planner";
 import { UgcOutputInvalidError } from "@/lib/ugc/ugc-pipeline-types";
 import type { UgcSnapshotJob, UgcVisualPlan, UgcPlanningResult } from "@/lib/ugc/ugc-request-planner";
 import type { UgcFalInput } from "@/lib/ugc/ugc-fal-submission";
@@ -11,7 +10,7 @@ import type { ProviderVideoFile } from "@/lib/video-generation/types";
 
 export interface UgcPipelineDependencies {
   repository: UgcPipelineRepository;
-  /** Explicit override only for legacy Kling verification; new UGC plans use Seedance. */
+  /** Explicit planner override for isolated verification. New UGC plans pin a Kling model. */
   planRequest?: (job: UgcSnapshotJob) => UgcPlanningResult;
   media: {
     resolveInput(job: UgcSnapshotJob, plan: UgcVisualPlan): Promise<UgcFalInput>;
@@ -36,7 +35,9 @@ export async function verifyUgcSubmission(ownerId: string, jobId: string, deps: 
   const job = await deps.repository.findOwned(ownerId, jobId);
   if (!job || job.ownerId !== ownerId) return { kind: "not_found" } as const;
   if (job.status !== "draft") return { kind: "duplicate" } as const;
-  const planned = (deps.planRequest ?? planUgcModelRequest)(job);
+  const planRequest = deps.planRequest ?? (job.requestSnapshot.providerSelection === "kling-v3-pro-image"
+    ? planUgcKlingRequest : planUgcModelRequest);
+  const planned = planRequest(job);
   if (!planned.ok) return planned;
   const claim = await deps.repository.claimSubmission(job, planned.plan);
   if (!claim) return { kind: "duplicate" } as const;

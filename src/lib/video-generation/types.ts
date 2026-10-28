@@ -14,7 +14,16 @@ export type VideoSourceReference =
   | { kind: "generated-image"; generationId: string }
   | { kind: "uploaded-image"; sourceAssetId: string };
 
+export type VideoPreparationSource =
+  | { kind: "upload"; sourceAssetId: string; objectPath: string }
+  | { kind: "generated-image"; generationId: string };
+
 export type VideoGenerationDraft = {
+  shotMode?: "single" | "multi";
+  director?: import("../video-director/core").VideoDirectorSelection;
+  method?: import("./preservation").VideoGenerationMethod;
+  criticalRegion?: import("./preservation").CriticalProductRegion | null;
+  analysisConsent?: { model: "gpt-4o-mini"; maximumCostUsd: number; pricingVersion: string; locale?: "tr" | "en" } | null;
   clientSubmissionId: string;
   mode: VideoGenerationMode;
   prompt: string;
@@ -45,7 +54,15 @@ export type ProviderVideoFile = {
   sizeBytes: number | null;
 };
 
+/** A provider explicitly rejected this submission; it was not accepted as a queued job. */
+export class DefiniteVideoProviderFailure extends Error {
+  constructor() { super("The video provider rejected the submitted request."); this.name = "DefiniteVideoProviderFailure"; }
+}
+
 export type VideoProviderRequest = {
+  multiPrompt?: import("../video-director/core").KlingMultiPrompt;
+  negativePrompt?: string;
+  cfgScale?: number;
   modelId: string;
   endpointId: string;
   mode: VideoGenerationMode;
@@ -58,12 +75,13 @@ export type VideoProviderRequest = {
 export interface VideoGenerationProvider {
   readonly name: "fal";
   submit(request: VideoProviderRequest): Promise<{ requestId: string }>;
-  getStatus(endpointId: string, requestId: string): Promise<"queued" | "processing" | "completed">;
+  getStatus(endpointId: string, requestId: string): Promise<"queued" | "processing" | "completed" | "failed">;
   getResult(endpointId: string, requestId: string): Promise<ProviderVideoFile>;
   cancel?(endpointId: string, requestId: string): Promise<void>;
 }
 
 export type VideoJobRecord = {
+  preservation?: VideoPreservationSnapshot | null;
   id: string;
   ownerId: string;
   clientSubmissionId: string;
@@ -96,6 +114,22 @@ export type VideoJobRecord = {
   completedAt: string | null;
 };
 
+export type VideoPreservationSnapshot = {
+  payloadSummary?: { mode: "single" | "multi"; shotType: "customize" | null; durations: number[]; promptHashes: string[]; directorVersion: string | null; presetId: string | null; presetVersion: number | null };
+  director?: { plan: import("../video-director/core").VideoDirectorPlan; multiPrompt?: import("../video-director/core").KlingMultiPrompt };
+  version: string;
+  method: import("./preservation").HistoricalVideoGenerationMethod;
+  draftHash: string;
+  sourceSha256: string;
+  geometry: import("./preservation").SourceFrameGeometry;
+  criticalRegion: import("./preservation").CriticalProductRegion | null;
+  frameRegion: import("./preservation").CriticalProductRegion | null;
+  compiledPrompt: string;
+  negativePrompt: string;
+  cfgScale: number;
+  analysisConsent: NonNullable<VideoGenerationDraft["analysisConsent"]> | null;
+};
+
 export type VideoReconciliationClaim = {
   job: VideoJobRecord;
   leaseToken: string;
@@ -104,11 +138,13 @@ export type VideoReconciliationClaim = {
 };
 
 export interface VideoJobRepository {
+  findBySubmission?(ownerId: string, submissionId: string): Promise<VideoJobRecord | null>;
   createOrGet(input: Omit<VideoJobRecord, "id" | "createdAt" | "startedAt" | "completedAt" | "reconciliationAttempts" | "nextReconciliationAt">): Promise<{ job: VideoJobRecord; created: boolean }>;
   findOwned(ownerId: string, jobId: string): Promise<VideoJobRecord | null>;
   findById(jobId: string): Promise<VideoJobRecord | null>;
   listOwned(ownerId: string): Promise<VideoJobRecord[]>;
   attachProviderRequest(jobId: string, requestId: string): Promise<VideoJobRecord>;
+  markSubmissionAmbiguous?(jobId: string): Promise<void>;
   transition(jobId: string, from: readonly VideoGenerationStatus[], patch: Partial<VideoJobRecord>): Promise<VideoJobRecord | null>;
   scheduleReconciliation(jobId: string, attempts: number, nextAt: string | null): Promise<void>;
 }
@@ -121,6 +157,7 @@ export interface VideoReconciliationRepository extends VideoJobRepository {
 }
 
 export interface DurableVideoOutputStore {
+  recover?(job: VideoJobRecord): Promise<{ bucketId: string; objectPath: string; contentType: "video/mp4"; sizeBytes: number } | null>;
   persist(job: VideoJobRecord, file: ProviderVideoFile): Promise<{
     bucketId: string;
     objectPath: string;

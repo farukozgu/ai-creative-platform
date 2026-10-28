@@ -13,6 +13,8 @@ export type UgcKlingBlocker =
   | "ugc_worker_and_billing_required";
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+// The linked Kling v3 Pro image-to-video endpoint documents durations from 3 to 15 seconds.
+const supportsKlingDuration = (value: string) => /^\d+$/.test(value) && Number(value) >= 3 && Number(value) <= 15;
 
 /** Pure dry run of the saved snapshot. Never rereads mutable project settings or signs URLs. */
 export function prepareUgcKlingIntegration(job: UgcPreparedJob) {
@@ -36,12 +38,12 @@ export function prepareUgcKlingIntegration(job: UgcPreparedJob) {
     && product.objectPath.startsWith(`${job.ownerId}/${job.projectId}/`)
     && /^[0-9a-f-]{36}\.(jpg|png|webp)$/.test(product.objectPath.split("/")[2] ?? "")
     && product.objectPath.split("/").length === 3;
-  if (!parsed.ok || !parsed.value.spokenDialogue.trim() || !validIdentity || !validProduct) {
+  if (!parsed.ok || !validIdentity || !validProduct) {
     blockers.push("invalid_snapshot");
   } else {
     // Concept IDs are placeholders, not provider identities; a product image is not a composed scene.
     blockers.push("creator_reference_unavailable", "prepared_start_frame_required", "source_ratio_verification_required");
-    if (!capability.durations.some(duration => duration === Number(parsed.value.settings.duration))) blockers.push("unsupported_duration");
+    if (!supportsKlingDuration(parsed.value.settings.duration)) blockers.push("unsupported_duration");
     blockers.push("speech_pipeline_required");
     if (parsed.value.settings.subtitles) blockers.push("subtitle_pipeline_required");
     blockers.push("ugc_worker_and_billing_required");

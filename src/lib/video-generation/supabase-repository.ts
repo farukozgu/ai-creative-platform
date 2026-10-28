@@ -8,6 +8,7 @@ type VideoJobRow = Record<string, unknown>;
 function mapJob(row: VideoJobRow): VideoJobRecord {
   return {
     id: String(row.id), ownerId: String(row.owner_id), clientSubmissionId: String(row.client_submission_id),
+    preservation: row.provider_metadata && typeof row.provider_metadata === "object" && "videoPreservation" in row.provider_metadata ? row.provider_metadata.videoPreservation as VideoJobRecord["preservation"] : null,
     mode: row.video_mode as VideoJobRecord["mode"], prompt: String(row.creative_direction_snapshot), quality: row.quality as VideoJobRecord["quality"],
     aspectRatio: row.aspect_ratio as VideoJobRecord["aspectRatio"], durationSeconds: row.duration_seconds as VideoJobRecord["durationSeconds"],
     cameraMovement: row.camera_movement as VideoJobRecord["cameraMovement"], sourceKind: row.source_kind as VideoJobRecord["sourceKind"],
@@ -27,6 +28,7 @@ function mapJob(row: VideoJobRow): VideoJobRecord {
 function insertRow(input: Parameters<VideoJobRepository["createOrGet"]>[0]) {
   return {
     owner_id: input.ownerId, project_id: null, input_asset_id: null, generation_type: "video",
+    ...(input.preservation ? { provider_metadata: { videoPreservation: input.preservation } } : {}),
     client_submission_id: input.clientSubmissionId, video_mode: input.mode, creative_direction_snapshot: input.prompt,
     quality: input.quality, aspect_ratio: input.aspectRatio, duration_seconds: input.durationSeconds,
     camera_movement: input.cameraMovement, source_kind: input.sourceKind, source_id: input.sourceId,
@@ -50,7 +52,15 @@ function patchRow(patch: Partial<VideoJobRecord>) {
 }
 
 export class SupabaseVideoJobRepository implements VideoReconciliationRepository {
+  async findBySubmission(ownerId: string, submissionId: string) {
+    const { data, error } = await this.client().from("generations").select("*").eq("generation_type", "video").eq("owner_id", ownerId).eq("client_submission_id", submissionId).maybeSingle();
+    if (error) throw new Error("Unable to read video submission.");
+    return data ? mapJob(data) : null;
+  }
   private client() { return getSupabaseAdminClient(); }
+  toReconciliationClaim(row: Record<string, unknown>): VideoReconciliationClaim {
+    return { job: mapJob(row), leaseToken: String(row.reconciliation_lease_token), leaseVersion: Number(row.reconciliation_lease_version), leaseExpiresAt: String(row.reconciliation_lease_expires_at) };
+  }
 
   async createOrGet(input: Parameters<VideoJobRepository["createOrGet"]>[0]) {
     const supabase = this.client();
@@ -79,6 +89,11 @@ export class SupabaseVideoJobRepository implements VideoReconciliationRepository
     const { data, error } = await this.client().from("generations").update({ provider_request_id: requestId }).eq("generation_type", "video").eq("id", jobId).is("provider_request_id", null).eq("status", "queued").select("*").single();
     if (error || !data) throw new Error("Unable to attach the provider request identifier.");
     return mapJob(data);
+  }
+  async markSubmissionAmbiguous(jobId: string) {
+    const { error } = await this.client().from("generations").update({ status: "failed", error_code: "provider_submission_ambiguous", billing_status: "reconciliation_required" })
+      .eq("generation_type", "video").eq("id", jobId).eq("status", "queued").is("provider_request_id", null);
+    if (error) throw new Error("Unable to save the uncertain submission state.");
   }
   async transition(jobId: string, from: readonly VideoGenerationStatus[], patch: Partial<VideoJobRecord>) {
     const { data, error } = await this.client().from("generations").update(patchRow(patch)).eq("generation_type", "video").eq("id", jobId).in("status", [...from]).select("*").maybeSingle();

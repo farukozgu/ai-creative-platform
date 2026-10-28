@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { DashboardIcon } from "@/components/dashboard/dashboard-icons";
@@ -12,6 +12,7 @@ import {
 } from "@/features/video/video-library-state";
 import type { VideoPresentationRecord, VideoStatus } from "@/features/video/video-studio-types";
 import { Link } from "@/i18n/navigation";
+import { listVideoGenerationsAction, resumeVideoFidelityReviewAction } from "@/app/[locale]/dashboard/video/generation-actions";
 import styles from "@/features/video/video-library.module.css";
 
 type VideoLibraryProps = {
@@ -22,7 +23,23 @@ type VideoLibraryProps = {
 const filters: VideoLibraryFilter[] = ["all", "image"];
 const statuses: VideoStatus[] = ["queued", "processing", "ready", "failed", "unavailable"];
 
-export function VideoLibrary({ records, locale }: VideoLibraryProps) {
+export function VideoLibrary({ records: initialRecords, locale }: VideoLibraryProps) {
+  const [records, setRecords] = useState(initialRecords);
+  const reviewsRequested = useRef(new Set<string>());
+  useEffect(() => {
+    for (const record of records) if (record.status === "ready" && record.analysisRequested && !reviewsRequested.current.has(record.id)) {
+      reviewsRequested.current.add(record.id);
+      void resumeVideoFidelityReviewAction(record.id);
+    }
+  }, [records]);
+  useEffect(() => {
+    if (!records.some(record => record.status === "queued" || record.status === "processing")) return;
+    let active = true;
+    const timer = setTimeout(() => { void listVideoGenerationsAction().then(result => {
+      if (active) setRecords(result.status === "success" ? result.records : [...records]);
+    }).catch(() => { if (active) setRecords([...records]); }); }, 8_000);
+    return () => { active = false; clearTimeout(timer); };
+  }, [records]);
   const t = useTranslations("Dashboard.videoLibrary");
   const [filter, setFilter] = useState<VideoLibraryFilter>("all");
   const [query, setQuery] = useState("");
@@ -33,6 +50,7 @@ export function VideoLibrary({ records, locale }: VideoLibraryProps) {
   );
   const isEmpty = records.length === 0;
   const cardCopy: VideoCardCopy = {
+    legacyLocal: t("legacyLocal"),
     open: t("card.open"),
     download: t("card.download"),
     noPreview: t("card.noPreview"),

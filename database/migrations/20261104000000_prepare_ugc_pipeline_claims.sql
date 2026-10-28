@@ -1,5 +1,8 @@
 -- REVIEW ONLY. Do not apply as part of pipeline preparation.
 -- No billing, scheduler, provider call or change to existing Video Studio tables.
+-- Execute this whole file once; any statement failure aborts the installation.
+begin;
+
 alter table public.ugc_video_jobs
   add column provider_plan jsonb null,
   add column submission_started_at timestamptz null,
@@ -41,6 +44,17 @@ alter table public.ugc_video_jobs
         and jsonb_typeof(provider_plan->'generateAudio') = 'boolean'
         and provider_plan->'model' = jsonb_build_object('tier', 'standard', 'provider', 'fal',
           'endpointId', 'bytedance/seedance-2.0/mini/reference-to-video', 'version', 1))
+      or (provider_plan->>'version' = '4'
+        and provider_plan->>'durationSeconds' = '15'
+        and provider_plan->>'aspectRatio' in ('9:16', '1:1', '16:9')
+        and ((provider_plan->>'modelId' = 'kling-v3-standard-image'
+          and provider_plan->>'endpointId' = 'fal-ai/kling-video/v3/standard/image-to-video'
+          and provider_plan->'model' = jsonb_build_object('tier', 'standard', 'provider', 'fal',
+            'endpointId', 'fal-ai/kling-video/v3/standard/image-to-video', 'version', 1))
+        or (provider_plan->>'modelId' = 'kling-v3-pro-image'
+          and provider_plan->>'endpointId' = 'fal-ai/kling-video/v3/pro/image-to-video'
+          and provider_plan->'model' = jsonb_build_object('tier', 'premium', 'provider', 'fal',
+            'endpointId', 'fal-ai/kling-video/v3/pro/image-to-video', 'version', 1))))
     )
   ) is true);
 
@@ -67,6 +81,16 @@ returns boolean language sql immutable set search_path = '' as $$
       and p_snapshot->'model' = jsonb_build_object('tier', 'standard', 'provider', 'fal',
         'endpointId', 'bytedance/seedance-2.0/mini/reference-to-video', 'version', 1)
       and p_plan->'model' = p_snapshot->'model'
+    when p_plan->>'version' = '4' then
+      p_plan->'model' = p_snapshot->'model'
+      and ((p_plan->>'modelId' = 'kling-v3-standard-image'
+        and p_plan->>'endpointId' = 'fal-ai/kling-video/v3/standard/image-to-video'
+        and p_snapshot->'model' = jsonb_build_object('tier', 'standard', 'provider', 'fal',
+          'endpointId', 'fal-ai/kling-video/v3/standard/image-to-video', 'version', 1))
+      or (p_plan->>'modelId' = 'kling-v3-pro-image'
+        and p_plan->>'endpointId' = 'fal-ai/kling-video/v3/pro/image-to-video'
+        and p_snapshot->'model' = jsonb_build_object('tier', 'premium', 'provider', 'fal',
+          'endpointId', 'fal-ai/kling-video/v3/pro/image-to-video', 'version', 1)))
     else false
   end is true;
 $$;
@@ -159,7 +183,8 @@ begin
       and status = 'draft' and submission_started_at is null
     for update skip locked;
   if not found then return; end if;
-  if not public.ugc_pipeline_plan_matches_snapshot(p_plan, j.request_snapshot)
+  if (p_plan->>'version') not in ('1', '4')
+    or not public.ugc_pipeline_plan_matches_snapshot(p_plan, j.request_snapshot)
     or (j.provider is not null and j.provider <> 'fal') then
     raise exception 'UGC provider route does not match immutable request';
   end if;
@@ -208,7 +233,11 @@ create function public.finish_ugc_claim(
   p_task text default null, p_error text default null, p_output jsonb default null, p_delay integer default 0
 )
 returns boolean language plpgsql security definer set search_path = '' as $$
-declare j public.ugc_video_jobs;
+declare
+  j public.ugc_video_jobs;
+  output_bytes bigint;
+  output_duration numeric;
+  planned_duration numeric;
 begin
   select * into j from public.ugc_video_jobs where id = p_job and owner_id = p_owner
     and lease_token = p_token and lease_version = p_version and lease_expires_at > clock_timestamp()
@@ -224,15 +253,30 @@ begin
     raise exception 'Invalid UGC task identity';
   end if;
   if p_status = 'succeeded' then
-    if j.provider_request_id is null or p_output is null
+    -- Reject malformed metadata before casting or changing any persisted state.
+    if jsonb_typeof(p_output) is distinct from 'object'
+      or jsonb_typeof(p_output->'byteSize') is distinct from 'number'
+      or jsonb_typeof(p_output->'durationSeconds') is distinct from 'number' then
+      raise exception 'Invalid UGC output' using errcode = '22023';
+    end if;
+    if (p_output->>'byteSize') !~ '^[0-9]{1,9}$' then
+      raise exception 'Invalid UGC output' using errcode = '22023';
+    end if;
+    begin
+      output_bytes := (p_output->>'byteSize')::bigint;
+      output_duration := (p_output->>'durationSeconds')::numeric;
+    exception when invalid_text_representation or numeric_value_out_of_range then
+      raise exception 'Invalid UGC output' using errcode = '22023';
+    end;
+    planned_duration := case j.provider_plan->>'durationSeconds' when '15' then 15 when '30' then 30 else null end;
+    if j.provider_request_id is null
       or p_output->>'bucketId' is distinct from 'ugc-generated-videos'
       or p_output->>'objectPath' is distinct from (p_owner::text || '/' || j.project_id::text || '/' || j.id::text || '.mp4')
       or p_output->>'contentType' is distinct from 'video/mp4'
-      or (p_output->>'byteSize')::bigint is null or (p_output->>'byteSize')::bigint not between 1 and 262144000
-      or (p_output->>'durationSeconds')::numeric is null
-      or j.provider_plan->>'durationSeconds' is null
-      or abs((p_output->>'durationSeconds')::numeric - (j.provider_plan->>'durationSeconds')::numeric) > 0.5
-      then raise exception 'Invalid UGC output'; end if;
+      or output_bytes is null or output_bytes not between 1 and 262144000
+      or output_duration is null or output_duration not between 0.001 and 30.5
+      or planned_duration is null or abs(output_duration - planned_duration) > 0.5
+      then raise exception 'Invalid UGC output' using errcode = '22023'; end if;
     if j.status = 'queued' then
       update public.ugc_video_jobs set status = 'processing' where id = j.id;
     end if;
@@ -242,8 +286,8 @@ begin
     output_bucket_id = case when p_status = 'succeeded' then p_output->>'bucketId' else null end,
     output_object_path = case when p_status = 'succeeded' then p_output->>'objectPath' else null end,
     output_content_type = case when p_status = 'succeeded' then 'video/mp4' else null end,
-    output_byte_size = case when p_status = 'succeeded' then (p_output->>'byteSize')::bigint else null end,
-    duration_seconds = case when p_status = 'succeeded' then (p_output->>'durationSeconds')::numeric else null end,
+    output_byte_size = case when p_status = 'succeeded' then output_bytes else null end,
+    duration_seconds = case when p_status = 'succeeded' then output_duration else null end,
     lease_token = null, lease_expires_at = null,
     next_poll_at = case when p_status in ('queued', 'processing')
       then clock_timestamp() + make_interval(secs => greatest(1, least(300, coalesce(p_delay, 10)))) else null end
@@ -263,3 +307,5 @@ grant execute on function public.claim_ugc_submission(uuid, uuid, text, jsonb) t
 grant execute on function public.claim_ugc_reconciliation(uuid, uuid) to service_role;
 grant execute on function public.is_ugc_claim_current(uuid, uuid, uuid, bigint) to service_role;
 grant execute on function public.finish_ugc_claim(uuid, uuid, uuid, bigint, text, text, text, jsonb, integer) to service_role;
+
+commit;

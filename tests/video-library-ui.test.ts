@@ -50,7 +50,7 @@ test("detail player and actions only render for a playable asset", () => {
   assert.match(detail, /playable \? \(/);
   assert.match(detail, /<video controls preload="metadata" playsInline/);
   assert.doesNotMatch(detail, /autoPlay/);
-  assert.match(detail, /playable \? <a[^>]+download/);
+  assert.match(detail, /playable \? <VideoDownloadButton/);
 });
 
 test("Video Library copy is complete in Turkish and English", () => {

@@ -526,9 +526,9 @@
     "ugcStudio": {
       "model": {
         "label": "UGC model",
-        "standard": { "label": "Standard", "description": "Plan 15-second clips at 720p with creator and product references. Portrait, square and landscape formats." },
-        "premium": { "label": "Premium", "description": "Plan 15- or 30-second clips at 720p with creator and product references. Portrait, square and landscape formats." },
-        "limits": "Generation is unavailable for both tiers. Native audio is planned; exact speech, Turkish pronunciation, voice identity and lip sync are unverified. Audio uploads, subtitles and 60-second clips are unavailable.",
+        "standard": { "label": "Kling 3.0 Standard", "description": "Plan 15-second clips with creator and product references. Portrait, square and landscape formats." },
+        "premium": { "label": "Kling 3.0 Pro", "description": "Plan 15-second clips with Kling 3.0 Pro. Portrait, square and landscape formats." },
+        "limits": "Generation is disabled for both models. Speech, audio uploads, lip sync and subtitles are unsupported. 30- and 60-second clips are unavailable.",
         "durationUnsupported": "Your {duration}-second draft is preserved. Choose a supported duration or another model before preparing a request."
       },
         "metadataTitle": "UGC Studio | Klay AI",
@@ -736,12 +736,135 @@
       "emptyDescription": "Configure your image using the controls. No generated image yet."
     },
     "videoStudio": {
+      "advancedSettings": "Advanced settings",
+      "configurationUnavailable": "Not enabled in administrator settings.",
+      "singleImageNotice": "A 360° rotation from one image requires inferred unseen surfaces; accuracy from every angle is not guaranteed.",
+      "director": {
+        "title": "AI Video Director",
+        "description": "Choose a preset for a product film that respects the source image.",
+        "preset": "Video preset",
+        "shotMode": "Shot structure",
+        "single": "Single shot",
+        "multi": "Multiple shots",
+        "presets": {
+          "luxury-fashion-film": {
+            "title": "Luxury Fashion Film",
+            "description": "Measured editorial framing, soft highlights and a composed campaign finish."
+          },
+          "macro-detail-reveal": {
+            "title": "Macro Detail Reveal",
+            "description": "A restrained closer view of visible materials and craftsmanship."
+          },
+          "minimal-studio": {
+            "title": "Minimal Studio",
+            "description": "A stable hero frame with balanced space and consistent light."
+          }
+        },
+        "consent": "I approve up to ${cost} for one AI plan request. Cached plans incur no new AI request.",
+        "unavailable": "AI planning is currently unavailable. You can prepare a conservative plan without an AI request.",
+        "prepare": "Prepare AI plan",
+        "planHeading": "Shot plan",
+        "preparing": "Preparing plan…",
+        "fallbackButton": "Use conservative plan",
+        "separateApproval": "Planning does not generate a video. Video generation requires its own cost approval.",
+        "aiPlan": "AI creative plan",
+        "fallbackPlan": "Conservative creative plan",
+        "fallbackNotice": "A conservative preset plan is shown. It does not incorporate your request or claim new product detail.",
+        "shot": "Shot {number} · {seconds} s",
+        "fullPlan": "Show all shot directions",
+        "camera": "Camera",
+        "lighting": "Lighting",
+        "composition": "Composition",
+        "motion": "Motion",
+        "pace": "Pace",
+        "focus": "Product detail",
+        "review": "Review the plan before generating. Changing the source, request or settings requires a new plan.",
+        "planRequired": "Prepare a creative plan before generating.",
+          "planLocked": "The previous video request is still active or being verified. Create a separate video request before preparing a new plan.",
+          "planNeedsSource": "Choose a source image before preparing a plan.",
+          "planNeedsPreparedSource": "The source image must finish preparing before a plan can be created.",
+          "planNeedsReadyDraft": "Complete the video settings before preparing a plan.",
+        "error": "The plan could not be prepared or its approval expired. Check your settings and try the conservative plan."
+      },
+      "preservation": {
+        "quoteLoading": "Checking cost and availability…",
+        "noGuarantee": "Kling can change small text and details. Exact preservation is not guaranteed.",
+        "regionTitle": "Mark a critical region (optional)",
+        "regionHelp": "Drag over a logo or label in the original image. With a keyboard, press Enter to start and adjust the percentage fields.",
+        "regionSelect": "Select a critical product region",
+        "regionResolution": "Region in the prepared frame: {width} × {height} px. Small details may be unreadable in the video.",
+        "sourceAlt": "Original product for critical region selection",
+        "x": "Left (%)",
+        "y": "Top (%)",
+        "width": "Width (%)",
+        "height": "Height (%)",
+        "declaredText": "Text you can read here (optional)",
+        "unverifiedHint": "This is a user-provided hint, not visually verified evidence.",
+        "clearRegion": "Clear selection",
+        "analysisOptIn": "Check product fidelity after generation",
+        "analysisCost": "Model: {model} · estimated analysis ceiling: ${cost} USD",
+        "analysisDisabled": "Paid analysis is not enabled on the server, or pricing/schema could not be verified.",
+        "analysisConsent": "Selecting this sends the source and sampled frames to OpenAI and confirms the displayed extra cost. Uncertain requests are never automatically repeated.",
+        "combinedQuote": "Kling: ${generation} · Analysis: ${analysis} · Total upper estimate: ${total} USD"
+      },
+      "preparation": {
+        "preparing": "Preparing the source frame…",
+        "ready": "Source frame ready. The entire product remains in frame.",
+        "failed": "The image could not be prepared. Select the file again or try another ratio. Video generation has not started.",
+        "description": "Your image is fitted to the selected ratio without cropping or stretching. Empty space uses a matching background."
+      },
+      "beta": {
+        "unsafeMotion": "This motion may invent hidden surfaces or change the product shape. Choose gentle camera movement.",
+        "quote": "{model} · {seconds}s · Estimated ceiling: ${cost} USD",
+        "quoteUnavailable": "Verified pricing is unavailable. Generation is disabled.",
+        "prepareQuote": "Verify current cost",
+        "checkingPrevious": "The previous video request is being verified. Wait for this safety check before starting another generation.",
+        "newSubmissionFirst": "The previous video request is preserved. Create a separate video request before starting another generation.",
+        "videoUnavailable": "Video generation is not currently enabled for this account or these options.",
+        "preparingSubmission": "Preparing a new video request…",
+        "selectSourceFirst": "Select a product image before continuing.",
+        "preparingSource": "Preparing the source image. You can create the shot plan once it is ready.",
+        "sourcePrepareFailed": "The source image could not be prepared. Select it again and retry preparation.",
+        "completeSettingsFirst": "Complete the video request settings first.",
+        "prepareDirectorFirst": "Prepare the shot plan first. Changing the preset or shot structure invalidates the previous plan and cost approval.",
+        "verifyCostFirst": "The shot plan is ready. Verify the current cost of the Kling request before continuing.",
+        "confirmCostFirst": "The cost is verified. Explicitly approve the displayed amount before creating the video.",
+        "payloadPreview": "Kling request to be sent",
+        "shotCount": "{count} shots",
+        "preparingQuote": "Verifying cost…",
+        "confirmCost": "I approve a maximum cost of {cost} USD for this video.",
+        "newSubmission": "Create a new video request",
+        "recoveryStorage": "The request cannot be recovered safely. Check its status in Video Library.",
+        "submitting": "Sending to Kling…",
+        "approval": "The required approval for this video request could not be verified. Generation has not started.",
+        "budgetLimit": "The available video budget is exhausted; existing reservations count toward the limit. No new generation was started. Do not resubmit until the reservation is resolved.",
+        "billingUnavailable": "The video budget could not be verified. No new generation was started; try again later.",
+        "sourceUnavailable": "The source image could not be accessed. Generation has not started; select the image again.",
+        "ambiguous": "Submission outcome is uncertain. Do not resubmit; check Video Library.",
+        "providerRejected": "Kling rejected the shot instructions. Review the plan and create a new request; this request was not automatically resubmitted.",
+        "invalidPrompt": "The shot plan does not meet Kling's limits. Nothing was submitted; prepare the plan again.",
+        "failed": "Video could not be completed. Check Video Library; do not repeat the paid request.",
+        "sending": "The request is being sent to Kling. There is no need to click again.",
+        "queued": "Kling received the request; it is waiting in the queue.",
+        "processing": "Kling is processing your video. Status updates automatically.",
+        "finalizing": "The video is saved to private storage; final checks are running.",
+        "ready": "Your video is ready.",
+        "unknown": "The request status is not verified yet. Do not start another generation; status checks will continue.",
+        "restoreUnavailable": "The previous request status cannot be verified. Check Video Library; a new request may incur a separate cost.",
+        "submissionUsed": "This request ID has already been used. Check Video Library or create a new request.",
+        "progressTitle": "Generation status",
+        "steps": { "source": "Source image ready", "request": "Request sent", "queued": "In Kling queue", "processing": "Kling processing", "storage": "Saving video securely", "saved": "Video saved to private storage", "ready": "Video ready" },
+        "watchVideo": "Watch video",
+        "libraryLink": "Video Library",
+        "pollError": "Status is temporarily unavailable. The last confirmed stage is kept; polling will resume.",
+        "download": "Download MP4",
+        "openVideo": "Open video"
+      },
       "metadataTitle": "Video Studio",
       "metadataDescription": "Klay AI Video Studio for preparing videos from product images.",
       "title": "Video Studio",
       "description": "Prepare your source and motion direction.",
       "generate": "Generate Video",
-      "preparationOnly": "Preparation mode · Video generation is not connected yet.",
       "source": {
         "heading": "Source image",
         "description": "Choose the product image that will act as the opening frame.",
@@ -750,7 +873,7 @@
         "remove": "Remove",
         "chooseLibrary": "Choose from Klay Library",
         "closeLibrary": "Close library",
-        "dropLabel": "JPEG, PNG or WebP · Up to 20 MB",
+        "dropLabel": "JPEG/PNG · Up to 20 MB · Automatically fitted to your video ratio",
         "selectedAlt": "Selected source product image",
         "localLabel": "Local image",
         "libraryLabel": "Klay Library",
@@ -766,8 +889,8 @@
       },
       "prompt": {
         "image": {
-          "heading": "Motion prompt",
-          "description": "Describe how the existing image should come to life.",
+          "heading": "Motion direction (optional)",
+          "description": "Add a short creative direction for camera or product movement.",
           "placeholder": "E.g. Slow cinematic dolly-in with subtle reflection changes…"
         },
         "inspirationLabel": "Prompt suggestions"
@@ -797,8 +920,8 @@
         "heading": "Generation quality",
         "proLocked": "Growth plan or higher required. Pro pricing is not available yet.",
         "options": {
-          "standard": { "label": "Standard", "description": "Balanced product video generation." },
-          "pro": { "label": "Pro", "description": "Premium product video generation." },
+          "standard": { "label": "Kling 3.0 Standard", "description": "Balanced product video generation." },
+          "pro": { "label": "Kling 3.0 Pro", "description": "Premium product video generation." },
           "auto": { "label": "Auto", "description": "Historical selection." },
           "best": { "label": "Best Quality", "description": "Historical selection." }
         }
@@ -820,14 +943,15 @@
       "generations": {
         "title": "Generations",
         "emptyTitle": "No videos generated yet",
-        "emptyDescription": "Completed videos will appear here in a future phase."
+        "emptyDescription": "Watch and download completed videos in Video Library."
       },
       "validation": {
         "source-required": "Choose a source image to continue.",
         "prompt-required": "Add a short motion prompt to continue.",
-        "invalid-source-type": "Choose a JPEG, PNG, or WebP image.",
+        "invalid-source-type": "Choose a JPEG or PNG image.",
         "source-too-large": "The image must be 20 MB or smaller.",
         "source-unreadable": "This image could not be opened in your browser. Try another file.",
+        "source-dimensions-unsupported": "The image must be 40 megapixels or smaller.",
         "not-connected": "Your draft is ready. Video generation will be connected in a future phase."
       },
       "mobile": {
@@ -837,6 +961,7 @@
       }
     },
     "videoLibrary": {
+      "legacyLocal": "Older local video",
       "metadataTitle": "Video Library",
       "metadataDescription": "Review and manage videos created in Klay AI.",
       "eyebrow": "VIDEO WORKSPACE",
@@ -948,6 +1073,84 @@
         "ready": { "title": "Playback unavailable", "description": "This record does not include a playable video asset." },
         "failed": { "title": "Video could not be created", "description": "No playable video is available for this generation." },
         "unavailable": { "title": "Video unavailable", "description": "The playable asset is not available for this record." }
+      },
+      "fidelityAnalysis": {
+        "closeupSource": "Critical region · source",
+        "closeupVideo": "Critical region window · {time}s (alignment unverified)",
+        "title": "Product Fidelity Analysis",
+        "description": "Compare the source product image with frames from the beginning, middle, and end of the video. Changes in camera angle, lighting, or partial visibility are not product damage.",
+        "freeStep": "Prepare the source and five representative frames on the secure server. This step sends no data to an external analysis service.",
+        "prepare": "Prepare frames",
+        "preparing": "Preparing frames…",
+        "preparingSource": "Loading the private source image",
+        "extractingFrames": "Extracting frames from the start, middle, and end of the video",
+        "sourceFrame": "Source product image",
+        "videoFrame": "Frame {number} · {timestamp}",
+        "frameUnavailable": "This video frame could not be read.",
+        "analysisDisabled": "Frames were prepared locally. Paid analysis is not enabled for this account on the server; no analysis request was sent.",
+        "pricingUnavailable": "No verified cost estimate is available for this model. Paid analysis remains disabled.",
+        "priceEstimate": "Estimated upper cost: about ${amount} USD",
+        "consentLead": "Paid analysis starts only after you confirm below.",
+        "consentDetails": "If you consent, the source image and five compressed video frames are sent to OpenAI for visual comparison. The full MP4 is not sent. Results are stored privately for your account.",
+        "consentLabel": "I agree to send the source image and five frames to OpenAI and may incur an analysis charge of up to about ${amount} USD.",
+        "analyze": "Start paid analysis · up to ${amount} USD",
+        "analyzing": "Comparing the product and video frames…",
+        "cancel": "Cancel",
+        "profileTitle": "Source product profile",
+        "profile": {
+          "category": "Category",
+          "color": "Color",
+          "shape": "Silhouette and shape",
+          "material": "Visible material",
+          "branding": "Identity features and visible branding",
+          "readableText": "Readable text",
+          "noVisibleBranding": "No visible logo, label, or readable brand text in the source image.",
+          "observations": "Details visible in the source"
+        },
+        "verticals": {
+          "apparel": "Apparel",
+          "jewelry": "Jewelry",
+          "watches": "Watches",
+          "cosmetics": "Cosmetics",
+          "footwear": "Footwear",
+          "bags": "Bags"
+        },
+        "checksTitle": "Checks",
+        "categories": {
+          "brandingText": "Logo, label, and text",
+          "shapeProportions": "Shape and proportions",
+          "colorMaterial": "Color and material appearance",
+          "constructionDetails": "Zippers, buttons, pockets, and seams",
+          "motionDeformation": "Deformation during camera movement"
+        },
+        "overallTitle": "Overall assessment",
+        "statuses": {
+          "preserved": "Preserved",
+          "suspicious_change": "Suspicious change",
+          "clear_distortion": "Clear distortion",
+          "unverified": "Unverified"
+        },
+        "overallStatuses": {
+          "clear_distortion": "Clear distortion detected",
+          "review_recommended": "Review recommended",
+          "no_clear_change_detected": "No clear change found in verifiable details",
+          "inconclusive": "Inconclusive"
+        },
+        "confidence": { "high": "High confidence", "medium": "Medium confidence", "low": "Low confidence" },
+        "causes": {
+          "product_change": "Product change",
+          "camera_angle": "Camera angle or perspective",
+          "lighting": "Lighting or reflection",
+          "partial_visibility": "Partially visible",
+          "motion_blur": "Motion blur",
+          "unclear": "Cause unclear"
+        },
+        "timestamp": "At {value}",
+        "noText": "Not verified from the source image",
+        "prepareError": "The source image or video could not be read. The video record is unchanged; no paid analysis was sent.",
+        "unavailable": "This video or its source image cannot be accessed. Ownership could not be verified.",
+        "uncertain": "The analysis request may have reached the provider. It may have been charged; it was not resubmitted and no automatic retry will run.",
+        "failed": "Analysis could not be completed. The video record is preserved and its generation status was not changed."
       }
     },
     "backgroundJobs": { "active": "Creating image" },
