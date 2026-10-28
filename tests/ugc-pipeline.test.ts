@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
+import { dirname, relative, resolve, sep } from "node:path";
 import { createContext, runInContext } from "node:vm";
 import test from "node:test";
 import ts from "typescript";
@@ -29,17 +30,26 @@ function harness(overrides: Record<string, unknown> = {}) {
     fetch: fakeFetch, process: { env: { NEXT_PUBLIC_SUPABASE_URL: "https://project.supabase.co" } } });
   runInContext("globalThis.structuredClone = value => JSON.parse(JSON.stringify(value))", context);
   const cache = new Map<string, Record<string, unknown>>();
-  function load(name: string): Record<string, unknown> {
+  function load(name: string, importer?: string): Record<string, unknown> {
     if (name in overrides) return overrides[name] as Record<string, unknown>;
     if (name === "server-only") return {};
+    if ((name.startsWith("./") || name.startsWith("../")) && importer) {
+      const basePath = resolve(dirname(importer), name);
+      const resolvedPath = [basePath, `${basePath}.ts`, `${basePath}.tsx`, `${basePath}.js`].find(existsSync);
+      if (!resolvedPath) throw new Error(`Cannot resolve ${name} from ${importer}`);
+      const relativeToSource = relative(resolve("src"), resolvedPath);
+      if (relativeToSource.startsWith(`..${sep}`)) throw new Error(`Relative import escaped src: ${name} from ${importer}`);
+      return load(`@/${relativeToSource.replace(/\\/g, "/").replace(/\.(?:tsx?|js)$/, "")}`);
+    }
     if (!name.startsWith("@/")) return requirePackage(name);
     if (cache.has(name)) return cache.get(name)!;
-    const source = readFileSync(`src/${name.slice(2)}.ts`, "utf8");
+    const sourcePath = resolve("src", `${name.slice(2)}.ts`);
+    const source = readFileSync(sourcePath, "utf8");
     const compiled = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true } }).outputText;
     const exports: Record<string, unknown> = {};
     cache.set(name, exports);
     const evaluate = runInContext(`(function(require, exports) { ${compiled}\n })`, context);
-    evaluate(load, exports);
+    evaluate((dependency: string) => load(dependency, sourcePath), exports);
     return exports;
   }
   const planner = load("@/lib/ugc/ugc-request-planner") as typeof Planner;
