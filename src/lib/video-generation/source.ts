@@ -4,7 +4,7 @@ export type ResolvedVideoSource = {
   reference: VideoSourceReference;
   providerUrl: string;
   expiresAt: string;
-  mimeType: "image/jpeg" | "image/png";
+  mimeType: "image/jpeg" | "image/png" | "image/webp";
   sizeBytes: number;
   width: number;
   height: number;

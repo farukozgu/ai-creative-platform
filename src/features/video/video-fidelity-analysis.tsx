@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+
 /* eslint-disable @next/next/no-img-element -- the browser creates these transient frame preview data URLs locally. */
 
 import { useEffect, useRef, useState } from "react";
@@ -21,7 +23,6 @@ export type VideoFidelityCopy = {
   sourceFrame: string;
   frameUnavailable: string;
   analysisDisabled: string;
-  pricingUnavailable: string;
   consentLead: string;
   consentDetails: string;
   analyzing: string;
@@ -88,7 +89,6 @@ export function VideoFidelityAnalysis({ videoId, durationSeconds, availability, 
   const [preparing, setPreparing] = useState(false);
   const [prepared, setPrepared] = useState<PreparedReview | null>(null);
   const [prepareError, setPrepareError] = useState(false);
-  const [consented, setConsented] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [report, setReport] = useState<VideoFidelityReport | null>(null);
   const [analysisOutcome, setAnalysisOutcome] = useState<"disabled" | "uncertain" | "failed" | null>(null);
@@ -140,12 +140,12 @@ export function VideoFidelityAnalysis({ videoId, durationSeconds, availability, 
   }
 
   async function handleAnalyze() {
-    if (!prepared || !availability.enabled || !availability.maximumEstimatedCostUsd || !consented || analysisStarted) return;
+    if (!prepared || !availability.enabled || analysisStarted) return;
     setAnalysisStarted(true); setAnalyzing(true); setAnalysisOutcome(null);
     try {
       const response = await fetch(`/api/dashboard/videos/${encodeURIComponent(videoId)}/fidelity-analysis`, {
         method: "POST", credentials: "same-origin", cache: "no-store", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ consent: true, confirmedMaximumCostUsd: availability.maximumEstimatedCostUsd, pricingVersion: availability.pricingVersion, locale }),
+        body: JSON.stringify({ request: true, locale }),
       });
       const result = await response.json() as { status?: string; report?: VideoFidelityReport };
       if (response.ok && result.status === "success" && result.report) setReport(result.report);
@@ -176,9 +176,9 @@ export function VideoFidelityAnalysis({ videoId, durationSeconds, availability, 
       {!prepared ? (
         <div className={styles.prepareBlock}>
           <p>{copy.freeStep}</p>
-          <button type="button" className={libraryStyles.secondaryAction} onClick={handlePrepare} disabled={preparing}>
+          <Button variant="secondary" size="md" type="button" className={libraryStyles.secondaryAction} onClick={handlePrepare} disabled={preparing}>
             {preparing ? copy.preparing : copy.prepare}
-          </button>
+          </Button>
           {preparing ? <p className={styles.liveStatus} role="status">{copy.preparingSource}<br />{copy.extractingFrames}</p> : null}
           {prepareError ? <p className={styles.error} role="status">{copy.prepareError}</p> : null}
         </div>
@@ -202,22 +202,17 @@ export function VideoFidelityAnalysis({ videoId, durationSeconds, availability, 
       )}
 
       {prepared && sessionCacheReady && !report && !analysisOutcome && !analysisStarted ? (
-        <div className={styles.consentBlock}>
-          {availability.enabled && availability.maximumEstimatedCostUsd !== null ? (
+        <div className={styles.analysisBlock}>
+          {availability.enabled ? (
             <>
-              <p className={styles.estimate}>{t("priceEstimate", { amount: availability.maximumEstimatedCostUsd.toFixed(6) })}</p>
               <p>{copy.consentLead}</p>
               <p className={styles.muted}>{copy.consentDetails}</p>
-              <label className={styles.consentLabel}>
-                <input type="checkbox" checked={consented} onChange={(event) => setConsented(event.target.checked)} />
-                <span>{t("consentLabel", { amount: availability.maximumEstimatedCostUsd.toFixed(6) })}</span>
-              </label>
-              <button type="button" className={libraryStyles.primaryAction} onClick={handleAnalyze} disabled={!consented || analyzing}>
-                {analyzing ? copy.analyzing : t("analyze", { amount: availability.maximumEstimatedCostUsd.toFixed(6) })}
-              </button>
+              <Button variant="primary" size="md" type="button" className={libraryStyles.primaryAction} onClick={handleAnalyze} disabled={analyzing}>
+                {analyzing ? copy.analyzing : t("analyze")}
+              </Button>
             </>
           ) : (
-            <p className={styles.muted}>{availability.maximumEstimatedCostUsd === null ? copy.pricingUnavailable : copy.analysisDisabled}</p>
+            <p className={styles.muted}>{copy.analysisDisabled}</p>
           )}
         </div>
       ) : null}

@@ -4,16 +4,41 @@
     "description": "Kampanya görselleri için giyim, takı, saat, kozmetik, ayakkabı ve çantalar."
   },
   "AppStates": {
-    "notFound": {"title": "Bu sayfa bulunamadı", "description": "Aradığınız sayfa taşınmış, silinmiş veya hiç var olmamış olabilir.", "dashboard": "Ana sayfaya dön", "projects": "Projeleri görüntüle"},
-    "error": {"title": "Bir şeyler ters gitti", "description": "İsteğinizi tamamlayamadık. Tekrar deneyebilirsiniz.", "retry": "Tekrar dene", "dashboard": "Ana sayfaya dön"}
+    "notFound": {
+      "title": "Bu sayfa bulunamadı",
+      "description": "Aradığınız sayfa taşınmış, silinmiş veya hiç var olmamış olabilir.",
+      "dashboard": "Ana sayfaya dön",
+      "projects": "Projeleri görüntüle"
+    },
+    "error": {
+      "title": "Bir şeyler ters gitti",
+      "description": "İsteğinizi tamamlayamadık. Tekrar deneyebilirsiniz.",
+      "retry": "Tekrar dene",
+      "dashboard": "Ana sayfaya dön"
+    }
   },
   "GenerationTimeline": {
     "stages": {
-      "0": { "title": "Ürün hazırlanıyor", "description": "Ürün görselleri ve temel detaylar hazırlanıyor." },
-      "1": { "title": "Yaratıcı yön kuruluyor", "description": "Preset, yönlendirme ve referans bilgileri bir araya getiriliyor." },
-      "2": { "title": "Görsel oluşturuluyor", "description": "Sahne, ışık ve kompozisyon oluşturuluyor." },
-      "3": { "title": "Kalite kontrolü", "description": "Ürün kimliği ve görsel tutarlılığı kontrol ediliyor." },
-      "4": { "title": "Son dokunuşlar", "description": "Sonuç hazırlanıyor ve kaydediliyor." }
+      "0": {
+        "title": "Ürün hazırlanıyor",
+        "description": "Ürün görselleri ve temel detaylar hazırlanıyor."
+      },
+      "1": {
+        "title": "Yaratıcı yön kuruluyor",
+        "description": "Preset, yönlendirme ve referans bilgileri bir araya getiriliyor."
+      },
+      "2": {
+        "title": "Görsel oluşturuluyor",
+        "description": "Sahne, ışık ve kompozisyon oluşturuluyor."
+      },
+      "3": {
+        "title": "Kalite kontrolü",
+        "description": "Ürün kimliği ve görsel tutarlılığı kontrol ediliyor."
+      },
+      "4": {
+        "title": "Son dokunuşlar",
+        "description": "Sonuç hazırlanıyor ve kaydediliyor."
+      }
     }
   },
   "Navigation": {
@@ -526,152 +551,158 @@
     "ugcStudio": {
       "model": {
         "label": "UGC modeli",
-        "standard": { "label": "Kling 3.0 Standard", "description": "İçerik üreticisi ve ürün referanslarıyla 15 saniyelik klipler planlayın. Dikey, kare ve yatay formatlar." },
-        "premium": { "label": "Kling 3.0 Pro", "description": "Kling 3.0 Pro ile 15 saniyelik klipler planlayın. Dikey, kare ve yatay formatlar." },
+        "standard": {
+          "label": "Kling 3.0 Standard",
+          "description": "İçerik üreticisi ve ürün referanslarıyla 15 saniyelik klipler planlayın. Dikey, kare ve yatay formatlar."
+        },
+        "premium": {
+          "label": "Kling 3.0 Pro",
+          "description": "Kling 3.0 Pro ile 15 saniyelik klipler planlayın. Dikey, kare ve yatay formatlar."
+        },
         "limits": "Her iki modelde de üretim kapalıdır. Konuşma, ses yükleme, dudak senkronu ve altyazı desteklenmez. 30 ve 60 saniyelik klipler kullanılamaz.",
         "durationUnsupported": "{duration} saniyelik taslağınız korundu. İstek hazırlamadan önce desteklenen bir süre veya başka bir model seçin."
       },
-        "metadataTitle": "UGC Stüdyosu | Klay AI",
-        "title": "UGC Stüdyosu",
-        "eyebrow": "YARATICI ÇALIŞMA ALANI",
-        "description": "Ürününüz kendi hikâyesini anlatsın. İlk kelimeden son kareye, içerik üreticisi odaklı videolar planlayın.",
-        "comingSoon": "Yakında",
-        "configuration": "Yaratıcı ayarlar",
-        "workspace": "Video çalışma alanı",
-        "contentTitle": "01 · İçerik üreticisi ve format",
-        "creator": "İçerik üreticisi",
-        "creatorHint": "Planlama için örnek profiller. Görseller temsilidir; kullanılabilir içerik üreticileri değildir.",
-        "creators": {
-          "ada": {
-            "name": "Ada",
-            "style": "Güzellik · Doğal",
-            "alt": "Cilt bakım serumu uygulayan örnek güzellik içerik üreticisi"
-          },
-          "deniz": {
-            "name": "Deniz",
-            "style": "Moda · Editoryal",
-            "alt": "Moda kampanyasında örnek içerik üreticisi"
-          },
-          "maya": {
-            "name": "Maya",
-            "style": "Yaşam tarzı · Zarif",
-            "alt": "Şehirde çanta taşıyan örnek yaşam tarzı içerik üreticisi"
-          }
+      "metadataTitle": "UGC Stüdyosu | Klay AI",
+      "title": "UGC Stüdyosu",
+      "eyebrow": "YARATICI ÇALIŞMA ALANI",
+      "description": "Ürününüz kendi hikâyesini anlatsın. İlk kelimeden son kareye, içerik üreticisi odaklı videolar planlayın.",
+      "comingSoon": "Yakında",
+      "configuration": "Yaratıcı ayarlar",
+      "workspace": "Video çalışma alanı",
+      "contentTitle": "01 · İçerik üreticisi ve format",
+      "creator": "İçerik üreticisi",
+      "creatorHint": "Planlama için örnek profiller. Görseller temsilidir; kullanılabilir içerik üreticileri değildir.",
+      "creators": {
+        "ada": {
+          "name": "Ada",
+          "style": "Güzellik · Doğal",
+          "alt": "Cilt bakım serumu uygulayan örnek güzellik içerik üreticisi"
         },
-        "product": "Ürün",
-        "upload": "Ürün fotoğrafı ekle",
-        "replace": "Fotoğrafı değiştir",
-        "remove": "Kaldır",
-        "uploadHint": "JPG, PNG veya WebP · En fazla 10 MB. Yalnızca cihazınızda önizlenir, sunucuya yüklenmez.",
-        "localOnly": "Yalnızca yerel önizleme",
-        "productAlt": "Seçilen ürün: {name}",
-        "invalidFile": "10 MB altında bir JPG, PNG veya WebP görsel seçin.",
-        "unreadableFile": "Görsel açılamadı. Lütfen başka bir fotoğraf seçin.",
-        "format": "UGC formatı",
-        "formats": {
-          "testimonial": "Kullanıcı deneyimi",
-          "review": "Ürün incelemesi",
-          "unboxing": "Kutu açılışı",
-          "demo": "Ürün tanıtımı",
-          "story": "Hikâye anlatımı",
-          "problem": "Sorun / Çözüm"
+        "deniz": {
+          "name": "Deniz",
+          "style": "Moda · Editoryal",
+          "alt": "Moda kampanyasında örnek içerik üreticisi"
         },
-        "scriptTitle": "02 · Senaryo ve ses",
-        "sceneDirection": "Sahne Yönergeleri",
-        "sceneDirectionPlaceholder": "Ortamı, jestleri, ürünle etkileşimi ve kamera hareketlerini anlatın…",
-        "sceneDirectionHint": "Yalnızca görsel yönergelerdir. Bu metin seslendirilmez.",
-        "spokenDialogue": "Konuşma Metni",
-        "spokenDialogueHint": "İçerik üreticisinin Türkçe veya İngilizce söylemesini istediğiniz sözler.",
-        "dialogueTiming": "{count} kelime · Dakikada 150 kelimeyle yaklaşık {seconds} saniye",
-        "dialogueTooLong": "Bu konuşma, seçtiğiniz {duration} saniyelik videoya sığmayabilir. Metni kısaltın veya süreyi artırın.",
-        "generateDialogue": "AI ile konuşma metni oluştur · Yakında",
-        "dialogueGenerationHint": "Bir metin üretim hizmeti bağlanana kadar AI ile konuşma metni oluşturma kullanılamaz.",
-        "script": "Senaryonuz",
-        "scriptPlaceholder": "Dikkat çekici bir giriş yapın. Ürününüzü tanıtın, onu özel kılan noktayı anlatın ve net bir çağrıyla bitirin…",
-        "scriptCount": "{count} / 3.000 karakter",
-        "voiceHint": "Ses tercihleri yaratıcı özetinize kaydedilir. Konuşma, dudak senkronizasyonu ve ses önizlemesi henüz kullanılamıyor.",
-        "sceneTitle": "03 · Sahne ve çıktı",
-        "scene": "Sahne",
-        "output": "Çıktı",
-        "subtitles": "Altyazı ekle",
-        "subtitlesOn": "Altyazı açık",
-        "subtitlesOff": "Altyazı kapalı",
-        "fields": {
-          "language": "Dil",
-          "tone": "Ton",
-          "voice": "Ses",
-          "environment": "Ortam",
-          "lighting": "Işık",
-          "framing": "Kamera kadrajı",
-          "duration": "Süre",
-          "ratio": "En-boy oranı"
-        },
-        "options": {
-          "language": {
-            "tr": "Türkçe",
-            "en": "İngilizce"
-          },
-          "tone": {
-            "natural": "Doğal",
-            "energetic": "Enerjik",
-            "professional": "Profesyonel"
-          },
-          "voice": {
-            "warm": "Sıcak",
-            "bright": "Canlı",
-            "calm": "Sakin"
-          },
-          "environment": {
-            "home": "Ev ortamı",
-            "studio": "Stüdyo",
-            "outdoor": "Dış mekân"
-          },
-          "lighting": {
-            "daylight": "Gün ışığı",
-            "soft": "Yumuşak ışık",
-            "warm": "Sıcak ışık"
-          },
-          "framing": {
-            "medium": "Orta plan",
-            "close": "Yakın plan",
-            "wide": "Geniş plan"
-          },
-          "duration": {
-            "15": "15 saniye",
-            "30": "30 saniye",
-            "60": "60 saniye"
-          },
-          "ratio": {
-            "9:16": "9:16 · Dikey",
-            "1:1": "1:1 · Kare",
-            "16:9": "16:9 · Yatay"
-          }
-        },
-        "sessionOnly": "Ayarlarınız bu oturumda kalır. Sayfadan ayrıldığınızda veya sayfayı yenilediğinizde seçimleriniz sıfırlanır.",
-        "preview": "Video önizlemesi",
-        "previewLabel": "Planlama modu",
-        "emptyTitle": "Hikâyeniz burada başlıyor",
-        "emptyDescription": "İçerik üreticisini seçin, ürününüzü ekleyin ve senaryonuzu yazın. Video üretimi açıldığında videonuz burada görünecek.",
-        "noVideo": "Henüz video üretilmedi",
-        "summary": "Yaratıcı özetiniz",
-        "noProduct": "Ürün seçilmedi",
-        "generate": "UGC üret",
-        "generationHint": "UGC üretimi henüz aktif değil. Ayarları özgürce keşfedin; kredi kullanılmaz.",
-        "results": "Video sonuçları",
-        "resultCount": "{count, plural, =0 {Video yok} one {# video} other {# video}}",
-        "resultsEmpty": "Sıradaki kampanyanıza ayrıldı",
-        "resultsHint": "Gelecekteki UGC videolarınız burada yer alacak. Henüz video oluşturulmadı.",
-        "productSaved": "Özel çalışma alanınıza kaydedildi",
-        "saveState": {
-          "idle": "Değişiklikleriniz özel proje taslağına otomatik kaydedilir.",
-          "saving": "Proje taslağınız kaydediliyor…",
-          "saved": "Proje taslağınız kaydedildi.",
-          "error": "Bazı değişiklikler kaydedilemedi. Bağlantınızı kontrol edip yeniden deneyin.",
-          "unavailable": "Çalışma alanı kurulumu tamamlanana kadar proje kaydı kullanılamıyor. Değişiklikleriniz bu sayfada kalır."
-        },
-        "resultVideoLabel": "Üretilen UGC videosu",
-        "resultDetails": "Video · {duration} saniye"
+        "maya": {
+          "name": "Maya",
+          "style": "Yaşam tarzı · Zarif",
+          "alt": "Şehirde çanta taşıyan örnek yaşam tarzı içerik üreticisi"
+        }
       },
+      "product": "Ürün",
+      "upload": "Ürün fotoğrafı ekle",
+      "replace": "Fotoğrafı değiştir",
+      "remove": "Kaldır",
+      "uploadHint": "JPG, PNG veya WebP · En fazla 10 MB. Yalnızca cihazınızda önizlenir, sunucuya yüklenmez.",
+      "localOnly": "Yalnızca yerel önizleme",
+      "productAlt": "Seçilen ürün: {name}",
+      "invalidFile": "10 MB altında bir JPG, PNG veya WebP görsel seçin.",
+      "unreadableFile": "Görsel açılamadı. Lütfen başka bir fotoğraf seçin.",
+      "format": "UGC formatı",
+      "formats": {
+        "testimonial": "Kullanıcı deneyimi",
+        "review": "Ürün incelemesi",
+        "unboxing": "Kutu açılışı",
+        "demo": "Ürün tanıtımı",
+        "story": "Hikâye anlatımı",
+        "problem": "Sorun / Çözüm"
+      },
+      "scriptTitle": "02 · Senaryo ve ses",
+      "sceneDirection": "Sahne Yönergeleri",
+      "sceneDirectionPlaceholder": "Ortamı, jestleri, ürünle etkileşimi ve kamera hareketlerini anlatın…",
+      "sceneDirectionHint": "Yalnızca görsel yönergelerdir. Bu metin seslendirilmez.",
+      "spokenDialogue": "Konuşma Metni",
+      "spokenDialogueHint": "İçerik üreticisinin Türkçe veya İngilizce söylemesini istediğiniz sözler.",
+      "dialogueTiming": "{count} kelime · Dakikada 150 kelimeyle yaklaşık {seconds} saniye",
+      "dialogueTooLong": "Bu konuşma, seçtiğiniz {duration} saniyelik videoya sığmayabilir. Metni kısaltın veya süreyi artırın.",
+      "generateDialogue": "AI ile konuşma metni oluştur · Yakında",
+      "dialogueGenerationHint": "Bir metin üretim hizmeti bağlanana kadar AI ile konuşma metni oluşturma kullanılamaz.",
+      "script": "Senaryonuz",
+      "scriptPlaceholder": "Dikkat çekici bir giriş yapın. Ürününüzü tanıtın, onu özel kılan noktayı anlatın ve net bir çağrıyla bitirin…",
+      "scriptCount": "{count} / 3.000 karakter",
+      "voiceHint": "Ses tercihleri yaratıcı özetinize kaydedilir. Konuşma, dudak senkronizasyonu ve ses önizlemesi henüz kullanılamıyor.",
+      "sceneTitle": "03 · Sahne ve çıktı",
+      "scene": "Sahne",
+      "output": "Çıktı",
+      "subtitles": "Altyazı ekle",
+      "subtitlesOn": "Altyazı açık",
+      "subtitlesOff": "Altyazı kapalı",
+      "fields": {
+        "language": "Dil",
+        "tone": "Ton",
+        "voice": "Ses",
+        "environment": "Ortam",
+        "lighting": "Işık",
+        "framing": "Kamera kadrajı",
+        "duration": "Süre",
+        "ratio": "En-boy oranı"
+      },
+      "options": {
+        "language": {
+          "tr": "Türkçe",
+          "en": "İngilizce"
+        },
+        "tone": {
+          "natural": "Doğal",
+          "energetic": "Enerjik",
+          "professional": "Profesyonel"
+        },
+        "voice": {
+          "warm": "Sıcak",
+          "bright": "Canlı",
+          "calm": "Sakin"
+        },
+        "environment": {
+          "home": "Ev ortamı",
+          "studio": "Stüdyo",
+          "outdoor": "Dış mekân"
+        },
+        "lighting": {
+          "daylight": "Gün ışığı",
+          "soft": "Yumuşak ışık",
+          "warm": "Sıcak ışık"
+        },
+        "framing": {
+          "medium": "Orta plan",
+          "close": "Yakın plan",
+          "wide": "Geniş plan"
+        },
+        "duration": {
+          "15": "15 saniye",
+          "30": "30 saniye",
+          "60": "60 saniye"
+        },
+        "ratio": {
+          "9:16": "9:16 · Dikey",
+          "1:1": "1:1 · Kare",
+          "16:9": "16:9 · Yatay"
+        }
+      },
+      "sessionOnly": "Ayarlarınız bu oturumda kalır. Sayfadan ayrıldığınızda veya sayfayı yenilediğinizde seçimleriniz sıfırlanır.",
+      "preview": "Video önizlemesi",
+      "previewLabel": "Planlama modu",
+      "emptyTitle": "Hikâyeniz burada başlıyor",
+      "emptyDescription": "İçerik üreticisini seçin, ürününüzü ekleyin ve senaryonuzu yazın. Video üretimi açıldığında videonuz burada görünecek.",
+      "noVideo": "Henüz video üretilmedi",
+      "summary": "Yaratıcı özetiniz",
+      "noProduct": "Ürün seçilmedi",
+      "generate": "UGC üret",
+      "generationHint": "UGC üretimi henüz aktif değil. Ayarları özgürce keşfedin; kredi kullanılmaz.",
+      "results": "Video sonuçları",
+      "resultCount": "{count, plural, =0 {Video yok} one {# video} other {# video}}",
+      "resultsEmpty": "Sıradaki kampanyanıza ayrıldı",
+      "resultsHint": "Gelecekteki UGC videolarınız burada yer alacak. Henüz video oluşturulmadı.",
+      "productSaved": "Özel çalışma alanınıza kaydedildi",
+      "saveState": {
+        "idle": "Değişiklikleriniz özel proje taslağına otomatik kaydedilir.",
+        "saving": "Proje taslağınız kaydediliyor…",
+        "saved": "Proje taslağınız kaydedildi.",
+        "error": "Bazı değişiklikler kaydedilemedi. Bağlantınızı kontrol edip yeniden deneyin.",
+        "unavailable": "Çalışma alanı kurulumu tamamlanana kadar proje kaydı kullanılamıyor. Değişiklikleriniz bu sayfada kalır."
+      },
+      "resultVideoLabel": "Üretilen UGC videosu",
+      "resultDetails": "Video · {duration} saniye"
+    },
     "projectManagement": {
       "failed": "Başarısız",
       "failedDescription": "Son üretimi başarısız olan projeler. Bu projelerde başarılı çıktılar ve başka dosyalar bulunabilir.",
@@ -722,9 +753,30 @@
       "eyebrow": "KLAY AI / YARATICI SÜREÇ",
       "heading": "Klay nasıl çalışır?",
       "exampleNotice": "Klay örnek ürünüyle hazırlanmış temsili süreç.",
-      "upload": {"title":"Ürününü yükle","description":"Net bir ürün fotoğrafıyla başla. Klay, ürününün kimliğini merkeze alır.","alt":"Sıcak gri stüdyoda önden fotoğraflanmış kalın kumaşlı kömür siyahı tişört"},
-      "direction": {"title":"Yaratıcı yönünü belirle","description":"Kampanyanı şekillendirmek için sahne, stil ve format seç.","alt":"Kömür siyahı tişörtün özgün stüdyo fotoğrafı, üzerinde örnek yaratıcı yön ayarları","panelTitle":"Yaratıcı Yön","styleLabel":"Stil","styleValue":"Editoryal","environmentLabel":"Ortam","environmentValue":"Kent Sokağı","lightingLabel":"Işık","lightingValue":"Doğal Gün Işığı","aspectRatioLabel":"En Boy Oranı","aspectRatioValue":"4:5"},
-      "create": {"title":"Kampanya görselini oluştur","description":"Ürününü kullanıma hazır, özenli bir kampanya görseline dönüştür.","alt":"Avrupa kent sokağında aynı kömür siyahı tişörtü giyen model"}
+      "upload": {
+        "title": "Ürününü yükle",
+        "description": "Net bir ürün fotoğrafıyla başla. Klay, ürününün kimliğini merkeze alır.",
+        "alt": "Sıcak gri stüdyoda önden fotoğraflanmış kalın kumaşlı kömür siyahı tişört"
+      },
+      "direction": {
+        "title": "Yaratıcı yönünü belirle",
+        "description": "Kampanyanı şekillendirmek için sahne, stil ve format seç.",
+        "alt": "Kömür siyahı tişörtün özgün stüdyo fotoğrafı, üzerinde örnek yaratıcı yön ayarları",
+        "panelTitle": "Yaratıcı Yön",
+        "styleLabel": "Stil",
+        "styleValue": "Editoryal",
+        "environmentLabel": "Ortam",
+        "environmentValue": "Kent Sokağı",
+        "lightingLabel": "Işık",
+        "lightingValue": "Doğal Gün Işığı",
+        "aspectRatioLabel": "En Boy Oranı",
+        "aspectRatioValue": "4:5"
+      },
+      "create": {
+        "title": "Kampanya görselini oluştur",
+        "description": "Ürününü kullanıma hazır, özenli bir kampanya görseline dönüştür.",
+        "alt": "Avrupa kent sokağında aynı kömür siyahı tişörtü giyen model"
+      }
     },
     "creationWorkspace": {
       "title": "Görsel oluştur",
@@ -741,7 +793,7 @@
       "singleImageNotice": "Tek görselden 360° dönüş, görünmeyen yüzlerin tahmin edilmesini gerektirir; ürünün tüm açılardan doğruluğu garanti edilmez.",
       "director": {
         "title": "AI Video Director",
-        "description": "Ürünün özgün görünümüne uygun bir reklam filmi için preset seçin.",
+        "description": "Kampanyanızın görsel dilini seçin.",
         "preset": "Video preseti",
         "shotMode": "Çekim yapısı",
         "single": "Tek çekim",
@@ -749,29 +801,135 @@
         "presets": {
           "luxury-fashion-film": {
             "title": "Luxury Fashion Film",
-            "description": "Ölçülü editoryal kadraj, yumuşak vurgular ve sakin bir kampanya finali."
+            "description": "Ölçülü editoryal kadraj, yumuşak vurgular ve sakin bir kampanya finali.",
+            "caption": "Editoryal ve sinematik"
           },
           "macro-detail-reveal": {
             "title": "Macro Detail Reveal",
-            "description": "Görünür malzeme ve işçiliğe kontrollü bir yakın bakış."
+            "description": "Görünür malzeme ve işçiliğe kontrollü bir yakın bakış.",
+            "caption": "Doku ve işçilik"
           },
           "minimal-studio": {
             "title": "Minimal Studio",
-            "description": "Dengeli boşluk ve sabit ışıkla ürünü öne çıkaran durağan kadraj."
+            "description": "Dengeli boşluk ve sabit ışıkla ürünü öne çıkaran durağan kadraj.",
+            "caption": "Sade ve ürün odaklı"
+          },
+          "floating-fashion": {
+            "title": "Süzülen Moda",
+            "description": "Kaynak silüeti koruyan hafif bir yükseliş hissi.",
+            "caption": "Hafif silüet"
+          },
+          "precision-macro": {
+            "title": "Hassas Makro",
+            "description": "Görünür küçük ayrıntılara ölçülü, net bir bakış.",
+            "caption": "Hassas ayrıntılar"
+          },
+          "glass-reflection": {
+            "title": "Cam ve Yansıma",
+            "description": "Doğrulanmış yüzey üzerinde yumuşak bir ışık gezintisi.",
+            "caption": "Işık ve yüzey"
+          },
+          "product-spotlight": {
+            "title": "Ürün Spotu",
+            "description": "Formu ışıkla öne çıkaran kontrollü bir sunum.",
+            "caption": "Kontrollü ışık"
+          },
+          "elegant-orbit": {
+            "title": "Zarif Yörünge",
+            "description": "Tam tur yerine görünür yüzde kısa yanal bir gezinti.",
+            "caption": "Sınırlı yanal hareket"
+          },
+          "cinematic-hero": {
+            "title": "Sinematik Ürün",
+            "description": "Dramatik bir girişten güçlü bir kampanya finaline.",
+            "caption": "Güçlü kampanya finali"
+          },
+          "material-detail": {
+            "title": "Yüzey ve Doku",
+            "description": "Malzeme varsaymadan mevcut yüzey dokusunu hissettirir.",
+            "caption": "Dokusal yakın bakış"
+          },
+          "macro-stitching": {
+            "title": "Makro Dikiş",
+            "description": "Görünür dikiş ve birleşim çizgilerini takip eder.",
+            "caption": "Görünür işçilik"
+          },
+          "fabric-motion": {
+            "title": "Kumaş Ritmi",
+            "description": "Mevcut dökümü koruyan ışık ve kamera ritmi.",
+            "caption": "Döküm ve ışık"
+          },
+          "label-reveal": {
+            "title": "Etiket Tanıtımı",
+            "description": "Görünür özgün etiketi ürünün bütünüyle ilişkilendirir.",
+            "caption": "Özgün marka alanı"
+          },
+          "dramatic-backlight": {
+            "title": "Dramatik Kontur",
+            "description": "Işıkla belirginleşen silüet; şeffaflık varsayılmaz.",
+            "caption": "Belirgin konturlar"
+          },
+          "cinematic-dial": {
+            "title": "Sinematik Kadran",
+            "description": "Görünür kadran düzeninden tam saat görünümüne.",
+            "caption": "Kadran ve düzen"
+          },
+          "metallic-light-sweep": {
+            "title": "Yüzeyde Işık",
+            "description": "Mevcut yüzeyde ilerleyen kontrollü bir ışık şeridi.",
+            "caption": "Gezinen ışık şeridi"
+          },
+          "hardware-reveal": {
+            "title": "Aksam Detayı",
+            "description": "Görünür bağlantı ve aksamı açmadan inceler.",
+            "caption": "Bağlantı ve aksam"
+          },
+          "floating-accessory": {
+            "title": "Süzülen Aksesuar",
+            "description": "Kaynak yönünü koruyan hafif ve dengeli bir sunum.",
+            "caption": "Dengeli yükseliş hissi"
+          },
+          "sneaker-hero": {
+            "title": "Ayakkabı Sahnesi",
+            "description": "Gerçek silüeti ve görünür detaylarıyla grafik bir sunum.",
+            "caption": "Grafik silüet"
+          },
+          "upholstery-macro": {
+            "title": "Döşeme Detayı",
+            "description": "Doğrulanmış yüzey ve birleşimlere sakin bir yakın bakış.",
+            "caption": "Yüzey ve birleşimler"
+          },
+          "culinary-texture": {
+            "title": "Lezzetin Dokusu",
+            "description": "İçerik veya tazelik iddiası olmadan görünür gıda dokusu.",
+            "caption": "Mevcut yüzey dokusu"
+          },
+          "optical-lines": {
+            "title": "Optik Çizgiler",
+            "description": "Görünür kenarlardan dengeli, simetrik bir finale.",
+            "caption": "Çizgiler ve simetri"
+          },
+          "craftsmanship-study": {
+            "title": "İşçilik İncelemesi",
+            "description": "Üretim hikâyesi uydurmadan bitmiş işçiliği inceler.",
+            "caption": "Bitmiş ürün detayları"
+          },
+          "window-display": {
+            "title": "Vitrin Estetiği",
+            "description": "Yeni mağaza kurmadan kaynak ortamında vitrin estetiği.",
+            "caption": "Kaynak ortamında sunum"
           }
         },
-        "consent": "Bir AI plan isteği için en fazla {cost} USD maliyeti onaylıyorum. Önbellekteki planlar yeni AI isteği başlatmaz.",
-        "unavailable": "AI planlama şu anda kullanılamıyor. AI isteği olmadan koruma odaklı bir plan hazırlayabilirsin.",
+        "automaticPlanning": "AI çekim planı ek kullanıcı ücreti veya ayrı fiyat onayı olmadan hazırlanır. Gerçek video üretimi için fiyat onayı gerekir.",
         "prepare": "AI planı hazırla",
-        "planHeading": "Çekim planı",
+        "planHeading": "AI çekim planı",
         "preparing": "Plan hazırlanıyor…",
-        "fallbackButton": "Koruma odaklı planı kullan",
         "separateApproval": "Planlama video üretmez. Video üretimi için ayrıca maliyet onayı gerekir.",
         "aiPlan": "AI yaratıcı planı",
-        "fallbackPlan": "Koruma odaklı yaratıcı plan",
-        "fallbackNotice": "Koruma odaklı preset planı gösteriliyor. İsteğini plana eklemez veya üründe yeni detay varsaymaz.",
-        "shot": "Çekim {number} · {seconds} sn",
-        "fullPlan": "Çekim yönergelerinin tamamını göster",
+        "fallbackPlan": "Temel preset planı",
+        "fallbackNotice": "AI Director planı tamamlayamadı. Bu temel plan doğrulanmış ürün bilgisi, preset ve güvenle uygulanabilen hareket isteğini kullanır; AI yaratıcı yorumu içermez.",
+        "shot": "Sahne {number} · {seconds} sn",
+        "fullPlan": "Teknik çekim yönergeleri",
         "camera": "Kamera",
         "lighting": "Işık",
         "composition": "Kompozisyon",
@@ -779,12 +937,75 @@
         "pace": "Tempo",
         "focus": "Ürün detayı",
         "review": "Üretimden önce planı incele. Kaynak, istek veya ayarlar değişirse yeni plan hazırlamalısın.",
-        "planRequired": "Üretimden önce çekim planını hazırla.",
-          "planLocked": "Önceki video isteği tamamlanmadı veya durumu doğrulanıyor. Yeni plan için ayrı bir video isteği oluşturun.",
-          "planNeedsSource": "Plan hazırlamak için önce bir kaynak görsel seçin.",
-          "planNeedsPreparedSource": "Plan hazırlamak için kaynak görselin hazırlanması gerekiyor.",
-          "planNeedsReadyDraft": "Plan hazırlamak için video ayarlarını tamamlayın.",
-        "error": "Plan hazırlanamadı veya onayın süresi doldu. Ayarları kontrol edip koruma odaklı planı dene."
+        "planRequired": "Planınız hazır olduğunda sahneler burada görünecek.",
+        "planLocked": "Önceki video isteği tamamlanmadı veya durumu doğrulanıyor. Yeni plan için ayrı bir video isteği oluşturun.",
+        "planNeedsSource": "Plan hazırlamak için önce bir kaynak görsel seçin.",
+        "planNeedsPreparedSource": "Plan hazırlamak için kaynak görselin hazırlanması gerekiyor.",
+        "planNeedsReadyDraft": "Plan hazırlamak için video ayarlarını tamamlayın.",
+        "error": "Plan hazırlanamadı. Ayarları kontrol edip yeniden deneyin.",
+        "styleHeading": "Video stili",
+        "planDescription": "Sahneleri hazırlayın ve üretimden önce inceleyin. Planlama video üretimini başlatmaz.",
+        "planReady": "Plan hazır · {count} sahne",
+        "prepareAgain": "AI planını yeniden hazırla",
+        "intent": "Yaratıcı yorum",
+        "purpose": "Görsel amaç",
+        "purposes": {
+          "hero-reveal": "Ürün tanıtımı",
+          "macro-detail": "Makro detay",
+          "material-study": "Malzeme incelemesi",
+          "controlled-motion": "Kontrollü hareket",
+          "lighting-reveal": "Işıkla ortaya çıkarma",
+          "final-hero": "Final ürün çekimi"
+        },
+        "library": {
+          "filter": "Stilleri keşfet",
+          "recommended": "Önerilen stiller",
+          "all": "Tüm stiller",
+          "recommendedBadge": "Önerilen",
+          "previous": "Önceki",
+          "next": "Sonraki",
+          "count": "{start}–{end} / {total}",
+          "selected": "Seçili stil: {name}",
+          "unknown": "Doğrulanmış kategori yok. Evrensel stiller öneriliyor; kategori filtresi yalnızca keşif içindir.",
+          "profile": "Mevcut ürün profiline göre öneri: {category}. İsterseniz başka bir stil seçebilirsiniz.",
+          "analysis": {
+            "verified": "Ürün görseli analiz edildi; öneriler doğrulanmış kategori ve görünür detaylara göre güncellendi.",
+            "not_analyzed": "Kategori henüz analiz edilmedi. Çekim planı hazırlanırken, sunucu kotası uygunsa ürün analizi yapılır.",
+            "unsupported": "Görselden desteklenen bir ürün kategorisi doğrulanamadı; evrensel stiller kullanılabilir.",
+            "quota_limited": "Ürün analizi sunucu kotasına takıldı. Görsel AI ile analiz edilmiş sayılmıyor.",
+            "budget_unavailable": "Ürün analizi için sunucu kota kontrolüne ulaşılamadı. Görsel AI ile analiz edilmiş sayılmıyor; daha sonra yeniden deneyin.",
+            "configuration_error": "Ürün analizi sunucu yapılandırması nedeniyle başlatılamadı. Görsel AI ile analiz edilmiş sayılmıyor.",
+            "provider_failed": "Ürün analizi tamamlanamadı. Görsel AI ile analiz edilmiş sayılmıyor.",
+            "pending": "Bu görsel için ürün analizi zaten sürüyor; tekrar analiz başlatılmadı."
+          },
+          "safeHeading": "Kaynak görsele göre uyarlama",
+          "noDetail": "Bu stilin özel detayı henüz doğrulanmadı. Görünür form üzerinden güvenli bir alternatif planlanır.",
+          "categories": {
+            "apparel": "Giyim",
+            "bags": "Çanta",
+            "watches": "Saat",
+            "headwear": "Şapka",
+            "eyewear": "Gözlük",
+            "jewelry": "Takı",
+            "cosmetics": "Kozmetik ve parfüm",
+            "footwear": "Ayakkabı",
+            "furniture": "Mobilya",
+            "food": "Yiyecek",
+            "packaged-food": "Paketli gıda",
+            "electronics": "Elektronik"
+          },
+          "risks": {
+            "unseen-surfaces": "Tek kare arka yüzeyi doğrulamaz. Tam tur yerine görünür yüzde kısa yanal hareket kullanılır.",
+            "deformation": "Ürün formu korunur. Riskli esneme ve rüzgâr yerine ışık veya kamera hareketi kullanılır.",
+            "reflection": "Yüzey görünümü ve yazılar korunur; yeni cam veya yansıma ayrıntısı varsayılmaz.",
+            "micro-detail": "Yalnız kaynakta seçilebilen detay yakınlaştırılır; yetersizse daha geniş kadraj kullanılır.",
+            "unverified-process": "Üretim geçmişi ve iç parçalar doğrulanmaz. Atölye veya parçalarına ayırma yerine bitmiş görünür işçilik incelenir.",
+            "new-setting": "Yeni mağaza, stant veya manken eklenmez; estetik kaynak ortamına uyarlanır.",
+            "mechanism": "Görünür kapak veya bağlantı açılmaz, püskürtülmez veya çalıştırılmaz.",
+            "interaction": "Yeni el veya kişi eklenmez. Ürün kamera ile incelenir.",
+            "layout-change": "Yatay bir kare dikey veya havada bir görünümü doğrulamaz. Kaynak yönü korunarak yükseliş hissi verilir."
+          }
+        }
       },
       "preservation": {
         "quoteLoading": "Maliyet ve kullanılabilirlik kontrol ediliyor…",
@@ -802,9 +1023,9 @@
         "unverifiedHint": "Bu metin kullanıcı beyanıdır; görselden doğrulanmış bilgi sayılmaz.",
         "clearRegion": "Seçimi kaldır",
         "analysisOptIn": "Üretim sonrası sadakat kontrolü",
-        "analysisCost": "Model: {model} · analiz üst tahmini: ${cost} USD",
-        "analysisDisabled": "Ücretli analiz sunucuda etkin değil veya fiyat/şema doğrulanamadı.",
-        "analysisConsent": "Seçerseniz kaynak ve örnek kareler OpenAI'a gönderilir; gösterilen ek maliyeti onaylamış olursunuz. Belirsiz istek otomatik tekrarlanmaz.",
+        "analysisCost": "Video sadakat analizi KLAY tarafından yönetilir; ayrıca kullanıcı ücreti yansıtılmaz.",
+        "analysisDisabled": "Video sadakat analizi şu anda kullanılamıyor.",
+        "analysisConsent": "Seçerseniz kaynak görsel ve örnek kareler ürün sadakati incelemesi için OpenAI tarafından işlenir. Belirsiz istek otomatik tekrarlanmaz.",
         "combinedQuote": "Kling: ${generation} · Analiz: ${analysis} · Toplam üst tahmin: ${total} USD"
       },
       "preparation": {
@@ -817,7 +1038,7 @@
         "unsafeMotion": "Bu hareket ürünün görünmeyen yüzlerini veya şeklini değiştirebilir. Hafif kamera hareketi seçin.",
         "quote": "{model} · {seconds} sn · Tahmini üst sınır: ${cost} USD",
         "quoteUnavailable": "Doğrulanmış maliyet alınamadı. Üretim kapalı.",
-        "prepareQuote": "Güncel maliyeti doğrula",
+        "prepareQuote": "Video teklifini doğrula",
         "checkingPrevious": "Önceki video isteğinin durumu doğrulanıyor. Yeni üretim güvenli biçimde devam edebilmek için bu kontrolü bekliyor.",
         "newSubmissionFirst": "Önceki video isteği korunuyor. Yeni üretime geçmek için ayrı bir video isteği oluştur.",
         "videoUnavailable": "Video üretimi şu anda bu hesap veya seçenekler için etkin değil.",
@@ -835,8 +1056,16 @@
         "confirmCost": "Bu video için en fazla {cost} USD maliyeti onaylıyorum.",
         "newSubmission": "Yeni video isteği oluştur",
         "recoveryStorage": "İstek güvenli biçimde geri yüklenemiyor. Video Library durumunu kontrol edin.",
-        "submitting": "Kling'e gönderiliyor…",
+        "submitting": "Video isteği gönderiliyor…",
         "approval": "Bu video isteği için gerekli onay doğrulanamadı. Üretim başlatılmadı.",
+        "quote_not_allowlisted": "Bu hesap video üretimine erişemiyor.",
+        "quote_invalid_draft": "Video seçenekleri geçersiz. Seçimlerinizi kontrol edin.",
+        "quote_unsafe_motion": "Seçilen hareket ürün koruma kurallarına uygun değil.",
+        "quote_already_used": "Bu video isteği daha önce kullanıldı. Yeni bir istek oluşturun.",
+        "quote_policy_denied": "Video üretimi mevcut harcama veya seçenek politikasıyla kapalı.",
+        "quote_snapshot_unavailable": "Görsel veya yönetmen planı doğrulanamadı. Planı yeniden hazırlayın.",
+        "quote_quote_unavailable": "Güncel video fiyatı alınamadı. Daha sonra tekrar deneyin.",
+        "quote_repository_unavailable": "Video isteğinin geçmişi doğrulanamadı. Daha sonra tekrar deneyin.",
         "budgetLimit": "Kullanılabilir video bütçesi sınırı dolu; ayrılmış önceki tutarlar hesaba katılıyor. Yeni üretim başlatılmadı. Rezervasyon sonucu netleşmeden yeniden göndermeyin.",
         "billingUnavailable": "Video bütçesi doğrulanamadı. Yeni üretim başlatılmadı; biraz sonra tekrar deneyin.",
         "sourceUnavailable": "Kaynak görsele erişilemedi. Üretim başlatılmadı; görseli yeniden seçin.",
@@ -846,34 +1075,67 @@
         "failed": "Video tamamlanamadı. Video Library durumunu kontrol edin; ücretli isteği tekrar göndermeyin.",
         "sending": "İstek Kling'e gönderiliyor. Bu sırada tekrar tıklamanız gerekmez.",
         "queued": "İstek Kling'e ulaştı; kuyrukta sıra bekliyor.",
-        "processing": "Kling videonuzu işliyor. Durum otomatik güncellenir.",
+        "processing": "Ürün görseliniz videoya dönüşüyor. Durum otomatik güncellenir.",
         "finalizing": "Video güvenli depoya kaydedildi; son kontroller yapılıyor.",
+        "storageRetry": "Kling tamamlandı ancak video kaydedilemedi. Yeni üretim isteği gönderilmeden kayıt otomatik yeniden denenecek.",
+        "storageFailed": "Kling tamamlandı ancak tekrarlanan denemelerde video kaydedilemedi. Yeni bir ücretli isteği onaylamadan önce Video Library durumunu kontrol edin.",
         "ready": "Videonuz hazır.",
         "unknown": "İstek durumu henüz doğrulanamıyor. Yeni bir üretim başlatmayın; durum kontrolü sürecek.",
         "restoreUnavailable": "Önceki isteğin durumu doğrulanamıyor. Video Kütüphanesi'ni kontrol edin; yeni bir istek ayrı maliyet oluşturabilir.",
         "submissionUsed": "Bu istek kimliği kullanıldı. Video Kütüphanesi'ni kontrol edin veya yeni bir istek oluşturun.",
         "progressTitle": "Üretim durumu",
-        "steps": { "source": "Kaynak görsel hazır", "request": "İstek gönderildi", "queued": "Kling kuyruğunda", "processing": "Kling işliyor", "storage": "Video güvenli şekilde kaydediliyor", "saved": "Video güvenli depoya kaydedildi", "ready": "Video hazır" },
+        "progressHeadings": {
+          "loading": "Kaldığınız yerden devam",
+          "submitting": "Sahne hazırlanıyor",
+          "queued": "Videonuz sırasını bekliyor",
+          "processing": "Görseliniz harekete geçiyor",
+          "finalizing": "Son dokunuşlar yapılıyor",
+          "ready": "Sahne artık sizin",
+          "attention": "Durumu birlikte takip edelim"
+        },
+        "progressLabels": {
+          "active": "Devam ediyor",
+          "ready": "Tamamlandı",
+          "attention": "Kontrol gerekli"
+        },
+        "stepStates": {
+          "complete": "Tamamlandı",
+          "current": "Şu an bu aşamada",
+          "pending": "Sıradaki adım",
+          "paused": "Durum bekleniyor"
+        },
+        "progressLibraryHint": "Sonucu video kütüphanenizden takip edebilirsiniz.",
+        "steps": {
+          "source": "Kaynak görsel hazır",
+          "request": "İstek gönderildi",
+          "queued": "Üretim kuyruğunda",
+          "processing": "Video oluşturuluyor",
+          "processed": "Video işlendi",
+          "storage": "Güvenli kayıt",
+          "saved": "Video kaydedildi",
+          "ready": "Video hazır"
+        },
         "watchVideo": "Videoyu İzle",
         "libraryLink": "Video Kütüphanesi",
         "pollError": "Durum bilgisi geçici olarak alınamıyor. Son doğrulanan aşama korunuyor; sorgulama yeniden sürecek.",
         "download": "MP4 indir",
-        "openVideo": "Videoyu aç"
+        "openVideo": "Videoyu aç",
+        "playbackError": "Video önizlemesi yüklenemedi. Videoyu kütüphaneden açabilirsiniz."
       },
       "metadataTitle": "Video Studio",
       "metadataDescription": "Ürün görsellerinden video hazırlamak için Klay AI Video Studio.",
       "title": "Video Studio",
-      "description": "Kaynağınızı ve hareket yönünüzü hazırlayın.",
+      "description": "Ürün görselinizden kampanyaya hazır bir videoya.",
       "generate": "Video Oluştur",
       "source": {
-        "heading": "Kaynak görsel",
-        "description": "Videonun başlangıç karesi olarak kullanılacak ürün görselini seçin.",
-        "upload": "Cihazdan görsel seç",
+        "heading": "Ürün görseli",
+        "description": "Bir ürün görseli yükleyin veya kütüphanenizden seçin.",
+        "upload": "Görsel yükle",
         "replace": "Değiştir",
         "remove": "Kaldır",
         "chooseLibrary": "Klay Kütüphanesi'nden seç",
         "closeLibrary": "Kütüphaneyi kapat",
-        "dropLabel": "JPEG/PNG · En fazla 20 MB · Seçilen video oranına otomatik hazırlanır",
+        "dropLabel": "Sürükleyip bırakın · JPEG / PNG · En fazla 20 MB",
         "selectedAlt": "Seçilen kaynak ürün görseli",
         "localLabel": "Yerel görsel",
         "libraryLabel": "Klay Kütüphanesi",
@@ -907,38 +1169,71 @@
         "heading": "Kamera hareketi",
         "description": "Tercihiniz gelecekte model yeteneklerine göre uyarlanacak.",
         "options": {
-          "auto": { "label": "Otomatik", "description": "Sahneye uygun hareket tercih edilir." },
-          "dolly-in": { "label": "Yaklaş", "description": "Kamera ürüne doğru ilerler." },
-          "dolly-out": { "label": "Uzaklaş", "description": "Kamera üründen geriye açılır." },
-          "orbit": { "label": "Yörünge", "description": "Kamera ürünün çevresinde hareket eder." },
-          "pan-left": { "label": "Sola kaydır", "description": "Kadraj yatay olarak sola ilerler." },
-          "pan-right": { "label": "Sağa kaydır", "description": "Kadraj yatay olarak sağa ilerler." },
-          "static": { "label": "Sabit", "description": "Kamera konumu korunur." }
+          "auto": {
+            "label": "Otomatik",
+            "description": "Sahneye uygun hareket tercih edilir."
+          },
+          "dolly-in": {
+            "label": "Yaklaş",
+            "description": "Kamera ürüne doğru ilerler."
+          },
+          "dolly-out": {
+            "label": "Uzaklaş",
+            "description": "Kamera üründen geriye açılır."
+          },
+          "orbit": {
+            "label": "Yörünge",
+            "description": "Kamera ürünün çevresinde hareket eder."
+          },
+          "pan-left": {
+            "label": "Sola kaydır",
+            "description": "Kadraj yatay olarak sola ilerler."
+          },
+          "pan-right": {
+            "label": "Sağa kaydır",
+            "description": "Kadraj yatay olarak sağa ilerler."
+          },
+          "static": {
+            "label": "Sabit",
+            "description": "Kamera konumu korunur."
+          }
         }
       },
       "quality": {
-        "heading": "Üretim kalitesi",
+        "heading": "Model",
         "proLocked": "Growth veya üzeri plan gerekir. Pro fiyatlandırması henüz kullanılamıyor.",
         "options": {
-          "standard": { "label": "Kling 3.0 Standard", "description": "Dengeli ürün videosu üretimi." },
-          "pro": { "label": "Kling 3.0 Pro", "description": "Premium ürün videosu üretimi." },
-          "auto": { "label": "Otomatik", "description": "Geçmiş seçim." },
-          "best": { "label": "En iyi kalite", "description": "Geçmiş seçim." }
+          "standard": {
+            "label": "Standard",
+            "description": "Dengeli ürün videosu üretimi."
+          },
+          "pro": {
+            "label": "Pro",
+            "description": "Premium ürün videosu üretimi."
+          },
+          "auto": {
+            "label": "Otomatik",
+            "description": "Geçmiş seçim."
+          },
+          "best": {
+            "label": "En iyi kalite",
+            "description": "Geçmiş seçim."
+          }
         }
       },
       "output": {
-        "heading": "Çıktı ayarları",
-        "aspectRatio": "En boy oranı",
+        "heading": "Video ayarları",
+        "aspectRatio": "Format",
         "duration": "Süre",
         "seconds": "{seconds} saniye"
       },
       "canvas": {
-        "previewLabel": "Video önizleme alanı",
-        "draftLabel": "Taslak çıktı çerçevesi",
+        "previewLabel": "Önizleme",
+        "draftLabel": "Kaynak kare",
         "libraryLink": "Video Kütüphanesi",
         "sourceAlt": "Video için seçilen kaynak kare",
-        "imageEmptyTitle": "Kaynak karenizi seçin",
-        "imageEmptyDescription": "Seçilen görsel, kırpılmadan taslak çıktı çerçevesinde gösterilecek."
+        "imageEmptyTitle": "Ürününüzü harekete geçirin",
+        "imageEmptyDescription": "Bir görselle başlayın. Stilini seçin, çekim planını inceleyin ve videonuzu oluşturun."
       },
       "generations": {
         "title": "Üretimler",
@@ -948,7 +1243,7 @@
       "validation": {
         "source-required": "Devam etmek için bir kaynak görsel seçin.",
         "prompt-required": "Devam etmek için kısa bir hareket açıklaması yazın.",
-        "invalid-source-type": "JPEG veya PNG biçiminde bir görsel seçin.",
+        "invalid-source-type": "JPEG, PNG veya WebP biçiminde bir görsel seçin.",
         "source-too-large": "Görsel 20 MB veya daha küçük olmalı.",
         "source-unreadable": "Bu görsel tarayıcıda açılamadı. Başka bir dosya deneyin.",
         "source-dimensions-unsupported": "Görsel en fazla 40 megapiksel olabilir.",
@@ -958,6 +1253,62 @@
         "viewLabel": "Video Studio görünümü",
         "controls": "Kontroller",
         "preview": "Önizleme"
+      },
+      "layout": {
+        "eyebrow": "Yaratıcı çalışma alanı",
+        "approvalHeading": "Onayla ve oluştur",
+        "estimatedCost": "Tahmini video maliyeti",
+        "verifiedCost": "Doğrulanmış video teklifi",
+        "usd": "{cost} USD",
+        "costEstimateHint": "Kesin teklif çekim planından sonra doğrulanır. İsteğe bağlı planlama ve analiz ayrıca ücretlendirilir.",
+        "costApprovalHint": "Üretim bu tutarı onayladığınızda başlar. Seçili analiz ayrıca ücretlendirilir.",
+        "styleExample": "Stil örneği",
+        "exampleAlt": "Mimari bir fonda mavi ceketli modelin örnek kampanya görseli",
+        "guideSource": "Görselini seç",
+        "guideStyle": "Stilini belirle",
+        "guideCreate": "Planla ve oluştur",
+        "previewHint": "Bu alan kaynak karenizi gösterir. Video hazır olduğunda sonucu burada izleyebilirsiniz."
+      },
+      "references": {
+        "heading": "Ürün referansları",
+        "description": "İsteğe bağlı, en fazla 3 fotoğraf. Öneriler dışında aynı ürüne ait kendi detayınızı da yükleyebilirsiniz.",
+        "conditional": "Yalnız ürününüzde varsa; bu alan farklı bir detayı da kabul eder.",
+        "upload": "Fotoğraf yükle",
+        "uploadFor": "{type} referansı yükle",
+        "fileHint": "JPEG veya PNG · En fazla 10 MB",
+        "added": "Referans eklendi",
+        "libraryPrompt": "Ürün görselini seçin",
+        "libraryEmpty": "Kütüphanede seçilebilir görsel yok.",
+        "replace": "Değiştir",
+        "remove": "Kaldır",
+        "library": "Kütüphaneden seç",
+        "close": "Kapat",
+        "preview": "Ek ürün referansı",
+        "loading": "Referans hazırlanıyor…",
+        "error": "Referans hazırlanamadı. JPEG/PNG, en fazla 10 MB kullanın.",
+        "analysisNotice": "Referans incelemesi ücret onaylı AI Director ile yapılır. Ücretsiz planda yeni detay kanıtı veya Kling referansı olarak kullanılmaz.",
+        "matched": "Kling’e gönderilecek",
+        "conflict": "Ürün eşleşmedi; gönderilmeyecek",
+        "uncertain": "Belirsiz; gönderilmeyecek",
+        "suggestions": {
+          "texture": "Yüzey / kumaş detayı",
+          "construction": "Düğme, kemer veya birleşim detayı",
+          "side": "Yan görünüm",
+          "dial": "Kadran detayı",
+          "case": "Yan kasa",
+          "strap": "Kordon",
+          "label": "Logo / etiket",
+          "cap": "Kapak",
+          "hardware": "Toka / fermuar / aksam",
+          "sole": "Taban",
+          "craft": "Taş / işçilik detayı",
+          "angle": "Farklı açı",
+          "controls": "Görünür kontroller",
+          "frame": "Çerçeve",
+          "hinge": "Menteşe",
+          "packaging": "Ambalaj",
+          "detail": "Görünür detay"
+        }
       }
     },
     "videoLibrary": {
@@ -970,9 +1321,18 @@
       "newVideo": "Yeni Video",
       "galleryLabel": "Üretilen videolar",
       "resultCount": "{count} video",
-      "modes": { "image": "Görselden Videoya", "text": "Arşivlenmiş video" },
-      "filters": { "all": "Tümü", "image": "Görselden Videoya" },
-      "sort": { "newest": "Önce en yeni", "oldest": "Önce en eski" },
+      "modes": {
+        "image": "Görselden Videoya",
+        "text": "Arşivlenmiş video"
+      },
+      "filters": {
+        "all": "Tümü",
+        "image": "Görselden Videoya"
+      },
+      "sort": {
+        "newest": "Önce en yeni",
+        "oldest": "Önce en eski"
+      },
       "status": {
         "queued": "Sırada",
         "processing": "İşleniyor",
@@ -986,6 +1346,16 @@
         "searchLabel": "Videolarda ara",
         "searchPlaceholder": "Video başlığıyla ara",
         "sortLabel": "Sırala"
+      },
+      "deletion": {
+        "delete": "Sil",
+        "label": "Videoyu sil: {title}",
+        "title": "Video silinsin mi?",
+        "description": "“{title}” videosu ve video dosyası kalıcı olarak silinecek. Bu işlem geri alınamaz.",
+        "cancel": "Vazgeç",
+        "deleting": "Siliniyor…",
+        "error": "Video silinemedi. Lütfen tekrar deneyin.",
+        "busy": "Üretim veya işlem kontrolü sürüyor. Tamamlandıktan sonra silebilirsiniz."
       },
       "card": {
         "open": "Ayrıntıları aç",
@@ -1020,7 +1390,13 @@
           "label": "Cinsiyet",
           "helper": "İsteğe bağlıdır. Cinsiyet ve dışa yansıyan ifade, profilin farklı yönlerini tanımlar.",
           "clear": "Seçimi temizle",
-          "options": {"female": "Kadın", "male": "Erkek", "non_binary": "Non-binary", "androgynous": "Androjen", "prefer_not_to_say": "Belirtmek istemiyorum"}
+          "options": {
+            "female": "Kadın",
+            "male": "Erkek",
+            "non_binary": "Non-binary",
+            "androgynous": "Androjen",
+            "prefer_not_to_say": "Belirtmek istemiyorum"
+          }
         },
         "liveSummary": "Canlı profil özeti",
         "notSet": "Henüz seçilmedi",
@@ -1029,14 +1405,238 @@
         "ready": "Profilin taslak olarak kaydedilmeye hazır.",
         "incomplete": "Taslağını kaydetmek için kimlik, görünüm ve görsel stil alanlarını tamamla.",
         "unavailable": "Kaydettikten sonra profili açıp portre üretimini başlatın. Kimlik onayı ve model kullanımı henüz açık değil.",
-        "stageStates": {"current": "Mevcut adım", "completed": "Tamamlandı", "available": "Kullanılabilir", "unavailable": "Kullanılamıyor"}
+        "stageStates": {
+          "current": "Mevcut adım",
+          "completed": "Tamamlandı",
+          "available": "Kullanılabilir",
+          "unavailable": "Kullanılamıyor"
+        }
       },
-      "metadataTitle": "AI Model Studio", "metadataDescription": "Gelecekteki kampanyalar için kurgusal yetişkin model kimliklerini tanımlayın ve hazırlayın.",
-      "library": { "eyebrow": "MODEL KÜTÜPHANESİ", "title": "AI Model Studio", "description": "Gelecekteki kampanyalar için kurgusal yetişkin model kimlikleri tanımlayın. Onaylı referanslar ve tekrar kullanılabilir kimlikler burada görünecek.", "create": "Model oluştur", "toolbarLabel": "Model kütüphanesi kontrolleri", "searchLabel": "Modellerde ara", "searchPlaceholder": "Model adına göre ara", "empty": { "title": "Henüz model yok", "description": "Onaylı kurgusal model kimlikleriniz burada görünecek. Bir görünüm profili tanımlayarak başlayın.", "action": "Model oluştur" }, "noResults": { "title": "Aramanızla eşleşen model yok", "description": "“{query}” ile eşleşen kayıtlı model bulunamadı. Başka bir ad deneyin veya aramayı temizleyin.", "action": "Aramayı temizle" } },
-      "create": { "eyebrow": "KURGUSAL YETİŞKİN MODEL", "title": "Model profili tanımlayın", "description": "Gelecekteki kampanyalarda sabit kalması gereken kimlik özelliklerini belirleyin. Adayları incelemeden önce taslak profili kaydedin. Üretim henüz kullanılamıyor.", "stepsLabel": "Model oluşturma aşamaları", "steps": { "define": "Görünümü tanımla", "review": "Taslağı kaydet", "generate": "Aday üret", "select": "Adayları incele", "approve": "Kimliği onayla", "use": "Onaylı modeli kullan" }, "identityLegend": "Görünüm profili", "identityHelper": "Bu özellikler gelecekte kalıcı olacak kurgusal bir kimliği tanımlar. Tüm profiller yetişkinleri temsil eder.", "choose": "Seçin", "notesLegend": "Yaratıcı notlar", "notesHelper": "İsteğe bağlı notlar, gelecekteki kimlik brief'ini yönlendirir. Gerçek bir kişinin benzerliğini eklemeyin.", "fields": { "name": { "label": "Çalışma adı", "placeholder": "Örneğin, Stüdyo modeli 01" }, "presentation": { "label": "Sunum", "options": ["Feminen", "Maskülen", "Androjen"] }, "ageRange": { "label": "Yetişkin yaş aralığı", "options": ["18–24", "25–34", "35–44", "45–54", "55+"] }, "skinTone": { "label": "Cilt tonu", "options": ["Açık", "Orta", "Koyu"] }, "hairColor": { "label": "Saç rengi", "options": ["Siyah", "Kahverengi", "Sarı", "Kızıl", "Gri"] }, "hairstyle": { "label": "Saç stili", "options": ["Kısa", "Orta uzunluk", "Uzun", "Kıvırcık", "Sık kıvırcık"] }, "eyeColor": { "label": "Göz rengi", "options": ["Kahverengi", "Mavi", "Yeşil", "Ela", "Gri"] }, "silhouette": { "label": "Vücut / silüet", "options": ["Narin", "Dengeli", "Atletik", "Uzun"] }, "visualStyle": { "label": "Görsel stil", "options": ["Doğal editorial", "Rafine stüdyo", "Çağdaş kampanya"] }, "notes": { "label": "İsteğe bağlı yaratıcı notlar", "placeholder": "Yalnızca kimlik için önemli, kalıcı görünüm detaylarını yazın." } }, "guidance": { "title": "Kimliği ayrı tutun", "identity": { "title": "Kimlik profili", "description": "Görünüm özellikleri ve onaylı referanslar gelecekteki model kimliğini tanımlar." }, "scene": { "title": "Kampanya stili", "description": "Kıyafet, poz, ışık ve arka plan her çekime aittir; kimliği yeniden tanımlamaz." } }, "safety": "Yalnızca kurgusal yetişkin modeller. Gerçek kişi benzerlikleri, yüklemeler ve ünlü taklitleri kullanılamaz.", "reviewTitle": "Üretim henüz bağlı değil", "reviewReady": "Profiliniz tamamlandı; sonraki aşama kullanıma açıldığında gözden geçirilebilir.", "reviewIncomplete": "Profili gözden geçirmeye hazırlamak için gerekli görünüm alanlarını tamamlayın.", "generationUnavailable": "Aday üretimi planlandı", "unavailableHelper": "Aday üretimi ve kimlik onayı kullanıma kapalıdır. Taslak kaydı için Model Studio veritabanı şeması gerekir." }
+      "metadataTitle": "AI Model Studio",
+      "metadataDescription": "Gelecekteki kampanyalar için kurgusal yetişkin model kimliklerini tanımlayın ve hazırlayın.",
+      "library": {
+        "eyebrow": "MODEL KÜTÜPHANESİ",
+        "title": "AI Model Studio",
+        "description": "Gelecekteki kampanyalar için kurgusal yetişkin model kimlikleri tanımlayın. Onaylı referanslar ve tekrar kullanılabilir kimlikler burada görünecek.",
+        "create": "Model oluştur",
+        "toolbarLabel": "Model kütüphanesi kontrolleri",
+        "searchLabel": "Modellerde ara",
+        "searchPlaceholder": "Model adına göre ara",
+        "empty": {
+          "title": "Henüz model yok",
+          "description": "Onaylı kurgusal model kimlikleriniz burada görünecek. Bir görünüm profili tanımlayarak başlayın.",
+          "action": "Model oluştur"
+        },
+        "noResults": {
+          "title": "Aramanızla eşleşen model yok",
+          "description": "“{query}” ile eşleşen kayıtlı model bulunamadı. Başka bir ad deneyin veya aramayı temizleyin.",
+          "action": "Aramayı temizle"
+        }
+      },
+      "create": {
+        "eyebrow": "KURGUSAL YETİŞKİN MODEL",
+        "title": "Model profili tanımlayın",
+        "description": "Gelecekteki kampanyalarda sabit kalması gereken kimlik özelliklerini belirleyin. Adayları incelemeden önce taslak profili kaydedin. Üretim henüz kullanılamıyor.",
+        "stepsLabel": "Model oluşturma aşamaları",
+        "steps": {
+          "define": "Görünümü tanımla",
+          "review": "Taslağı kaydet",
+          "generate": "Aday üret",
+          "select": "Adayları incele",
+          "approve": "Kimliği onayla",
+          "use": "Onaylı modeli kullan"
+        },
+        "identityLegend": "Görünüm profili",
+        "identityHelper": "Bu özellikler gelecekte kalıcı olacak kurgusal bir kimliği tanımlar. Tüm profiller yetişkinleri temsil eder.",
+        "choose": "Seçin",
+        "notesLegend": "Yaratıcı notlar",
+        "notesHelper": "İsteğe bağlı notlar, gelecekteki kimlik brief'ini yönlendirir. Gerçek bir kişinin benzerliğini eklemeyin.",
+        "fields": {
+          "name": {
+            "label": "Çalışma adı",
+            "placeholder": "Örneğin, Stüdyo modeli 01"
+          },
+          "presentation": {
+            "label": "Sunum",
+            "options": [
+              "Feminen",
+              "Maskülen",
+              "Androjen"
+            ]
+          },
+          "ageRange": {
+            "label": "Yetişkin yaş aralığı",
+            "options": [
+              "18–24",
+              "25–34",
+              "35–44",
+              "45–54",
+              "55+"
+            ]
+          },
+          "skinTone": {
+            "label": "Cilt tonu",
+            "options": [
+              "Açık",
+              "Orta",
+              "Koyu"
+            ]
+          },
+          "hairColor": {
+            "label": "Saç rengi",
+            "options": [
+              "Siyah",
+              "Kahverengi",
+              "Sarı",
+              "Kızıl",
+              "Gri"
+            ]
+          },
+          "hairstyle": {
+            "label": "Saç stili",
+            "options": [
+              "Kısa",
+              "Orta uzunluk",
+              "Uzun",
+              "Kıvırcık",
+              "Sık kıvırcık"
+            ]
+          },
+          "eyeColor": {
+            "label": "Göz rengi",
+            "options": [
+              "Kahverengi",
+              "Mavi",
+              "Yeşil",
+              "Ela",
+              "Gri"
+            ]
+          },
+          "silhouette": {
+            "label": "Vücut / silüet",
+            "options": [
+              "Narin",
+              "Dengeli",
+              "Atletik",
+              "Uzun"
+            ]
+          },
+          "visualStyle": {
+            "label": "Görsel stil",
+            "options": [
+              "Doğal editorial",
+              "Rafine stüdyo",
+              "Çağdaş kampanya"
+            ]
+          },
+          "notes": {
+            "label": "İsteğe bağlı yaratıcı notlar",
+            "placeholder": "Yalnızca kimlik için önemli, kalıcı görünüm detaylarını yazın."
+          }
+        },
+        "guidance": {
+          "title": "Kimliği ayrı tutun",
+          "identity": {
+            "title": "Kimlik profili",
+            "description": "Görünüm özellikleri ve onaylı referanslar gelecekteki model kimliğini tanımlar."
+          },
+          "scene": {
+            "title": "Kampanya stili",
+            "description": "Kıyafet, poz, ışık ve arka plan her çekime aittir; kimliği yeniden tanımlamaz."
+          }
+        },
+        "safety": "Yalnızca kurgusal yetişkin modeller. Gerçek kişi benzerlikleri, yüklemeler ve ünlü taklitleri kullanılamaz.",
+        "reviewTitle": "Üretim henüz bağlı değil",
+        "reviewReady": "Profiliniz tamamlandı; sonraki aşama kullanıma açıldığında gözden geçirilebilir.",
+        "reviewIncomplete": "Profili gözden geçirmeye hazırlamak için gerekli görünüm alanlarını tamamlayın.",
+        "generationUnavailable": "Aday üretimi planlandı",
+        "unavailableHelper": "Aday üretimi ve kimlik onayı kullanıma kapalıdır. Taslak kaydı için Model Studio veritabanı şeması gerekir."
+      }
     },
-    "modelReview": { "generation": {"error":"Üretim tamamlanamadı. Devam etmeden önce iş durumunu kontrol edin.","invalid":"Size ait geçerli bir taslak profil gerekir.","duplicate":"Bir üretim denemesi zaten var. Durumu görmek için sayfayı yenileyin.","success":"Portreniz incelemeye hazır.","pending":"Portre üretiliyor…","savedSettings":"Kaydedilmiş ayarlarla tek portre üretin. Önce değişiklikleri kaydedin. Profil başına tek üretim denemesi yapılabilir.","generate":"Portre üret"}, "eyebrow":"KİMLİK İNCELEMESİ","title":"Aday inceleme","description":"Onay öncesinde kayıtlı adayları ve kimlik kanıtlarını inceleyin.","unavailable":"Aday kayıtlarına erişilemiyor. Veritabanı şeması henüz kurulmamış olabilir.","empty":"Henüz kayıtlı aday yok.","gallery":"Kayıtlı adaylar","candidate":"Aday {number}","candidateAlt":"Aday {number} portresi","selectedAlt":"Seçili aday portresi","selected":"Seçili aday","previewMissing":"Önizleme yok veya süresi dolmuş","compare":"Adayları karşılaştır","approvalTitle":"Kimlik onayı","approvalExplanation":"Onay, seçilen portreyi ve doğrulanmış referansları yeniden kullanılabilir bir kimlik sürümü olarak sabitleyecek.","selectedStatus":"Seçili aday: {status}","noSelection":"Aday seçilmedi.","version":"Kimlik sürümü {number}","noVersion":"Henüz onaylı kimlik sürümü yok.","approve":"Kimliği onayla","approvalDisabled":"Arka uç onay süreci doğrulanıp açılana kadar onay kullanılamaz.","evidence":"Referans kanıtları","additional":"{count} ek referans","consistency":"Birden çok açı henüz doğrulanmadı.","job":{"none":"Üretim işi yok","queued":"Üretim sırada","processing":"Üretim sürüyor","succeeded":"Üretim tamamlandı; kayıtlı adayları aşağıda inceleyin","failed":"Üretim başarısız","ambiguous":"Üretim uzlaştırma gerektiriyor","unknown":"Üretim durumu bilinmiyor"},"candidateStatus":{"pending":"Doğrulama bekliyor","ready":"İncelemeye hazır","failed":"Başarısız","rejected":"Reddedildi"},"evidenceState":{"validated":"Referans mevcut","missing":"Referans eksik","pending":"Doğrulama bekliyor","rejected":"Reddedildi","unavailable":"Önizleme yok"},"views":{"front":"Ana portre","three_quarter":"Üç çeyrek portre","side":"Yan profil portresi"},"attributes":{"presentation":"Sunum","ageRange":"Yaş aralığı","skinTone":"Cilt tonu","hairColor":"Saç rengi","hairstyle":"Saç stili","eyeColor":"Göz rengi","silhouette":"Silüet","visualStyle":"Görsel stil"} },
-    "modelStudioDraft": { "resultLabel": "Kaydedilmiş model profilleri", "updated": "Güncellendi: {date}", "draft": "Taslak profil", "archived": "Arşivlendi", "candidate_pending": "Aday üretimi", "identity_review_pending": "Kimlik incelemesi", "approved": "Onaylı kimlik", "archive": "Taslağı arşivle", "save": "Taslağı kaydet", "saving": "Kaydediliyor…", "saveError": "Taslak kaydedilemedi. Tekrar deneyin." },
+    "modelReview": {
+      "generation": {
+        "error": "Üretim tamamlanamadı. Devam etmeden önce iş durumunu kontrol edin.",
+        "invalid": "Size ait geçerli bir taslak profil gerekir.",
+        "duplicate": "Bir üretim denemesi zaten var. Durumu görmek için sayfayı yenileyin.",
+        "success": "Portreniz incelemeye hazır.",
+        "pending": "Portre üretiliyor…",
+        "savedSettings": "Kaydedilmiş ayarlarla tek portre üretin. Önce değişiklikleri kaydedin. Profil başına tek üretim denemesi yapılabilir.",
+        "generate": "Portre üret"
+      },
+      "eyebrow": "KİMLİK İNCELEMESİ",
+      "title": "Aday inceleme",
+      "description": "Onay öncesinde kayıtlı adayları ve kimlik kanıtlarını inceleyin.",
+      "unavailable": "Aday kayıtlarına erişilemiyor. Veritabanı şeması henüz kurulmamış olabilir.",
+      "empty": "Henüz kayıtlı aday yok.",
+      "gallery": "Kayıtlı adaylar",
+      "candidate": "Aday {number}",
+      "candidateAlt": "Aday {number} portresi",
+      "selectedAlt": "Seçili aday portresi",
+      "selected": "Seçili aday",
+      "previewMissing": "Önizleme yok veya süresi dolmuş",
+      "compare": "Adayları karşılaştır",
+      "approvalTitle": "Kimlik onayı",
+      "approvalExplanation": "Onay, seçilen portreyi ve doğrulanmış referansları yeniden kullanılabilir bir kimlik sürümü olarak sabitleyecek.",
+      "selectedStatus": "Seçili aday: {status}",
+      "noSelection": "Aday seçilmedi.",
+      "version": "Kimlik sürümü {number}",
+      "noVersion": "Henüz onaylı kimlik sürümü yok.",
+      "approve": "Kimliği onayla",
+      "approvalDisabled": "Arka uç onay süreci doğrulanıp açılana kadar onay kullanılamaz.",
+      "evidence": "Referans kanıtları",
+      "additional": "{count} ek referans",
+      "consistency": "Birden çok açı henüz doğrulanmadı.",
+      "job": {
+        "none": "Üretim işi yok",
+        "queued": "Üretim sırada",
+        "processing": "Üretim sürüyor",
+        "succeeded": "Üretim tamamlandı; kayıtlı adayları aşağıda inceleyin",
+        "failed": "Üretim başarısız",
+        "ambiguous": "Üretim uzlaştırma gerektiriyor",
+        "unknown": "Üretim durumu bilinmiyor"
+      },
+      "candidateStatus": {
+        "pending": "Doğrulama bekliyor",
+        "ready": "İncelemeye hazır",
+        "failed": "Başarısız",
+        "rejected": "Reddedildi"
+      },
+      "evidenceState": {
+        "validated": "Referans mevcut",
+        "missing": "Referans eksik",
+        "pending": "Doğrulama bekliyor",
+        "rejected": "Reddedildi",
+        "unavailable": "Önizleme yok"
+      },
+      "views": {
+        "front": "Ana portre",
+        "three_quarter": "Üç çeyrek portre",
+        "side": "Yan profil portresi"
+      },
+      "attributes": {
+        "presentation": "Sunum",
+        "ageRange": "Yaş aralığı",
+        "skinTone": "Cilt tonu",
+        "hairColor": "Saç rengi",
+        "hairstyle": "Saç stili",
+        "eyeColor": "Göz rengi",
+        "silhouette": "Silüet",
+        "visualStyle": "Görsel stil"
+      }
+    },
+    "modelStudioDraft": {
+      "resultLabel": "Kaydedilmiş model profilleri",
+      "updated": "Güncellendi: {date}",
+      "draft": "Taslak profil",
+      "archived": "Arşivlendi",
+      "candidate_pending": "Aday üretimi",
+      "identity_review_pending": "Kimlik incelemesi",
+      "approved": "Onaylı kimlik",
+      "archive": "Taslağı arşivle",
+      "save": "Taslağı kaydet",
+      "saving": "Kaydediliyor…",
+      "saveError": "Taslak kaydedilemedi. Tekrar deneyin."
+    },
     "videoDetail": {
       "metadataTitle": "Video ayrıntıları",
       "metadataDescription": "Bir videoyu ve kullanılabilir üretim ayrıntılarını inceleyin.",
@@ -1047,7 +1647,10 @@
       "sourceAlt": "Bu video için kullanılan kaynak görsel",
       "detailsTitle": "Üretim ayrıntıları",
       "seconds": "{value} saniye",
-      "modes": { "image": "Görselden Videoya", "text": "Arşivlenmiş video" },
+      "modes": {
+        "image": "Görselden Videoya",
+        "text": "Arşivlenmiş video"
+      },
       "status": {
         "queued": "Sırada",
         "processing": "İşleniyor",
@@ -1066,11 +1669,26 @@
         "source": "Kaynak görsel"
       },
       "unavailable": {
-        "queued": { "title": "Video sırada", "description": "Video işlendiğinde oynatma burada kullanılabilir olacak." },
-        "processing": { "title": "Video işleniyor", "description": "Video hazır olduğunda oynatma burada görünecek." },
-        "ready": { "title": "Oynatma kullanılamıyor", "description": "Bu kayıt oynatılabilir bir video varlığı içermiyor." },
-        "failed": { "title": "Video oluşturulamadı", "description": "Bu üretim için oynatılabilir bir video bulunmuyor." },
-        "unavailable": { "title": "Video kullanılamıyor", "description": "Bu kaydın oynatılabilir varlığı kullanılamıyor." }
+        "queued": {
+          "title": "Video sırada",
+          "description": "Video işlendiğinde oynatma burada kullanılabilir olacak."
+        },
+        "processing": {
+          "title": "Video işleniyor",
+          "description": "Video hazır olduğunda oynatma burada görünecek."
+        },
+        "ready": {
+          "title": "Oynatma kullanılamıyor",
+          "description": "Bu kayıt oynatılabilir bir video varlığı içermiyor."
+        },
+        "failed": {
+          "title": "Video oluşturulamadı",
+          "description": "Bu üretim için oynatılabilir bir video bulunmuyor."
+        },
+        "unavailable": {
+          "title": "Video kullanılamıyor",
+          "description": "Bu kaydın oynatılabilir varlığı kullanılamıyor."
+        }
       },
       "fidelityAnalysis": {
         "closeupSource": "Kritik bölge · kaynak",
@@ -1086,12 +1704,9 @@
         "videoFrame": "Kare {number} · {timestamp}",
         "frameUnavailable": "Bu video karesi okunamadı.",
         "analysisDisabled": "Kareler yerel olarak hazırlandı. Ücretli analiz, bu hesap için sunucu tarafında etkinleştirilmemiş; hiçbir analiz isteği gönderilmedi.",
-        "pricingUnavailable": "Bu model için doğrulanmış maliyet tahmini yok. Ücretli analiz kapalı kaldı.",
-        "priceEstimate": "Tahmini üst maliyet: yaklaşık ${amount} USD",
-        "consentLead": "Ücretli analiz yalnızca aşağıdaki onaydan sonra başlar.",
-        "consentDetails": "Onay verirseniz kaynak görsel ve beş sıkıştırılmış video karesi OpenAI'a görsel karşılaştırma için gönderilir. Tam MP4 gönderilmez. Sonuç özel hesabınıza bağlı olarak saklanır.",
-        "consentLabel": "Kaynak görseli ve beş kareyi OpenAI'a göndermeyi, yaklaşık ${amount} USD'ye kadar analiz ücreti oluşabileceğini kabul ediyorum.",
-        "analyze": "Ücretli analizi başlat · ${amount} USD'ye kadar",
+        "consentLead": "Video sadakat incelemesini başlatın.",
+        "consentDetails": "Kaynak görsel ve beş sıkıştırılmış video karesi OpenAI'a karşılaştırma için gönderilir. Tam MP4 gönderilmez. Kullanıcıya ayrı analiz ücreti yansıtılmaz; istekler sunucu kotasına tabidir.",
+        "analyze": "Sadakat incelemesini başlat",
         "analyzing": "Ürün ve video kareleri karşılaştırılıyor…",
         "cancel": "Vazgeç",
         "profileTitle": "Kaynak ürün profili",
@@ -1134,7 +1749,11 @@
           "no_clear_change_detected": "Doğrulanabilen ayrıntılarda belirgin değişiklik görülmedi",
           "inconclusive": "Sonuç kesin değil"
         },
-        "confidence": { "high": "Yüksek güven", "medium": "Orta güven", "low": "Düşük güven" },
+        "confidence": {
+          "high": "Yüksek güven",
+          "medium": "Orta güven",
+          "low": "Düşük güven"
+        },
         "causes": {
           "product_change": "Ürün değişikliği",
           "camera_angle": "Kamera açısı veya perspektif",
@@ -1151,7 +1770,9 @@
         "failed": "Analiz tamamlanamadı. Video kaydı korunuyor ve üretim durumuna dokunulmadı."
       }
     },
-    "backgroundJobs": { "active": "Görsel hazırlanıyor" },
+    "backgroundJobs": {
+      "active": "Görsel hazırlanıyor"
+    },
     "metadataTitle": "Yaratıcı Çalışma Alanı",
     "metadataDescription": "Klay.ai çalışma alanında kampanyaya hazır ürün görselleri oluşturun ve yaratıcı yönleri keşfedin.",
     "home": {
@@ -1163,20 +1784,56 @@
       "nextWorkflow": "Sonraki iş akışlarına kaydır",
       "workflowAction": "Keşfet",
       "workflows": {
-        "fashion": {"category":"Moda","title":"Model üzerinde moda","description":"Giysini doğal bir kent kampanyasında göster."},
-        "studio": {"category":"Kozmetik","title":"Stüdyo ürün çekimi","description":"Ambalajı kontrollü stüdyo ışığında göster."},
-        "jewelry": {"category":"Takı","title":"Model üzerinde takı","description":"Takıyı doğal vücut temasıyla sun."},
-        "watches": {"category":"Saat","title":"Bilekte saat","description":"Saati gerçekçi bir kullanım sahnesinde göster."},
-        "lifestyle": {"category":"Aksesuar","title":"Yaşam tarzı kampanyası","description":"Çantayı özenli günlük sahnelere taşı."},
-        "footwear": {"category":"Ayakkabı","title":"Sokakta ayakkabı","description":"Ayakkabını öne çıkaran kent görseli oluştur."}
+        "fashion": {
+          "category": "Moda",
+          "title": "Model üzerinde moda",
+          "description": "Giysini doğal bir kent kampanyasında göster."
+        },
+        "studio": {
+          "category": "Kozmetik",
+          "title": "Stüdyo ürün çekimi",
+          "description": "Ambalajı kontrollü stüdyo ışığında göster."
+        },
+        "jewelry": {
+          "category": "Takı",
+          "title": "Model üzerinde takı",
+          "description": "Takıyı doğal vücut temasıyla sun."
+        },
+        "watches": {
+          "category": "Saat",
+          "title": "Bilekte saat",
+          "description": "Saati gerçekçi bir kullanım sahnesinde göster."
+        },
+        "lifestyle": {
+          "category": "Aksesuar",
+          "title": "Yaşam tarzı kampanyası",
+          "description": "Çantayı özenli günlük sahnelere taşı."
+        },
+        "footwear": {
+          "category": "Ayakkabı",
+          "title": "Sokakta ayakkabı",
+          "description": "Ayakkabını öne çıkaran kent görseli oluştur."
+        }
       },
       "launcherHeading": "Klay ile başla",
       "launcherDescription": "Yeni görselin için bir başlangıç noktası seç.",
       "launchers": {
-        "create": {"title":"Ürün görseli oluştur","description":"Ürününle rehberli çalışma alanında başla."},
-        "fashion": {"title":"Moda kampanyası","description":"Model üzerinde sokak çekimiyle başla."},
-        "studio": {"title":"Kozmetik stüdyo çekimi","description":"Ürün odaklı stüdyo düzeniyle başla."},
-        "projects": {"title":"Projelerim","description":"Kampanyalarını ve geçmiş görsellerini aç."}
+        "create": {
+          "title": "Ürün görseli oluştur",
+          "description": "Ürününle rehberli çalışma alanında başla."
+        },
+        "fashion": {
+          "title": "Moda kampanyası",
+          "description": "Model üzerinde sokak çekimiyle başla."
+        },
+        "studio": {
+          "title": "Kozmetik stüdyo çekimi",
+          "description": "Ürün odaklı stüdyo düzeniyle başla."
+        },
+        "projects": {
+          "title": "Projelerim",
+          "description": "Kampanyalarını ve geçmiş görsellerini aç."
+        }
       },
       "title": "Ürün fotoğrafından\nkampanya dünyasına.",
       "description": "Ürününüzü merkeze alan gerçekçi, yaratıcı ve kullanıma hazır kampanya görselleri üretin.",
@@ -1250,10 +1907,22 @@
       "loadError": "Bildirimler yüklenemedi.",
       "retry": "Tekrar dene",
       "fallbackProject": "projeniz",
-      "generation_completed": {"title": "Görseliniz hazır", "message": "{projectName} projesindeki üretim tamamlandı."},
-      "generation_failed": {"title": "Üretim tamamlanamadı", "message": "{projectName} projesindeki üretim başarısız oldu."},
-      "image_edit_completed": {"title": "Düzenleme tamamlandı", "message": "{projectName} projesindeki görsel düzenlemesi hazır."},
-      "image_edit_failed": {"title": "Düzenleme tamamlanamadı", "message": "{projectName} projesindeki görsel düzenleme başarısız oldu."}
+      "generation_completed": {
+        "title": "Görseliniz hazır",
+        "message": "{projectName} projesindeki üretim tamamlandı."
+      },
+      "generation_failed": {
+        "title": "Üretim tamamlanamadı",
+        "message": "{projectName} projesindeki üretim başarısız oldu."
+      },
+      "image_edit_completed": {
+        "title": "Düzenleme tamamlandı",
+        "message": "{projectName} projesindeki görsel düzenlemesi hazır."
+      },
+      "image_edit_failed": {
+        "title": "Düzenleme tamamlanamadı",
+        "message": "{projectName} projesindeki görsel düzenleme başarısız oldu."
+      }
     },
     "account": {
       "settingsHeading": "Ayarlar",
@@ -1404,13 +2073,90 @@
       "description": "Ürününü yükle, sahneyi belirle ve kampanya görselini oluştur.",
       "projectNameLabel": "Proje adı",
       "projectNamePlaceholder": "İsteğe bağlı",
-      "flow": { "progressLabel": "Oluşturma adımları", "stepLabel": "Adım {current} / {total}", "navProduct": "Ürün", "navFormat": "Format", "navDirection": "Yön", "navReference": "Referans", "navDetails": "Detaylar", "nameTitle": "Bu çalışmaya bir isim ver", "namePlaceholder": "FW26 Deri Ceket Kampanyası", "nameRequired": "Devam etmek için çalışmanıza bir isim verin.", "productTitle": "Ürününü ekle", "productDescription": "İlk görsel ürün kimliğini belirler. Ek görseller aynı ürünün farklı açılarını göstermelidir.", "productAuthority": "Ürün kimliği", "primaryView": "ANA GÖRSEL", "supportingView": "DİĞER AÇI", "directionTitle": "Nasıl bir görsel oluşturalım?", "presetPath": "Preset ile başla", "customPath": "Kendi yönümü oluştur", "presentationLabel": "Sunum biçimi", "referenceTitle": "Bir görünüm referansın var mı?", "referenceDescription": "Ürünün yerine geçmeden pozu, kompozisyonu, ışığı ve atmosferi yönlendirir.", "referenceAuthority": "Sahne ve stil yönü", "optional": "İsteğe bağlı", "detailsTitle": "Son bir dokunuş?", "reviewTitle": "Yaratıcı özet", "reviewDescription": "Kampanyayı üretime göndermeden önce prodüksiyon tercihlerini gözden geçir.", "viewCount": "{count} ürün görseli", "referenceCount": "{count} referans", "noReference": "referans yok", "back": "Geri", "continue": "Devam et", "skip": "Atla", "generate": "Görseli üret", "generationUnavailable": "Bu hesap için görsel üretimi şu anda kullanılamıyor.", "generatingTitle": "Kampanyan hazırlanıyor", "generatingDescription": "Klay, ürün kimliğini korurken seçtiğin sahne ve formatı bir araya getiriyor.", "generatingProduct": "Ürün detayları korunuyor", "generatingScene": "Sahne kuruluyor", "generatingComposition": "Kompozisyon dengeleniyor", "generatingRender": "Görsel işleniyor", "generatingCheck": "Son kontroller yapılıyor", "chips": { "cinematic": "Daha sinematik", "minimal": "Minimal tut", "product": "Ürünü öne çıkar", "hardLight": "Daha sert ışık", "night": "Gece çekimi", "editorial": "Editoryal" }, "tryAgain": "Tekrar dene" },
-      "modelSelection": { "legend": "AI Model kimliği", "helper": "Model kimliği kalıcıdır. Ürün görselleri ürünü korur; referanslar bu çekimin sahnesini, pozunu ve stilini yönlendirir.", "label": "Kaydedilmiş onaylı model", "none": "AI Model seçilmedi", "version": "Kimlik sürümü {version}", "previewAlt": "{name} için onaylı kimlik önizlemesi", "referencesAvailable": "{count} onaylı referans görseli mevcut", "missingReferences": "Onaylı kimlik referansları eksik", "missingPreview": "Kimlik önizlemesi kullanılamıyor", "empty": "Henüz kullanılabilir onaylı AI Model yok.", "unavailable": "Model Kitaplığı kullanılamıyor. Kayıtlı AI Model seçilemez.", "reviewLabel": "AI Model kimliği", "gateClosed": "AI Model koşullu üretim henüz etkin değil. Standart ürün görseli oluşturmak için seçili modeli kaldırın." },
+      "flow": {
+        "progressLabel": "Oluşturma adımları",
+        "stepLabel": "Adım {current} / {total}",
+        "navProduct": "Ürün",
+        "navFormat": "Format",
+        "navDirection": "Yön",
+        "navReference": "Referans",
+        "navDetails": "Detaylar",
+        "nameTitle": "Bu çalışmaya bir isim ver",
+        "namePlaceholder": "FW26 Deri Ceket Kampanyası",
+        "nameRequired": "Devam etmek için çalışmanıza bir isim verin.",
+        "productTitle": "Ürününü ekle",
+        "productDescription": "İlk görsel ürün kimliğini belirler. Ek görseller aynı ürünün farklı açılarını göstermelidir.",
+        "productAuthority": "Ürün kimliği",
+        "primaryView": "ANA GÖRSEL",
+        "supportingView": "DİĞER AÇI",
+        "directionTitle": "Nasıl bir görsel oluşturalım?",
+        "presetPath": "Preset ile başla",
+        "customPath": "Kendi yönümü oluştur",
+        "presentationLabel": "Sunum biçimi",
+        "referenceTitle": "Bir görünüm referansın var mı?",
+        "referenceDescription": "Ürünün yerine geçmeden pozu, kompozisyonu, ışığı ve atmosferi yönlendirir.",
+        "referenceAuthority": "Sahne ve stil yönü",
+        "optional": "İsteğe bağlı",
+        "detailsTitle": "Son bir dokunuş?",
+        "reviewTitle": "Yaratıcı özet",
+        "reviewDescription": "Kampanyayı üretime göndermeden önce prodüksiyon tercihlerini gözden geçir.",
+        "viewCount": "{count} ürün görseli",
+        "referenceCount": "{count} referans",
+        "noReference": "referans yok",
+        "back": "Geri",
+        "continue": "Devam et",
+        "skip": "Atla",
+        "generate": "Görseli üret",
+        "generationUnavailable": "Bu hesap için görsel üretimi şu anda kullanılamıyor.",
+        "generatingTitle": "Kampanyan hazırlanıyor",
+        "generatingDescription": "Klay, ürün kimliğini korurken seçtiğin sahne ve formatı bir araya getiriyor.",
+        "generatingProduct": "Ürün detayları korunuyor",
+        "generatingScene": "Sahne kuruluyor",
+        "generatingComposition": "Kompozisyon dengeleniyor",
+        "generatingRender": "Görsel işleniyor",
+        "generatingCheck": "Son kontroller yapılıyor",
+        "chips": {
+          "cinematic": "Daha sinematik",
+          "minimal": "Minimal tut",
+          "product": "Ürünü öne çıkar",
+          "hardLight": "Daha sert ışık",
+          "night": "Gece çekimi",
+          "editorial": "Editoryal"
+        },
+        "tryAgain": "Tekrar dene"
+      },
+      "modelSelection": {
+        "legend": "AI Model kimliği",
+        "helper": "Model kimliği kalıcıdır. Ürün görselleri ürünü korur; referanslar bu çekimin sahnesini, pozunu ve stilini yönlendirir.",
+        "label": "Kaydedilmiş onaylı model",
+        "none": "AI Model seçilmedi",
+        "version": "Kimlik sürümü {version}",
+        "previewAlt": "{name} için onaylı kimlik önizlemesi",
+        "referencesAvailable": "{count} onaylı referans görseli mevcut",
+        "missingReferences": "Onaylı kimlik referansları eksik",
+        "missingPreview": "Kimlik önizlemesi kullanılamıyor",
+        "empty": "Henüz kullanılabilir onaylı AI Model yok.",
+        "unavailable": "Model Kitaplığı kullanılamıyor. Kayıtlı AI Model seçilemez.",
+        "reviewLabel": "AI Model kimliği",
+        "gateClosed": "AI Model koşullu üretim henüz etkin değil. Standart ürün görseli oluşturmak için seçili modeli kaldırın."
+      },
       "steps": {
-        "product": { "title": "Ürün görseli", "description": "Ürününüzü net ve mümkün olduğunca yüksek kaliteli bir görselle yükleyin." },
-        "format": { "title": "Format", "description": "İçeriğinizin kullanılacağı yere uygun görsel oranını seçin." },
-        "project": { "title": "Proje adı", "description": "İsterseniz bu çalışmaya bir ad verin." },
-        "additional": { "title": "Ek yönlendirme", "description": "İsterseniz sahne, stil veya referans ekleyin." }
+        "product": {
+          "title": "Ürün görseli",
+          "description": "Ürününüzü net ve mümkün olduğunca yüksek kaliteli bir görselle yükleyin."
+        },
+        "format": {
+          "title": "Format",
+          "description": "İçeriğinizin kullanılacağı yere uygun görsel oranını seçin."
+        },
+        "project": {
+          "title": "Proje adı",
+          "description": "İsterseniz bu çalışmaya bir ad verin."
+        },
+        "additional": {
+          "title": "Ek yönlendirme",
+          "description": "İsterseniz sahne, stil veya referans ekleyin."
+        }
       },
       "dropzone": {
         "title": "Ürün görselinizi buraya bırakın",
@@ -1557,7 +2303,15 @@
       "viewAll": "Tüm presetleri gör",
       "showLess": "Daha az göster",
       "filterLabel": "Presetleri ürün kategorisine göre filtrele",
-      "filterCategories": { "all": "Tümü", "apparel": "Giyim", "jewelry": "Takı", "watches": "Saat", "footwear": "Ayakkabı", "cosmetics": "Kozmetik", "bags": "Çantalar" },
+      "filterCategories": {
+        "all": "Tümü",
+        "apparel": "Giyim",
+        "jewelry": "Takı",
+        "watches": "Saat",
+        "footwear": "Ayakkabı",
+        "cosmetics": "Kozmetik",
+        "bags": "Çantalar"
+      },
       "styleCount": "{count} stil",
       "selectedPresetFamily": "Seçili preset: {title}",
       "description": "Üretime hazır bir yön seçin, ardından isteğe bağlı notunuzu ekleyin.",
@@ -1582,32 +2336,253 @@
           "detail": "Dikiş, doku, yıkama ve materyal detayları yakın plan ürün diliyle gösterilir.",
           "catalogue_product": "Ürün nötr, sade ve doğrudan ticari katalog mantığıyla sunulur."
         },
-        "apparel-street": { "walking": "Kıyafeti tanınabilir şehir sokağında yürürken gösterir.", "curb": "Kıyafeti görünür kaldırım kenarında kadrajlar.", "crosswalk": "Kıyafeti tanınabilir yaya geçidinde adım halinde gösterir.", "metro_stairs": "Görünür metro veya ulaşım merdivenleri kullanır.", "storefront": "Gerçek vitrini ikincil şehir bağlamı olarak kullanır.", "concrete_district": "Sade beton şehir mimarisi kullanır.", "low_angle_street": "Net şehir bağlamıyla alçak açı kullanır.", "movement_detail": "Kıyafet yapısını gösteren yakın hareket kadrajı kullanır.", "seated_urban_moment": "İnandırıcı oturan şehir pozu gösterir.", "night_editorial": "Gerçek gece sokağında kontrollü flaş kullanır." },
-        "apparel-scenic": { "model_landscape": "Kıyafeti açık manzarada model üzerinde gösterir.", "architectural_model": "Rafine teras, avlu veya dış mimari kullanır.", "walking_location": "Doğal mekânda tam boy yürüyüş anı gösterir.", "seated_location": "İnandırıcı oturan mekân portresi sunar.", "environmental_portrait": "Okunur kıyafeti görünür doğal çevreyle dengeler." },
-        "jewelry-on-model": { "on_neck": "Kolyeyi boyun ve köprücük kemiğine doğal yerleştirir.", "on_ear": "Küpeyi doğru kulak noktasına doğal takar.", "on_hand": "El takısını gerçekçi parmak temasıyla gösterir.", "on_wrist": "Bileziği bileğe doğal oturtur.", "beauty_macro": "Kadrajı takı odaklı beauty makroyla doldurur.", "editorial_closeup": "Takıyı baskın tutan yakın portre kullanır." },
-        "jewelry-lifestyle": { "stone": "Takıyı sade doğal taşta destekler.", "textile": "Takıyı rafine yumuşak tekstile yerleştirir.", "mirror": "Bilinçli yansıma için tek ayna kullanır.", "gallery": "İnsansız galeri veya mimari raf kullanır.", "reflective_surface": "Takıyı kapatmadan yansıtıcı cam kullanır.", "editorial_still_life": "Sade editoryal natürmort kurar." },
-        "jewelry-studio": { "macro": "Takı işçiliğini gerçek makroyla kadraja doldurur.", "pedestal": "Takıyı tek görünür kaidede destekler.", "reflection": "Tek kontrollü stüdyo yansıması oluşturur.", "stone": "Sade taş destek kullanır.", "textile": "Yumuşak tekstil desteği kullanır.", "shadow": "Takıyı grafik stüdyo gölgesiyle şekillendirir.", "clean_packshot": "Takının tamamını temiz lüks packshot olarak sunar." },
-        "watches-on-wrist": { "wrist_hero": "Okunur kadranla yakın bilek hero sunar.", "executive": "Saati sade takım manşetiyle eşleştirir.", "travel": "Saati rafine seyahat bağlamında takılı gösterir.", "outdoor": "İnandırıcı dış mekân gün ışığı kullanır.", "architecture": "Saati temiz mimari önünde kadrajlar.", "lifestyle_closeup": "Saati baskın tutan yakın lifestyle etkileşimi kullanır." },
-        "watches-product-composition": { "desk": "Saati sade premium masada düzenler.", "stone": "Saati tek taş kaidede destekler.", "leather": "Saati minimal deri yüzeye yerleştirir.", "metal": "Tek fırçalanmış metal destek kullanır.", "fabric": "Saati rafine yumuşak kumaşta destekler.", "box_composition": "Saati tek kutu veya blokla kurgular.", "macro_detail": "Kadrajı kurma kolu, kasa veya kadran detayıyla doldurur." },
-        "watches-editorial-studio": { "dark_studio": "Kontrollü koyu tonlu saat hero üretir.", "gradient": "Temiz ton geçişli fon kullanır.", "metallic": "Kontrollü metalik stüdyo seti kullanır.", "spotlight": "Saati tek odaklı spot ışıkla şekillendirir.", "reflection": "Görünür kontrollü yansıma kullanır.", "catalogue": "Saatin tamamını hassas katalog kadrajında gösterir." },
-        "footwear-street": { "walking": "Şehir sokağında gerçekçi yürüyüş teması gösterir.", "crosswalk": "Ayakkabıyı görünür yaya geçidinde hareket halinde sunar.", "concrete_district": "Beton şehir mimarisi kullanır.", "metro_stairs": "Ulaşım merdivenlerinde inandırıcı temas gösterir.", "seated_urban_moment": "İki ayakkabının okunur olduğu oturan poz kullanır.", "movement_detail": "Taban esnemesini yakın hareket detayıyla gösterir.", "low_angle_street": "Tanındık şehir bağlamıyla alçak kamera kullanır." },
-        "footwear-studio": { "isolated_hero": "Tam ayakkabı siluetini izole hero olarak gösterir.", "floating_product": "Ayakkabıyı görünür destek olmadan sunar.", "pedestal": "Ayakkabıyı tek görünür kaidede destekler.", "reflective_floor": "Kontrollü yansıtıcı zemin kullanır.", "sculptural_blocks": "Minimal görünür heykelsi bloklar kullanır.", "pair_composition": "Kaynak uygunsa tutarlı ayakkabı çifti gösterir.", "top_down": "Ayakkabıyı üstten çeker.", "side_profile_campaign": "Tam yan profil gösterir.", "macro_material_detail": "Kadrajı malzeme veya yapı detayıyla doldurur." },
-        "footwear-scenic": { "architectural_stone": "Ayakkabıyı dış mimaride taş üzerine yerleştirir.", "terrace": "Rafine teras kullanır.", "gallery": "İnsansız çağdaş galeri kullanır.", "courtyard": "Sade avlu kullanır.", "hotel_setting": "Rafine insansız otel ortamı kullanır.", "minimal_landscape": "Zemine oturan ayakkabıyla minimal doğal manzara kullanır." },
-        "cosmetics-studio": { "packshot": "Ambalajı etiketi okunur biçimde önden gösterir.", "floating": "Ambalajı görünür destek olmadan sunar.", "liquid_interaction": "Kontrollü sıvı etkileşimi kurar.", "acrylic": "Ürünü tek akrilik formla destekler.", "reflection": "Tek kontrollü görünür yansıma kullanır.", "monochrome": "Tonal monokrom set kurar.", "clinical": "Temiz klinik beauty seti kullanır.", "glossy": "Parlak editoryal beauty seti kurar.", "shadow_play": "Bilinçli grafik gölgeler kullanır." },
-        "cosmetics-scenic": { "water": "Kontrollü su veya ıslak yüzey sahnesi kullanır.", "stone": "Ambalajı dokulu taşta destekler.", "botanical": "Belirgin botanik bağlam kullanır.", "glasshouse": "İnsansız cam sera rafı kullanır.", "architecture": "Rafine mimari raf kullanır.", "material_study": "Tek dokulu malzeme çalışması kurar.", "natural_light": "Ambalajı doğal pencere ışığıyla şekillendirir." },
-        "bags-on-model": { "shoulder_carry": "Çantayı omuzda doğal taşır.", "hand_carry": "Kaynak sapta doğal el tutuşu kullanır.", "crossbody": "Kaynak askıyı gövde üzerinden çapraz geçirir.", "walking": "Yürürken kaynakla uyumlu taşıma gösterir.", "seated": "Doğal oturan çanta etkileşimi gösterir.", "full_body": "Çantayı baskın tutan tam boy kadraj kullanır.", "waist_crop": "Taşıma temasını gösteren bel kadrajı kullanır.", "urban_editorial": "Tanındık şehir mimarisi ve doğal taşıma kullanır." },
-        "bags-studio": { "front_hero": "Çantanın tamamını önden hero açıyla gösterir.", "three_quarter_hero": "Çantanın tamamını 3/4 açıyla gösterir.", "suspended_bag": "Çantayı zemine dayanmadan asılı gösterir.", "pedestal": "Çantayı tek görünür kaidede destekler.", "top_down": "Çantanın tamamını üstten çeker.", "reflective_floor": "Kontrollü yansıtıcı zemin kullanır.", "hardware_macro": "Kadrajı donanım veya kapama detayıyla doldurur." },
-        "bags-lifestyle": { "cafe": "Çantayı insansız kafe masasına yerleştirir.", "terrace": "Rafine insansız teras kullanır.", "gallery": "Galeri kaidesi ve mimari alan kullanır.", "hotel": "Rafine insansız otel iç mekânı kullanır.", "architecture": "Dengeli mimari destek kullanır.", "window_light": "Çantayı görünür pencere ışığı yakınına yerleştirir.", "travel_setting": "Sade insansız seyahat bağlamı kullanır.", "editorial_still_life": "Ürün odaklı editoryal natürmort kurar." }
+        "apparel-street": {
+          "walking": "Kıyafeti tanınabilir şehir sokağında yürürken gösterir.",
+          "curb": "Kıyafeti görünür kaldırım kenarında kadrajlar.",
+          "crosswalk": "Kıyafeti tanınabilir yaya geçidinde adım halinde gösterir.",
+          "metro_stairs": "Görünür metro veya ulaşım merdivenleri kullanır.",
+          "storefront": "Gerçek vitrini ikincil şehir bağlamı olarak kullanır.",
+          "concrete_district": "Sade beton şehir mimarisi kullanır.",
+          "low_angle_street": "Net şehir bağlamıyla alçak açı kullanır.",
+          "movement_detail": "Kıyafet yapısını gösteren yakın hareket kadrajı kullanır.",
+          "seated_urban_moment": "İnandırıcı oturan şehir pozu gösterir.",
+          "night_editorial": "Gerçek gece sokağında kontrollü flaş kullanır."
+        },
+        "apparel-scenic": {
+          "model_landscape": "Kıyafeti açık manzarada model üzerinde gösterir.",
+          "architectural_model": "Rafine teras, avlu veya dış mimari kullanır.",
+          "walking_location": "Doğal mekânda tam boy yürüyüş anı gösterir.",
+          "seated_location": "İnandırıcı oturan mekân portresi sunar.",
+          "environmental_portrait": "Okunur kıyafeti görünür doğal çevreyle dengeler."
+        },
+        "jewelry-on-model": {
+          "on_neck": "Kolyeyi boyun ve köprücük kemiğine doğal yerleştirir.",
+          "on_ear": "Küpeyi doğru kulak noktasına doğal takar.",
+          "on_hand": "El takısını gerçekçi parmak temasıyla gösterir.",
+          "on_wrist": "Bileziği bileğe doğal oturtur.",
+          "beauty_macro": "Kadrajı takı odaklı beauty makroyla doldurur.",
+          "editorial_closeup": "Takıyı baskın tutan yakın portre kullanır."
+        },
+        "jewelry-lifestyle": {
+          "stone": "Takıyı sade doğal taşta destekler.",
+          "textile": "Takıyı rafine yumuşak tekstile yerleştirir.",
+          "mirror": "Bilinçli yansıma için tek ayna kullanır.",
+          "gallery": "İnsansız galeri veya mimari raf kullanır.",
+          "reflective_surface": "Takıyı kapatmadan yansıtıcı cam kullanır.",
+          "editorial_still_life": "Sade editoryal natürmort kurar."
+        },
+        "jewelry-studio": {
+          "macro": "Takı işçiliğini gerçek makroyla kadraja doldurur.",
+          "pedestal": "Takıyı tek görünür kaidede destekler.",
+          "reflection": "Tek kontrollü stüdyo yansıması oluşturur.",
+          "stone": "Sade taş destek kullanır.",
+          "textile": "Yumuşak tekstil desteği kullanır.",
+          "shadow": "Takıyı grafik stüdyo gölgesiyle şekillendirir.",
+          "clean_packshot": "Takının tamamını temiz lüks packshot olarak sunar."
+        },
+        "watches-on-wrist": {
+          "wrist_hero": "Okunur kadranla yakın bilek hero sunar.",
+          "executive": "Saati sade takım manşetiyle eşleştirir.",
+          "travel": "Saati rafine seyahat bağlamında takılı gösterir.",
+          "outdoor": "İnandırıcı dış mekân gün ışığı kullanır.",
+          "architecture": "Saati temiz mimari önünde kadrajlar.",
+          "lifestyle_closeup": "Saati baskın tutan yakın lifestyle etkileşimi kullanır."
+        },
+        "watches-product-composition": {
+          "desk": "Saati sade premium masada düzenler.",
+          "stone": "Saati tek taş kaidede destekler.",
+          "leather": "Saati minimal deri yüzeye yerleştirir.",
+          "metal": "Tek fırçalanmış metal destek kullanır.",
+          "fabric": "Saati rafine yumuşak kumaşta destekler.",
+          "box_composition": "Saati tek kutu veya blokla kurgular.",
+          "macro_detail": "Kadrajı kurma kolu, kasa veya kadran detayıyla doldurur."
+        },
+        "watches-editorial-studio": {
+          "dark_studio": "Kontrollü koyu tonlu saat hero üretir.",
+          "gradient": "Temiz ton geçişli fon kullanır.",
+          "metallic": "Kontrollü metalik stüdyo seti kullanır.",
+          "spotlight": "Saati tek odaklı spot ışıkla şekillendirir.",
+          "reflection": "Görünür kontrollü yansıma kullanır.",
+          "catalogue": "Saatin tamamını hassas katalog kadrajında gösterir."
+        },
+        "footwear-street": {
+          "walking": "Şehir sokağında gerçekçi yürüyüş teması gösterir.",
+          "crosswalk": "Ayakkabıyı görünür yaya geçidinde hareket halinde sunar.",
+          "concrete_district": "Beton şehir mimarisi kullanır.",
+          "metro_stairs": "Ulaşım merdivenlerinde inandırıcı temas gösterir.",
+          "seated_urban_moment": "İki ayakkabının okunur olduğu oturan poz kullanır.",
+          "movement_detail": "Taban esnemesini yakın hareket detayıyla gösterir.",
+          "low_angle_street": "Tanındık şehir bağlamıyla alçak kamera kullanır."
+        },
+        "footwear-studio": {
+          "isolated_hero": "Tam ayakkabı siluetini izole hero olarak gösterir.",
+          "floating_product": "Ayakkabıyı görünür destek olmadan sunar.",
+          "pedestal": "Ayakkabıyı tek görünür kaidede destekler.",
+          "reflective_floor": "Kontrollü yansıtıcı zemin kullanır.",
+          "sculptural_blocks": "Minimal görünür heykelsi bloklar kullanır.",
+          "pair_composition": "Kaynak uygunsa tutarlı ayakkabı çifti gösterir.",
+          "top_down": "Ayakkabıyı üstten çeker.",
+          "side_profile_campaign": "Tam yan profil gösterir.",
+          "macro_material_detail": "Kadrajı malzeme veya yapı detayıyla doldurur."
+        },
+        "footwear-scenic": {
+          "architectural_stone": "Ayakkabıyı dış mimaride taş üzerine yerleştirir.",
+          "terrace": "Rafine teras kullanır.",
+          "gallery": "İnsansız çağdaş galeri kullanır.",
+          "courtyard": "Sade avlu kullanır.",
+          "hotel_setting": "Rafine insansız otel ortamı kullanır.",
+          "minimal_landscape": "Zemine oturan ayakkabıyla minimal doğal manzara kullanır."
+        },
+        "cosmetics-studio": {
+          "packshot": "Ambalajı etiketi okunur biçimde önden gösterir.",
+          "floating": "Ambalajı görünür destek olmadan sunar.",
+          "liquid_interaction": "Kontrollü sıvı etkileşimi kurar.",
+          "acrylic": "Ürünü tek akrilik formla destekler.",
+          "reflection": "Tek kontrollü görünür yansıma kullanır.",
+          "monochrome": "Tonal monokrom set kurar.",
+          "clinical": "Temiz klinik beauty seti kullanır.",
+          "glossy": "Parlak editoryal beauty seti kurar.",
+          "shadow_play": "Bilinçli grafik gölgeler kullanır."
+        },
+        "cosmetics-scenic": {
+          "water": "Kontrollü su veya ıslak yüzey sahnesi kullanır.",
+          "stone": "Ambalajı dokulu taşta destekler.",
+          "botanical": "Belirgin botanik bağlam kullanır.",
+          "glasshouse": "İnsansız cam sera rafı kullanır.",
+          "architecture": "Rafine mimari raf kullanır.",
+          "material_study": "Tek dokulu malzeme çalışması kurar.",
+          "natural_light": "Ambalajı doğal pencere ışığıyla şekillendirir."
+        },
+        "bags-on-model": {
+          "shoulder_carry": "Çantayı omuzda doğal taşır.",
+          "hand_carry": "Kaynak sapta doğal el tutuşu kullanır.",
+          "crossbody": "Kaynak askıyı gövde üzerinden çapraz geçirir.",
+          "walking": "Yürürken kaynakla uyumlu taşıma gösterir.",
+          "seated": "Doğal oturan çanta etkileşimi gösterir.",
+          "full_body": "Çantayı baskın tutan tam boy kadraj kullanır.",
+          "waist_crop": "Taşıma temasını gösteren bel kadrajı kullanır.",
+          "urban_editorial": "Tanındık şehir mimarisi ve doğal taşıma kullanır."
+        },
+        "bags-studio": {
+          "front_hero": "Çantanın tamamını önden hero açıyla gösterir.",
+          "three_quarter_hero": "Çantanın tamamını 3/4 açıyla gösterir.",
+          "suspended_bag": "Çantayı zemine dayanmadan asılı gösterir.",
+          "pedestal": "Çantayı tek görünür kaidede destekler.",
+          "top_down": "Çantanın tamamını üstten çeker.",
+          "reflective_floor": "Kontrollü yansıtıcı zemin kullanır.",
+          "hardware_macro": "Kadrajı donanım veya kapama detayıyla doldurur."
+        },
+        "bags-lifestyle": {
+          "cafe": "Çantayı insansız kafe masasına yerleştirir.",
+          "terrace": "Rafine insansız teras kullanır.",
+          "gallery": "Galeri kaidesi ve mimari alan kullanır.",
+          "hotel": "Rafine insansız otel iç mekânı kullanır.",
+          "architecture": "Dengeli mimari destek kullanır.",
+          "window_light": "Çantayı görünür pencere ışığı yakınına yerleştirir.",
+          "travel_setting": "Sade insansız seyahat bağlamı kullanır.",
+          "editorial_still_life": "Ürün odaklı editoryal natürmort kurar."
+        }
       },
       "presentationModes": {
-        "model_studio": "Model stüdyosu", "ghost_mannequin": "Görünmez manken", "floating": "Havada", "hanger": "Askıda", "flat_lay": "Düz serim", "folded": "Katlı", "sculptural_stage": "Heykelsi sahne", "fabric_motion": "Kumaş hareketi", "detail": "Makro detay", "catalogue_product": "Katalog ürünü",
-        "isolated_hero": "Ürün hero", "floating_product": "Havada", "pedestal": "Kaide", "reflective_floor": "Yansımalı zemin", "sculptural_blocks": "Heykelsi bloklar", "pair_composition": "Çift kompozisyon", "top_down": "Üstten", "side_profile_campaign": "Yan profil", "macro_material_detail": "Makro detay",
-        "walking": "Yürüyüş", "crosswalk": "Yaya geçidi", "concrete_district": "Şehirde duruş", "metro_stairs": "Merdiven", "seated_urban_moment": "Otururken", "movement_detail": "Hareket detayı", "low_angle_street": "Alçak açı", "architectural_stone": "Mimari", "terrace": "Teras", "gallery": "Galeri", "courtyard": "Avlu", "hotel_setting": "Otel", "minimal_landscape": "Manzara",
-        "front_hero": "Ön hero", "three_quarter_hero": "3/4 hero", "suspended_bag": "Asılı", "hardware_macro": "Donanım detayı", "shoulder_carry": "Omuzda", "hand_carry": "Elde", "crossbody": "Çapraz", "seated": "Otururken", "full_body": "Tam boy", "waist_crop": "Bel hizası", "urban_editorial": "Editoryal", "cafe": "Kafe", "architecture": "Mimari", "window_light": "Pencere ışığı", "travel_setting": "Seyahat", "editorial_still_life": "Editoryal natürmort",
-        "macro": "Makro", "reflection": "Yansıma", "stone": "Taş yüzey", "textile": "Tekstil", "shadow": "Gölge oyunu", "clean_packshot": "Temiz lüks packshot", "on_neck": "Boyunda", "on_ear": "Kulakta", "on_hand": "Elde", "on_wrist": "Bilekte", "beauty_macro": "Beauty yakın plan", "editorial_closeup": "Editoryal portre", "mirror": "Ayna", "reflective_surface": "Yansıtıcı yüzey",
-        "wrist_hero": "Bilek hero", "executive": "Executive", "travel": "Seyahat", "outdoor": "Dış mekân", "lifestyle_closeup": "Lifestyle yakın plan", "desk": "Masa", "leather": "Deri", "metal": "Metal", "fabric": "Kumaş", "box_composition": "Kutu kompozisyonu", "macro_detail": "Makro detay", "dark_studio": "Koyu stüdyo", "gradient": "Geçiş", "metallic": "Metalik", "spotlight": "Spot ışığı", "catalogue": "Katalog",
-        "packshot": "Temiz packshot", "liquid_interaction": "Sıvı etkileşimi", "acrylic": "Akrilik", "monochrome": "Monokrom", "clinical": "Klinik", "glossy": "Parlak", "shadow_play": "Gölge oyunu", "water": "Su", "botanical": "Botanik", "glasshouse": "Cam sera", "material_study": "Malzeme çalışması", "natural_light": "Doğal ışık",
-        "architectural_model": "Mimari model", "curb": "Kaldırım kenarı", "environmental_portrait": "Çevresel portre", "hotel": "Otel", "model_landscape": "Manzarada model", "night_editorial": "Gece editoryali", "seated_location": "Mekânda oturuş", "storefront": "Vitrin önü", "walking_location": "Mekânda yürüyüş"
+        "model_studio": "Model stüdyosu",
+        "ghost_mannequin": "Görünmez manken",
+        "floating": "Havada",
+        "hanger": "Askıda",
+        "flat_lay": "Düz serim",
+        "folded": "Katlı",
+        "sculptural_stage": "Heykelsi sahne",
+        "fabric_motion": "Kumaş hareketi",
+        "detail": "Makro detay",
+        "catalogue_product": "Katalog ürünü",
+        "isolated_hero": "Ürün hero",
+        "floating_product": "Havada",
+        "pedestal": "Kaide",
+        "reflective_floor": "Yansımalı zemin",
+        "sculptural_blocks": "Heykelsi bloklar",
+        "pair_composition": "Çift kompozisyon",
+        "top_down": "Üstten",
+        "side_profile_campaign": "Yan profil",
+        "macro_material_detail": "Makro detay",
+        "walking": "Yürüyüş",
+        "crosswalk": "Yaya geçidi",
+        "concrete_district": "Şehirde duruş",
+        "metro_stairs": "Merdiven",
+        "seated_urban_moment": "Otururken",
+        "movement_detail": "Hareket detayı",
+        "low_angle_street": "Alçak açı",
+        "architectural_stone": "Mimari",
+        "terrace": "Teras",
+        "gallery": "Galeri",
+        "courtyard": "Avlu",
+        "hotel_setting": "Otel",
+        "minimal_landscape": "Manzara",
+        "front_hero": "Ön hero",
+        "three_quarter_hero": "3/4 hero",
+        "suspended_bag": "Asılı",
+        "hardware_macro": "Donanım detayı",
+        "shoulder_carry": "Omuzda",
+        "hand_carry": "Elde",
+        "crossbody": "Çapraz",
+        "seated": "Otururken",
+        "full_body": "Tam boy",
+        "waist_crop": "Bel hizası",
+        "urban_editorial": "Editoryal",
+        "cafe": "Kafe",
+        "architecture": "Mimari",
+        "window_light": "Pencere ışığı",
+        "travel_setting": "Seyahat",
+        "editorial_still_life": "Editoryal natürmort",
+        "macro": "Makro",
+        "reflection": "Yansıma",
+        "stone": "Taş yüzey",
+        "textile": "Tekstil",
+        "shadow": "Gölge oyunu",
+        "clean_packshot": "Temiz lüks packshot",
+        "on_neck": "Boyunda",
+        "on_ear": "Kulakta",
+        "on_hand": "Elde",
+        "on_wrist": "Bilekte",
+        "beauty_macro": "Beauty yakın plan",
+        "editorial_closeup": "Editoryal portre",
+        "mirror": "Ayna",
+        "reflective_surface": "Yansıtıcı yüzey",
+        "wrist_hero": "Bilek hero",
+        "executive": "Executive",
+        "travel": "Seyahat",
+        "outdoor": "Dış mekân",
+        "lifestyle_closeup": "Lifestyle yakın plan",
+        "desk": "Masa",
+        "leather": "Deri",
+        "metal": "Metal",
+        "fabric": "Kumaş",
+        "box_composition": "Kutu kompozisyonu",
+        "macro_detail": "Makro detay",
+        "dark_studio": "Koyu stüdyo",
+        "gradient": "Geçiş",
+        "metallic": "Metalik",
+        "spotlight": "Spot ışığı",
+        "catalogue": "Katalog",
+        "packshot": "Temiz packshot",
+        "liquid_interaction": "Sıvı etkileşimi",
+        "acrylic": "Akrilik",
+        "monochrome": "Monokrom",
+        "clinical": "Klinik",
+        "glossy": "Parlak",
+        "shadow_play": "Gölge oyunu",
+        "water": "Su",
+        "botanical": "Botanik",
+        "glasshouse": "Cam sera",
+        "material_study": "Malzeme çalışması",
+        "natural_light": "Doğal ışık",
+        "architectural_model": "Mimari model",
+        "curb": "Kaldırım kenarı",
+        "environmental_portrait": "Çevresel portre",
+        "hotel": "Otel",
+        "model_landscape": "Manzarada model",
+        "night_editorial": "Gece editoryali",
+        "seated_location": "Mekânda oturuş",
+        "storefront": "Vitrin önü",
+        "walking_location": "Mekânda yürüyüş"
       },
       "categories": {
         "apparel": "Giyim",
@@ -1989,10 +2964,10 @@
         "failed": "Düzenleme tamamlanamadı. Lütfen tekrar deneyin.",
         "progressTitle": "Düzenlemeniz uygulanıyor",
         "progressDescription": "Seçili görsel, ürün kimliği korunarak düzenleniyor.",
-                "activeStatus": "Görsel düzenlemesi uygulanıyor…",
+        "activeStatus": "Görsel düzenlemesi uygulanıyor…",
         "successStatus": "Görsel düzenlemesi tamamlandı",
         "failedStatus": "Görsel düzenlemesi başarısız",
-"progressStatuses": {
+        "progressStatuses": {
           "applying": "İstenen değişiklik uygulanıyor",
           "preserving": "Görsel korunuyor",
           "checking": "Ürün kimliği kontrol ediliyor",
@@ -2165,15 +3140,15 @@
           "failed": "Başarısız"
         },
         "format": "Format",
-      "type": "Tür",
-      "favoriteAdd": "Favorilere ekle",
-      "favoriteRemove": "Favorilerden çıkar",
-      "favoriteError": "Favori durumu güncellenemedi.",
-      "animate": "Videoya Dönüştür",
-      "filterAll": "Tümü",
-      "filterFavorites": "Favoriler",
-      "favoritesEmptyHeading": "Henüz favori görsel yok",
-      "favoritesEmptyDescription": "Beğendiğiniz çıktıları yıldızlayarak burada toplayabilirsiniz."
+        "type": "Tür",
+        "favoriteAdd": "Favorilere ekle",
+        "favoriteRemove": "Favorilerden çıkar",
+        "favoriteError": "Favori durumu güncellenemedi.",
+        "animate": "Videoya Dönüştür",
+        "filterAll": "Tümü",
+        "filterFavorites": "Favoriler",
+        "favoritesEmptyHeading": "Henüz favori görsel yok",
+        "favoritesEmptyDescription": "Beğendiğiniz çıktıları yıldızlayarak burada toplayabilirsiniz."
       },
       "status": {
         "draft": "Taslak",

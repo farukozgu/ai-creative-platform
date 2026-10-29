@@ -11,6 +11,7 @@ import { Link } from "@/i18n/navigation";
 import styles from "@/features/video/video-library.module.css";
 import { VideoJobProgress } from "./video-job-progress";
 import { VideoDownloadButton } from "./video-download-button";
+import { VideoDeleteButton } from "./video-delete-button";
 import { VideoFidelityAnalysis, type VideoFidelityCopy } from "./video-fidelity-analysis";
 import type { VideoFidelityAnalysisAvailability } from "@/lib/video-fidelity/types";
 
@@ -81,7 +82,10 @@ export function VideoDetail({ record, locale, copy, fidelityAvailability }: Vide
               <h1>{record.title}</h1>
               <p><span className={`${styles.status} ${styles[`status_${record.status}`]}`}>{copy.status[record.status]}</span></p>
             </div>
-            {playable ? <VideoDownloadButton jobId={record.id} label={copy.download} /> : null}
+            <div className={styles.detailActions}>
+              {playable ? <VideoDownloadButton jobId={record.id} label={copy.download} /> : null}
+              <VideoDeleteButton jobId={record.id} title={record.title} disabled={record.status === "queued" || record.status === "processing"} />
+            </div>
           </div>
         </header>
         {record.status === "queued" || record.status === "processing" ? <VideoJobProgress jobId={record.id} /> : null}

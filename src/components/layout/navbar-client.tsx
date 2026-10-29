@@ -129,7 +129,7 @@ export function NavbarClient({isAuthenticated}: NavbarClientProps) {
               <LanguageSwitcher />
               <Button
                 href={isAuthenticated ? workspaceHref : getPathname({href: siteConfig.routes.signup, locale})}
-                variant="dark"
+                variant="primary"
                 size="sm"
                 className="navbar-cta"
               >

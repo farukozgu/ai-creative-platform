@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 
@@ -191,17 +193,17 @@ export function ProjectImageViewer({ src, alt, open, closeLabel, zoomInLabel, zo
   }
 
   return <dialog ref={dialogRef} className="project-lightbox" aria-label={alt} onCancel={(event) => { event.preventDefault(); close(); }} onClose={() => { fit(); triggerRef.current?.focus(); }} onClick={(event) => { if (event.target === event.currentTarget) close(); }}>
-    <button type="button" className="project-lightbox-close" aria-label={closeLabel} onClick={close}>×</button>
+    <Button variant="icon" size="sm" type="button" className="project-lightbox-close" aria-label={closeLabel} onClick={close}>×</Button>
     <div ref={viewportRef} className={`project-lightbox-viewport${dragging ? " is-dragging" : scale > MIN_SCALE ? " is-zoomed" : ""}`} onWheel={(event) => { event.preventDefault(); const rect = event.currentTarget.getBoundingClientRect(); zoomAt(scaleRef.current * Math.exp(-event.deltaY * 0.002), { x: event.clientX - rect.left, y: event.clientY - rect.top }); }} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerEnd} onPointerCancel={onPointerEnd} onDoubleClick={onDoubleClick}>
       {/* Private signed URLs intentionally bypass the public image optimizer. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img ref={imageRef} className="project-lightbox-image" src={src} alt={alt} draggable={false} onLoad={(event) => setNaturalSize({ width: event.currentTarget.naturalWidth, height: event.currentTarget.naturalHeight })} style={{ width: fittedSize.width || undefined, height: fittedSize.height || undefined, transform: `translate3d(${pan.x}px, ${pan.y}px, 0) scale(${scale})` }} />
     </div>
     <div className="project-lightbox-controls" aria-label={t("zoomControls")}>
-      <button type="button" aria-label={zoomOutLabel} onClick={() => zoomAt(scaleRef.current / 1.2)}>−</button>
+      <Button variant="icon" size="sm" type="button" aria-label={zoomOutLabel} onClick={() => zoomAt(scaleRef.current / 1.2)}>−</Button>
       <output aria-live="polite">{Math.round(scale * 100)}%</output>
-      <button type="button" aria-label={zoomInLabel} onClick={() => zoomAt(scaleRef.current * 1.2)}>+</button>
-      <button type="button" className="project-lightbox-reset" aria-label={resetLabel} onClick={fit}>{resetLabel}</button>
+      <Button variant="icon" size="sm" type="button" aria-label={zoomInLabel} onClick={() => zoomAt(scaleRef.current * 1.2)}>+</Button>
+      <Button variant="secondary" size="sm" type="button" className="project-lightbox-reset" aria-label={resetLabel} onClick={fit}>{resetLabel}</Button>
       {downloadControl}
     </div>
   </dialog>;

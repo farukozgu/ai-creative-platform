@@ -21,7 +21,7 @@ export function ProjectCardMenu({projectId, locale, menuLabel, deleteMessages, r
   const action = deleteProject.bind(null, locale, projectId);
 
   return <div ref={rootRef} className="project-card-actions" onClick={(event) => event.stopPropagation()}>
-    <Button ref={triggerRef} type="button" variant="ghost" size="sm" className="project-card-menu-trigger" aria-label={menuLabel} aria-haspopup="menu" aria-expanded={menuOpen} onClick={toggle}>
+    <Button ref={triggerRef} type="button" variant="icon" size="sm" className="project-card-menu-trigger" aria-label={menuLabel} aria-haspopup="menu" aria-expanded={menuOpen} onClick={toggle}>
       <span aria-hidden="true">···</span>
     </Button>
     {menuOpen ? <div className="project-card-menu-content" role="menu">

@@ -35,17 +35,17 @@ export class SupabaseVideoSourceResolver implements VideoSourceResolver {
       objectPath = result.data.output_object_path;
     }
     const downloaded = await supabase.storage.from(bucketId).download(objectPath);
-    if (downloaded.error || !downloaded.data || downloaded.data.size <= 0 || downloaded.data.size > 25 * 1024 * 1024 || !["image/jpeg", "image/png"].includes(downloaded.data.type)) return null;
+    if (downloaded.error || !downloaded.data || downloaded.data.size <= 0 || downloaded.data.size > 25 * 1024 * 1024 || !["image/jpeg", "image/png", "image/webp"].includes(downloaded.data.type)) return null;
     const metadata = await sharp(Buffer.from(await downloaded.data.arrayBuffer()), { failOn: "error", limitInputPixels: 40_000_000 }).metadata();
     if (!metadata.width || !metadata.height || metadata.width < 360 || metadata.height < 360 || metadata.width > 2000 || metadata.height > 2000
-      || !["jpeg", "png"].includes(metadata.format ?? "") || (metadata.pages ?? 1) > 1 || (metadata.orientation ?? 1) !== 1) return null;
+      || !["jpeg", "png", "webp"].includes(metadata.format ?? "") || (metadata.pages ?? 1) > 1 || (metadata.orientation ?? 1) !== 1) return null;
     const aspectRatio = ratioFor(metadata.width, metadata.height);
     if (!aspectRatio) return null;
     const signed = await supabase.storage.from(bucketId).createSignedUrl(objectPath, 3600);
     if (signed.error || !signed.data) return null;
     return {
       reference: source, providerUrl: signed.data.signedUrl, expiresAt: new Date(Date.now() + 3600_000).toISOString(),
-      mimeType: downloaded.data.type as "image/jpeg" | "image/png", sizeBytes: downloaded.data.size,
+      mimeType: downloaded.data.type as "image/jpeg" | "image/png" | "image/webp", sizeBytes: downloaded.data.size,
       width: metadata.width, height: metadata.height, aspectRatio,
     };
   }

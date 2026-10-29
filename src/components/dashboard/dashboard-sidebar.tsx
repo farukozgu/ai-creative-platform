@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { DashboardIcon } from "@/components/dashboard/dashboard-icons";
@@ -31,9 +33,9 @@ export function DashboardSidebar({ displayName, collapsed, onToggle }: Dashboard
       <Link href="/dashboard" className={styles.brand} aria-label={t("brand")}>
         <span className={styles.brandName}>{t("brand")}</span>
       </Link>
-      <button type="button" className={styles.toggle} aria-label={collapsed ? t("expandSidebar") : t("collapseSidebar")} aria-expanded={!collapsed} title={collapsed ? t("expandSidebar") : t("collapseSidebar")} onClick={onToggle}>
+      <Button variant="icon" size="sm" type="button" className={styles.toggle} aria-label={collapsed ? t("expandSidebar") : t("collapseSidebar")} aria-expanded={!collapsed} title={collapsed ? t("expandSidebar") : t("collapseSidebar")} onClick={onToggle}>
         <DashboardIcon name={collapsed ? "expand" : "collapse"} />
-      </button>
+      </Button>
     </header>
     <div className={styles.body}>
       <section className={styles.navSection} aria-labelledby="sidebar-workspace-label">

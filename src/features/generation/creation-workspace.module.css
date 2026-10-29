@@ -94,10 +94,10 @@
 }
 .inspector :global(.creation-flow.is-intro) { grid-template-rows: 0 minmax(0, 1fr) auto; }
 .inspector :global(.creation-stage) > * { min-width: 0; }
-.inspector :global(.creation-flow) h1 { font-size: 1.25rem; line-height: 1.4; overflow-wrap: anywhere; }
+.inspector :global(.creation-flow) h1 { font-size: var(--text-heading-3); line-height: 1.4; overflow-wrap: anywhere; }
 .inspector :global(.creation-step-header) { display: grid; gap: 0.5rem; }
 .inspector :global(.creation-step-header p),
-.inspector :global(.creation-intro-copy > p) { color: var(--dashboard-muted); font-size: 0.875rem; line-height: 1.5; }
+.inspector :global(.creation-intro-copy > p) { color: var(--dashboard-muted); font-size: var(--text-ui); line-height: 1.5; }
 .inspector :global(.creation-intro-meta) { display: grid; gap: 0.5rem; margin-bottom: 1rem; }
 .inspector :global(.creation-type-options) { grid-template-columns: minmax(0, 1fr); }
 .inspector :global(.creation-type-card) { min-height: 0; padding: 1rem; }
@@ -106,7 +106,7 @@
 .inspector :global(.creation-type-arrow) { display: none; }
 .inspector :global(.creation-type-footer),
 .inspector :global(.creation-type-copy) { display: grid; gap: 0.5rem; }
-.inspector :global(.creation-name-input) { font-size: 1rem; }
+.inspector :global(.creation-name-input) { font-size: var(--text-body); }
 .inspector :global(.creation-upload-grid),
 .inspector :global(.creation-reference-grid),
 .inspector :global(.creation-ratio-grid) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -125,14 +125,14 @@
 .inspector :global(.creation-preset-copy) { display: grid; gap: 0.5rem; }
 .inspector :global(.creation-paths) { gap: 0.5rem; }
 .inspector :global(.creation-paths button) { padding: 0.75rem; overflow-wrap: anywhere; }
-.inspector :global(.creation-authority-note) { display: grid; gap: 0.5rem; font-size: 0.875rem; }
+.inspector :global(.creation-authority-note) { display: grid; gap: 0.5rem; font-size: var(--text-ui); }
 .inspector :global(.creation-authority-note svg) { width: 1.25rem; height: 1.25rem; }
 .inspector :global(.creation-presentation-fieldset) { min-width: 0; }
 .inspector :global(.creation-review-media) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; }
 .inspector :global(.creation-review-media img) { width: 100%; height: auto; }
 .inspector :global(.creation-brief) { overflow-wrap: anywhere; }
 .inspector :global(.creation-brief > div) { display: grid; gap: 0.5rem; }
-.inspector :global(.creation-brief strong) { font-size: 0.875rem; }
+.inspector :global(.creation-brief strong) { font-size: var(--text-ui); }
 .inspector :global(.creation-actions) {
   grid-row: 3;
   min-height: var(--creation-footer-height);
@@ -164,8 +164,8 @@
 }
 .empty { align-self: center; justify-self: center; width: min(100%, 20rem); text-align: center; }
 .empty svg { width: 1.5rem; height: 1.5rem; margin: 0 auto 1rem; color: var(--dashboard-muted); }
-.empty h2 { font-size: 1.25rem; line-height: 1.4; }
-.empty p { margin-top: 0.5rem; font-size: 0.875rem; line-height: 1.5; color: var(--dashboard-muted); }
+.empty h2 { font-size: var(--text-heading-3); line-height: 1.4; }
+.empty p { margin-top: 0.5rem; font-size: var(--text-ui); line-height: 1.5; color: var(--dashboard-muted); }
 .workspace button:focus-visible { outline: 2px solid var(--dashboard-focus); outline-offset: 2px; }
 
 @media (min-width: 1024px) and (max-width: 1199px) {
@@ -187,7 +187,7 @@
   .workspace[data-view="preview"] .inspector :global(.creation-actions) { visibility: visible; }
   .inspector :global(.creation-actions) { padding-bottom: calc(1rem + env(safe-area-inset-bottom)); min-height: calc(var(--creation-footer-height) + env(safe-area-inset-bottom)); }
   .inspector :global(.creation-stage), .inspector :global(.creation-progress) { padding-inline: 1rem; }
-  .inspector input, .inspector textarea { font-size: 1rem; }
+  .inspector input, .inspector textarea { font-size: var(--text-body); }
 }
 
 @media (max-width: 767px) {

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { createHash } from "node:crypto";
 import sharp from "sharp";
-import { prepareVideoSourceImage, videoSourceFrameSizes } from "../src/lib/video-generation/prepare-source-image";
+import { getSafeVideoImageTransformDiagnostic, prepareVideoSourceImage, videoSourceFrameSizes } from "../src/lib/video-generation/prepare-source-image";
 
 async function jacketSizeFixture() {
   const tile = (r: number, g: number, b: number, width: number, height: number) => sharp({ create: { width, height, channels: 3, background: { r, g, b } } }).png().toBuffer();
@@ -43,13 +43,50 @@ for (const ratio of ["9:16", "16:9", "1:1"] as const) test(`2400×3600 JPEG beco
   assert.ok(frame.image.length < 25 * 1024 * 1024);
 });
 
-test("preparation rejects unsupported formats, corrupt data, oversized files and decompression bombs", async () => {
+test("preparation rejects corrupt data, oversized files and decompression bombs", async () => {
   await assert.rejects(prepareVideoSourceImage(Buffer.from("broken"), "9:16"));
   await assert.rejects(prepareVideoSourceImage(Buffer.alloc(25 * 1024 * 1024 + 1), "9:16"));
   const webp = await sharp({ create: { width: 500, height: 500, channels: 3, background: "white" } }).webp().toBuffer();
-  await assert.rejects(prepareVideoSourceImage(webp, "1:1"));
+  const webpFrame = await prepareVideoSourceImage(webp, "1:1");
+  assert.equal((await sharp(webpFrame.image).metadata()).format, "png");
   const pixels = await sharp({ create: { width: 8000, height: 6000, channels: 3, background: "white" } }).png().toBuffer();
   await assert.rejects(prepareVideoSourceImage(pixels, "1:1"));
+});
+
+test("PNG, JPEG, and WebP are normalized without cropping in portrait, landscape, and square sizes", async () => {
+  const sources = [
+    await sharp({ create: { width: 180, height: 320, channels: 4, background: { r: 20, g: 80, b: 160, alpha: 0.7 } } }).png().toBuffer(),
+    await sharp({ create: { width: 640, height: 360, channels: 3, background: { r: 170, g: 110, b: 40 } } }).jpeg().toBuffer(),
+    await sharp({ create: { width: 420, height: 420, channels: 3, background: { r: 40, g: 140, b: 90 } } }).webp().toBuffer(),
+  ];
+  for (const source of sources) for (const ratio of ["16:9", "9:16", "1:1"] as const) {
+    const result = await prepareVideoSourceImage(source, ratio);
+    assert.deepEqual({ width: result.width, height: result.height }, videoSourceFrameSizes[ratio]);
+    const metadata = await sharp(result.image).metadata();
+    assert.equal(metadata.format, "png");
+    assert.equal(metadata.hasAlpha, false);
+  }
+});
+
+test("reported shoe and glasses PNG dimensions prepare for landscape output", async () => {
+  for (const [width, height] of [[1070, 1338], [720, 386]] as const) {
+    const source = await sharp({ create: { width, height, channels: 4, background: { r: 90, g: 30, b: 20, alpha: 1 } } }).png().toBuffer();
+    const result = await prepareVideoSourceImage(source, "16:9");
+    const metadata = await sharp(result.image).metadata();
+    assert.equal(metadata.format, "png");
+    assert.equal(metadata.width, 1920);
+    assert.equal(metadata.height, 1080);
+    assert.equal(metadata.hasAlpha, false);
+  }
+});
+
+test("invalid image data reports a safe metadata transform diagnostic", async () => {
+  await assert.rejects(prepareVideoSourceImage(Buffer.from("not an image"), "16:9"), error => {
+    const diagnostic = getSafeVideoImageTransformDiagnostic(error);
+    assert.deepEqual(diagnostic, { step: "metadata", sharpFormat: null, pageCount: null, rejectionReason: "metadata_error", inputMimeType: null,
+      width: null, height: null, targetAspectRatio: "16:9", sharpCode: null });
+    return true;
+  });
 });
 
 test("transparent PNG and EXIF-oriented JPEG are normalized to an opaque safe frame", async () => {

@@ -70,7 +70,7 @@ export function DeleteProjectModal({action, open, onClose, redirectOnSuccess = f
       <div className="delete-project-dialog-actions">
         <Button type="button" variant="secondary" size="sm" onClick={close} disabled={pending}>{messages.cancel}</Button>
         <form action={formAction}>
-          <Button type="submit" variant="primary" size="sm" disabled={pending} aria-busy={pending}>{pending ? messages.deleting : messages.confirm}</Button>
+          <Button type="submit" variant="destructive" size="sm" disabled={pending} aria-busy={pending}>{pending ? messages.deleting : messages.confirm}</Button>
         </form>
       </div>
     </div>

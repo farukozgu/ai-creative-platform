@@ -44,7 +44,7 @@ src/
 - Rastgele hex renk, border-radius, gölge, spacing veya transition değeri kullanma; `globals.css` tokenlarını ve mevcut ölçeği kullan.
 - Mevcut UI bileşenini yeniden oluşturma. `Button`, `Badge`, `Container`, `Section` ve `SectionHeading` bileşenlerini kullan; yeni ihtiyaçta önce bunları genişlet.
 - Aynı işlev için birden çok button veya kart sistemi oluşturma.
-- Font kullanımını tutarlı tut: Body/UI ve başlıklarda `next/font/local` ile `public/poppins/` içindeki yerel Poppins dosyalarını kullan (400, 500, 600, 700; mevcut italik varyantları). Font indirme veya Google Fonts kullanma; Türkçe karakter desteğini koru.
+- Font kullanımını tutarlı tut: Başlıklarda Bricolage Grotesque, body/UI, buton ve formlarda Onest kullan. `src/app/fonts.ts` içindeki `next/font/local` tanımlarını, `public/fonts/` içindeki yerel değişken fontları ve `globals.css` tipografi tokenlarını kullan. Harici font servisine runtime isteği ekleme; TR/EN karakter desteğini ve font lisanslarını koru. Ortak sistemin kullanım rehberi `docs/design-system.md` içindedir.
 - Uzun paragraflardan, aşırı küçük metinlerden ve görselin önüne geçen içerikten kaçın.
 
 # Component Standards

@@ -3,6 +3,7 @@
 import { useEffect, useRef, type ChangeEvent, type DragEvent } from "react";
 
 import { DashboardIcon } from "@/components/dashboard/dashboard-icons";
+import { Button } from "@/components/ui/button";
 import type {
   VideoLibraryAsset,
   VideoSource,
@@ -81,7 +82,7 @@ export function VideoSourceSelector({
   return (
     <section ref={sectionRef} className={styles.controlSection} aria-labelledby="video-source-heading" tabIndex={-1}>
       <div className={styles.controlHeading}>
-        <h2 id="video-source-heading">{copy.heading}</h2>
+        <h2 id="video-source-heading" tabIndex={-1}><span className={styles.stepNumber} aria-hidden="true">01</span>{copy.heading}</h2>
         <p>{copy.description}</p>
       </div>
 
@@ -114,10 +115,10 @@ export function VideoSourceSelector({
             </small>
           </div>
           <div className={styles.sourceActions}>
-            <button type="button" onClick={() => inputRef.current?.click()}>
+            <Button variant="secondary" size="sm" onClick={() => inputRef.current?.click()}>
               {copy.replace}
-            </button>
-            <button type="button" onClick={onRemove}>{copy.remove}</button>
+            </Button>
+            <Button variant="ghost" size="sm" onClick={onRemove}>{copy.remove}</Button>
           </div>
         </div>
       ) : (
@@ -136,14 +137,17 @@ export function VideoSourceSelector({
 
       <input
         ref={inputRef}
+        id="video-source-upload"
         className="sr-only"
         type="file"
-        accept="image/jpeg,image/png"
+        accept="image/jpeg,image/png,image/webp"
+        tabIndex={-1}
         aria-label={source ? copy.replace : copy.upload}
         onChange={chooseFile}
       />
 
-      <button
+      <Button variant="secondary"
+        id="video-source-library-toggle"
         type="button"
         className={styles.libraryToggle}
         aria-expanded={libraryOpen}
@@ -152,7 +156,7 @@ export function VideoSourceSelector({
       >
         <DashboardIcon name="projects" />
         <span>{libraryOpen ? copy.closeLibrary : copy.chooseLibrary}</span>
-      </button>
+      </Button>
 
       {libraryOpen ? (
         <div
@@ -167,7 +171,7 @@ export function VideoSourceSelector({
           {libraryStatus === "error" ? (
             <div className={styles.libraryState} role="alert">
               <p>{copy.libraryError}</p>
-              <button type="button" onClick={onRetryLibrary}>{copy.retry}</button>
+              <Button variant="secondary" size="sm" type="button" onClick={onRetryLibrary}>{copy.retry}</Button>
             </div>
           ) : null}
           {libraryStatus === "success" && libraryAssets.length === 0 ? (

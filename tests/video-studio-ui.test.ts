@@ -9,6 +9,27 @@ import {
 
 const read = (path: string) => readFileSync(path, "utf8");
 
+test("submission quote rejection reasons have separate Turkish and English messages", () => {
+  const tr = JSON.parse(read("src/messages/tr.json"));
+  const en = JSON.parse(read("src/messages/en.json"));
+  const reasons = ["not_allowlisted", "invalid_draft", "unsafe_motion", "already_used", "policy_denied", "snapshot_unavailable", "quote_unavailable", "repository_unavailable"];
+  for (const messages of [tr, en]) {
+    const find = (value: unknown): Record<string, unknown> | null => {
+      if (!value || typeof value !== "object") return null;
+      const record = value as Record<string, unknown>;
+      if ("quote_policy_denied" in record) return record;
+      for (const child of Object.values(record)) { const found = find(child); if (found) return found; }
+      return null;
+    };
+    const section = find(messages);
+    assert.ok(section);
+    const texts = reasons.map(reason => section[`quote_${reason}`]);
+    assert.ok(texts.every(text => typeof text === "string" && text.length > 0));
+    assert.equal(new Set(texts).size, reasons.length);
+  }
+  assert.match(read("src/features/video/video-studio-workspace.tsx"), /quote_\$\{result.reasonCode\}/);
+});
+
 test("Video Studio route uses the authenticated dashboard boundary", () => {
   assert.ok(existsSync("src/app/[locale]/dashboard/video/page.tsx"));
   const page = read("src/app/[locale]/dashboard/video/page.tsx");
@@ -75,7 +96,7 @@ test("Video Studio keeps secondary controls and full prompts out of the primary 
   const inspector = read("src/features/video/video-generation-inspector.tsx");
   const panel = read("src/features/video/video-director-panel.tsx");
   const workspace = read("src/features/video/video-studio-workspace.tsx");
-  assert.match(inspector, /\{presetControls\}[\s\S]*video-prompt-heading[\s\S]*qualityHeading[\s\S]*outputHeading[\s\S]*\{directorControls\}[\s\S]*\{advancedSettings \?\? preservationControls\}/);
+  assert.match(inspector, /\{presetControls\}[\s\S]*video-prompt-heading[\s\S]*qualityHeading[\s\S]*outputHeading[\s\S]*\{advancedSettings \?\? preservationControls\}[\s\S]*\{directorControls\}/);
   assert.doesNotMatch(inspector, /submissionId|quoteSummary|preparationOnly/);
   assert.match(panel, /<details>[\s\S]*fullPlan[\s\S]*shotFields/);
   assert.match(workspace, /<details className=\{styles\.payloadDetails\}>/);
@@ -134,15 +155,15 @@ test("disabled generation explains the next required step in both locales", () =
   }
 });
 
-test("Video Studio shell has anchored controls and responsive views", () => {
+test("Video Studio shell has a balanced workspace and a continuous mobile flow", () => {
   const styles = read("src/features/video/video-studio-workspace.module.css");
 
-  assert.match(styles, /grid-template-rows: auto minmax\(0, 1fr\) auto/);
-  assert.match(styles, /\.inspectorScroll[\s\S]*min-height: 0;[\s\S]*overflow-y: auto/);
+  assert.match(styles, /\.workspace[\s\S]*overflow-y: auto/);
+  assert.match(styles, /grid-template-columns: minmax\(0, 1\.05fr\) minmax\(0, 1fr\)/);
   assert.match(styles, /@media \(max-width: 1023px\)/);
   assert.match(styles, /@media \(max-width: 767px\)/);
-  assert.match(styles, /\.workspace\[data-view="controls"\] \.canvasRegion/);
-  assert.match(styles, /--video-inspector-width: 22\.5rem/);
+  assert.doesNotMatch(styles, /\[data-view="(?:controls|preview)"\][^{]*\{\s*display: none/);
+  assert.match(styles, /\.canvasRegion \{ position: sticky; top: 0; \}/);
   assert.match(styles, /\.mediaFrame\[data-aspect-ratio="16:9"\]/);
   assert.match(styles, /\.mediaFrame\[data-aspect-ratio="9:16"\]/);
   assert.match(styles, /\.mediaFrame\[data-aspect-ratio="1:1"\]/);

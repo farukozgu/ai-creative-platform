@@ -26,10 +26,14 @@ function mapJob(row: VideoJobRow): VideoJobRecord {
 }
 
 function insertRow(input: Parameters<VideoJobRepository["createOrGet"]>[0]) {
+  // The real schema requires nonempty creative_direction_snapshot. Blank user
+  // intent is valid; persist its verified server direction while draftHash
+  // continues to bind the original request for approval/idempotency checks.
+  const direction = input.prompt.trim() || input.preservation?.director?.plan.summary || input.preservation?.compiledPrompt || input.prompt;
   return {
     owner_id: input.ownerId, project_id: null, input_asset_id: null, generation_type: "video",
     ...(input.preservation ? { provider_metadata: { videoPreservation: input.preservation } } : {}),
-    client_submission_id: input.clientSubmissionId, video_mode: input.mode, creative_direction_snapshot: input.prompt,
+    client_submission_id: input.clientSubmissionId, video_mode: input.mode, creative_direction_snapshot: direction,
     quality: input.quality, aspect_ratio: input.aspectRatio, duration_seconds: input.durationSeconds,
     camera_movement: input.cameraMovement, source_kind: input.sourceKind, source_id: input.sourceId,
     provider: input.provider, endpoint_id: input.endpointId, model: input.modelId, provider_request_id: input.providerRequestId,
@@ -118,7 +122,12 @@ export class SupabaseVideoJobRepository implements VideoReconciliationRepository
     }));
   }
   async transitionClaimed(claim: VideoReconciliationClaim, from: readonly VideoGenerationStatus[], patch: Partial<VideoJobRecord>) {
-    const { data, error } = await this.client().from("generations").update(patchRow(patch))
+    // Terminal rows become immutable in the same UPDATE: release the lease here,
+    // while the token/version fence still applies, never in a follow-up write.
+    const terminal = patch.status === "failed" || patch.status === "succeeded";
+    const { data, error } = await this.client().from("generations").update({ ...patchRow(patch),
+      ...(terminal ? { reconciliation_lease_token: null, reconciliation_lease_expires_at: null } : {}),
+    })
       .eq("generation_type", "video").eq("id", claim.job.id).in("status", [...from])
       .eq("reconciliation_lease_token", claim.leaseToken).eq("reconciliation_lease_version", claim.leaseVersion)
       .gt("reconciliation_lease_expires_at", new Date().toISOString()).select("*").maybeSingle();

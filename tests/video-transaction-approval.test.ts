@@ -4,7 +4,7 @@ import test from "node:test";
 import { runInNewContext } from "node:vm";
 import ts from "typescript";
 import { videoEndpointCapabilities, videoTierRouting } from "../src/lib/video-generation/capabilities";
-import { canAccessVideoBeta, canSubmitVideoBeta } from "../src/lib/video-generation/beta-policy";
+import { canAccessVideoBeta, canSubmitVideoBeta, videoSubmissionPolicyChecks } from "../src/lib/video-generation/beta-policy";
 import { validateVideoGenerationDraft } from "../src/lib/video-generation/validation";
 import { matchesUsdQuoteConfirmation } from "../src/lib/video-generation/money";
 import { sealVideoQuote, verifyVideoQuote } from "../src/lib/video-generation/quote-receipt";
@@ -21,6 +21,8 @@ const draft: VideoGenerationDraft = { clientSubmissionId: "20000000-0000-4000-80
   quality: "standard", durationSeconds: 5, aspectRatio: "16:9", cameraMovement: "static", source: { kind: "uploaded-image", sourceAssetId: owner } };
 
 function fixture() {
+  const logs: Array<{ stage: string; result: string; fields: Record<string, unknown> }> = [];
+  let failure: "repository" | "quote" | "unsafe" | null = null;
   let currentOwner: string | null = owner, cost = 0.7, calls = 0, sourceReads = 0, sourceAvailable = true, planValid = true;
   let detailPrompt = "detail";
   let submitted: { preservation?: import("../src/lib/video-generation/types").VideoPreservationSnapshot; capability?: import("../src/lib/video-generation/capabilities").VideoEndpointCapability } | null = null;
@@ -30,13 +32,14 @@ function fixture() {
     VIDEO_GENERATION_ENABLED: "true", VIDEO_BETA_TRANSACTION_APPROVALS_ENABLED: "true", VIDEO_BETA_MAX_COST_PER_REQUEST_USD: "0.70",
     VIDEO_BETA_ALLOWED_TIERS: "standard", VIDEO_BETA_ALLOWED_DURATIONS: "5" };
   const mocks: Record<string, unknown> = {
+    "@/lib/video-generation/reference-context": { readProductReferences: async () => [] },
     "@/lib/video-generation/capabilities": { videoEndpointCapabilities, videoTierRouting },
     "@/lib/auth/require-user": { getAuthenticatedUserId: async () => currentOwner },
     "@/lib/video-generation/media-access": {}, "@/lib/video-generation/presentation": { toVideoPresentationRecord: (job: unknown) => job },
-    "@/lib/video-generation/supabase-repository": { SupabaseVideoJobRepository: class { async findBySubmission() { return prior; } async findOwned(_owner: string, id: string) { return history?.find(job => job.id === id) ?? prior; } async listOwned() { return history ?? (prior ? [prior] : []); } } },
+    "@/lib/video-generation/supabase-repository": { SupabaseVideoJobRepository: class { async findBySubmission() { if (failure === "repository") throw new Error("fixture"); return prior; } async findOwned(_owner: string, id: string) { return history?.find(job => job.id === id) ?? prior; } async listOwned() { return history ?? (prior ? [prior] : []); } } },
     "@/lib/video-generation/validation": { validateVideoGenerationDraft },
-    "@/lib/video-generation/beta-policy": { canAccessVideoBeta: (id: string) => canAccessVideoBeta(id, env), canSubmitVideoBeta: (id: string, value: VideoGenerationDraft, price: number) => canSubmitVideoBeta(id, value, price, env) },
-    "@/lib/video-generation/beta-runtime": { getVideoBetaQuote: async (_quality: string, duration: number) => ({ estimatedMaxCostUsd: cost, rate: cost / duration }), VideoBetaBudget: class {}, reconcileVideoBeta: async () => {} },
+    "@/lib/video-generation/beta-policy": { canAccessVideoBeta: (id: string) => canAccessVideoBeta(id, env), canSubmitVideoBeta: (id: string, value: VideoGenerationDraft, price: number) => canSubmitVideoBeta(id, value, price, env), videoSubmissionPolicyChecks: (id: string, value: VideoGenerationDraft, price: number) => videoSubmissionPolicyChecks(id, value, price, env) },
+    "@/lib/video-generation/beta-runtime": { getVideoBetaQuote: async (_quality: string, duration: number) => { if (failure === "quote") throw new Error("fixture"); return { estimatedMaxCostUsd: cost, rate: cost / duration }; }, VideoBetaBudget: class {}, reconcileVideoBeta: async () => {} },
     "@/lib/video-generation/service": { submitVideoGeneration: async (_owner: string, _draft: unknown, dependencies: typeof submitted) => { calls++; submitted = dependencies; return { ok: true, jobId: "job", status: "queued", duplicate: false }; } },
     "@/lib/video-generation/fal-provider": { FalVideoGenerationProvider: class {} },
     "@/lib/video-generation/supabase-source-resolver": { SupabaseVideoSourceResolver: class {} },
@@ -44,15 +47,17 @@ function fixture() {
     "@/lib/video-generation/money": { matchesUsdQuoteConfirmation },
     "@/lib/video-generation/quote-receipt": { sealVideoQuote, verifyVideoQuote },
     "@/lib/video-generation/payload-summary": { summarizeVideoPayload },
+    "@/lib/video-generation/diagnostics": { createVideoCorrelationId: () => "test-correlation", logVideoDiagnostic: (_id: string, stage: string, result: string, fields: Record<string, unknown>) => logs.push({ stage, result, fields }) },
+    "@/lib/video-director/receipt": { readDirectorProfileSnapshot: () => null },
     "@/lib/video-generation/fal-request": { validateKlingMultiPrompt },
     "@/lib/video-generation/progress-phase": { shouldRestoreApprovedVideoJob },
-    "@/lib/video-generation/preservation": { compileProductVideoPrompt: () => ({ prompt: "safe", negativePrompt: "safe", cfgScale: 0.5 }), isUnsafeProductMotion: () => false, VIDEO_PRESERVATION_VERSION: "fixture" },
+    "@/lib/video-generation/preservation": { compileProductVideoPrompt: () => ({ prompt: "safe", negativePrompt: "safe", cfgScale: 0.5 }), isUnsafeProductMotion: () => failure === "unsafe", VIDEO_PRESERVATION_VERSION: "fixture" },
     "@/lib/video-generation/request-identity": { videoDraftHash, matchesVideoRequest: () => true },
     "@/lib/video-generation/source-context": { readOwnedPreparedVideoSource: async () => { sourceReads++; if (!sourceAvailable) throw new Error("Source not owned"); return { profile: null, sourceSha256: "fixture", geometry: {} }; } },
     "@/lib/video-fidelity/availability": { getVideoFidelityAnalysisAvailability: () => ({ enabled: false }) },
     "@/lib/video-fidelity/pricing": { quoteVideoFidelity: () => null },
     "@/lib/video-fidelity/reviews": { videoFidelitySchemaReady: async () => false },
-    "@/lib/video-director/runtime": { getVideoDirectorQuote: () => null, readVerifiedDirectorPlan: (_owner: string, _source: string, input: { shotMode: string }) => planValid ? ({ version: "fixture", shotMode: input.shotMode, shots: [{ camera: "locked" }, { camera: "detail" }] }) : null },
+    "@/lib/video-director/runtime": { readVerifiedDirectorPlan: (_owner: string, _source: string, input: { shotMode: string }) => planValid ? ({ version: "fixture", shotMode: input.shotMode, shots: [{ camera: "locked" }, { camera: "detail" }] }) : null },
     "@/lib/video-director/core": { compileDirectorPlan: (_plan: unknown, input: { shotMode: string; draft: VideoGenerationDraft }) => ({ prompt: "safe", negativePrompt: "safe", cfgScale: 0.5, ...(input.shotMode === "multi" ? { multiPrompt: [{ prompt: "hero", duration: input.draft.durationSeconds === 10 ? "4" : "2" }, { prompt: detailPrompt, duration: input.draft.durationSeconds === 10 ? "6" : "3" }] } : {}) }) },
   };
   const exports = {};
@@ -62,7 +67,7 @@ function fixture() {
     if (!(name in mocks)) throw new Error(`Unmocked dependency: ${name}`);
     return mocks[name];
   } });
-  return { api: exports as typeof actions, env, getCalls: () => calls, getSourceReads: () => sourceReads,
+  return { api: exports as typeof actions, env, logs, fail: (value: typeof failure) => { failure = value; }, getCalls: () => calls, getSourceReads: () => sourceReads,
     owner: (value: string | null) => { currentOwner = value; }, price: (value: number) => { cost = value; },
     previous: (value: Record<string, unknown> | null) => { prior = value; }, source: (value: boolean) => { sourceAvailable = value; },
     history: (value: Record<string, unknown>[]) => { history = value; },
@@ -164,6 +169,32 @@ test("used submission recovery does not need a live quote and never reaches the 
   assert.equal((await f.api.restoreVideoGenerationBySubmissionAction(draft.clientSubmissionId)).status, "success");
   assert.equal((await f.api.restoreLatestVideoGenerationAction()).status, "none");
   assert.equal(f.getCalls(), 0);
+});
+
+test("quote rejection paths return distinct reasons and safe structured diagnostics", async () => {
+  const cases: Array<{ reason: string; configure(f: ReturnType<typeof fixture>): void; value?: unknown }> = [
+    { reason: "not_allowlisted", configure: f => f.owner(null) },
+    { reason: "invalid_draft", configure: () => {}, value: {} },
+    { reason: "unsafe_motion", configure: f => f.fail("unsafe") },
+    { reason: "already_used", configure: f => f.previous({ id: "job" }) },
+    { reason: "policy_denied", configure: f => { f.env.VIDEO_BETA_TRANSACTION_APPROVALS_ENABLED = "false"; } },
+    { reason: "snapshot_unavailable", configure: f => f.source(false) },
+    { reason: "quote_unavailable", configure: f => f.fail("quote") },
+    { reason: "repository_unavailable", configure: f => f.fail("repository") },
+  ];
+  for (const scenario of cases) {
+    const f = fixture(); scenario.configure(f);
+    const result = await f.api.quoteVideoSubmissionAction(scenario.value ?? draft);
+    assert.notEqual(result.status, "success");
+    if (result.status === "success") throw new Error("Expected rejection");
+    assert.equal(result.reasonCode, scenario.reason);
+    const log = f.logs.find(event => event.stage === "video_quote_submission");
+    assert.equal(log?.result, "rejected");
+    assert.equal(log?.fields.reasonCode, scenario.reason);
+    if (scenario.reason === "policy_denied") assert.equal(log?.fields.condition, "beta_approvals_enabled");
+    assert.equal(f.getCalls(), 0);
+    assert.ok(!JSON.stringify(f.logs).includes("fixture-secret"));
+  }
 });
 
 test("legacy active jobs recover without a configured submission UUID or a paid request", async () => {

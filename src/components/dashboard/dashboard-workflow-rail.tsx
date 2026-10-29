@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { DashboardIcon } from "./dashboard-icons";
 import styles from "./dashboard-home.module.css";
@@ -40,8 +42,8 @@ export function DashboardWorkflowRail({ children, label, previousLabel, nextLabe
       <div className={styles.railHeading}>
         <p>{label}</p>
         <div className={styles.railControls}>
-        <button type="button" aria-label={previousLabel} disabled={bounds.start} onClick={() => move(-1)}><DashboardIcon name="arrow" /></button>
-        <button type="button" aria-label={nextLabel} disabled={bounds.end} onClick={() => move(1)}><DashboardIcon name="arrow" /></button>
+        <Button variant="icon" size="sm" type="button" aria-label={previousLabel} disabled={bounds.start} onClick={() => move(-1)}><DashboardIcon name="arrow" /></Button>
+        <Button variant="icon" size="sm" type="button" aria-label={nextLabel} disabled={bounds.end} onClick={() => move(1)}><DashboardIcon name="arrow" /></Button>
         </div>
       </div>
       <div ref={railRef} className={styles.rail} role="region" aria-label={label} tabIndex={0} onScroll={updateBounds} onKeyDown={(event) => {

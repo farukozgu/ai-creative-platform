@@ -198,7 +198,7 @@ export function ContactForm() {
         </ContactField>
 
         <div className="contact-submit-group">
-          <Button type="submit" variant="dark" size="lg" className="w-full">
+          <Button type="submit" variant="primary" size="lg" className="w-full">
             {t("submit")}
           </Button>
           <p className="contact-helper">{t("helper")}</p>

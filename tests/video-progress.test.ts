@@ -10,6 +10,7 @@ test("video progress phase reflects only persisted provider and storage state", 
   assert.equal(getVideoProgressPhase({ ...base, status: "queued" }), "queued");
   assert.equal(getVideoProgressPhase({ ...base, status: "queued", providerRequestId: null }), "submission-uncertain");
   assert.equal(getVideoProgressPhase({ ...base, status: "processing" }), "processing");
+  assert.equal(getVideoProgressPhase({ ...base, status: "processing", errorCode: "output_persistence_failure" }), "storage-retry");
   assert.equal(getVideoProgressPhase({ ...base, status: "processing", outputObjectPath: "private/output.mp4" }), "finalizing");
   assert.equal(getVideoProgressPhase({ ...base, status: "succeeded", outputObjectPath: "private/output.mp4" }), "ready");
   assert.equal(getVideoProgressPhase({ ...base, status: "failed", errorCode: "provider_submission_ambiguous", providerRequestId: null }), "ambiguous");

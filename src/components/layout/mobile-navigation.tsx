@@ -179,7 +179,7 @@ export function MobileNavigation({isAuthenticated}: MobileNavigationProps) {
               ) : null}
               <Button
                 href={isAuthenticated ? getPathname({href: "/dashboard", locale}) : getPathname({href: siteConfig.routes.signup, locale})}
-                variant="dark"
+                variant="primary"
                 size="md"
                 className="flex-1"
                 onClick={closeMenu}

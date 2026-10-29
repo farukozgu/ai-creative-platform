@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+
 import { type ChangeEvent, type DragEvent, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
@@ -104,9 +106,9 @@ export function ProductImageUpload({ projectId, userId, initialAssets, registerA
         <span className="project-product-role">{index === 0 ? t("primary") : t("supporting")}</span>
         <div className="project-product-actions">
           {index > 0 ? <button type="button" onClick={() => void makePrimary(asset.id)} disabled={isBusy}>{t("setPrimary")}</button> : null}
-          {index > 1 ? <button type="button" aria-label={t("moveEarlier", { index: index + 1 })} onClick={() => void moveSupporting(index, -1)} disabled={isBusy}>↑</button> : null}
-          {index > 0 && index < assets.length - 1 ? <button type="button" aria-label={t("moveLater", { index: index + 1 })} onClick={() => void moveSupporting(index, 1)} disabled={isBusy}>↓</button> : null}
-          <button type="button" aria-label={t("remove", { index: index + 1 })} onClick={() => void removeAsset(asset)} disabled={isBusy || assets.length === 1}>×</button>
+          {index > 1 ? <Button variant="icon" size="sm" type="button" aria-label={t("moveEarlier", { index: index + 1 })} onClick={() => void moveSupporting(index, -1)} disabled={isBusy}>↑</Button> : null}
+          {index > 0 && index < assets.length - 1 ? <Button variant="icon" size="sm" type="button" aria-label={t("moveLater", { index: index + 1 })} onClick={() => void moveSupporting(index, 1)} disabled={isBusy}>↓</Button> : null}
+          <Button variant="icon" size="sm" type="button" aria-label={t("remove", { index: index + 1 })} onClick={() => void removeAsset(asset)} disabled={isBusy || assets.length === 1}>×</Button>
         </div>
       </article>)}
       {!atLimit ? <button type="button" className={`project-product-add ${isDragging ? "is-dragging" : ""}`} onClick={() => inputRef.current?.click()} onDragOver={(event) => { event.preventDefault(); if (!isBusy) setIsDragging(true); }} onDragLeave={() => setIsDragging(false)} onDrop={handleDrop} disabled={isBusy} aria-describedby="product-upload-help"><span aria-hidden="true">+</span><strong>{isBusy ? t("uploading") : t("addView")}</strong></button> : null}

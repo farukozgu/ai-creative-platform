@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+
 import { useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import type { RegisterReferenceAssetResult } from "@/app/[locale]/dashboard/projects/[projectId]/actions";
@@ -49,7 +51,7 @@ export function ReferenceAssetList({ projectId, userId, initialUrls, registerAss
         // eslint-disable-next-line @next/next/no-img-element
         <img key={url} src={url} alt={t("previewAlt", { index: index + 1 })} />
       ))}
-      {urls.length < MAX_PROJECT_REFERENCE_IMAGES ? <button type="button" className="project-reference-add" disabled={uploading} onClick={() => inputRef.current?.click()}>{uploading ? t("uploading") : t("add")}</button> : null}
+      {urls.length < MAX_PROJECT_REFERENCE_IMAGES ? <Button variant="outline" size="sm" type="button" className="project-reference-add" disabled={uploading} onClick={() => inputRef.current?.click()}>{uploading ? t("uploading") : t("add")}</Button> : null}
     </div>
     <input ref={inputRef} type="file" className="sr-only" accept="image/jpeg,image/png,image/webp" multiple aria-label={t("add")} onChange={(event) => void addReferences(Array.from(event.target.files ?? []))} />
     {error ? <p role="alert">{error}</p> : null}

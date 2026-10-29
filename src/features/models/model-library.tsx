@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { DashboardIcon } from "@/components/dashboard/dashboard-icons";
-import { Button } from "@/components/ui/button";
+import {Button, buttonStyles} from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import type { PersistedModelProfile } from "@/features/models/model-profile";
 import styles from "@/features/models/model-studio.module.css";
@@ -18,7 +18,7 @@ export function ModelLibrary({ records, locale }: { records: PersistedModelProfi
   return <main className="dashboard-main"><div className={`dashboard-main-inner dashboard-container ${styles.page}`}>
     <header className={styles.header}>
       <div><p className={styles.eyebrow}>{t("eyebrow")}</p><h1>{t("title")}</h1><p>{t("description")}</p></div>
-      <Link href="/dashboard/models/create" className={styles.primaryAction}><DashboardIcon name="plus" /><span>{t("create")}</span></Link>
+      <Link href="/dashboard/models/create" className={buttonStyles({variant: "primary", className: styles.primaryAction})}><DashboardIcon name="plus" /><span>{t("create")}</span></Link>
     </header>
     <section className={styles.toolbar} aria-label={t("toolbarLabel")}>
       <label className={styles.search}><span className="sr-only">{t("searchLabel")}</span><DashboardIcon name="search" /><input type="search" value={query} placeholder={t("searchPlaceholder")} onChange={(event) => setQuery(event.target.value)} /></label>
@@ -26,7 +26,7 @@ export function ModelLibrary({ records, locale }: { records: PersistedModelProfi
     {records.length === 0 ? <section className={styles.emptyState} aria-live="polite">
       <span className={styles.emptyIcon} aria-hidden="true"><DashboardIcon name="models" /></span>
       <h2>{t("empty.title")}</h2><p>{t("empty.description")}</p>
-      <Link href="/dashboard/models/create" className={styles.secondaryAction}>{t("empty.action")}</Link>
+      <Link href="/dashboard/models/create" className={buttonStyles({variant: "secondary", className: styles.secondaryAction})}>{t("empty.action")}</Link>
     </section> : matchingRecords.length === 0 ? <section className={styles.emptyState} aria-live="polite" aria-labelledby="model-search-empty-title">
       <span className={styles.emptyIcon} aria-hidden="true"><DashboardIcon name="search" /></span>
       <h2 id="model-search-empty-title">{t("noResults.title")}</h2><p>{t("noResults.description", { query })}</p>

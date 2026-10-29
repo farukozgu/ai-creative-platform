@@ -1,64 +1,81 @@
-export const VIDEO_DIRECTOR_VERSION = "video-director-v3";
-export const videoPresetIds = ["luxury-fashion-film", "macro-detail-reveal", "minimal-studio"] as const;
+import { additionalVideoPresets, extraVideoPresetIds } from "./preset-library";
+import { sourcePreservation, sourceStructure, type VideoPreset as LibraryPreset } from "./preset-contract";
+export const VIDEO_DIRECTOR_VERSION = "video-director-3.1-canonical-descriptions-v2";
+export const legacyVideoPresetIds = ["luxury-fashion-film", "macro-detail-reveal", "minimal-studio"] as const;
+export const videoPresetIds = [...legacyVideoPresetIds, ...extraVideoPresetIds] as const;
 export type VideoPresetId = typeof videoPresetIds[number];
 export type VideoShotMode = "single" | "multi";
+export const shotPurposes = ["hero-reveal", "macro-detail", "material-study", "controlled-motion", "lighting-reveal", "final-hero"] as const;
+export type ShotPurpose = typeof shotPurposes[number];
 
-type VideoPreset = {
-  version: number;
-  camera: string;
-  lighting: string;
-  composition: string;
-  motion: string;
-  pace: string;
-  focus: string;
-  shots: readonly { camera: string; composition: string; motion: string; pace: string; focus: string }[];
-};
+type Direction = { camera: string; lighting: string; composition: string; motion: string; pace: string; focus: string };
+type VideoPreset = Direction & { version: number; brief: string; shots: readonly (Direction & { purpose: ShotPurpose })[] };
 
-/** Video-only production defaults. Image presets and Composer remain independent. */
-export const videoDirectorPresets = {
+/** Creative briefs guide the AI; these concise directions are only the free fallback. */
+const legacyPresets = {
   "luxury-fashion-film": {
-    version: 2,
-    camera: "Restrained editorial push-in with a long-lens perspective; preserve the source viewpoint.",
-    lighting: "Maintain source exposure and color; retain soft directional highlights and natural contact shadows.",
-    composition: "Campaign hero framing with clean negative space; keep the complete silhouette and branding readable.",
-    motion: "Stationary product and model; movement comes only from a subtle camera advance.",
-    pace: "Measured opening, gentle advance, settled final hero hold.",
-    focus: "Prioritize silhouette, tailoring, material character and visible craftsmanship already present in the source.",
+    version: 3,
+    brief: "Editorial luxury campaign. Sculpted directional light, long-lens negative space, composed reveal and confident hero finish. Adapt to this product, not just garments.",
+    camera: "Long-lens slow push-in from the source view",
+    lighting: "Soft directional light shapes the visible contour",
+    composition: "Complete silhouette with campaign negative space",
+    motion: "Controlled advance settles into a hero hold",
+    pace: "Measured, confident finish",
+    focus: "Source-visible product silhouette",
     shots: [
-      { camera: "Long-lens editorial framing with a restrained push-in.", composition: "Establish the complete visible silhouette with balanced negative space.", motion: "The product stays stationary.", pace: "Measured opening.", focus: "Visible silhouette and tailoring." },
-      { camera: "Long-lens close framing of a visible construction detail.", composition: "Frame a source-visible material or construction detail without inventing surfaces.", motion: "The product stays stationary.", pace: "A deliberate detail hold.", focus: "Source-visible craftsmanship and texture." },
-      { camera: "Long-lens hero framing with a gentle final hold.", composition: "Return to a composed view of the complete visible product.", motion: "The product stays stationary.", pace: "Settle into a quiet campaign finish.", focus: "Visible identity and silhouette." },
+      { purpose: "hero-reveal", camera: "Long-lens slow push-in", lighting: "Soft directional contour light", composition: "Full visible silhouette with negative space", motion: "Advance settles at the source-facing view", pace: "Measured opening", focus: "Source-visible product silhouette" },
+      { purpose: "lighting-reveal", camera: "Short lateral camera glide within the source view", lighting: "A soft highlight travels over the visible surface", composition: "Off-center close framing of the chosen detail", motion: "Highlight reveals existing relief", pace: "Deliberate reveal", focus: "Source-visible surface detail" },
+      { purpose: "final-hero", camera: "Long-lens locked hero frame", lighting: "Soft directional contour light", composition: "Return to full product with campaign negative space", motion: "Settle into the recognizable source-facing pose", pace: "Confident final hold", focus: "Source-visible product form" },
     ],
   },
   "macro-detail-reveal": {
-    version: 2,
-    camera: "Small optical push toward a visible detail from the existing viewpoint; avoid extreme magnification.",
-    lighting: "Retain the source white balance and fixed soft highlights; protect fine texture from clipped reflections.",
-    composition: "Establish the product before a restrained close view of a source-visible material or construction detail.",
-    motion: "Keep all product parts still; use only a small camera movement toward the chosen visible detail.",
-    pace: "Slow approach with a generous sharp detail hold; no abrupt focus changes.",
-    focus: "Highlight source-visible material, texture and construction details; keep visible marks legible.",
+    version: 3,
+    brief: "Tactile detail-led film. Select an evidenced feature, use source-resolvable macro scale and grazing soft light. Alternate detail scale and recognizable product form.",
+    camera: "Slow optical push toward the chosen visible detail",
+    lighting: "Grazing soft light defines existing surface relief",
+    composition: "Source-resolvable close detail with breathing room",
+    motion: "Approach the detail, then hold it sharply",
+    pace: "Patient detail study",
+    focus: "Source-visible surface detail",
     shots: [
-      { camera: "Controlled product overview from the source viewpoint.", composition: "Establish the complete visible product before the detail.", motion: "The product stays stationary.", pace: "Brief, clear introduction.", focus: "Visible product form." },
-      { camera: "Restrained macro framing on a source-visible detail.", composition: "Close view of visible texture or construction; preserve source detail and orientation.", motion: "The product stays stationary.", pace: "Hold the detail sharply without abrupt focus changes.", focus: "A visible material, seam or hardware detail already in the source." },
-      { camera: "Calm medium product framing at the source viewpoint.", composition: "Return to a recognizable hero view of the visible product.", motion: "The product stays stationary.", pace: "A composed closing hold.", focus: "Visible identity and overall form." },
+      { purpose: "hero-reveal", camera: "Locked medium product overview", lighting: "Soft edge light preserves source colors", composition: "Establish the recognizable visible product", motion: "Hold the source-facing pose", pace: "Brief introduction", focus: "Source-visible product form" },
+      { purpose: "macro-detail", camera: "Restrained macro push toward the visible detail", lighting: "Grazing soft light reveals existing relief", composition: "Close framing at source-resolvable detail scale", motion: "Approach settles into a sharp detail hold", pace: "Patient detail hold", focus: "Source-visible surface detail" },
+      { purpose: "final-hero", camera: "Slow pull-back to medium hero framing", lighting: "Soft edge light preserves source colors", composition: "Return to recognizable product form", motion: "Widen within the known source-facing view", pace: "Calm closing hold", focus: "Source-visible product form" },
     ],
   },
   "minimal-studio": {
-    version: 2,
-    camera: "Locked camera with a stable, natural product perspective.",
-    lighting: "Preserve source lighting, neutral color and stable contact shadows throughout.",
-    composition: "Clean hero composition in the existing setting; balanced margins and complete product visibility.",
-    motion: "Keep the product completely still; retain a stable frame.",
-    pace: "Quiet opening and sustained hero hold with a calm finish.",
-    focus: "Keep original branding, surface texture, color boundaries and construction edges sharp.",
+    version: 3,
+    brief: "Quiet graphic studio film. Stable diffuse light, balanced margins, mostly locked camera and clean changes of scale. Product shape and original marks lead; restrained pace.",
+    camera: "Locked camera at the source-facing viewpoint",
+    lighting: "Diffuse studio light preserves source colors",
+    composition: "Centered full product with balanced margins",
+    motion: "A gentle focus settle resolves the visible form",
+    pace: "Quiet sustained hero hold",
+    focus: "Source-visible product form",
     shots: [
-      { camera: "Locked, balanced studio overview.", composition: "Establish a centered hero view with clean margins.", motion: "The product stays stationary.", pace: "A quiet opening hold.", focus: "Complete visible product and branding." },
-      { camera: "Locked close framing on a source-visible detail.", composition: "Clean close view of an existing surface or construction detail.", motion: "The product stays stationary.", pace: "A steady detail hold.", focus: "Visible texture and construction edges." },
-      { camera: "Locked, symmetrical hero frame.", composition: "Return to the complete visible product with balanced space.", motion: "The product stays stationary.", pace: "A sustained, still final hold.", focus: "Visible branding and source colors." },
+      { purpose: "hero-reveal", camera: "Locked balanced studio overview", lighting: "Diffuse soft light with natural contact shadow", composition: "Centered complete product with clean margins", motion: "Focus settles on the visible contour", pace: "Quiet opening hold", focus: "Source-visible product form" },
+      { purpose: "material-study", camera: "Locked close framing", lighting: "Even diffuse light defines existing texture", composition: "Graphic crop of the chosen source-visible detail", motion: "Gentle focus settle on the existing surface", pace: "Steady detail hold", focus: "Source-visible surface detail" },
+      { purpose: "final-hero", camera: "Locked symmetrical hero frame", lighting: "Diffuse soft light with natural contact shadow", composition: "Return to the full product with balanced space", motion: "Hold the recognizable source-facing pose", pace: "Sustained final hold", focus: "Source-visible product form" },
     ],
   },
-} as const satisfies Record<VideoPresetId, VideoPreset>;
+} as const satisfies Record<typeof legacyVideoPresetIds[number], VideoPreset>;
+
+function compatiblePreset(id: typeof legacyVideoPresetIds[number]): LibraryPreset {
+  const preset = legacyPresets[id];
+  return { ...preset, structure: sourceStructure, preservation: sourcePreservation, strategy: {
+    categories: [], objective: preset.brief, cameraStrategy: [preset.shots[0].camera, preset.shots[1].camera, preset.shots[2].camera],
+    framing: [preset.shots[0].composition, preset.shots[1].composition, preset.shots[2].composition], lighting: preset.lighting, tempo: preset.pace,
+    detailTerms: ["zip", "buckle", "button", "clasp", "hardware", "closure", "stone", "setting", "texture", "grain"],
+    supportedMotion: ["Source-facing camera travel", "Source-resolved close framing"], risks: ["micro-detail", "unseen-surfaces"], variations: {},
+  } };
+}
+const compatiblePresets = {
+  "luxury-fashion-film": compatiblePreset("luxury-fashion-film"),
+  "macro-detail-reveal": compatiblePreset("macro-detail-reveal"),
+  "minimal-studio": compatiblePreset("minimal-studio"),
+};
+
+export const videoDirectorPresets: Record<VideoPresetId, LibraryPreset> = { ...compatiblePresets, ...additionalVideoPresets };
 
 export function isVideoPresetId(value: unknown): value is VideoPresetId {
   return typeof value === "string" && videoPresetIds.some(id => id === value);

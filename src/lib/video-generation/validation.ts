@@ -39,8 +39,13 @@ export function validateVideoGenerationDraft(value: unknown): VideoDraftValidati
   if (typeof input.durationSeconds !== "number" || !durations.has(input.durationSeconds)) return { ok: false, field: "durationSeconds", message: "Select a supported duration." };
   if (typeof input.cameraMovement !== "string" || !cameraMovements.has(input.cameraMovement)) return { ok: false, field: "cameraMovement", message: "Select a supported camera preference." };
   const prompt = typeof input.prompt === "string" ? input.prompt.trim().replace(/\s+/g, " ") : "";
-  if (!prompt) return { ok: false, field: "prompt", message: "A prompt is required." };
+  if (typeof input.prompt !== "string") return { ok: false, field: "prompt", message: "A motion description must be text." };
   if (prompt.length > 2500) return { ok: false, field: "prompt", message: "The prompt must be 2,500 characters or fewer." };
+  if (input.productReferences !== undefined && (!Array.isArray(input.productReferences) || input.productReferences.length > 3
+    || input.productReferences.some(ref => !ref || typeof ref !== "object" || typeof ref.purpose !== "string" || ref.purpose.length > 60
+      || typeof ref.sha256 !== "string" || !/^[a-f0-9]{64}$/.test(ref.sha256) || ref.source?.kind !== "uploaded-image" || !uuidPattern.test(ref.source.sourceAssetId))
+    || new Set(input.productReferences.map(ref => ref.source.sourceAssetId)).size !== input.productReferences.length))
+    return { ok: false, field: "productReferences", message: "Invalid private product references." };
   const source = input.source;
   if (!source || typeof source !== "object") return { ok: false, field: "source", message: "A private source image is required." };
   const candidate = source as Record<string, unknown>;

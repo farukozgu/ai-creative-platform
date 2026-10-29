@@ -3,7 +3,7 @@ import sharp from "sharp";
 import { createHash } from "node:crypto";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { isProductProfile, type ProductProfile } from "@/lib/product-understanding/product-profile";
-import { prepareVideoSourceImage } from "./prepare-source-image";
+import { isAvifImage, prepareVideoSourceImage } from "./prepare-source-image";
 import type { VideoGenerationAspectRatio, VideoSourceReference } from "./types";
 import { sourceFrameGeometry } from "./preservation";
 export { sourceFrameGeometry } from "./preservation";
@@ -44,7 +44,7 @@ export async function readOwnedPreparedVideoSource(ownerId: string, source: Vide
   }
   const image = sharp(original, { failOn: "error", limitInputPixels: 40_000_000 });
   const meta = await image.metadata();
-  if (!meta.width || !meta.height || !["jpeg", "png"].includes(meta.format ?? "") || (meta.pages ?? 1) !== 1) throw new Error("Invalid original image.");
+  if (!meta.width || !meta.height || (!["jpeg", "png", "webp"].includes(meta.format ?? "") && !(meta.format === "heif" && isAvifImage(original))) || (meta.pages ?? 1) !== 1) throw new Error("Invalid original image.");
   const rotated = (meta.orientation ?? 1) >= 5;
   const geometry = sourceFrameGeometry(rotated ? meta.height : meta.width, rotated ? meta.width : meta.height, asset.width, asset.height);
   const verified = await prepareVideoSourceImage(original, ratio);

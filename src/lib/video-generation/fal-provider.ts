@@ -1,9 +1,9 @@
 import "server-only";
 
-import { createFalClient, type FalClient } from "@fal-ai/client";
+import { ApiError, createFalClient, type FalClient } from "@fal-ai/client";
 
 import { buildFalVideoRequestInput } from "@/lib/video-generation/fal-request";
-import { DefiniteVideoProviderFailure, type ProviderVideoFile, type VideoGenerationProvider, type VideoProviderRequest } from "@/lib/video-generation/types";
+import { DefiniteVideoProviderFailure, VideoProviderTaskFailure, type ProviderVideoFile, type VideoGenerationProvider, type VideoProviderRequest } from "@/lib/video-generation/types";
 
 type FalOutput = { video?: { url?: unknown; content_type?: unknown; file_size?: unknown } };
 
@@ -21,7 +21,8 @@ export class FalVideoGenerationProvider implements VideoGenerationProvider {
   private readonly client: FalClient;
 
   constructor(private readonly credentials = process.env.FAL_KEY, private readonly http: typeof fetch = fetch) {
-    this.client = createServerFalClient(credentials, { fetch: (url, init) => http(url, { ...init, redirect: "error", signal: AbortSignal.timeout(20_000) }) });
+    this.client = createServerFalClient(credentials, { fetch: (url, init) => http(url, { ...init, redirect: "error",
+      signal: init?.signal ? AbortSignal.any([init.signal, AbortSignal.timeout(20_000)]) : AbortSignal.timeout(20_000) }) });
   }
 
   async submit(request: VideoProviderRequest) {
@@ -54,20 +55,29 @@ export class FalVideoGenerationProvider implements VideoGenerationProvider {
   }
 
   async getStatus(endpointId: string, requestId: string) {
-    const status = await this.client.queue.status(endpointId, { requestId, logs: false });
+    const status = await this.client.queue.status(endpointId, { requestId, logs: false, abortSignal: AbortSignal.timeout(20_000) });
     const providerStatus = (status as unknown as { status?: unknown }).status;
     if (providerStatus === "IN_QUEUE") return "queued" as const;
     if (providerStatus === "IN_PROGRESS") return "processing" as const;
-    if (providerStatus === "COMPLETED") return "completed" as const;
+    if (providerStatus === "COMPLETED") {
+      const result = status as unknown as { error?: unknown; error_type?: unknown };
+      // Queue completion means a result exists; fal also completes failed tasks.
+      return result.error || result.error_type ? "failed" as const : "completed" as const;
+    }
     if (providerStatus === "FAILED" || providerStatus === "CANCELLED" || providerStatus === "CANCELED") return "failed" as const;
     throw new Error("The provider returned an unknown video task status.");
   }
 
   async getResult(endpointId: string, requestId: string): Promise<ProviderVideoFile> {
-    const response = await this.client.queue.result(endpointId, { requestId });
-    const output = response.data as FalOutput;
-    const video = output.video;
-    if (!video || typeof video.url !== "string") throw new Error("The provider response did not include a video file.");
+    let response;
+    try { response = await this.client.queue.result(endpointId, { requestId, abortSignal: AbortSignal.timeout(20_000) }); }
+    catch (error) {
+      if (error instanceof ApiError && error.status === 422) throw new VideoProviderTaskFailure();
+      throw error;
+    }
+    const output = response.data as FalOutput | null;
+    const video = output?.video;
+    if (!video || typeof video.url !== "string") throw new VideoProviderTaskFailure();
     return {
       url: video.url,
       contentType: typeof video.content_type === "string" ? video.content_type : null,
@@ -76,6 +86,6 @@ export class FalVideoGenerationProvider implements VideoGenerationProvider {
   }
 
   async cancel(endpointId: string, requestId: string) {
-    await this.client.queue.cancel(endpointId, { requestId });
+    await this.client.queue.cancel(endpointId, { requestId, abortSignal: AbortSignal.timeout(20_000) });
   }
 }

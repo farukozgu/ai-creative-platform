@@ -94,6 +94,7 @@ test("Director multi-shot submission keeps the billing boundary, source and idem
       assert.equal(payload.start_image_url, "https://signed.example/source.png");
       assert.equal(payload.enable_safety_checker, true); assert.equal(payload.generate_audio, false);
       assert.equal(request.multiPrompt?.reduce((sum, shot) => sum + Number(shot.duration), 0), 5);
+      assert.deepEqual(request.multiPrompt, compiled.multiPrompt);
       return { requestId: "director-task" };
     } });
     const deps = { repository, provider: mock.value, billing: budget.value, sourceResolver,
@@ -119,6 +120,24 @@ test("Director multi-shot submission keeps the billing boundary, source and idem
     assert.ok(duplicate.ok && duplicate.duplicate); assert.equal(calls, 1);
     assert.equal(repository.records.get(jobId)?.preservation?.director?.plan.presetId, "minimal-studio");
   }
+});
+
+test("invalid compiled single-shot prompts cannot reserve credits or reach provider submit", async () => {
+  const budget = billing(), mock = provider(), repository = new MemoryRepository();
+  const baseDraft = validateVideoGenerationDraft(imageDraft);
+  assert.ok(baseDraft.ok);
+  const input = { draft: baseDraft.value, presetId: "minimal-studio" as const, shotMode: "single" as const, profile: null };
+  const compiled = compileDirectorPlan(fallbackDirectorPlan(input), input);
+  for (const compiledPrompt of ["", "x".repeat(2501)]) {
+    const result = await submitVideoGeneration(ownerId, baseDraft.value, { repository, provider: mock.value, billing: budget.value,
+      preservation: { version: compiled.version, method: "kling", draftHash: videoDraftHash(baseDraft.value), sourceSha256: "fixture",
+        geometry: { originalWidth: 1000, originalHeight: 562, contentRect: { x: 0, y: 0, width: 1, height: 1 } },
+        criticalRegion: null, frameRegion: null, compiledPrompt, negativePrompt: compiled.negativePrompt, cfgScale: compiled.cfgScale, analysisConsent: null },
+      sourceResolver, capability: approvedImageCapability, env: { VIDEO_GENERATION_ENABLED: "true" } });
+    assert.equal(result.ok, false);
+  }
+  assert.equal(budget.counts().reservations, 0);
+  assert.equal(repository.records.size, 0);
 });
 
 test("concurrent use of one reserved submission never causes two paid calls, including lost reservation replies", async () => {
@@ -366,4 +385,36 @@ test("a committed task attachment with a lost response is recovered without a se
     sourceResolver, capability: approvedImageCapability, env: { VIDEO_GENERATION_ENABLED: "true" } });
   assert.equal(result.ok, true); assert.equal(mock.submissions(), 1);
   assert.equal(repository.records.get(jobId)?.status, "queued");
+});
+
+test("reference submit resolves only matched images before reserving credits and preserves the exact element prompt", async () => {
+  for (const available of [false, true]) {
+    const reference = { source: { kind: "uploaded-image" as const, sourceAssetId: "10000000-0000-4000-8000-000000000002" }, sha256: "a".repeat(64), purpose: "dial" };
+    const draft = { ...imageDraft, shotMode: "single" as const, productReferences: [reference], director: { presetId: "minimal-studio" as const, shotMode: "single" as const, receipt: "fixture" } };
+    const input = { draft, presetId: "minimal-studio" as const, shotMode: "single" as const, profile: null };
+    const plan = { ...fallbackDirectorPlan(input), origin: "ai" as const, referenceReviews: [{ index: 0, status: "matched" as const, reason: "Same visible outline", details: [] }] };
+    const compiled = compileDirectorPlan(plan, input);
+    const budget = billing(); let calls = 0;
+    const result = await submitVideoGeneration(ownerId, draft, {
+      repository: new MemoryRepository(), billing: budget.value,
+      provider: provider({ submit: async request => {
+        calls++; assert.deepEqual(request.elementImageUrls, ["https://signed.example/detail.png"]);
+        assert.equal(request.prompt, compiled.prompt);
+        assert.equal(buildFalVideoRequestInput(request).elements?.length, 1);
+        return { requestId: "reference-task" };
+      } }).value,
+      sourceResolver: { resolveOwned: async (_owner, source) => {
+        const main = await sourceResolver.resolveOwned();
+        return source.kind === "uploaded-image" && source.sourceAssetId === reference.source.sourceAssetId ? available && main ? { ...main, providerUrl: "https://signed.example/detail.png" } : null : main;
+      } },
+      capability: approvedImageCapability, env: { VIDEO_GENERATION_ENABLED: "true" },
+      preservation: { version: compiled.version, method: "kling", draftHash: videoDraftHash(draft), sourceSha256: "fixture",
+        geometry: { originalWidth: 1000, originalHeight: 562, contentRect: { x: 0, y: 0, width: 1, height: 1 } },
+        criticalRegion: null, frameRegion: null, compiledPrompt: compiled.prompt, negativePrompt: compiled.negativePrompt, cfgScale: compiled.cfgScale,
+        analysisConsent: null, director: { plan } },
+    });
+    assert.equal(result.ok, available);
+    assert.equal(calls, available ? 1 : 0);
+    assert.equal(budget.counts().reservations, available ? 1 : 0);
+  }
 });

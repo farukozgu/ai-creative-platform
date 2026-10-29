@@ -1,5 +1,7 @@
 "use client";
 
+import {Button, buttonStyles} from "@/components/ui/button";
+
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 
@@ -52,7 +54,6 @@ export function VideoLibrary({ records: initialRecords, locale }: VideoLibraryPr
   const cardCopy: VideoCardCopy = {
     legacyLocal: t("legacyLocal"),
     open: t("card.open"),
-    download: t("card.download"),
     noPreview: t("card.noPreview"),
     thumbnailAlt: t("card.thumbnailAlt"),
     mode: { image: t("modes.image"), text: t("modes.text") },
@@ -75,7 +76,7 @@ export function VideoLibrary({ records: initialRecords, locale }: VideoLibraryPr
             <h1>{t("title")}</h1>
             <p>{t("description")}</p>
           </div>
-          <Link href="/dashboard/video" className={styles.primaryAction}>
+          <Link href="/dashboard/video" className={buttonStyles({variant: "primary", className: styles.primaryAction})}>
             <DashboardIcon name="plus" />
             <span>{t("newVideo")}</span>
           </Link>
@@ -124,14 +125,14 @@ export function VideoLibrary({ records: initialRecords, locale }: VideoLibraryPr
             <span className={styles.emptyIcon} aria-hidden="true"><DashboardIcon name="videoLibrary" /></span>
             <h2>{t("empty.title")}</h2>
             <p>{t("empty.description")}</p>
-            <Link href="/dashboard/video" className={styles.secondaryAction}>{t("empty.action")}</Link>
+            <Link href="/dashboard/video" className={buttonStyles({variant: "secondary", className: styles.secondaryAction})}>{t("empty.action")}</Link>
           </section>
         ) : visibleRecords.length === 0 ? (
           <section className={styles.emptyState} role="status">
             <span className={styles.emptyIcon} aria-hidden="true"><DashboardIcon name="search" /></span>
             <h2>{t("noResults.title")}</h2>
             <p>{t("noResults.description")}</p>
-            <button type="button" className={styles.secondaryAction} onClick={resetControls}>{t("noResults.action")}</button>
+            <Button variant="secondary" size="md" type="button" className={styles.secondaryAction} onClick={resetControls}>{t("noResults.action")}</Button>
           </section>
         ) : (
           <section aria-label={t("galleryLabel")}>

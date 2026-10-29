@@ -2,7 +2,7 @@ import "server-only";
 
 import { getFidelityValidationModel } from "@/lib/fidelity-validation/validate-generated-image";
 import { buildValidationBrief, renderValidationInstructions } from "@/lib/fidelity-validation/build-validation-brief";
-import { getOpenAIClient } from "@/lib/openai/client";
+import { getOpenAIVideoStudioAnalysisClient } from "@/lib/openai/client";
 import { structuredResponseText } from "@/lib/openai/structured-response";
 import { productAnalysisModelOutputSchema } from "@/lib/product-understanding/product-analysis-model-output";
 import type { VideoFidelityFrameInput, VideoFidelityReport } from "./types";
@@ -99,7 +99,7 @@ export async function analyzeVideoFidelity(input: {
   const timeline = `Analyze source asset ${input.sourceAssetId}. The source product is Image 1. The completed ${input.durationSeconds}-second video was sampled as follows: ${frameTimeline} ${input.criticalRegion ? `User-declared (unverified) text: ${JSON.stringify(input.criticalRegion.declaredText)}.` : ""} ${(input.closeups ?? []).map((crop, index) => `Image ${index + 7}: ${crop.label}`).join(" ")}`;
   // Leave part of the conservative token envelope for message/schema framing.
   if (Buffer.byteLength(instructions + timeline + JSON.stringify(reportSchema)) > VIDEO_ANALYSIS_MAX_TEXT_BYTES - 1000) throw new Error("Analysis exceeds priced text envelope.");
-  const response = await getOpenAIClient().responses.create({
+  const response = await getOpenAIVideoStudioAnalysisClient(model).responses.create({
     model,
     instructions,
     input: [{ role: "user", content: [

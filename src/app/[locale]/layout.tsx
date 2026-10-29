@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
+import { bricolage, onest } from "@/app/fonts";
 import { NextIntlClientProvider } from "next-intl";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -9,54 +9,6 @@ import { ThemeInitScript } from "@/components/theme/theme-init-script";
 import { ThemeProviderBoundary } from "@/components/theme/theme-provider-boundary";
 
 import "../globals.css";
-
-const poppins = localFont({
-  src: [
-    {
-      path: "../../../public/poppins/Poppins-Regular.ttf",
-      weight: "400",
-      style: "normal",
-    },
-    {
-      path: "../../../public/poppins/Poppins-Medium.ttf",
-      weight: "500",
-      style: "normal",
-    },
-    {
-      path: "../../../public/poppins/Poppins-SemiBold.ttf",
-      weight: "600",
-      style: "normal",
-    },
-    {
-      path: "../../../public/poppins/Poppins-Bold.ttf",
-      weight: "700",
-      style: "normal",
-    },
-    {
-      path: "../../../public/poppins/Poppins-Italic.ttf",
-      weight: "400",
-      style: "italic",
-    },
-    {
-      path: "../../../public/poppins/Poppins-MediumItalic.ttf",
-      weight: "500",
-      style: "italic",
-    },
-    {
-      path: "../../../public/poppins/Poppins-SemiBoldItalic.ttf",
-      weight: "600",
-      style: "italic",
-    },
-    {
-      path: "../../../public/poppins/Poppins-BoldItalic.ttf",
-      weight: "700",
-      style: "italic",
-    },
-  ],
-  variable: "--font-sans",
-  display: "swap",
-  preload: true,
-});
 
 type LocaleLayoutProps = {
   children: React.ReactNode;
@@ -120,7 +72,7 @@ export default async function LocaleLayout({
       suppressHydrationWarning
     >
       <head><ThemeInitScript /></head>
-      <body className={poppins.variable}>
+      <body className={`${onest.variable} ${bricolage.variable}`}>
         <ThemeProviderBoundary><NextIntlClientProvider>{children}</NextIntlClientProvider></ThemeProviderBoundary>
       </body>
     </html>

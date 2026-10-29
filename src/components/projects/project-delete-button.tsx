@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+
 import {useState} from "react";
 import {useTranslations} from "next-intl";
 import {deleteProject} from "@/app/[locale]/dashboard/actions";
@@ -16,9 +18,9 @@ export function ProjectDeleteButton({projectId, title, locale, messages}: {
   const selection = useProjectSelection();
   const t = useTranslations("Dashboard.projectManagement");
   return <div className={styles.deleteControl} onClick={event => event.stopPropagation()}>
-    <button type="button" className={styles.deleteButton} aria-label={t("deleteProject", {title})} title={t("deleteProject", {title})} disabled={selection?.busy} onClick={() => setOpen(true)}>
+    <Button variant="icon" size="sm" type="button" className={styles.deleteButton} aria-label={t("deleteProject", {title})} title={t("deleteProject", {title})} disabled={selection?.busy} onClick={() => setOpen(true)}>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 6h18M9 6V4h6v2M5 6l1 14h12l1-14M10 10v6m4-6v6" /></svg>
-    </button>
+    </Button>
     {open ? <DeleteProjectModal action={deleteProject.bind(null, locale, projectId)} open={open} onClose={() => setOpen(false)} onPendingChange={selection?.setSinglePending} messages={messages} /> : null}
   </div>;
 }

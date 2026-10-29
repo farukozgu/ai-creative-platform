@@ -1,0 +1,458 @@
+[
+  {
+    "product": "jacket",
+    "presetId": "macro-stitching",
+    "provenance": "offline-authored-assessment",
+    "plan": {
+      "version": "video-director-3.1-references-v1",
+      "presetId": "macro-stitching",
+      "presetVersion": 1,
+      "shotMode": "multi",
+      "referenceReviews": [
+        {
+          "index": 0,
+          "status": "matched",
+          "reason": "Authored fixture: consistent main-product outline",
+          "details": []
+        },
+        {
+          "index": 1,
+          "status": "matched",
+          "reason": "Authored fixture: consistent main-product outline",
+          "details": []
+        }
+      ],
+      "origin": "ai",
+      "intent": "Preset direction selected from verified product evidence.",
+      "intentContract": {
+        "camera": "auto",
+        "focusRequested": false,
+        "focusEvidenceId": null,
+        "focusPosition": "any",
+        "sequence": "preset",
+        "safeAdjustment": "none"
+      },
+      "summary": "Preset direction adapted to the explicit camera and focus request using only verified product evidence.",
+      "shots": [
+        {
+          "durationSeconds": 3,
+          "purpose": "hero-reveal",
+          "evidenceRefs": [
+            5
+          ],
+          "camera": "Locked macro framing",
+          "lighting": "Soft raking light reveals existing relief",
+          "composition": "Close view of evidenced construction",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Measured craft study",
+          "focus": "belted jacket silhouette"
+        },
+        {
+          "durationSeconds": 4,
+          "purpose": "macro-detail",
+          "evidenceRefs": [
+            3
+          ],
+          "camera": "Macro pan left along the selected visible detail",
+          "lighting": "Soft raking light reveals existing relief",
+          "composition": "Diagonal crop following the existing detail line",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Measured craft study",
+          "focus": "wide notched collar"
+        },
+        {
+          "durationSeconds": 3,
+          "purpose": "final-hero",
+          "evidenceRefs": [
+            5
+          ],
+          "camera": "Slow pull-back to full product framing",
+          "lighting": "Soft raking light reveals existing relief",
+          "composition": "Full visible silhouette with clean margins",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Measured craft study",
+          "focus": "belted jacket silhouette"
+        }
+      ]
+    },
+    "payload": {
+      "start_image_url": "https://private.example/main.png",
+      "multi_prompt": [
+        {
+          "prompt": "@Element1: Use locked macro framing, framing the belted jacket silhouette. Compose the close view of evidenced construction. Soft raking light reveals existing relief. Focus resolves existing surface detail. Allow a measured craft study. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "3"
+        },
+        {
+          "prompt": "@Element1: Use a macro pan left along the selected visible detail, framing the wide notched collar. Compose the diagonal crop following the existing detail line. Soft raking light reveals existing relief. Focus resolves existing surface detail. Allow a measured craft study. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "4"
+        },
+        {
+          "prompt": "@Element1: Use slow pull-back to full product framing, framing the belted jacket silhouette. Compose the full visible silhouette with clean margins. Soft raking light reveals existing relief. Focus resolves existing surface detail. Allow a measured craft study. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "3"
+        }
+      ],
+      "shot_type": "customize",
+      "elements": [
+        {
+          "frontal_image_url": "https://private.example/main.png",
+          "reference_image_urls": [
+            "https://private.example/detail.png",
+            "https://private.example/angle.png"
+          ]
+        }
+      ],
+      "duration": "10",
+      "generate_audio": false,
+      "enable_safety_checker": true,
+      "negative_prompt": "changed logo, changed brand mark, rewritten text, misspelled text, illegible label, morphing letters, altered color, changed hue, changed pattern, changed print, altered material, changed surface texture, redesigned product, altered silhouette, changed proportions, stretched or compressed geometry, extra or missing parts, extra or missing buttons, extra or missing belt, broken seams, warped hardware, melting texture, garment deformation, new hidden surfaces, blur",
+      "cfg_scale": 0.5
+    },
+    "promptCharacters": [
+      346,
+      383,
+      370
+    ]
+  },
+  {
+    "product": "perfume",
+    "presetId": "label-reveal",
+    "provenance": "offline-authored-assessment",
+    "plan": {
+      "version": "video-director-3.1-references-v1",
+      "presetId": "label-reveal",
+      "presetVersion": 1,
+      "shotMode": "multi",
+      "referenceReviews": [
+        {
+          "index": 0,
+          "status": "matched",
+          "reason": "Authored fixture: consistent main-product outline",
+          "details": []
+        },
+        {
+          "index": 1,
+          "status": "matched",
+          "reason": "Authored fixture: consistent main-product outline",
+          "details": []
+        }
+      ],
+      "origin": "ai",
+      "intent": "Preset direction selected from verified product evidence.",
+      "intentContract": {
+        "camera": "auto",
+        "focusRequested": false,
+        "focusEvidenceId": null,
+        "focusPosition": "any",
+        "sequence": "preset",
+        "safeAdjustment": "none"
+      },
+      "summary": "Preset direction adapted to the explicit camera and focus request using only verified product evidence.",
+      "shots": [
+        {
+          "durationSeconds": 3,
+          "purpose": "hero-reveal",
+          "evidenceRefs": [
+            2
+          ],
+          "camera": "Slow dolly-in within the source view",
+          "lighting": "Even soft light keeps existing marks readable",
+          "composition": "Complete product with the visible mark in context",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Clear measured reveal",
+          "focus": "rectangular bottle geometry"
+        },
+        {
+          "durationSeconds": 4,
+          "purpose": "macro-detail",
+          "evidenceRefs": [
+            0
+          ],
+          "camera": "Locked close framing",
+          "lighting": "Even soft light keeps existing marks readable",
+          "composition": "Readable crop at source-resolved scale",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Clear measured reveal",
+          "focus": "centered front label"
+        },
+        {
+          "durationSeconds": 3,
+          "purpose": "final-hero",
+          "evidenceRefs": [
+            2
+          ],
+          "camera": "Locked medium packshot",
+          "lighting": "Even soft light keeps existing marks readable",
+          "composition": "Balanced front-facing product composition",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Clear measured reveal",
+          "focus": "rectangular bottle geometry"
+        }
+      ]
+    },
+    "payload": {
+      "start_image_url": "https://private.example/main.png",
+      "multi_prompt": [
+        {
+          "prompt": "@Element1: Dolly in slowly within the source view, framing the rectangular bottle geometry. Compose the complete product with the visible mark in context. Light the scene with even soft light keeps existing marks readable. Focus resolves existing surface detail. Allow a clear measured reveal. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "3"
+        },
+        {
+          "prompt": "@Element1: Frame the centered front label in a locked close view. Compose the readable crop at source-resolved scale. Light the scene with even soft light keeps existing marks readable. Focus resolves existing surface detail. Allow a clear measured reveal. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "4"
+        },
+        {
+          "prompt": "@Element1: Use locked medium packshot, framing the rectangular bottle geometry. Compose the balanced front-facing product composition. Light the scene with even soft light keeps existing marks readable. Focus resolves existing surface detail. Allow a clear measured reveal. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "3"
+        }
+      ],
+      "shot_type": "customize",
+      "elements": [
+        {
+          "frontal_image_url": "https://private.example/main.png",
+          "reference_image_urls": [
+            "https://private.example/detail.png",
+            "https://private.example/angle.png"
+          ]
+        }
+      ],
+      "duration": "10",
+      "generate_audio": false,
+      "enable_safety_checker": true,
+      "negative_prompt": "changed logo, changed brand mark, rewritten text, misspelled text, illegible label, morphing letters, altered color, changed hue, changed pattern, changed print, altered material, changed surface texture, redesigned product, altered silhouette, changed proportions, stretched or compressed geometry, extra or missing parts, extra or missing buttons, extra or missing belt, broken seams, warped hardware, melting texture, garment deformation, new hidden surfaces, blur",
+      "cfg_scale": 0.5
+    },
+    "promptCharacters": [
+      402,
+      365,
+      382
+    ]
+  },
+  {
+    "product": "watch",
+    "presetId": "precision-macro",
+    "provenance": "offline-authored-assessment",
+    "plan": {
+      "version": "video-director-3.1-references-v1",
+      "presetId": "precision-macro",
+      "presetVersion": 1,
+      "shotMode": "multi",
+      "referenceReviews": [
+        {
+          "index": 0,
+          "status": "matched",
+          "reason": "Authored fixture: consistent main-product outline",
+          "details": []
+        },
+        {
+          "index": 1,
+          "status": "matched",
+          "reason": "Authored fixture: consistent main-product outline",
+          "details": []
+        }
+      ],
+      "origin": "ai",
+      "intent": "Preset direction selected from verified product evidence.",
+      "intentContract": {
+        "camera": "auto",
+        "focusRequested": false,
+        "focusEvidenceId": null,
+        "focusPosition": "any",
+        "sequence": "preset",
+        "safeAdjustment": "none"
+      },
+      "summary": "Preset direction adapted to the explicit camera and focus request using only verified product evidence.",
+      "shots": [
+        {
+          "durationSeconds": 3,
+          "purpose": "hero-reveal",
+          "evidenceRefs": [
+            0
+          ],
+          "camera": "Locked close framing",
+          "lighting": "Narrow diffuse light defines existing edges",
+          "composition": "Tight crop on the chosen evidenced feature",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Patient precise rhythm",
+          "focus": "silver"
+        },
+        {
+          "durationSeconds": 4,
+          "purpose": "macro-detail",
+          "evidenceRefs": [
+            6
+          ],
+          "camera": "Short lateral macro camera glide",
+          "lighting": "Narrow diffuse light defines existing edges",
+          "composition": "Parallel close view of existing surface relief",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Patient precise rhythm",
+          "focus": "slim dial markers"
+        },
+        {
+          "durationSeconds": 3,
+          "purpose": "final-hero",
+          "evidenceRefs": [
+            0
+          ],
+          "camera": "Slow pull-back to the complete visible form",
+          "lighting": "Narrow diffuse light defines existing edges",
+          "composition": "Centered recognizable hero view",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Patient precise rhythm",
+          "focus": "silver"
+        }
+      ]
+    },
+    "payload": {
+      "start_image_url": "https://private.example/main.png",
+      "multi_prompt": [
+        {
+          "prompt": "@Element1: Frame the silver in a locked close view. Compose the tight crop on the chosen evidenced feature. Narrow diffuse light defines existing edges. Focus resolves existing surface detail. Allow a patient precise rhythm. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "3"
+        },
+        {
+          "prompt": "@Element1: Use a short lateral macro camera glide, framing the slim dial markers. Compose the parallel close view of existing surface relief. Narrow diffuse light defines existing edges. Focus resolves existing surface detail. Allow a patient precise rhythm. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "4"
+        },
+        {
+          "prompt": "@Element1: Use a slow pull-back to the complete visible form, framing the silver. Compose the centered recognizable hero view. Narrow diffuse light defines existing edges. Focus resolves existing surface detail. Allow a patient precise rhythm. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "3"
+        }
+      ],
+      "shot_type": "customize",
+      "elements": [
+        {
+          "frontal_image_url": "https://private.example/main.png",
+          "reference_image_urls": [
+            "https://private.example/detail.png",
+            "https://private.example/angle.png"
+          ]
+        }
+      ],
+      "duration": "10",
+      "generate_audio": false,
+      "enable_safety_checker": true,
+      "negative_prompt": "changed logo, changed brand mark, rewritten text, misspelled text, illegible label, morphing letters, altered color, changed hue, changed pattern, changed print, altered material, changed surface texture, redesigned product, altered silhouette, changed proportions, stretched or compressed geometry, extra or missing parts, extra or missing buttons, extra or missing belt, broken seams, warped hardware, melting texture, garment deformation, new hidden surfaces, blur",
+      "cfg_scale": 0.5
+    },
+    "promptCharacters": [
+      333,
+      367,
+      352
+    ]
+  },
+  {
+    "product": "bag",
+    "presetId": "hardware-reveal",
+    "provenance": "offline-authored-assessment",
+    "plan": {
+      "version": "video-director-3.1-references-v1",
+      "presetId": "hardware-reveal",
+      "presetVersion": 1,
+      "shotMode": "multi",
+      "referenceReviews": [
+        {
+          "index": 0,
+          "status": "matched",
+          "reason": "Authored fixture: consistent main-product outline",
+          "details": []
+        },
+        {
+          "index": 1,
+          "status": "matched",
+          "reason": "Authored fixture: consistent main-product outline",
+          "details": []
+        }
+      ],
+      "origin": "ai",
+      "intent": "Preset direction selected from verified product evidence.",
+      "intentContract": {
+        "camera": "auto",
+        "focusRequested": false,
+        "focusEvidenceId": null,
+        "focusPosition": "any",
+        "sequence": "preset",
+        "safeAdjustment": "none"
+      },
+      "summary": "Preset direction adapted to the explicit camera and focus request using only verified product evidence.",
+      "shots": [
+        {
+          "durationSeconds": 3,
+          "purpose": "hero-reveal",
+          "evidenceRefs": [
+            1
+          ],
+          "camera": "Locked close framing",
+          "lighting": "Directional soft light defines existing edges",
+          "composition": "Tight crop of evidenced construction",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Crisp deliberate rhythm",
+          "focus": "structured bag silhouette"
+        },
+        {
+          "durationSeconds": 4,
+          "purpose": "macro-detail",
+          "evidenceRefs": [
+            3
+          ],
+          "camera": "Short lateral camera glide along the visible edge",
+          "lighting": "Directional soft light defines existing edges",
+          "composition": "Parallel detail view with clean margins",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Crisp deliberate rhythm",
+          "focus": "front clasp"
+        },
+        {
+          "durationSeconds": 3,
+          "purpose": "final-hero",
+          "evidenceRefs": [
+            1
+          ],
+          "camera": "Slow pull-back to full product framing",
+          "lighting": "Directional soft light defines existing edges",
+          "composition": "Recognizable product with the detail in context",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Crisp deliberate rhythm",
+          "focus": "structured bag silhouette"
+        }
+      ]
+    },
+    "payload": {
+      "start_image_url": "https://private.example/main.png",
+      "multi_prompt": [
+        {
+          "prompt": "@Element1: Frame the structured bag silhouette in a locked close view. Compose the tight crop of evidenced construction. Directional soft light defines existing edges. Focus resolves existing surface detail. Allow a crisp deliberate rhythm. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "3"
+        },
+        {
+          "prompt": "@Element1: Use a short lateral camera glide along the visible edge, framing the front clasp. Compose the parallel detail view with clean margins. Directional soft light defines existing edges. Focus resolves existing surface detail. Allow a crisp deliberate rhythm. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "4"
+        },
+        {
+          "prompt": "@Element1: Use slow pull-back to full product framing, framing the structured bag silhouette. Compose the recognizable product with the detail in context. Directional soft light defines existing edges. Focus resolves existing surface detail. Allow a crisp deliberate rhythm. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "3"
+        }
+      ],
+      "shot_type": "customize",
+      "elements": [
+        {
+          "frontal_image_url": "https://private.example/main.png",
+          "reference_image_urls": [
+            "https://private.example/detail.png",
+            "https://private.example/angle.png"
+          ]
+        }
+      ],
+      "duration": "10",
+      "generate_audio": false,
+      "enable_safety_checker": true,
+      "negative_prompt": "changed logo, changed brand mark, rewritten text, misspelled text, illegible label, morphing letters, altered color, changed hue, changed pattern, changed print, altered material, changed surface texture, redesigned product, altered silhouette, changed proportions, stretched or compressed geometry, extra or missing parts, extra or missing buttons, extra or missing belt, broken seams, warped hardware, melting texture, garment deformation, new hidden surfaces, blur",
+      "cfg_scale": 0.5
+    },
+    "promptCharacters": [
+      349,
+      374,
+      383
+    ]
+  }
+]

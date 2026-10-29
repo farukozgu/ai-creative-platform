@@ -18,10 +18,19 @@ export type DashboardGeneration = {
 
 export async function getDashboardGenerations(userId: string) {
   const supabase = await createClient();
-  const { data: ownedProjects, error: projectError } = await supabase.from("projects").select("id, title").eq("user_id", userId);
+  const readProjects = () => supabase.from("projects").select("id, title").eq("user_id", userId);
+  let projectResult = await readProjects();
+  // PostgREST reports transport failures as status 0. Retrying this owned read
+  // once is safe; permission/schema errors must retain their original failure.
+  if (projectResult.error && projectResult.status === 0) projectResult = await readProjects();
+  const { data: ownedProjects, error: projectError } = projectResult;
   if (projectError) {
     if (process.env.NODE_ENV === "development") {
-      console.error("[dashboard-projects] query_failed", { code: projectError.code, message: projectError.message, details: projectError.details, hint: projectError.hint });
+      console.error("[dashboard-projects] query_failed", JSON.stringify({
+        status: projectResult.status,
+        code: /^[a-z0-9_]{1,40}$/i.test(projectError.code ?? "") ? projectError.code : null,
+        category: projectResult.status === 0 ? "network_error" : "database_error",
+      }));
     }
     throw new Error("Unable to load dashboard projects.");
   }

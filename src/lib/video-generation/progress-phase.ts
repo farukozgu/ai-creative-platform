@@ -10,7 +10,8 @@ export function getVideoProgressPhase(input: {
 }): VideoProgressPhase {
   if (input.status === "succeeded") return "ready";
   if (input.status === "failed") return input.errorCode === "provider_submission_ambiguous" ? "ambiguous" : "failed";
-  if (input.status === "processing") return input.outputObjectPath ? "finalizing" : "processing";
+  if (input.status === "processing") return input.outputObjectPath ? "finalizing"
+    : input.errorCode === "output_persistence_failure" ? "storage-retry" : "processing";
   return input.providerRequestId || input.provider === "local" ? "queued" : "submission-uncertain";
 }
 

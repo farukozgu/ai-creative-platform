@@ -15,7 +15,7 @@ export const initialVideoStudioDraft: VideoStudioDraft = {
   criticalRegion: null, analyzeAfterGeneration: false,
   source: null,
   prompt: "",
-  cameraMovement: "dolly-in",
+  cameraMovement: "auto",
   quality: "standard",
   aspectRatio: "16:9",
   duration: 5,
@@ -84,7 +84,7 @@ export function appendPromptSuggestion(current: string, suggestion: string) {
 }
 
 export function validateVideoSourceFile(file: Pick<File, "size" | "type">) {
-  if (!["image/jpeg", "image/png"].includes(file.type)) return "invalid-source-type" as const;
+  if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) return "invalid-source-type" as const;
   if (file.size > MAX_PRODUCT_IMAGE_FILE_SIZE) return "source-too-large" as const;
   return null;
 }
@@ -100,7 +100,6 @@ export function validateVideoStudioDraft(
   state: VideoStudioDraft,
 ): VideoStudioFeedback | null {
   if (!state.source) return "source-required";
-  if (!state.prompt.trim()) return "prompt-required";
   return null;
 }
 

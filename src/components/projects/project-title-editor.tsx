@@ -58,9 +58,9 @@ export function ProjectTitleEditor({ projectId, locale, title, fallback, message
   return <>
     <div className="project-title-edit-row">
       <h1 id="project-heading">{title?.trim() || fallback}</h1>
-      <button ref={triggerRef} type="button" className="project-title-edit-button" aria-label={messages.edit} onClick={() => setOpen(true)}>
+      <Button variant="icon" size="sm" ref={triggerRef} type="button" className="project-title-edit-button" aria-label={messages.edit} onClick={() => setOpen(true)}>
         <svg aria-hidden="true" viewBox="0 0 20 20" fill="none"><path d="m12.9 3.9 3.2 3.2M4 16l3.4-.7L16 6.7a1.5 1.5 0 0 0-2.1-2.1l-8.6 8.6L4 16Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-      </button>
+      </Button>
     </div>
     <dialog
       ref={dialogRef}

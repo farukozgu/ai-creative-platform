@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+
 import { useState } from "react";
 import type {
   ChangeEventHandler,
@@ -64,7 +66,7 @@ export function PasswordField({
           aria-describedby={error ? errorId : undefined}
           onChange={onChange}
         />
-        <button
+        <Button variant="icon" size="sm"
           type="button"
           className="signup-password-toggle"
           aria-label={isVisible ? hideLabel : showLabel}
@@ -81,7 +83,7 @@ export function PasswordField({
               <circle cx="12" cy="12" r="2.5" />
             </svg>
           )}
-        </button>
+        </Button>
       </div>
       {error ? (
         <p id={errorId} className="signup-field-error" role="alert">
