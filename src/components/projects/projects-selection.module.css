@@ -1,21 +1,18 @@
-.toolbar { display: grid; gap: 0.75rem; min-width: 0; border: 1px solid var(--dashboard-border); border-radius: var(--radius-md); background: var(--dashboard-surface); padding: 0.75rem; color: var(--dashboard-foreground); font-size: 0.8125rem; }
+.toolbar { display: grid; gap: 0.75rem; min-width: 0; border: 1px solid var(--dashboard-border); border-radius: var(--radius-md); background: var(--dashboard-surface); padding: 0.75rem; color: var(--dashboard-foreground); font-size: var(--text-small); }
 .filters { display: grid; gap: 0.75rem; min-width: 0; }
 .selectAll { display: inline-flex; align-items: center; gap: 0.75rem; min-height: 2.75rem; cursor: pointer; }
 .selectAll input, .cardSelection input { width: 1.125rem; height: 1.125rem; accent-color: var(--dashboard-accent); cursor: pointer; }
 .selectAll input:disabled, .cardSelection input:disabled { cursor: wait; }
 .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; min-width: 0; border-top: 1px solid var(--dashboard-border); padding-top: 0.75rem; }
 .actions > span { flex: 1; margin-right: 0.5rem; color: var(--dashboard-accent-ink); font-weight: 500; }
-.feedback { color: var(--dashboard-muted); font-size: 0.875rem; line-height: 1.5; }
+.feedback { color: var(--dashboard-muted); font-size: var(--text-ui); line-height: 1.5; }
 .cardSelection { display: grid; flex: none; width: 2.75rem; height: 2.75rem; place-items: center; border-radius: var(--radius-sm); cursor: pointer; }
 :global(.projects-gallery-item):has(.cardSelection input:checked) { border-color: var(--dashboard-accent); box-shadow: 0 0 0 1px var(--dashboard-accent); }
 .deleteControl { flex: none; }
-.deleteButton { display: grid; width: 2.75rem; height: 2.75rem; place-items: center; border: 1px solid transparent; border-radius: var(--radius-sm); background: transparent; color: var(--dashboard-muted); cursor: pointer; transition: color var(--transition-fast) var(--ease-standard), border-color var(--transition-fast) var(--ease-standard); }
+.deleteButton { display: grid; width: 2.75rem; height: 2.75rem; place-items: center; }
 .deleteButton svg { width: 1.125rem; height: 1.125rem; }
-.deleteButton:hover { color: var(--dashboard-danger); border-color: var(--dashboard-danger); }
-.deleteButton:disabled { opacity: 0.5; cursor: wait; }
 .deleteButton:focus-visible, .selectAll input:focus-visible, .cardSelection input:focus-visible { outline: 2px solid var(--dashboard-focus); outline-offset: 3px; }
 .dialog :global(.delete-project-dialog-actions) { flex-wrap: wrap; }
 .dialog form, .dialog button { max-width: 100%; white-space: normal; }
 @media (max-width: 560px) { .actions { width: 100%; }.actions > span { width: 100%; } }
 @media (min-width: 1200px) { .filters { grid-template-columns: minmax(0, 1fr) auto; align-items: center; }.selectAll { padding-inline: 0.5rem; } }
-@media (prefers-reduced-motion: reduce) { .deleteButton { transition: none; } }

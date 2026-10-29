@@ -5,18 +5,22 @@ type Evidence = { priority: number; text: string };
 /** Existing profile evidence is a hint; the actual source image remains authoritative. */
 export function directorIdentityEvidence(profile: ProductProfile | null): string[] {
   if (!profile) return [];
+  // Low-confidence classifications and materials are not verified product facts.
+  if ((profile.confidence?.overall ?? 0) < 0.6) return [];
   const candidates: Evidence[] = [];
   const add = (priority: number, value: string | null | undefined) => {
     if (typeof value !== "string") return;
     const text = value.trim().replace(/\s+/g, " ");
     // Keep complete evidence atoms only; exclude hidden/uncertain claims and instruction-like content.
-    if (!text || text.length > 120 || /[\r\n<>`{}.;:!?]/.test(value)
-      || /\b(?:hidden|unseen|not visible|unknown|imagined|assumed|underside|interior|backside|ignore|instructions?|system|prompt|override|disregard|follow|reveal|add|remove|change|replace|redesign|invent|rotate|transform|never|must|should)\b|\bdo not\b/i.test(text)) return;
+    if (!text || /^(?:none|n\/a|not.applicable|false|no)$/i.test(text) || text.length > 120 || /[\r\n<>`{}.;:!?]/.test(value)
+      || /\b(?:hidden|unseen|not.visible|unknown|uncertain|possibly|probably|likely|appears|may|might|imagined|assumed|underside|interior|backside|rear|back|inside|ignore|instructions?|system|prompt|override|disregard|follow|reveal|add|remove|change|replace|redesign|invent|rotate|transform|never|must|should)\b|\bdo not\b/i.test(text)) return;
     candidates.push({ priority, text });
   };
   for (const item of profile.identityCriticalAttributes) {
     const value = item?.attribute;
     if (typeof value !== "string") continue;
+    if (/\b(?:not.visible|hidden|unseen|uncertain|assumed|unknown|possibly|probably)\b/i.test(item.rationale)
+      || Array.isArray(item.regions) && item.regions.some(region => /\b(?:back|rear|inside|underside|hidden|unseen)\b/i.test(region?.location))) continue;
     if (/logo|brand|monogram|emblem/i.test(value) && profile.visibleBranding.hasLogo === false
       || /letter|text|label|inscription/i.test(value) && profile.visibleBranding.hasReadableText === false
       || /artwork|print/i.test(value) && profile.visibleBranding.hasArtwork === false) continue;
@@ -36,9 +40,24 @@ export function directorIdentityEvidence(profile: ProductProfile | null): string
   if (profile.verticalAttributes.vertical === "apparel") {
     for (const closure of Array.isArray(profile.verticalAttributes.details.closures) ? profile.verticalAttributes.details.closures : []) add(1, closure);
     for (const detail of Array.isArray(profile.verticalAttributes.details.constructionDetails) ? profile.verticalAttributes.details.constructionDetails : []) add(3, detail);
+    add(3, profile.verticalAttributes.details.hoodOrCollar);
+  }
+  // Reuse visible vertical attributes; never feed hidden anatomy or mechanism flags.
+  const visibleFields: Record<string, readonly string[]> = {
+    jewelry: ["centerStoneShape", "centerStoneColor", "stoneLayout", "settingStyle", "bandOrChainStructure"],
+    watches: ["caseShape", "caseMaterialOrColor", "dialColor", "bezel", "pushers", "braceletOrStrap", "indicesOrMarkers", "dateWindow", "subdials"],
+    cosmetics: ["packageGeometry"],
+    footwear: ["silhouette", "upperMaterial", "outsole", "midsole", "panelStructure", "lacing", "tongue", "heel", "colorBlocking"],
+    bags: ["silhouette", "bodyStructure", "handleGeometry", "handleAttachmentPoints", "strapPlacement", "closureType", "zipperLayout", "panelConstruction", "stitchingPattern", "pipingOrEdgeTreatment", "hardwareLayout", "materialTexture", "colorBlocking", "patternOrPrint"],
+  };
+  const details = profile.verticalAttributes.details as unknown as Record<string, unknown>;
+  for (const key of visibleFields[profile.vertical] ?? []) {
+    const value = details[key];
+    for (const atom of Array.isArray(value) ? value : [value]) if (typeof atom === "string") add(3, atom);
   }
   for (const color of profile.dominantColors) add(2, color);
-  for (const material of profile.materials) add(3, material);
+  if ((profile.confidence.fields?.materials ?? profile.confidence.overall) >= 0.7)
+    for (const material of profile.materials) add(3, material);
   add(4, profile.productShape);
   const ordered = candidates.sort((a, b) => a.priority - b.priority);
   const firstInCategory = new Set<number>();

@@ -19,6 +19,7 @@ export type VideoPreparationSource =
   | { kind: "generated-image"; generationId: string };
 
 export type VideoGenerationDraft = {
+  productReferences?: { source: VideoSourceReference; sha256: string; purpose: string }[];
   shotMode?: "single" | "multi";
   director?: import("../video-director/core").VideoDirectorSelection;
   method?: import("./preservation").VideoGenerationMethod;
@@ -59,7 +60,13 @@ export class DefiniteVideoProviderFailure extends Error {
   constructor() { super("The video provider rejected the submitted request."); this.name = "DefiniteVideoProviderFailure"; }
 }
 
+/** A previously accepted task finished with an inference/result error. */
+export class VideoProviderTaskFailure extends Error {
+  constructor() { super("The accepted video task failed."); this.name = "VideoProviderTaskFailure"; }
+}
+
 export type VideoProviderRequest = {
+  elementImageUrls?: string[];
   multiPrompt?: import("../video-director/core").KlingMultiPrompt;
   negativePrompt?: string;
   cfgScale?: number;

@@ -1,5 +1,7 @@
 "use client";
 
+import { buttonStyles } from "@/components/ui/button";
+
 import { useState, type ReactNode } from "react";
 import type { GenerationStatus } from "@/lib/projects/get-projects";
 import { ProjectImageViewer } from "@/components/projects/project-image-viewer";
@@ -85,7 +87,7 @@ type GenerationGalleryProps = {
 function OutputState({ heading, description, busy = false, action }: { heading: string; description: string; busy?: boolean; action?: string }) {
   return <div className="project-viewer-state" aria-busy={busy} role={busy ? "status" : undefined} aria-live={busy ? "polite" : undefined}>
     <span className="project-viewer-state-mark" aria-hidden="true" />
-    <h3>{heading}</h3><p>{description}</p>{action ? <a href="#project-controls-heading" className="project-viewer-empty-action">{action}</a> : null}
+    <h3>{heading}</h3><p>{description}</p>{action ? <a href="#project-controls-heading" className={buttonStyles({variant: "primary", className: "project-viewer-empty-action"})}>{action}</a> : null}
   </div>;
 }
 

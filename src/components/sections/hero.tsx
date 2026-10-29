@@ -38,7 +38,7 @@ export async function Hero() {
             })}
             className="hero-cta mt-8"
             size="lg"
-            variant="dark"
+            variant="primary"
           >
             {t("primaryCta")}
           </Button>

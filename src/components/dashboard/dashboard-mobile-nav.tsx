@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+
 import { useEffect, useId, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 import { useTranslations } from "next-intl";
@@ -126,7 +128,7 @@ export function DashboardMobileNav({ displayName }: { displayName?: string | nul
 
   return (
     <div className="dashboard-mobile-navigation">
-      <button
+      <Button variant="icon" size="md"
         ref={triggerRef}
         type="button"
         aria-label={t("openMenu")}
@@ -137,7 +139,7 @@ export function DashboardMobileNav({ displayName }: { displayName?: string | nul
         onClick={() => setIsOpen(true)}
       >
         <DashboardIcon name="menu" />
-      </button>
+      </Button>
 
       {isOpen ? (
         <div className="dashboard-drawer-layer">
@@ -161,7 +163,7 @@ export function DashboardMobileNav({ displayName }: { displayName?: string | nul
               <Link href="/" aria-label={t("homeLabel")} className="dashboard-drawer-brand">
                 {t("brand")}
               </Link>
-              <button
+              <Button variant="icon" size="md"
                 ref={closeRef}
                 type="button"
                 aria-label={t("closeMenu")}
@@ -169,7 +171,7 @@ export function DashboardMobileNav({ displayName }: { displayName?: string | nul
                 onClick={() => closeDrawer(true)}
               >
                 <DashboardIcon name="close" />
-              </button>
+              </Button>
             </div>
 
             <nav aria-label={t("primaryLabel")} className="dashboard-drawer-nav">

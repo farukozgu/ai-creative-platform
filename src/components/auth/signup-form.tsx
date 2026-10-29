@@ -210,7 +210,7 @@ export function SignupForm({showConfirmationError = false}: SignupFormProps) {
               ) : null}
             </div>
 
-            <Button type="submit" variant="dark" size="lg" className="w-full">
+            <Button type="submit" variant="primary" size="lg" className="w-full">
               {t("continue")}
             </Button>
 
@@ -231,7 +231,7 @@ export function SignupForm({showConfirmationError = false}: SignupFormProps) {
           </div>
         ) : (
           <div key="password" className="signup-form-stage">
-            <button
+            <Button variant="ghost" size="sm"
               type="button"
               className="signup-back-button"
               onClick={handleChangeEmail}
@@ -240,7 +240,7 @@ export function SignupForm({showConfirmationError = false}: SignupFormProps) {
                 <path d="m10 3-5 5 5 5" />
               </svg>
               {t("changeEmail")}
-            </button>
+            </Button>
 
             <div className="signup-form-heading">
               <h1>{t("passwordHeading")}</h1>
@@ -267,7 +267,7 @@ export function SignupForm({showConfirmationError = false}: SignupFormProps) {
 
             <Button
               type="submit"
-              variant="dark"
+              variant="primary"
               size="lg"
               className="w-full"
               disabled={isSubmitting}

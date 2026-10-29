@@ -2,12 +2,13 @@
 
 import type { VideoGenerationDraft } from "@/lib/video-generation/types";
 import { videoEndpointCapabilities, videoTierRouting } from "@/lib/video-generation/capabilities";
+import { readProductReferences } from "@/lib/video-generation/reference-context";
 import { getAuthenticatedUserId } from "@/lib/auth/require-user";
 import { createAuthorizedVideoPlaybackUrl, createVideoSourceUploadTicket, finalizeVideoSourceUpload } from "@/lib/video-generation/media-access";
 import { toVideoPresentationRecord } from "@/lib/video-generation/presentation";
 import { SupabaseVideoJobRepository } from "@/lib/video-generation/supabase-repository";
 import { validateVideoGenerationDraft } from "@/lib/video-generation/validation";
-import { canAccessVideoBeta, canSubmitVideoBeta } from "@/lib/video-generation/beta-policy";
+import { canAccessVideoBeta, canSubmitVideoBeta, videoSubmissionPolicyChecks } from "@/lib/video-generation/beta-policy";
 import { getVideoBetaQuote, VideoBetaBudget, reconcileVideoBeta } from "@/lib/video-generation/beta-runtime";
 import { submitVideoGeneration } from "@/lib/video-generation/service";
 import { FalVideoGenerationProvider } from "@/lib/video-generation/fal-provider";
@@ -22,16 +23,23 @@ import { readOwnedPreparedVideoSource } from "@/lib/video-generation/source-cont
 import { getVideoFidelityAnalysisAvailability } from "@/lib/video-fidelity/availability";
 import { quoteVideoFidelity } from "@/lib/video-fidelity/pricing";
 import { resumeOwnedVideoReview, videoFidelitySchemaReady } from "@/lib/video-fidelity/reviews";
-import { getVideoDirectorQuote, readVerifiedDirectorPlan } from "@/lib/video-director/runtime";
+import { readVerifiedDirectorPlan } from "@/lib/video-director/runtime";
+import { readDirectorProfileSnapshot } from "@/lib/video-director/receipt";
 import { compileDirectorPlan } from "@/lib/video-director/core";
 import { matchesVideoRequest } from "@/lib/video-generation/request-identity";
 import { summarizeVideoPayload } from "@/lib/video-generation/payload-summary";
 import { validateKlingMultiPrompt } from "@/lib/video-generation/fal-request";
+import { createVideoCorrelationId, logVideoDiagnostic } from "@/lib/video-generation/diagnostics";
 
 async function verifiedVideoSnapshot(ownerId: string, draft: VideoGenerationDraft) {
   if (!draft.source || !draft.shotMode || (draft.shotMode === "multi" && !draft.director)) throw new Error("A shot mode and verified plan are required.");
   const context = await readOwnedPreparedVideoSource(ownerId, draft.source, draft.aspectRatio);
-  const input = draft.director ? { draft, profile: context.profile, presetId: draft.director.presetId, shotMode: draft.director.shotMode } : null;
+  await readProductReferences(ownerId, draft);
+  if (draft.productReferences?.length && !draft.director) throw new Error("Reference review requires Director.");
+  // Authenticate the profile snapshot first; plan verification then binds it to
+  // this owner, current source hash, model and full draft before it can be used.
+  const profile = context.profile ?? (draft.director ? readDirectorProfileSnapshot(draft.director.receipt, process.env.SUPABASE_SECRET_KEY ?? "") : null);
+  const input = draft.director ? { draft, profile, presetId: draft.director.presetId, shotMode: draft.director.shotMode } : null;
   if (input && input.shotMode !== draft.shotMode) throw new Error("Shot mode mismatch.");
   const plan = input ? readVerifiedDirectorPlan(ownerId, context.sourceSha256, input, draft.director?.receipt) : null;
   if (input && !plan) throw new Error("Director plan is invalid or expired.");
@@ -54,24 +62,38 @@ export async function quoteVideoGenerationAction(quality: "standard" | "pro", du
     const analysis = getVideoFidelityAnalysisAvailability(ownerId, Boolean(options?.hasRegion));
     const schemaReady = analysis.enabled && await videoFidelitySchemaReady();
     const price = await getVideoBetaQuote(quality, duration);
-    return { ...price, director: getVideoDirectorQuote(ownerId), hasRegion: Boolean(options?.hasRegion), analysis: { ...analysis, enabled: schemaReady && analysis.enabled } };
+    return { ...price, hasRegion: Boolean(options?.hasRegion), analysis: { ...analysis, enabled: schemaReady && analysis.enabled } };
   } catch { return null; }
 }
 
 export async function quoteVideoSubmissionAction(draft: unknown) {
+  type Reason = "not_allowlisted" | "invalid_draft" | "unsafe_motion" | "already_used" | "policy_denied" | "snapshot_unavailable" | "quote_unavailable" | "repository_unavailable";
+  const correlationId = createVideoCorrelationId();
+  const rejected = <T extends "unavailable" | "invalid" | "used">(status: T, reasonCode: Reason, condition?: string) => {
+    logVideoDiagnostic(correlationId, "video_quote_submission", "rejected", { reasonCode, condition: condition ?? null });
+    return { status, reasonCode };
+  };
   const ownerId = await getAuthenticatedUserId();
-  if (!ownerId || !canAccessVideoBeta(ownerId)) return { status: "unavailable" as const };
+  if (!ownerId || !canAccessVideoBeta(ownerId)) return rejected("unavailable", "not_allowlisted");
   const parsed = validateVideoGenerationDraft(draft);
-  if (!parsed.ok || isUnsafeProductMotion(parsed.value.prompt, parsed.value.cameraMovement)) return { status: "invalid" as const };
+  if (!parsed.ok) return rejected("invalid", "invalid_draft");
+  if (parsed.value.director ? parsed.value.cameraMovement === "orbit" : isUnsafeProductMotion(parsed.value.prompt, parsed.value.cameraMovement)) return rejected("invalid", "unsafe_motion");
+  let failedStage: Reason = "repository_unavailable";
   try {
     const previous = await new SupabaseVideoJobRepository().findBySubmission(ownerId, parsed.value.clientSubmissionId);
-    if (previous) return { status: "used" as const };
+    if (previous) return rejected("used", "already_used");
+    failedStage = "quote_unavailable";
     const quote = await getVideoBetaQuote(parsed.value.quality, parsed.value.durationSeconds);
-    if (!canSubmitVideoBeta(ownerId, parsed.value, quote.estimatedMaxCostUsd)) return { status: "unavailable" as const };
+    const denied = Object.entries(videoSubmissionPolicyChecks(ownerId, parsed.value, quote.estimatedMaxCostUsd)).find(([, passed]) => !passed);
+    if (denied) return rejected("unavailable", "policy_denied", denied[0]);
+    failedStage = "snapshot_unavailable";
     const payload = await verifiedVideoSnapshot(ownerId, parsed.value);
     const signed = sealVideoQuote(ownerId, parsed.value, quote.estimatedMaxCostUsd, process.env.SUPABASE_SECRET_KEY ?? "", undefined, payload.snapshotHash);
+    logVideoDiagnostic(parsed.value.clientSubmissionId, "video_quote_issued", "success", { costUsd: quote.estimatedMaxCostUsd, quality: parsed.value.quality, durationSeconds: parsed.value.durationSeconds });
     return { status: "success" as const, cost: quote.estimatedMaxCostUsd, preview: payload.preview, ...signed };
-  } catch { return { status: "unavailable" as const }; }
+  } catch {
+    return rejected("unavailable", failedStage);
+  }
 }
 
 export async function submitVideoGenerationAction(draft: unknown, confirmedMaxCostUsd: number, quoteReceipt: string, explicitApproval?: boolean) {
@@ -86,7 +108,7 @@ export async function submitVideoGenerationAction(draft: unknown, confirmedMaxCo
       ? { ok: true as const, jobId: previous.id, status: previous.status, duplicate: true }
       : { ok: false as const, code: "invalid_input" as const };
     if (explicitApproval !== true) return { ok: false as const, code: "approval_required" as const };
-    if (isUnsafeProductMotion(parsed.value.prompt, parsed.value.cameraMovement)) return { ok: false as const, code: "unsafe_motion" as const };
+    if (parsed.value.director ? parsed.value.cameraMovement === "orbit" : isUnsafeProductMotion(parsed.value.prompt, parsed.value.cameraMovement)) return { ok: false as const, code: "unsafe_motion" as const };
     const analysisQuote = quoteVideoFidelity(Boolean(parsed.value.criticalRegion));
     if (parsed.value.analysisConsent && (!getVideoFidelityAnalysisAvailability(ownerId, Boolean(parsed.value.criticalRegion)).enabled || !await videoFidelitySchemaReady()
       || !analysisQuote || parsed.value.analysisConsent.model !== analysisQuote.model || parsed.value.analysisConsent.pricingVersion !== analysisQuote.pricingVersion
@@ -99,6 +121,7 @@ export async function submitVideoGenerationAction(draft: unknown, confirmedMaxCo
       || !verifyVideoQuote(quoteReceipt, ownerId, parsed.value, confirmedMaxCostUsd, process.env.SUPABASE_SECRET_KEY ?? "", undefined, payload.snapshotHash)
       || !canSubmitVideoBeta(ownerId, parsed.value, quote.estimatedMaxCostUsd)) return { ok: false as const, code: "approval_required" as const };
     const capability = videoEndpointCapabilities[videoTierRouting[parsed.value.quality]];
+    logVideoDiagnostic(parsed.value.clientSubmissionId, "video_submission_approval", "success", { costUsd: quote.estimatedMaxCostUsd });
     return await submitVideoGeneration(ownerId, parsed.value, {
       repository: new SupabaseVideoJobRepository(), provider: new FalVideoGenerationProvider(), billing: new VideoBetaBudget(),
       preservation: payload.preservation,
@@ -112,7 +135,7 @@ export async function createVideoSourceUploadAction(fileName: string) {
   const ownerId = await getAuthenticatedUserId();
   if (!ownerId) return { status: "unauthorized" as const };
   if (!canAccessVideoBeta(ownerId)) return { status: "unavailable" as const };
-  if (typeof fileName !== "string" || fileName.length > 255 || !/\.(?:jpe?g|png)$/i.test(fileName)) return { status: "invalid" as const };
+  if (typeof fileName !== "string" || fileName.length > 255 || !/\.(?:jpe?g|png|webp)$/i.test(fileName)) return { status: "invalid" as const };
   try {
     return { status: "success" as const, ...(await createVideoSourceUploadTicket(ownerId, fileName)) };
   } catch {
@@ -199,7 +222,9 @@ export async function listVideoGenerationsAction() {
   const ownerId = await getAuthenticatedUserId();
   if (!ownerId) return { status: "unauthorized" as const, records: [] };
   try {
-    if (canAccessVideoBeta(ownerId)) await reconcileVideoBeta(ownerId, null, 5);
+    if (canAccessVideoBeta(ownerId)) {
+      try { await reconcileVideoBeta(ownerId, null, 5); } catch { /* Existing library records remain readable while reconciliation recovers. */ }
+    }
     const jobs = await new SupabaseVideoJobRepository().listOwned(ownerId);
     return { status: "success" as const, records: jobs.map((job) => toVideoPresentationRecord(job)) };
   } catch {

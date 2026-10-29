@@ -1,4 +1,6 @@
 "use client";
+
+import { Button } from "@/components/ui/button";
 /* eslint-disable @next/next/no-img-element -- private source previews may be blob URLs. */
 import { useRef } from "react";
 import { useTranslations } from "next-intl";
@@ -41,12 +43,12 @@ export function VideoPreservationControls({ region, sourceUrl, regionResolutionL
         <label className={styles.regionText}>{t("declaredText")}<input type="text" maxLength={120} value={region.declaredText} onChange={event => onRegion({ ...region, declaredText: event.target.value })} /></label>
         <p className={styles.fieldDescription}>{t("unverifiedHint")}</p>
         {regionResolutionLabel ? <p className={styles.fieldDescription} role="status">{regionResolutionLabel}</p> : null}
-        <button type="button" onClick={() => onRegion(null)}>{t("clearRegion")}</button>
+        <Button variant="ghost" size="sm" type="button" onClick={() => onRegion(null)}>{t("clearRegion")}</Button>
       </> : null}
     </details> : null}
     <div className={styles.analysisOptIn}>
       <label><input type="checkbox" checked={analyze && analysis.enabled} disabled={!analysis.enabled} onChange={event => onAnalyze(event.target.checked)} />{t("analysisOptIn")}</label>
-      <p className={styles.fieldDescription}>{analysis.enabled && analysis.maximumEstimatedCostUsd !== null ? t("analysisCost", { model: analysis.model ?? "gpt-4o-mini", cost: analysis.maximumEstimatedCostUsd.toFixed(6) }) : t("analysisDisabled")}</p>
+      <p className={styles.fieldDescription}>{analysis.enabled ? t("analysisCost") : t("analysisDisabled")}</p>
       <p className={styles.fieldDescription}>{t("analysisConsent")}</p>
     </div>
   </section>;

@@ -28,7 +28,7 @@ export function getVideoStudioOptions(env: Environment = process.env) {
 }
 
 /** Operator policy is independent of the customer's per-request confirmation. */
-export function canSubmitVideoBeta(ownerId: string, draft: VideoGenerationDraft, cost: number, env: Environment = process.env) {
+export function videoSubmissionPolicyChecks(ownerId: string, draft: VideoGenerationDraft, cost: number, env: Environment = process.env): Record<string, boolean> {
   if (env.VIDEO_STUDIO_ENABLED === "true") {
     const options = getVideoStudioOptions(env);
     const configured = env.VIDEO_STUDIO_MAX_COST_PER_REQUEST_USD ?? "2";
@@ -37,10 +37,10 @@ export function canSubmitVideoBeta(ownerId: string, draft: VideoGenerationDraft,
     const amount = usdToMicrosCeil(cost);
     const withinCeiling = configured === "unlimited" ? highLimits
       : ceiling !== null && ceiling > BigInt(0) && (ceiling <= BigInt(2_000_000) || highLimits) && amount !== null && amount <= ceiling;
-    return canAccessVideoBeta(ownerId, env) && env.VIDEO_GENERATION_ENABLED === "true"
-      && env.VIDEO_STUDIO_SPENDING_ENABLED === "true" && uuid.test(draft.clientSubmissionId)
-      && options.tiers.includes(draft.quality) && options.durations.includes(draft.durationSeconds)
-      && amount !== null && amount > BigInt(0) && withinCeiling;
+    return { access_allowed: canAccessVideoBeta(ownerId, env), generation_enabled: env.VIDEO_GENERATION_ENABLED === "true",
+      studio_spending_enabled: env.VIDEO_STUDIO_SPENDING_ENABLED === "true", submission_id_valid: uuid.test(draft.clientSubmissionId),
+      tier_allowed: options.tiers.includes(draft.quality), duration_allowed: options.durations.includes(draft.durationSeconds),
+      cost_valid: amount !== null && amount > BigInt(0), within_cost_ceiling: withinCeiling };
   }
   const ceiling = usdToMicrosFloor(env.VIDEO_BETA_MAX_COST_PER_REQUEST_USD ?? "0");
   const costMicros = usdToMicrosCeil(cost);
@@ -50,9 +50,13 @@ export function canSubmitVideoBeta(ownerId: string, draft: VideoGenerationDraft,
   const allowlistedAdmin = env.VIDEO_BETA_ENABLED === "true" && uuid.test(ownerId)
     && betaAllowlist.length === 1 && betaAllowlist[0] === ownerId;
   const validCost = costMicros !== null && costMicros > BigInt(0) && costMicros < BigInt("1000000000000");
-  return canAccessVideoBeta(ownerId, env) && env.VIDEO_GENERATION_ENABLED === "true"
-    && env.VIDEO_BETA_TRANSACTION_APPROVALS_ENABLED === "true" && uuid.test(draft.clientSubmissionId)
-    && tiers.length > 0 && tiers.every(value => ["standard", "pro"].includes(value)) && tiers.includes(draft.quality)
-    && durations.length > 0 && durations.every(value => ["5", "10"].includes(value)) && durations.includes(String(draft.durationSeconds))
-    && validCost && (allowlistedAdmin || (ceiling !== null && costMicros <= ceiling && ceiling <= BigInt(2_000_000)));
+  return { access_allowed: canAccessVideoBeta(ownerId, env), generation_enabled: env.VIDEO_GENERATION_ENABLED === "true",
+    beta_approvals_enabled: env.VIDEO_BETA_TRANSACTION_APPROVALS_ENABLED === "true", submission_id_valid: uuid.test(draft.clientSubmissionId),
+    tier_allowed: tiers.length > 0 && tiers.every(value => ["standard", "pro"].includes(value)) && tiers.includes(draft.quality),
+    duration_allowed: durations.length > 0 && durations.every(value => ["5", "10"].includes(value)) && durations.includes(String(draft.durationSeconds)),
+    cost_valid: validCost, within_cost_ceiling: allowlistedAdmin || (ceiling !== null && costMicros !== null && costMicros <= ceiling && ceiling <= BigInt(2_000_000)) };
+}
+
+export function canSubmitVideoBeta(ownerId: string, draft: VideoGenerationDraft, cost: number, env: Environment = process.env) {
+  return Object.values(videoSubmissionPolicyChecks(ownerId, draft, cost, env)).every(Boolean);
 }

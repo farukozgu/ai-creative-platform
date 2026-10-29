@@ -1,4 +1,3 @@
-import { DashboardIcon } from "@/components/dashboard/dashboard-icons";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import {
@@ -36,10 +35,13 @@ export type VideoInspectorCopy = {
   secondsLabel: (seconds: number) => string;
   generate: string;
   libraryLink: string;
+  approvalHeading: string;
 };
 
 type VideoGenerationInspectorProps = {
   approvalControls?: React.ReactNode;
+  costSummary?: React.ReactNode;
+  referenceControls?: React.ReactNode;
   presetControls?: React.ReactNode;
   directorControls?: React.ReactNode;
   advancedSettings?: React.ReactNode;
@@ -77,6 +79,8 @@ type VideoGenerationInspectorProps = {
 
 export function VideoGenerationInspector({
   approvalControls,
+  costSummary,
+  referenceControls,
   presetControls,
   directorControls,
   advancedSettings,
@@ -112,15 +116,7 @@ export function VideoGenerationInspector({
   onGenerate,
 }: VideoGenerationInspectorProps) {
   return (
-    <aside className={styles.inspector} aria-labelledby="video-studio-title">
-      <header className={styles.inspectorHeader}>
-        <div className={styles.titleRow}>
-          <DashboardIcon name="video" />
-          <h1 id="video-studio-title">{copy.title}</h1>
-        </div>
-        <p>{copy.description}</p>
-      </header>
-
+    <aside className={styles.inspector} aria-label={copy.title}>
       <div className={styles.inspectorScroll}>
         <VideoSourceSelector
           source={source}
@@ -136,24 +132,27 @@ export function VideoGenerationInspector({
           onSelectLibrary={onSelectLibrary}
         />
 
+        {referenceControls}
         {presetControls}
 
         <section className={styles.controlSection} aria-labelledby="video-prompt-heading">
           <div className={styles.controlHeading}>
-            <h2 id="video-prompt-heading">{copy.promptHeading}</h2>
-            <p>{copy.promptDescription}</p>
+            <h2 id="video-prompt-heading"><span className={styles.stepNumber} aria-hidden="true">03</span>{copy.promptHeading}</h2>
           </div>
           <textarea
             className={styles.promptEditor}
             value={prompt}
+            aria-labelledby="video-prompt-heading"
+            aria-describedby="video-prompt-description"
             placeholder={copy.promptPlaceholder}
-            rows={5}
+            rows={3}
             onChange={(event) => onPromptChange(event.target.value)}
           />
+          <p id="video-prompt-description" className={styles.fieldDescription}>{copy.promptDescription}</p>
         </section>
 
         <fieldset className={styles.controlSection}>
-          <legend>{copy.qualityHeading}</legend>
+          <legend><span className={styles.stepNumber} aria-hidden="true">04</span>{copy.qualityHeading}</legend>
           <div className={styles.qualityOptions}>
             {qualityOptions.length === 1 ? <div className={styles.activeOption}>
               <strong>{qualityOptions[0]?.label}</strong>
@@ -179,7 +178,8 @@ export function VideoGenerationInspector({
 
         <fieldset className={styles.controlSection}>
           <legend>{copy.outputHeading}</legend>
-          <div className={styles.outputGroup}>
+          <div className={styles.outputColumns}>
+          <div className={styles.outputGroup} role="group" aria-label={copy.aspectRatioLabel}>
             <span>{copy.aspectRatioLabel}</span>
             <div className={styles.outputOptions}>
               {aspectRatioOptions.map((option) => (
@@ -191,12 +191,12 @@ export function VideoGenerationInspector({
                     checked={aspectRatio === option.value}
                     onChange={() => onAspectRatioChange(option.value)}
                   />
-                  <span>{option.label}</span>
+                  <span><i className={styles.ratioIcon} data-ratio={option.value} aria-hidden="true" />{option.label}</span>
                 </label>
               ))}
             </div>
           </div>
-          <div className={styles.outputGroup}>
+          <div className={styles.outputGroup} role="group" aria-label={copy.durationLabel}>
             <span>{copy.durationLabel}</span>
             <div className={styles.outputOptions}>
               {durationOptions.map((option) => (
@@ -215,12 +215,15 @@ export function VideoGenerationInspector({
             </div>
             {durationOptions.some(option => option.disabled) ? <p className={styles.fieldDescription}>{durationOptions.find(option => option.disabled)?.description}</p> : null}
           </div>
+          </div>
         </fieldset>
-        {directorControls}
         {advancedSettings ?? preservationControls}
+        {directorControls}
       </div>
 
       <footer className={styles.inspectorFooter}>
+        <h2><span className={styles.stepNumber} aria-hidden="true">06</span>{copy.approvalHeading}</h2>
+        {costSummary}
         {approvalControls}
         <Button
           className={styles.generateButton}
@@ -230,12 +233,12 @@ export function VideoGenerationInspector({
           onClick={onGenerate}
           disabled={!generationAvailable}
         >
-          {isSubmitting ? <span className={styles.generateSpinner} aria-hidden="true" /> : null}
           {copy.generate}
         </Button>
         <p
           id="video-studio-feedback"
           className={styles.feedback}
+          data-error={feedbackIsError || undefined}
           role={feedbackMessage ? (feedbackIsError ? "alert" : "status") : undefined}
           aria-live="polite"
         >

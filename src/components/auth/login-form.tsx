@@ -159,13 +159,13 @@ export function LoginForm() {
             inputRef={passwordRef}
             label={t("passwordLabel")}
             labelAction={
-              <button
+              <Button variant="ghost" size="sm"
                 type="button"
                 className="login-forgot-button"
                 onClick={handleForgotPassword}
               >
                 {t("forgotPassword")}
-              </button>
+              </Button>
             }
             placeholder={t("passwordPlaceholder")}
             showLabel={t("showPassword")}
@@ -180,7 +180,7 @@ export function LoginForm() {
 
           <Button
             type="submit"
-            variant="dark"
+            variant="primary"
             size="lg"
             className="w-full"
             disabled={isSubmitting}

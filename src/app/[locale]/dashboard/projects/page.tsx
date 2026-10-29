@@ -1,3 +1,5 @@
+
+import { buttonStyles } from "@/components/ui/button";
 import type {Metadata} from "next";
 import {notFound} from "next/navigation";
 import {getTranslations, setRequestLocale} from "next-intl/server";
@@ -92,7 +94,7 @@ export default async function ProjectsPage({params, searchParams}: ProjectsPageP
             </ul>
           </section>
         ) : (
-          <AppState className="projects-index-empty" icon={result.totalCount === 0 ? "projects" : "search"} role="status" title={result.totalCount === 0 ? t("emptyTitle") : t("noResults")} description={result.totalCount === 0 ? t("emptyDescription") : t("noResultsDescription")} actions={result.totalCount === 0 ? <NewProjectButton action={createProject.bind(null, locale)} variant="primary" className="projects-create-button" messages={{create: t("firstProject"), creating: tRecent("creating"), error: tRecent("createError")}} /> : <Link href="/dashboard/projects" className="projects-empty-action">{t("clearFilters")}</Link>} />
+          <AppState className="projects-index-empty" icon={result.totalCount === 0 ? "projects" : "search"} role="status" title={result.totalCount === 0 ? t("emptyTitle") : t("noResults")} description={result.totalCount === 0 ? t("emptyDescription") : t("noResultsDescription")} actions={result.totalCount === 0 ? <NewProjectButton action={createProject.bind(null, locale)} variant="primary" className="projects-create-button" messages={{create: t("firstProject"), creating: tRecent("creating"), error: tRecent("createError")}} /> : <Link href="/dashboard/projects" className={buttonStyles({variant: "secondary", className: "projects-empty-action"})}>{t("clearFilters")}</Link>} />
         )}
         </ProjectsSelection>
 

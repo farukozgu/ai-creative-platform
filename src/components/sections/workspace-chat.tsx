@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { Button } from "@/components/ui/button";
 
 import { type WorkspaceGenerationState } from "@/data/workspace-demo";
 import { cn } from "@/lib/cn";
@@ -70,13 +71,13 @@ export function WorkspaceChat({
           </span>
           <p className="truncate text-xs font-medium">{t("agentName")}</p>
         </div>
-        <button
+        <Button variant="ghost" size="sm"
           type="button"
-          className="rounded-[var(--radius-sm)] px-2 py-2 text-xs text-[var(--workspace-muted)] transition-colors duration-(--transition-fast) hover:bg-[var(--workspace-control)] hover:text-[var(--workspace-text)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--focus-ring)]"
+          className="workspace-chat-action"
           onClick={onNewChat}
         >
           {t("newChat")}
-        </button>
+        </Button>
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-4 py-5">
@@ -238,11 +239,11 @@ export function WorkspaceChat({
                 </svg>
               </span>
             </div>
-            <button
+            <Button variant="icon" shape="round" size="sm"
               type="submit"
               aria-label={t("send")}
               disabled={!draft.trim()}
-              className="grid h-8 w-8 place-items-center rounded-full bg-[var(--workspace-control)] text-[var(--workspace-text)] transition-[background-color,transform] duration-(--transition-fast) hover:-translate-y-px hover:bg-[var(--workspace-panel-raised)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--focus-ring)] disabled:pointer-events-none disabled:opacity-35 motion-reduce:transform-none motion-reduce:transition-none"
+              className="workspace-chat-action"
             >
               <svg aria-hidden="true" viewBox="0 0 16 16" className="h-4 w-4" fill="none">
                 <path
@@ -253,7 +254,7 @@ export function WorkspaceChat({
                   strokeWidth="1.5"
                 />
               </svg>
-            </button>
+            </Button>
           </div>
         </div>
       </form>

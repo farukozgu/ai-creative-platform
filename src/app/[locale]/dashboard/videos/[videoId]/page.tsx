@@ -54,7 +54,6 @@ export default async function VideoDetailPage({ params }: VideoDetailPageProps) 
     sourceFrame: t("fidelityAnalysis.sourceFrame"),
     frameUnavailable: t("fidelityAnalysis.frameUnavailable"),
     analysisDisabled: t("fidelityAnalysis.analysisDisabled"),
-    pricingUnavailable: t("fidelityAnalysis.pricingUnavailable"),
     consentLead: t("fidelityAnalysis.consentLead"),
     consentDetails: t("fidelityAnalysis.consentDetails"),
     analyzing: t("fidelityAnalysis.analyzing"),

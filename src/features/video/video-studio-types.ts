@@ -59,7 +59,7 @@ export type VideoStudioDraft = {
 };
 
 export type VideoStatus = "queued" | "processing" | "ready" | "failed" | "unavailable";
-export type VideoProgressPhase = "queued" | "processing" | "finalizing" | "ready" | "failed" | "ambiguous" | "submission-uncertain";
+export type VideoProgressPhase = "queued" | "processing" | "storage-retry" | "finalizing" | "ready" | "failed" | "ambiguous" | "submission-uncertain";
 
 export type VideoPresentationRecord = {
   generationMethod?: import("@/lib/video-generation/preservation").VideoRecordGenerationMethod;

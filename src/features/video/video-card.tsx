@@ -1,15 +1,12 @@
-/* eslint-disable @next/next/no-img-element -- video thumbnails can be expiring authenticated URLs. */
-
 import { DashboardIcon } from "@/components/dashboard/dashboard-icons";
 import { Link } from "@/i18n/navigation";
-import { VideoDownloadButton } from "./video-download-button";
+import { VideoCardPreview } from "./video-card-preview";
 import type { VideoPresentationRecord, VideoStatus } from "@/features/video/video-studio-types";
 import styles from "@/features/video/video-library.module.css";
 
 export type VideoCardCopy = {
   legacyLocal: string;
   open: string;
-  download: string;
   noPreview: string;
   thumbnailAlt: string;
   mode: Record<VideoPresentationRecord["generationMode"], string>;
@@ -43,14 +40,7 @@ export function VideoCard({ record, locale, copy }: VideoCardProps) {
           className={styles.cardMedia}
           aria-label={`${copy.open}: ${title}`}
         >
-          {record.thumbnailUrl ? (
-            <img src={record.thumbnailUrl} alt={copy.thumbnailAlt} />
-          ) : (
-            <span className={styles.cardMediaEmpty}>
-              <DashboardIcon name="video" />
-              <span>{copy.noPreview}</span>
-            </span>
-          )}
+          <VideoCardPreview key={record.id} record={record} alt={copy.thumbnailAlt} unavailable={copy.noPreview} />
           <span className={styles.cardArrow} aria-hidden="true">
             <DashboardIcon name="arrow" />
           </span>
@@ -58,7 +48,7 @@ export function VideoCard({ record, locale, copy }: VideoCardProps) {
 
         <div className={styles.cardBody}>
           <div className={styles.cardTitleRow}>
-            <h2><Link href={`/dashboard/videos/${record.id}`}>{title}</Link></h2>
+            <h2><Link href={`/dashboard/videos/${record.id}`} title={title}>{title}</Link></h2>
             <span className={`${styles.status} ${styles[`status_${record.status}`]}`}>
               {copy.status[record.status]}
             </span>
@@ -71,7 +61,6 @@ export function VideoCard({ record, locale, copy }: VideoCardProps) {
           </p>
           <div className={styles.cardActions}>
             <Link href={`/dashboard/videos/${record.id}`}>{copy.open}</Link>
-            {record.status === "ready" ? <VideoDownloadButton jobId={record.id} label={copy.download} /> : null}
           </div>
         </div>
       </article>

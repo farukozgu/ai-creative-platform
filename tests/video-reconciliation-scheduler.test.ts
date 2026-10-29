@@ -47,7 +47,12 @@ class MemoryReconciliationRepository implements VideoReconciliationRepository {
     return claimed;
   }
   private owns(claim: VideoReconciliationClaim) { const current = this.claims.get(claim.job.id); return current?.token === claim.leaseToken && current.version === claim.leaseVersion && current.expiresAt > this.now; }
-  async transitionClaimed(claim: VideoReconciliationClaim, from: readonly VideoJobRecord["status"][], patch: Partial<VideoJobRecord>) { return this.owns(claim) ? this.transition(claim.job.id, from, patch) : null; }
+  async transitionClaimed(claim: VideoReconciliationClaim, from: readonly VideoJobRecord["status"][], patch: Partial<VideoJobRecord>) {
+    if (!this.owns(claim)) return null;
+    const updated = await this.transition(claim.job.id, from, patch);
+    if (updated && (patch.status === "failed" || patch.status === "succeeded")) this.claims.delete(claim.job.id);
+    return updated;
+  }
   async scheduleClaimedReconciliation(claim: VideoReconciliationClaim, attempts: number, nextAt: string | null) { if (!this.owns(claim)) return false; await this.scheduleReconciliation(claim.job.id, attempts, nextAt); this.claims.delete(claim.job.id); return true; }
 }
 

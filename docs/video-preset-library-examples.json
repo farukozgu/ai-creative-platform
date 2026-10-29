@@ -1,0 +1,1391 @@
+[
+  {
+    "name": "Ceket",
+    "category": "apparel",
+    "product": {
+      "category": "apparel",
+      "evidence": [
+        "two visible front buttons",
+        "black",
+        "glossy coated fabric",
+        "wide notched collar",
+        "front belt knot",
+        "belted jacket silhouette"
+      ]
+    },
+    "recommended": [
+      "floating-fashion",
+      "macro-stitching",
+      "fabric-motion",
+      "window-display",
+      "luxury-fashion-film",
+      "macro-detail-reveal"
+    ],
+    "plan": {
+      "version": "video-director-3.1-library-v1",
+      "presetId": "floating-fashion",
+      "presetVersion": 1,
+      "shotMode": "multi",
+      "origin": "fallback",
+      "intent": "Preset direction only; user intent has not been interpreted by AI.",
+      "summary": "Preset-based source-visible product study using existing product evidence.",
+      "shots": [
+        {
+          "durationSeconds": 3,
+          "purpose": "hero-reveal",
+          "evidenceRefs": [
+            5
+          ],
+          "camera": "Slow upward camera glide within the source view",
+          "lighting": "Broad soft light outlines the existing silhouette",
+          "composition": "Full silhouette with open margins",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Airy measured rhythm",
+          "focus": "belted jacket silhouette"
+        },
+        {
+          "durationSeconds": 4,
+          "purpose": "controlled-motion",
+          "evidenceRefs": [
+            5
+          ],
+          "camera": "Locked close framing",
+          "lighting": "Broad soft light outlines the existing silhouette",
+          "composition": "Close crop of the chosen visible detail",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Airy measured rhythm",
+          "focus": "belted jacket silhouette"
+        },
+        {
+          "durationSeconds": 3,
+          "purpose": "final-hero",
+          "evidenceRefs": [
+            5
+          ],
+          "camera": "Slow pull-back to a balanced hero view",
+          "lighting": "Broad soft light outlines the existing silhouette",
+          "composition": "Full form with generous space above",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Airy measured rhythm",
+          "focus": "belted jacket silhouette"
+        }
+      ]
+    },
+    "payload": {
+      "start_image_url": "https://invalid.example/offline-source",
+      "multi_prompt": [
+        {
+          "prompt": "Use a slow upward camera glide within the source view, framing the belted jacket silhouette. Compose the full silhouette with open margins. Light the scene with broad soft light outlines the existing silhouette. Focus resolves existing surface detail. Allow a airy measured rhythm. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "3"
+        },
+        {
+          "prompt": "Frame the belted jacket silhouette in a locked close view. Compose the close crop of the chosen visible detail. Light the scene with broad soft light outlines the existing silhouette. Focus resolves existing surface detail. Allow a airy measured rhythm. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "4"
+        },
+        {
+          "prompt": "Use a slow pull-back to a balanced hero view, framing the belted jacket silhouette. Compose the full form with generous space above. Light the scene with broad soft light outlines the existing silhouette. Focus resolves existing surface detail. Allow a airy measured rhythm. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "3"
+        }
+      ],
+      "shot_type": "customize",
+      "duration": "10",
+      "generate_audio": false,
+      "enable_safety_checker": true,
+      "negative_prompt": "changed logo, changed brand mark, rewritten text, misspelled text, illegible label, morphing letters, altered color, changed hue, changed pattern, changed print, altered material, changed surface texture, redesigned product, altered silhouette, changed proportions, stretched or compressed geometry, extra or missing parts, extra or missing buttons, extra or missing belt, broken seams, warped hardware, melting texture, garment deformation, new hidden surfaces, blur",
+      "cfg_scale": 0.5
+    }
+  },
+  {
+    "name": "Kot",
+    "category": "apparel",
+    "product": {
+      "category": "apparel",
+      "evidence": [
+        "visible hem stitching",
+        "denim weave",
+        "shorts silhouette"
+      ]
+    },
+    "recommended": [
+      "floating-fashion",
+      "macro-stitching",
+      "fabric-motion",
+      "window-display",
+      "cinematic-hero",
+      "material-detail"
+    ],
+    "plan": {
+      "version": "video-director-3.1-library-v1",
+      "presetId": "macro-stitching",
+      "presetVersion": 1,
+      "shotMode": "multi",
+      "origin": "fallback",
+      "intent": "Preset direction only; user intent has not been interpreted by AI.",
+      "summary": "Preset-based source-visible product study using existing product evidence.",
+      "shots": [
+        {
+          "durationSeconds": 3,
+          "purpose": "hero-reveal",
+          "evidenceRefs": [
+            2
+          ],
+          "camera": "Locked macro framing",
+          "lighting": "Soft raking light reveals existing relief",
+          "composition": "Close view of evidenced construction",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Measured craft study",
+          "focus": "shorts silhouette"
+        },
+        {
+          "durationSeconds": 4,
+          "purpose": "macro-detail",
+          "evidenceRefs": [
+            0
+          ],
+          "camera": "Slow pan left along the selected visible detail",
+          "lighting": "Soft raking light reveals existing relief",
+          "composition": "Diagonal crop following the existing detail line",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Measured craft study",
+          "focus": "visible hem stitching"
+        },
+        {
+          "durationSeconds": 3,
+          "purpose": "final-hero",
+          "evidenceRefs": [
+            2
+          ],
+          "camera": "Slow pull-back to full product framing",
+          "lighting": "Soft raking light reveals existing relief",
+          "composition": "Full visible silhouette with clean margins",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Measured craft study",
+          "focus": "shorts silhouette"
+        }
+      ]
+    },
+    "payload": {
+      "start_image_url": "https://invalid.example/offline-source",
+      "multi_prompt": [
+        {
+          "prompt": "Use locked macro framing, framing the shorts silhouette. Compose the close view of evidenced construction. Soft raking light reveals existing relief. Focus resolves existing surface detail. Allow a measured craft study. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "3"
+        },
+        {
+          "prompt": "Use a slow pan left along the selected visible detail, framing the visible hem stitching. Compose the diagonal crop following the existing detail line. Soft raking light reveals existing relief. Focus resolves existing surface detail. Allow a measured craft study. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "4"
+        },
+        {
+          "prompt": "Use slow pull-back to full product framing, framing the shorts silhouette. Compose the full visible silhouette with clean margins. Soft raking light reveals existing relief. Focus resolves existing surface detail. Allow a measured craft study. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "3"
+        }
+      ],
+      "shot_type": "customize",
+      "duration": "10",
+      "generate_audio": false,
+      "enable_safety_checker": true,
+      "negative_prompt": "changed logo, changed brand mark, rewritten text, misspelled text, illegible label, morphing letters, altered color, changed hue, changed pattern, changed print, altered material, changed surface texture, redesigned product, altered silhouette, changed proportions, stretched or compressed geometry, extra or missing parts, extra or missing buttons, extra or missing belt, broken seams, warped hardware, melting texture, garment deformation, new hidden surfaces, blur",
+      "cfg_scale": 0.5
+    }
+  },
+  {
+    "name": "Tişört",
+    "category": "apparel",
+    "product": {
+      "category": "apparel",
+      "evidence": [
+        "ribbed collar seam",
+        "shirt silhouette"
+      ]
+    },
+    "recommended": [
+      "floating-fashion",
+      "macro-stitching",
+      "window-display",
+      "fabric-motion",
+      "cinematic-hero",
+      "craftsmanship-study"
+    ],
+    "plan": {
+      "version": "video-director-3.1-library-v1",
+      "presetId": "fabric-motion",
+      "presetVersion": 1,
+      "shotMode": "multi",
+      "origin": "fallback",
+      "intent": "Preset direction only; user intent has not been interpreted by AI.",
+      "summary": "Preset-based source-visible product study using existing product evidence.",
+      "shots": [
+        {
+          "durationSeconds": 3,
+          "purpose": "hero-reveal",
+          "evidenceRefs": [
+            1
+          ],
+          "camera": "Slow vertical tracking within the visible face",
+          "lighting": "A gentle light sweep follows existing folds",
+          "composition": "Long visible contour in a narrow composition",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Soft kinetic rhythm",
+          "focus": "shirt silhouette"
+        },
+        {
+          "durationSeconds": 4,
+          "purpose": "controlled-motion",
+          "evidenceRefs": [],
+          "camera": "Locked close framing",
+          "lighting": "A gentle light sweep follows existing folds",
+          "composition": "Close crop of an existing visible contour",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Soft kinetic rhythm",
+          "focus": "Source-visible surface detail"
+        },
+        {
+          "durationSeconds": 3,
+          "purpose": "final-hero",
+          "evidenceRefs": [
+            1
+          ],
+          "camera": "Slow pull-back to a clean silhouette",
+          "lighting": "A gentle light sweep follows existing folds",
+          "composition": "Full form with balanced breathing room",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Soft kinetic rhythm",
+          "focus": "shirt silhouette"
+        }
+      ]
+    },
+    "payload": {
+      "start_image_url": "https://invalid.example/offline-source",
+      "multi_prompt": [
+        {
+          "prompt": "Use a slow vertical tracking within the visible face, framing the shirt silhouette. Compose the long visible contour in a narrow composition. Light the scene with a gentle light sweep follows existing folds. Focus resolves existing surface detail. Allow a soft kinetic rhythm. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "3"
+        },
+        {
+          "prompt": "Frame the visible surface detail in a locked close view. Compose the close crop of an existing visible contour. Light the scene with a gentle light sweep follows existing folds. Focus resolves existing surface detail. Allow a soft kinetic rhythm. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "4"
+        },
+        {
+          "prompt": "Use a slow pull-back to a clean silhouette, framing the shirt silhouette. Compose the full form with balanced breathing room. Light the scene with a gentle light sweep follows existing folds. Focus resolves existing surface detail. Allow a soft kinetic rhythm. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "3"
+        }
+      ],
+      "shot_type": "customize",
+      "duration": "10",
+      "generate_audio": false,
+      "enable_safety_checker": true,
+      "negative_prompt": "changed logo, changed brand mark, rewritten text, misspelled text, illegible label, morphing letters, altered color, changed hue, changed pattern, changed print, altered material, changed surface texture, redesigned product, altered silhouette, changed proportions, stretched or compressed geometry, extra or missing parts, extra or missing buttons, extra or missing belt, broken seams, warped hardware, melting texture, garment deformation, new hidden surfaces, blur",
+      "cfg_scale": 0.5
+    }
+  },
+  {
+    "name": "Çanta",
+    "category": "bags",
+    "product": {
+      "category": "bags",
+      "evidence": [
+        "brown",
+        "structured bag silhouette",
+        "arched front handle",
+        "front clasp",
+        "visible edge stitching",
+        "pebbled leather grain",
+        "pebbled leather"
+      ]
+    },
+    "recommended": [
+      "elegant-orbit",
+      "macro-stitching",
+      "metallic-light-sweep",
+      "hardware-reveal",
+      "floating-accessory",
+      "window-display"
+    ],
+    "plan": {
+      "version": "video-director-3.1-library-v1",
+      "presetId": "hardware-reveal",
+      "presetVersion": 1,
+      "shotMode": "multi",
+      "origin": "fallback",
+      "intent": "Preset direction only; user intent has not been interpreted by AI.",
+      "summary": "Preset-based source-visible product study using existing product evidence.",
+      "shots": [
+        {
+          "durationSeconds": 3,
+          "purpose": "hero-reveal",
+          "evidenceRefs": [
+            1
+          ],
+          "camera": "Locked close framing",
+          "lighting": "Directional soft light defines existing edges",
+          "composition": "Tight crop of evidenced construction",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Crisp deliberate rhythm",
+          "focus": "structured bag silhouette"
+        },
+        {
+          "durationSeconds": 4,
+          "purpose": "macro-detail",
+          "evidenceRefs": [
+            3
+          ],
+          "camera": "Short lateral camera glide along the visible edge",
+          "lighting": "Directional soft light defines existing edges",
+          "composition": "Parallel detail view with clean margins",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Crisp deliberate rhythm",
+          "focus": "front clasp"
+        },
+        {
+          "durationSeconds": 3,
+          "purpose": "final-hero",
+          "evidenceRefs": [
+            1
+          ],
+          "camera": "Slow pull-back to full product framing",
+          "lighting": "Directional soft light defines existing edges",
+          "composition": "Recognizable product with the detail in context",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Crisp deliberate rhythm",
+          "focus": "structured bag silhouette"
+        }
+      ]
+    },
+    "payload": {
+      "start_image_url": "https://invalid.example/offline-source",
+      "multi_prompt": [
+        {
+          "prompt": "Frame the structured bag silhouette in a locked close view. Compose the tight crop of evidenced construction. Directional soft light defines existing edges. Focus resolves existing surface detail. Allow a crisp deliberate rhythm. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "3"
+        },
+        {
+          "prompt": "Use a short lateral camera glide along the visible edge, framing the front clasp. Compose the parallel detail view with clean margins. Directional soft light defines existing edges. Focus resolves existing surface detail. Allow a crisp deliberate rhythm. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "4"
+        },
+        {
+          "prompt": "Use slow pull-back to full product framing, framing the structured bag silhouette. Compose the recognizable product with the detail in context. Directional soft light defines existing edges. Focus resolves existing surface detail. Allow a crisp deliberate rhythm. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "3"
+        }
+      ],
+      "shot_type": "customize",
+      "duration": "10",
+      "generate_audio": false,
+      "enable_safety_checker": true,
+      "negative_prompt": "changed logo, changed brand mark, rewritten text, misspelled text, illegible label, morphing letters, altered color, changed hue, changed pattern, changed print, altered material, changed surface texture, redesigned product, altered silhouette, changed proportions, stretched or compressed geometry, extra or missing parts, extra or missing buttons, extra or missing belt, broken seams, warped hardware, melting texture, garment deformation, new hidden surfaces, blur",
+      "cfg_scale": 0.5
+    }
+  },
+  {
+    "name": "Saat",
+    "category": "watches",
+    "product": {
+      "category": "watches",
+      "evidence": [
+        "silver",
+        "round watch case",
+        "blue dial with visible hands",
+        "brushed steel",
+        "blue dial",
+        "steel bracelet",
+        "slim dial markers"
+      ]
+    },
+    "recommended": [
+      "precision-macro",
+      "cinematic-dial",
+      "metallic-light-sweep",
+      "elegant-orbit",
+      "hardware-reveal",
+      "floating-accessory"
+    ],
+    "plan": {
+      "version": "video-director-3.1-library-v1",
+      "presetId": "cinematic-dial",
+      "presetVersion": 1,
+      "shotMode": "multi",
+      "origin": "fallback",
+      "intent": "Preset direction only; user intent has not been interpreted by AI.",
+      "summary": "Preset-based source-visible product study using existing product evidence.",
+      "shots": [
+        {
+          "durationSeconds": 3,
+          "purpose": "hero-reveal",
+          "evidenceRefs": [],
+          "camera": "Slow optical push toward the selected visible detail",
+          "lighting": "A narrow highlight crosses the existing relief",
+          "composition": "Visible face in a balanced graphic composition",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Precise editorial rhythm",
+          "focus": "Source-visible product form"
+        },
+        {
+          "durationSeconds": 4,
+          "purpose": "macro-detail",
+          "evidenceRefs": [
+            2
+          ],
+          "camera": "Locked close framing",
+          "lighting": "A narrow highlight crosses the existing relief",
+          "composition": "Asymmetric close crop of evidenced layout",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Precise editorial rhythm",
+          "focus": "blue dial with visible hands"
+        },
+        {
+          "durationSeconds": 3,
+          "purpose": "final-hero",
+          "evidenceRefs": [],
+          "camera": "Slow pull-back to a composed hero view",
+          "lighting": "A narrow highlight crosses the existing relief",
+          "composition": "Complete product with clean surrounding space",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Precise editorial rhythm",
+          "focus": "Source-visible product form"
+        }
+      ]
+    },
+    "payload": {
+      "start_image_url": "https://invalid.example/offline-source",
+      "multi_prompt": [
+        {
+          "prompt": "Use a slow optical push toward the selected visible detail, framing the visible product form. Compose the visible face in a balanced graphic composition. Light the scene with a narrow highlight crosses the existing relief. Focus resolves existing surface detail. Allow a precise editorial rhythm. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "3"
+        },
+        {
+          "prompt": "Frame the blue dial with visible hands in a locked close view. Compose the asymmetric close crop of evidenced layout. Light the scene with a narrow highlight crosses the existing relief. Focus resolves existing surface detail. Allow a precise editorial rhythm. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "4"
+        },
+        {
+          "prompt": "Use a slow pull-back to a composed hero view, framing the visible product form. Compose the complete product with clean surrounding space. Light the scene with a narrow highlight crosses the existing relief. Focus resolves existing surface detail. Allow a precise editorial rhythm. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "3"
+        }
+      ],
+      "shot_type": "customize",
+      "duration": "10",
+      "generate_audio": false,
+      "enable_safety_checker": true,
+      "negative_prompt": "changed logo, changed brand mark, rewritten text, misspelled text, illegible label, morphing letters, altered color, changed hue, changed pattern, changed print, altered material, changed surface texture, redesigned product, altered silhouette, changed proportions, stretched or compressed geometry, extra or missing parts, extra or missing buttons, extra or missing belt, broken seams, warped hardware, melting texture, garment deformation, new hidden surfaces, blur",
+      "cfg_scale": 0.5
+    }
+  },
+  {
+    "name": "Takı",
+    "category": "jewelry",
+    "product": {
+      "category": "jewelry",
+      "evidence": [
+        "oval center stone setting",
+        "silver",
+        "oval center stone",
+        "slim ring silhouette",
+        "slim band",
+        "silver metal"
+      ]
+    },
+    "recommended": [
+      "precision-macro",
+      "elegant-orbit",
+      "metallic-light-sweep",
+      "floating-accessory",
+      "window-display",
+      "dramatic-backlight"
+    ],
+    "plan": {
+      "version": "video-director-3.1-library-v1",
+      "presetId": "precision-macro",
+      "presetVersion": 1,
+      "shotMode": "multi",
+      "origin": "fallback",
+      "intent": "Preset direction only; user intent has not been interpreted by AI.",
+      "summary": "Preset-based source-visible product study using existing product evidence.",
+      "shots": [
+        {
+          "durationSeconds": 3,
+          "purpose": "hero-reveal",
+          "evidenceRefs": [
+            3
+          ],
+          "camera": "Locked close framing",
+          "lighting": "Narrow diffuse light defines existing edges",
+          "composition": "Tight crop on the chosen evidenced feature",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Patient precise rhythm",
+          "focus": "slim ring silhouette"
+        },
+        {
+          "durationSeconds": 4,
+          "purpose": "macro-detail",
+          "evidenceRefs": [
+            0
+          ],
+          "camera": "Short lateral macro camera glide",
+          "lighting": "Narrow diffuse light defines existing edges",
+          "composition": "Parallel close view of existing surface relief",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Patient precise rhythm",
+          "focus": "oval center stone setting"
+        },
+        {
+          "durationSeconds": 3,
+          "purpose": "final-hero",
+          "evidenceRefs": [
+            3
+          ],
+          "camera": "Slow pull-back to the complete visible form",
+          "lighting": "Narrow diffuse light defines existing edges",
+          "composition": "Centered recognizable hero view",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Patient precise rhythm",
+          "focus": "slim ring silhouette"
+        }
+      ]
+    },
+    "payload": {
+      "start_image_url": "https://invalid.example/offline-source",
+      "multi_prompt": [
+        {
+          "prompt": "Frame the slim ring silhouette in a locked close view. Compose the tight crop on the chosen evidenced feature. Narrow diffuse light defines existing edges. Focus resolves existing surface detail. Allow a patient precise rhythm. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "3"
+        },
+        {
+          "prompt": "Use a short lateral macro camera glide, framing the oval center stone setting. Compose the parallel close view of existing surface relief. Narrow diffuse light defines existing edges. Focus resolves existing surface detail. Allow a patient precise rhythm. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "4"
+        },
+        {
+          "prompt": "Use a slow pull-back to the complete visible form, framing the slim ring silhouette. Compose the centered recognizable hero view. Narrow diffuse light defines existing edges. Focus resolves existing surface detail. Allow a patient precise rhythm. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "3"
+        }
+      ],
+      "shot_type": "customize",
+      "duration": "10",
+      "generate_audio": false,
+      "enable_safety_checker": true,
+      "negative_prompt": "changed logo, changed brand mark, rewritten text, misspelled text, illegible label, morphing letters, altered color, changed hue, changed pattern, changed print, altered material, changed surface texture, redesigned product, altered silhouette, changed proportions, stretched or compressed geometry, extra or missing parts, extra or missing buttons, extra or missing belt, broken seams, warped hardware, melting texture, garment deformation, new hidden surfaces, blur",
+      "cfg_scale": 0.5
+    }
+  },
+  {
+    "name": "Parfüm",
+    "category": "cosmetics",
+    "product": {
+      "category": "cosmetics",
+      "evidence": [
+        "centered front label",
+        "amber",
+        "rectangular bottle geometry",
+        "rectangular glass bottle",
+        "clear glass",
+        "flat black cap"
+      ]
+    },
+    "recommended": [
+      "glass-reflection",
+      "label-reveal",
+      "dramatic-backlight",
+      "hardware-reveal",
+      "luxury-fashion-film",
+      "macro-detail-reveal"
+    ],
+    "plan": {
+      "version": "video-director-3.1-library-v1",
+      "presetId": "glass-reflection",
+      "presetVersion": 1,
+      "shotMode": "multi",
+      "origin": "fallback",
+      "intent": "Preset direction only; user intent has not been interpreted by AI.",
+      "summary": "Preset-based source-visible product study using existing product evidence.",
+      "shots": [
+        {
+          "durationSeconds": 3,
+          "purpose": "hero-reveal",
+          "evidenceRefs": [
+            2
+          ],
+          "camera": "Locked medium framing",
+          "lighting": "A broad soft highlight travels over the surface",
+          "composition": "Clean outline with lateral breathing room",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Smooth luminous rhythm",
+          "focus": "rectangular bottle geometry"
+        },
+        {
+          "durationSeconds": 4,
+          "purpose": "lighting-reveal",
+          "evidenceRefs": [
+            3
+          ],
+          "camera": "Slow vertical camera tilt within the visible face",
+          "lighting": "A broad soft highlight travels over the surface",
+          "composition": "Close crop of a source-visible reflective edge",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Smooth luminous rhythm",
+          "focus": "rectangular glass bottle"
+        },
+        {
+          "durationSeconds": 3,
+          "purpose": "final-hero",
+          "evidenceRefs": [
+            2
+          ],
+          "camera": "Locked symmetrical hero framing",
+          "lighting": "A broad soft highlight travels over the surface",
+          "composition": "Full form with readable existing marks",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Smooth luminous rhythm",
+          "focus": "rectangular bottle geometry"
+        }
+      ]
+    },
+    "payload": {
+      "start_image_url": "https://invalid.example/offline-source",
+      "multi_prompt": [
+        {
+          "prompt": "Use locked medium framing, framing the rectangular bottle geometry. Compose the clean outline with lateral breathing room. A broad soft highlight travels over the surface. Focus resolves existing surface detail. Allow a smooth luminous rhythm. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "3"
+        },
+        {
+          "prompt": "Use a slow vertical camera tilt within the visible face, framing the rectangular glass bottle. Compose the close crop of a source-visible reflective edge. A broad soft highlight travels over the surface. Focus resolves existing surface detail. Allow a smooth luminous rhythm. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "4"
+        },
+        {
+          "prompt": "Use locked symmetrical hero framing, framing the rectangular bottle geometry. Compose the full form with readable existing marks. A broad soft highlight travels over the surface. Focus resolves existing surface detail. Allow a smooth luminous rhythm. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "3"
+        }
+      ],
+      "shot_type": "customize",
+      "duration": "10",
+      "generate_audio": false,
+      "enable_safety_checker": true,
+      "negative_prompt": "changed logo, changed brand mark, rewritten text, misspelled text, illegible label, morphing letters, altered color, changed hue, changed pattern, changed print, altered material, changed surface texture, redesigned product, altered silhouette, changed proportions, stretched or compressed geometry, extra or missing parts, extra or missing buttons, extra or missing belt, broken seams, warped hardware, melting texture, garment deformation, new hidden surfaces, blur",
+      "cfg_scale": 0.5
+    }
+  },
+  {
+    "name": "Ayakkabı",
+    "category": "footwear",
+    "product": {
+      "category": "footwear",
+      "evidence": [
+        "woven upper texture",
+        "white",
+        "low shoe silhouette",
+        "visible sole edge",
+        "crossed laces",
+        "woven fabric"
+      ]
+    },
+    "recommended": [
+      "elegant-orbit",
+      "sneaker-hero",
+      "macro-stitching",
+      "hardware-reveal",
+      "luxury-fashion-film",
+      "macro-detail-reveal"
+    ],
+    "plan": {
+      "version": "video-director-3.1-library-v1",
+      "presetId": "sneaker-hero",
+      "presetVersion": 1,
+      "shotMode": "multi",
+      "origin": "fallback",
+      "intent": "Preset direction only; user intent has not been interpreted by AI.",
+      "summary": "Preset-based source-visible product study using existing product evidence.",
+      "shots": [
+        {
+          "durationSeconds": 3,
+          "purpose": "hero-reveal",
+          "evidenceRefs": [
+            2
+          ],
+          "camera": "Short lateral camera glide at source level",
+          "lighting": "Broad side light defines existing contour breaks",
+          "composition": "Full visible profile with forward negative space",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Crisp athletic rhythm",
+          "focus": "low shoe silhouette"
+        },
+        {
+          "durationSeconds": 4,
+          "purpose": "macro-detail",
+          "evidenceRefs": [
+            2
+          ],
+          "camera": "Locked close framing",
+          "lighting": "Broad side light defines existing contour breaks",
+          "composition": "Diagonal crop of the selected visible detail",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Crisp athletic rhythm",
+          "focus": "low shoe silhouette"
+        },
+        {
+          "durationSeconds": 3,
+          "purpose": "final-hero",
+          "evidenceRefs": [
+            2
+          ],
+          "camera": "Slow pull-back to a wide hero view",
+          "lighting": "Broad side light defines existing contour breaks",
+          "composition": "Complete product with an assertive graphic balance",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Crisp athletic rhythm",
+          "focus": "low shoe silhouette"
+        }
+      ]
+    },
+    "payload": {
+      "start_image_url": "https://invalid.example/offline-source",
+      "multi_prompt": [
+        {
+          "prompt": "Use a short lateral camera glide at source level, framing the low shoe silhouette. Compose the full visible profile with forward negative space. Broad side light defines existing contour breaks. Focus resolves existing surface detail. Allow a crisp athletic rhythm. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "3"
+        },
+        {
+          "prompt": "Frame the low shoe silhouette in a locked close view. Compose the diagonal crop of the selected visible detail. Broad side light defines existing contour breaks. Focus resolves existing surface detail. Allow a crisp athletic rhythm. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "4"
+        },
+        {
+          "prompt": "Use a slow pull-back to a wide hero view, framing the low shoe silhouette. Compose the complete product with an assertive graphic balance. Broad side light defines existing contour breaks. Focus resolves existing surface detail. Allow a crisp athletic rhythm. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "3"
+        }
+      ],
+      "shot_type": "customize",
+      "duration": "10",
+      "generate_audio": false,
+      "enable_safety_checker": true,
+      "negative_prompt": "changed logo, changed brand mark, rewritten text, misspelled text, illegible label, morphing letters, altered color, changed hue, changed pattern, changed print, altered material, changed surface texture, redesigned product, altered silhouette, changed proportions, stretched or compressed geometry, extra or missing parts, extra or missing buttons, extra or missing belt, broken seams, warped hardware, melting texture, garment deformation, new hidden surfaces, blur",
+      "cfg_scale": 0.5
+    }
+  },
+  {
+    "name": "Şapka",
+    "category": "headwear",
+    "product": {
+      "category": "headwear",
+      "evidence": [
+        "visible brim stitching",
+        "curved brim silhouette",
+        "front fabric panel"
+      ]
+    },
+    "recommended": [
+      "floating-fashion",
+      "macro-stitching",
+      "fabric-motion",
+      "window-display",
+      "label-reveal",
+      "cinematic-hero"
+    ],
+    "plan": {
+      "version": "video-director-3.1-library-v1",
+      "presetId": "macro-stitching",
+      "presetVersion": 1,
+      "shotMode": "multi",
+      "origin": "fallback",
+      "intent": "Preset direction only; user intent has not been interpreted by AI.",
+      "summary": "Preset-based source-visible product study using existing product evidence.",
+      "shots": [
+        {
+          "durationSeconds": 3,
+          "purpose": "hero-reveal",
+          "evidenceRefs": [
+            1
+          ],
+          "camera": "Locked macro framing",
+          "lighting": "Soft raking light reveals existing relief",
+          "composition": "Close view of evidenced construction",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Measured craft study",
+          "focus": "curved brim silhouette"
+        },
+        {
+          "durationSeconds": 4,
+          "purpose": "macro-detail",
+          "evidenceRefs": [
+            0
+          ],
+          "camera": "Slow pan left along the selected visible detail",
+          "lighting": "Soft raking light reveals existing relief",
+          "composition": "Diagonal crop following the existing detail line",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Measured craft study",
+          "focus": "visible brim stitching"
+        },
+        {
+          "durationSeconds": 3,
+          "purpose": "final-hero",
+          "evidenceRefs": [
+            1
+          ],
+          "camera": "Slow pull-back to full product framing",
+          "lighting": "Soft raking light reveals existing relief",
+          "composition": "Full visible silhouette with clean margins",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Measured craft study",
+          "focus": "curved brim silhouette"
+        }
+      ]
+    },
+    "payload": {
+      "start_image_url": "https://invalid.example/offline-source",
+      "multi_prompt": [
+        {
+          "prompt": "Use locked macro framing, framing the curved brim silhouette. Compose the close view of evidenced construction. Soft raking light reveals existing relief. Focus resolves existing surface detail. Allow a measured craft study. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "3"
+        },
+        {
+          "prompt": "Use a slow pan left along the selected visible detail, framing the visible brim stitching. Compose the diagonal crop following the existing detail line. Soft raking light reveals existing relief. Focus resolves existing surface detail. Allow a measured craft study. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "4"
+        },
+        {
+          "prompt": "Use slow pull-back to full product framing, framing the curved brim silhouette. Compose the full visible silhouette with clean margins. Soft raking light reveals existing relief. Focus resolves existing surface detail. Allow a measured craft study. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "3"
+        }
+      ],
+      "shot_type": "customize",
+      "duration": "10",
+      "generate_audio": false,
+      "enable_safety_checker": true,
+      "negative_prompt": "changed logo, changed brand mark, rewritten text, misspelled text, illegible label, morphing letters, altered color, changed hue, changed pattern, changed print, altered material, changed surface texture, redesigned product, altered silhouette, changed proportions, stretched or compressed geometry, extra or missing parts, extra or missing buttons, extra or missing belt, broken seams, warped hardware, melting texture, garment deformation, new hidden surfaces, blur",
+      "cfg_scale": 0.5
+    }
+  },
+  {
+    "name": "Gözlük",
+    "category": "eyewear",
+    "product": {
+      "category": "eyewear",
+      "evidence": [
+        "visible frame edge",
+        "front hinge line",
+        "curved frame silhouette"
+      ]
+    },
+    "recommended": [
+      "precision-macro",
+      "elegant-orbit",
+      "dramatic-backlight",
+      "hardware-reveal",
+      "floating-accessory",
+      "optical-lines"
+    ],
+    "plan": {
+      "version": "video-director-3.1-library-v1",
+      "presetId": "optical-lines",
+      "presetVersion": 1,
+      "shotMode": "multi",
+      "origin": "fallback",
+      "intent": "Preset direction only; user intent has not been interpreted by AI.",
+      "summary": "Preset-based source-visible product study using existing product evidence.",
+      "shots": [
+        {
+          "durationSeconds": 3,
+          "purpose": "hero-reveal",
+          "evidenceRefs": [
+            2
+          ],
+          "camera": "Locked off-center close framing",
+          "lighting": "Broad soft edge light preserves surface appearance",
+          "composition": "Asymmetric crop of an evidenced contour",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Clean graphic rhythm",
+          "focus": "curved frame silhouette"
+        },
+        {
+          "durationSeconds": 4,
+          "purpose": "controlled-motion",
+          "evidenceRefs": [
+            0
+          ],
+          "camera": "Slow pan right across the visible face",
+          "lighting": "Broad soft edge light preserves surface appearance",
+          "composition": "Horizontal composition retaining known edges",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Clean graphic rhythm",
+          "focus": "visible frame edge"
+        },
+        {
+          "durationSeconds": 3,
+          "purpose": "final-hero",
+          "evidenceRefs": [
+            2
+          ],
+          "camera": "Locked symmetrical hero framing",
+          "lighting": "Broad soft edge light preserves surface appearance",
+          "composition": "Clean centered full product outline",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Clean graphic rhythm",
+          "focus": "curved frame silhouette"
+        }
+      ]
+    },
+    "payload": {
+      "start_image_url": "https://invalid.example/offline-source",
+      "multi_prompt": [
+        {
+          "prompt": "Use locked off-center close framing, framing the curved frame silhouette. Compose the asymmetric crop of an evidenced contour. Broad soft edge light preserves surface appearance. Focus resolves existing surface detail. Allow a clean graphic rhythm. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "3"
+        },
+        {
+          "prompt": "Use a slow pan right across the visible face, framing the visible frame edge. Compose the horizontal composition retaining known edges. Broad soft edge light preserves surface appearance. Focus resolves existing surface detail. Allow a clean graphic rhythm. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "4"
+        },
+        {
+          "prompt": "Use locked symmetrical hero framing, framing the curved frame silhouette. Compose the clean centered full product outline. Broad soft edge light preserves surface appearance. Focus resolves existing surface detail. Allow a clean graphic rhythm. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "3"
+        }
+      ],
+      "shot_type": "customize",
+      "duration": "10",
+      "generate_audio": false,
+      "enable_safety_checker": true,
+      "negative_prompt": "changed logo, changed brand mark, rewritten text, misspelled text, illegible label, morphing letters, altered color, changed hue, changed pattern, changed print, altered material, changed surface texture, redesigned product, altered silhouette, changed proportions, stretched or compressed geometry, extra or missing parts, extra or missing buttons, extra or missing belt, broken seams, warped hardware, melting texture, garment deformation, new hidden surfaces, blur",
+      "cfg_scale": 0.5
+    }
+  },
+  {
+    "name": "Mobilya",
+    "category": "furniture",
+    "product": {
+      "category": "furniture",
+      "evidence": [
+        "visible edge seam",
+        "wide chair outline"
+      ]
+    },
+    "recommended": [
+      "macro-stitching",
+      "upholstery-macro",
+      "window-display",
+      "craftsmanship-study",
+      "luxury-fashion-film",
+      "macro-detail-reveal"
+    ],
+    "plan": {
+      "version": "video-director-3.1-library-v1",
+      "presetId": "upholstery-macro",
+      "presetVersion": 1,
+      "shotMode": "multi",
+      "origin": "fallback",
+      "intent": "Preset direction only; user intent has not been interpreted by AI.",
+      "summary": "Preset-based source-visible product study using existing product evidence.",
+      "shots": [
+        {
+          "durationSeconds": 3,
+          "purpose": "hero-reveal",
+          "evidenceRefs": [],
+          "camera": "Locked wide product framing",
+          "lighting": "Wide soft light grazes existing surface relief",
+          "composition": "Complete visible form with room to read scale",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Spacious unhurried rhythm",
+          "focus": "Source-visible product form"
+        },
+        {
+          "durationSeconds": 4,
+          "purpose": "material-study",
+          "evidenceRefs": [
+            0
+          ],
+          "camera": "Slow pan left across the visible surface",
+          "lighting": "Wide soft light grazes existing surface relief",
+          "composition": "Close crop of an evidenced surface junction",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Spacious unhurried rhythm",
+          "focus": "visible edge seam"
+        },
+        {
+          "durationSeconds": 3,
+          "purpose": "final-hero",
+          "evidenceRefs": [],
+          "camera": "Slow pull-back to wide hero framing",
+          "lighting": "Wide soft light grazes existing surface relief",
+          "composition": "Balanced full form with natural contact shadow",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Spacious unhurried rhythm",
+          "focus": "Source-visible product form"
+        }
+      ]
+    },
+    "payload": {
+      "start_image_url": "https://invalid.example/offline-source",
+      "multi_prompt": [
+        {
+          "prompt": "Use locked wide product framing, framing the visible product form. Compose the complete visible form with room to read scale. Light the scene with wide soft light grazes existing surface relief. Focus resolves existing surface detail. Allow a spacious unhurried rhythm. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "3"
+        },
+        {
+          "prompt": "Use a slow pan left across the visible surface, framing the visible edge seam. Compose the close crop of an evidenced surface junction. Light the scene with wide soft light grazes existing surface relief. Focus resolves existing surface detail. Allow a spacious unhurried rhythm. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "4"
+        },
+        {
+          "prompt": "Use slow pull-back to wide hero framing, framing the visible product form. Compose the balanced full form with natural contact shadow. Light the scene with wide soft light grazes existing surface relief. Focus resolves existing surface detail. Allow a spacious unhurried rhythm. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "3"
+        }
+      ],
+      "shot_type": "customize",
+      "duration": "10",
+      "generate_audio": false,
+      "enable_safety_checker": true,
+      "negative_prompt": "changed logo, changed brand mark, rewritten text, misspelled text, illegible label, morphing letters, altered color, changed hue, changed pattern, changed print, altered material, changed surface texture, redesigned product, altered silhouette, changed proportions, stretched or compressed geometry, extra or missing parts, extra or missing buttons, extra or missing belt, broken seams, warped hardware, melting texture, garment deformation, new hidden surfaces, blur",
+      "cfg_scale": 0.5
+    }
+  },
+  {
+    "name": "Yiyecek",
+    "category": "food",
+    "product": {
+      "category": "food",
+      "evidence": [
+        "visible layered surface",
+        "round food silhouette"
+      ]
+    },
+    "recommended": [
+      "culinary-texture",
+      "cinematic-hero",
+      "material-detail",
+      "luxury-fashion-film",
+      "macro-detail-reveal",
+      "minimal-studio"
+    ],
+    "plan": {
+      "version": "video-director-3.1-library-v1",
+      "presetId": "culinary-texture",
+      "presetVersion": 1,
+      "shotMode": "multi",
+      "origin": "fallback",
+      "intent": "Preset direction only; user intent has not been interpreted by AI.",
+      "summary": "Preset-based source-visible product study using existing product evidence.",
+      "shots": [
+        {
+          "durationSeconds": 3,
+          "purpose": "hero-reveal",
+          "evidenceRefs": [
+            1
+          ],
+          "camera": "Locked medium product view",
+          "lighting": "Soft grazing light retains original surface colors",
+          "composition": "Existing presentation with clean margins",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Patient sensory rhythm",
+          "focus": "round food silhouette"
+        },
+        {
+          "durationSeconds": 4,
+          "purpose": "material-study",
+          "evidenceRefs": [
+            0
+          ],
+          "camera": "Slow horizontal camera glide across the visible face",
+          "lighting": "Soft grazing light retains original surface colors",
+          "composition": "Source-resolved crop of existing surface layers",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Patient sensory rhythm",
+          "focus": "visible layered surface"
+        },
+        {
+          "durationSeconds": 3,
+          "purpose": "final-hero",
+          "evidenceRefs": [
+            1
+          ],
+          "camera": "Slow pull-back to a balanced presentation",
+          "lighting": "Soft grazing light retains original surface colors",
+          "composition": "Full visible form in its original arrangement",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Patient sensory rhythm",
+          "focus": "round food silhouette"
+        }
+      ]
+    },
+    "payload": {
+      "start_image_url": "https://invalid.example/offline-source",
+      "multi_prompt": [
+        {
+          "prompt": "Use locked medium product view, framing the round food silhouette. Compose the existing presentation with clean margins. Light the scene with soft grazing light retains original surface colors. Focus resolves existing surface detail. Allow a patient sensory rhythm. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "3"
+        },
+        {
+          "prompt": "Use a slow horizontal camera glide across the visible face, framing the visible layered surface. Compose the source-resolved crop of existing surface layers. Light the scene with soft grazing light retains original surface colors. Focus resolves existing surface detail. Allow a patient sensory rhythm. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "4"
+        },
+        {
+          "prompt": "Use a slow pull-back to a balanced presentation, framing the round food silhouette. Compose the full visible form in its original arrangement. Light the scene with soft grazing light retains original surface colors. Focus resolves existing surface detail. Allow a patient sensory rhythm. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "3"
+        }
+      ],
+      "shot_type": "customize",
+      "duration": "10",
+      "generate_audio": false,
+      "enable_safety_checker": true,
+      "negative_prompt": "changed logo, changed brand mark, rewritten text, misspelled text, illegible label, morphing letters, altered color, changed hue, changed pattern, changed print, altered material, changed surface texture, redesigned product, altered silhouette, changed proportions, stretched or compressed geometry, extra or missing parts, extra or missing buttons, extra or missing belt, broken seams, warped hardware, melting texture, garment deformation, new hidden surfaces, blur",
+      "cfg_scale": 0.5
+    }
+  },
+  {
+    "name": "Paketli gıda",
+    "category": "packaged-food",
+    "product": {
+      "category": "packaged-food",
+      "evidence": [
+        "visible container edge",
+        "cylindrical container geometry"
+      ]
+    },
+    "recommended": [
+      "dramatic-backlight",
+      "glass-reflection",
+      "label-reveal",
+      "metallic-light-sweep",
+      "craftsmanship-study",
+      "luxury-fashion-film"
+    ],
+    "plan": {
+      "version": "video-director-3.1-library-v1",
+      "presetId": "label-reveal",
+      "presetVersion": 1,
+      "shotMode": "multi",
+      "origin": "fallback",
+      "intent": "Preset direction only; user intent has not been interpreted by AI.",
+      "summary": "Preset-based source-visible product study using existing product evidence.",
+      "shots": [
+        {
+          "durationSeconds": 3,
+          "purpose": "hero-reveal",
+          "evidenceRefs": [
+            1
+          ],
+          "camera": "Slow dolly-in within the source view",
+          "lighting": "Even soft light keeps existing marks readable",
+          "composition": "Complete product with the visible mark in context",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Clear measured reveal",
+          "focus": "cylindrical container geometry"
+        },
+        {
+          "durationSeconds": 4,
+          "purpose": "macro-detail",
+          "evidenceRefs": [],
+          "camera": "Locked close framing",
+          "lighting": "Even soft light keeps existing marks readable",
+          "composition": "Close crop of an existing visible contour",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Clear measured reveal",
+          "focus": "Source-visible surface detail"
+        },
+        {
+          "durationSeconds": 3,
+          "purpose": "final-hero",
+          "evidenceRefs": [
+            1
+          ],
+          "camera": "Locked medium packshot",
+          "lighting": "Even soft light keeps existing marks readable",
+          "composition": "Balanced front-facing product composition",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Clear measured reveal",
+          "focus": "cylindrical container geometry"
+        }
+      ]
+    },
+    "payload": {
+      "start_image_url": "https://invalid.example/offline-source",
+      "multi_prompt": [
+        {
+          "prompt": "Dolly in slowly within the source view, framing the cylindrical container geometry. Compose the complete product with the visible mark in context. Light the scene with even soft light keeps existing marks readable. Focus resolves existing surface detail. Allow a clear measured reveal. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "3"
+        },
+        {
+          "prompt": "Frame the visible surface detail in a locked close view. Compose the close crop of an existing visible contour. Light the scene with even soft light keeps existing marks readable. Focus resolves existing surface detail. Allow a clear measured reveal. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "4"
+        },
+        {
+          "prompt": "Use locked medium packshot, framing the cylindrical container geometry. Compose the balanced front-facing product composition. Light the scene with even soft light keeps existing marks readable. Focus resolves existing surface detail. Allow a clear measured reveal. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "3"
+        }
+      ],
+      "shot_type": "customize",
+      "duration": "10",
+      "generate_audio": false,
+      "enable_safety_checker": true,
+      "negative_prompt": "changed logo, changed brand mark, rewritten text, misspelled text, illegible label, morphing letters, altered color, changed hue, changed pattern, changed print, altered material, changed surface texture, redesigned product, altered silhouette, changed proportions, stretched or compressed geometry, extra or missing parts, extra or missing buttons, extra or missing belt, broken seams, warped hardware, melting texture, garment deformation, new hidden surfaces, blur",
+      "cfg_scale": 0.5
+    }
+  },
+  {
+    "name": "Elektronik",
+    "category": "electronics",
+    "product": {
+      "category": "electronics",
+      "evidence": [
+        "visible control button",
+        "housing edge detail",
+        "curved housing silhouette"
+      ]
+    },
+    "recommended": [
+      "precision-macro",
+      "optical-lines",
+      "label-reveal",
+      "metallic-light-sweep",
+      "luxury-fashion-film",
+      "macro-detail-reveal"
+    ],
+    "plan": {
+      "version": "video-director-3.1-library-v1",
+      "presetId": "precision-macro",
+      "presetVersion": 1,
+      "shotMode": "multi",
+      "origin": "fallback",
+      "intent": "Preset direction only; user intent has not been interpreted by AI.",
+      "summary": "Preset-based source-visible product study using existing product evidence.",
+      "shots": [
+        {
+          "durationSeconds": 3,
+          "purpose": "hero-reveal",
+          "evidenceRefs": [
+            2
+          ],
+          "camera": "Locked close framing",
+          "lighting": "Narrow diffuse light defines existing edges",
+          "composition": "Tight crop on the chosen evidenced feature",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Patient precise rhythm",
+          "focus": "curved housing silhouette"
+        },
+        {
+          "durationSeconds": 4,
+          "purpose": "macro-detail",
+          "evidenceRefs": [
+            1
+          ],
+          "camera": "Short lateral macro camera glide",
+          "lighting": "Narrow diffuse light defines existing edges",
+          "composition": "Parallel close view of existing surface relief",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Patient precise rhythm",
+          "focus": "housing edge detail"
+        },
+        {
+          "durationSeconds": 3,
+          "purpose": "final-hero",
+          "evidenceRefs": [
+            2
+          ],
+          "camera": "Slow pull-back to the complete visible form",
+          "lighting": "Narrow diffuse light defines existing edges",
+          "composition": "Centered recognizable hero view",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Patient precise rhythm",
+          "focus": "curved housing silhouette"
+        }
+      ]
+    },
+    "payload": {
+      "start_image_url": "https://invalid.example/offline-source",
+      "multi_prompt": [
+        {
+          "prompt": "Frame the curved housing silhouette in a locked close view. Compose the tight crop on the chosen evidenced feature. Narrow diffuse light defines existing edges. Focus resolves existing surface detail. Allow a patient precise rhythm. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "3"
+        },
+        {
+          "prompt": "Use a short lateral macro camera glide, framing the housing edge detail. Compose the parallel close view of existing surface relief. Narrow diffuse light defines existing edges. Focus resolves existing surface detail. Allow a patient precise rhythm. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "4"
+        },
+        {
+          "prompt": "Use a slow pull-back to the complete visible form, framing the curved housing silhouette. Compose the centered recognizable hero view. Narrow diffuse light defines existing edges. Focus resolves existing surface detail. Allow a patient precise rhythm. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "3"
+        }
+      ],
+      "shot_type": "customize",
+      "duration": "10",
+      "generate_audio": false,
+      "enable_safety_checker": true,
+      "negative_prompt": "changed logo, changed brand mark, rewritten text, misspelled text, illegible label, morphing letters, altered color, changed hue, changed pattern, changed print, altered material, changed surface texture, redesigned product, altered silhouette, changed proportions, stretched or compressed geometry, extra or missing parts, extra or missing buttons, extra or missing belt, broken seams, warped hardware, melting texture, garment deformation, new hidden surfaces, blur",
+      "cfg_scale": 0.5
+    }
+  },
+  {
+    "name": "Belirsiz profil",
+    "category": "unknown",
+    "product": {
+      "category": "unknown",
+      "evidence": []
+    },
+    "recommended": [
+      "luxury-fashion-film",
+      "macro-detail-reveal",
+      "minimal-studio",
+      "product-spotlight",
+      "cinematic-hero",
+      "material-detail"
+    ],
+    "plan": {
+      "version": "video-director-3.1-library-v1",
+      "presetId": "cinematic-hero",
+      "presetVersion": 1,
+      "shotMode": "multi",
+      "origin": "fallback",
+      "intent": "Preset direction only; user intent has not been interpreted by AI.",
+      "summary": "Preset-based source-visible product study using existing product evidence.",
+      "shots": [
+        {
+          "durationSeconds": 3,
+          "purpose": "hero-reveal",
+          "evidenceRefs": [],
+          "camera": "Slow low-amplitude dolly-in",
+          "lighting": "Sculpted side light retains source color boundaries",
+          "composition": "Complete visible form with campaign negative space",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Confident cinematic rhythm",
+          "focus": "Source-visible product form"
+        },
+        {
+          "durationSeconds": 4,
+          "purpose": "material-study",
+          "evidenceRefs": [],
+          "camera": "Locked off-center close framing",
+          "lighting": "Sculpted side light retains source color boundaries",
+          "composition": "Close crop of an existing visible contour",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Confident cinematic rhythm",
+          "focus": "Source-visible surface detail"
+        },
+        {
+          "durationSeconds": 3,
+          "purpose": "final-hero",
+          "evidenceRefs": [],
+          "camera": "Slow pull-back to wide hero framing",
+          "lighting": "Sculpted side light retains source color boundaries",
+          "composition": "Wide hero composition with strong visual balance",
+          "motion": "Focus resolves existing surface detail",
+          "pace": "Confident cinematic rhythm",
+          "focus": "Source-visible product form"
+        }
+      ]
+    },
+    "payload": {
+      "start_image_url": "https://invalid.example/offline-source",
+      "multi_prompt": [
+        {
+          "prompt": "Use a slow low-amplitude dolly-in, framing the visible product form. Compose the complete visible form with campaign negative space. Light the scene with sculpted side light retains source color boundaries. Focus resolves existing surface detail. Allow a confident cinematic rhythm. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "3"
+        },
+        {
+          "prompt": "Use locked off-center close framing, framing the visible surface detail. Compose the close crop of an existing visible contour. Light the scene with sculpted side light retains source color boundaries. Focus resolves existing surface detail. Allow a confident cinematic rhythm. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "4"
+        },
+        {
+          "prompt": "Use slow pull-back to wide hero framing, framing the visible product form. Compose the wide hero composition with strong visual balance. Light the scene with sculpted side light retains source color boundaries. Focus resolves existing surface detail. Allow a confident cinematic rhythm. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+          "duration": "3"
+        }
+      ],
+      "shot_type": "customize",
+      "duration": "10",
+      "generate_audio": false,
+      "enable_safety_checker": true,
+      "negative_prompt": "changed logo, changed brand mark, rewritten text, misspelled text, illegible label, morphing letters, altered color, changed hue, changed pattern, changed print, altered material, changed surface texture, redesigned product, altered silhouette, changed proportions, stretched or compressed geometry, extra or missing parts, extra or missing buttons, extra or missing belt, broken seams, warped hardware, melting texture, garment deformation, new hidden surfaces, blur",
+      "cfg_scale": 0.5
+    }
+  }
+]

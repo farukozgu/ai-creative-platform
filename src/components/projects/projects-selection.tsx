@@ -110,7 +110,7 @@ export function ProjectsSelection({pageIds, locale, children, toolbar}: {pageIds
         {error ? <p role="alert">{t("deleteError")}</p> : null}
         <div className="delete-project-dialog-actions">
           <Button variant="secondary" size="sm" disabled={pending} onClick={close}>{t("cancel")}</Button>
-          <form onSubmit={event => { event.preventDefault(); confirm(); }}><Button type="submit" size="sm" disabled={pending || selected.length === 0} aria-busy={pending}>{pending ? t("deleting") : t("confirmDelete", {count: selected.length})}</Button></form>
+          <form onSubmit={event => { event.preventDefault(); confirm(); }}><Button type="submit" variant="destructive" size="sm" disabled={pending || selected.length === 0} aria-busy={pending}>{pending ? t("deleting") : t("confirmDelete", {count: selected.length})}</Button></form>
         </div>
       </div>
     </dialog>

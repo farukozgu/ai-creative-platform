@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
@@ -103,17 +105,17 @@ export function NotificationCenter({ initialItems, loadFailed = false, renderedA
 
   const badge = unreadCount > 9 ? "9+" : String(unreadCount);
   return <div ref={rootRef} className="notification-center">
-    <button ref={triggerRef} type="button" className="notification-trigger" aria-label={unreadCount ? t("triggerUnread", { count: unreadCount }) : t("trigger")} aria-haspopup="dialog" aria-expanded={isOpen} onClick={toggle}>
+    <Button variant="icon" size="md" ref={triggerRef} type="button" className="notification-trigger" aria-label={unreadCount ? t("triggerUnread", { count: unreadCount }) : t("trigger")} aria-haspopup="dialog" aria-expanded={isOpen} onClick={toggle}>
       <DashboardIcon name="bell" />
       {unreadCount ? <span className="notification-badge" aria-hidden="true">{badge}</span> : null}
-    </button>
+    </Button>
     {isOpen ? <div className="notification-panel" role="dialog" aria-modal="false" aria-labelledby="notification-panel-title">
       <div className="notification-panel-header">
         <h2 id="notification-panel-title" ref={headingRef} tabIndex={-1}>{t("title")}</h2>
-        {unreadCount ? <button type="button" onClick={markAllRead} disabled={isPending}>{t("markAllRead")}</button> : null}
+        {unreadCount ? <Button variant="ghost" size="sm" type="button" onClick={markAllRead} disabled={isPending}>{t("markAllRead")}</Button> : null}
       </div>
       <div className="notification-panel-body">
-        {loadFailed ? <div className="notification-state" role="alert"><strong>{t("loadError")}</strong><button type="button" onClick={() => router.refresh()}>{t("retry")}</button></div> : null}
+        {loadFailed ? <div className="notification-state" role="alert"><strong>{t("loadError")}</strong><Button variant="icon" size="sm" type="button" onClick={() => router.refresh()}>{t("retry")}</Button></div> : null}
         {!loadFailed && !items.length ? <div className="notification-state"><strong>{t("emptyTitle")}</strong><span>{t("emptyDescription")}</span></div> : null}
         {!loadFailed ? <>{renderGroup(t("today"), groups.today)}{renderGroup(t("earlier"), groups.earlier)}</> : null}
       </div>

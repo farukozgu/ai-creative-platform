@@ -18,13 +18,13 @@
 .panel:is(:popover-open, [data-fallback]) { display: grid; gap: 0.25rem; }
 .panel::backdrop { background: transparent; }
 .identity { display: grid; min-width: 0; gap: 0.25rem; border-bottom: 1px solid var(--dashboard-border); padding: 0.75rem; }
-.identity strong { overflow-wrap: anywhere; font-size: 0.875rem; font-weight: 600; }
-.identity span { color: var(--dashboard-muted); font-size: 0.75rem; }
-.panel .action { display: flex; width: 100%; min-height: 2.75rem; align-items: center; gap: 0.625rem; border: 0; border-radius: var(--radius-sm); background: transparent; padding: 0.625rem 0.75rem; color: var(--dashboard-foreground); font: inherit; font-size: 0.8125rem; font-weight: 500; text-align: left; text-decoration: none; cursor: pointer; transition: background-color var(--transition-fast) var(--ease-standard); }
+.identity strong { overflow-wrap: anywhere; font-size: var(--text-ui); font-weight: 600; }
+.identity span { color: var(--dashboard-muted); font-size: var(--text-caption); }
+.panel .action { display: flex; width: 100%; min-height: 2.75rem; align-items: center; gap: 0.625rem; border: 0; border-radius: var(--radius-sm); background: transparent; padding: 0.625rem 0.75rem; color: var(--dashboard-foreground); font: inherit; font-size: var(--text-small); font-weight: 500; text-align: left; text-decoration: none; cursor: pointer; transition: background-color var(--transition-fast) var(--ease-standard); }
 .action svg { width: 1.125rem; height: 1.125rem; flex: none; color: var(--dashboard-muted); }
 .action:hover { background: var(--dashboard-surface-hover); }
 .action:focus-visible { outline: 2px solid var(--dashboard-focus); outline-offset: -2px; }
 .appearance { display: grid; gap: 0.625rem; border-block: 1px solid var(--dashboard-border); padding: 0.75rem; }
-.appearance > p { color: var(--dashboard-muted); font-size: 0.75rem; font-weight: 500; }
+.appearance > p { color: var(--dashboard-muted); font-size: var(--text-caption); font-weight: 500; }
 .panel form { margin: 0; }
 @media (prefers-reduced-motion: reduce) { .action { transition: none; } }

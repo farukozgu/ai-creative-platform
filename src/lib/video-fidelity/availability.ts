@@ -1,7 +1,7 @@
 import "server-only";
 
 import { getFidelityValidationModel } from "@/lib/fidelity-validation/validate-generated-image";
-import { getOpenAIBetaPolicy } from "@/lib/openai/beta-policy";
+import { getVideoStudioOpenAIPolicy } from "@/lib/openai/beta-policy";
 import type { VideoFidelityAnalysisAvailability } from "./types";
 import { quoteVideoFidelity } from "./pricing";
 
@@ -9,7 +9,7 @@ import { quoteVideoFidelity } from "./pricing";
 export function getVideoFidelityAnalysisAvailability(userId: string, hasRegion = false): VideoFidelityAnalysisAvailability {
   const model = getFidelityValidationModel();
   const quote = model === "gpt-4o-mini" ? quoteVideoFidelity(hasRegion) : null;
-  const policy = getOpenAIBetaPolicy(userId);
+  const policy = getVideoStudioOpenAIPolicy(userId, model);
   return {
     ...(quote ? { model: quote.model, pricingVersion: quote.pricingVersion } : {}),
     enabled: Boolean(

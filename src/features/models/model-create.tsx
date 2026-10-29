@@ -99,7 +99,7 @@ export function ModelCreate({locale, modelId = null, initial = emptyModelAppeara
             <label className={styles.fullWidth}>{t("fields.name.label")}<input ref={nameRef} name="name" value={draft.name} maxLength={80} placeholder={t("fields.name.placeholder")} onChange={event => update("name", event.target.value)} /></label>
             <fieldset className={styles.choices} aria-describedby={genderHelp}><legend>{editor("gender.label")}</legend><div className={styles.chips}>
               {modelGenders.map(gender => <label key={gender} className={styles.chip}><input type="radio" name="gender" value={gender} checked={draft.gender === gender} onChange={() => update("gender", gender)} /><span>{editor(`gender.options.${gender}`)}</span></label>)}
-            </div><p id={genderHelp} className={styles.helper}>{editor("gender.helper")}{draft.gender ? <button type="button" className={styles.clearGender} onClick={() => update("gender", "")}>{editor("gender.clear")}</button> : null}</p></fieldset>
+            </div><p id={genderHelp} className={styles.helper}>{editor("gender.helper")}{draft.gender ? <Button variant="ghost" size="sm" type="button" className={styles.clearGender} onClick={() => update("gender", "")}>{editor("gender.clear")}</Button> : null}</p></fieldset>
             {selectField("ageRange")}{selectField("presentation")}
           </div>
         </fieldset>

@@ -141,14 +141,14 @@ export function CreativePresetRail({ vertical }: { vertical?: SupportedVertical 
         </div>
       </section> : null}
       {category === "all" && (allPresets.length > COLLAPSED_PRESET_COUNT || expanded) ? <div className="dashboard-preset-actions">
-        <button
+        <Button variant="ghost" size="sm"
           className="dashboard-preset-toggle"
           type="button"
           aria-expanded={expanded}
           onClick={() => setExpanded((current) => !current)}
         >
           {expanded ? t("showLess") : t("viewAll")}
-        </button>
+        </Button>
       </div> : null}
     </div>
   );

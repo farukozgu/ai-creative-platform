@@ -171,10 +171,13 @@ test("keeps Product Fidelity copy complete in Turkish and English", () => {
       Dashboard: { videoDetail: { fidelityAnalysis: Record<string, unknown> } };
     };
     const copy = messages.Dashboard.videoDetail.fidelityAnalysis;
-    for (const key of ["title", "description", "prepare", "freeStep", "consentLead", "consentDetails", "consentLabel", "analyze", "uncertain", "failed"]) {
+    for (const key of ["title", "description", "prepare", "freeStep", "consentLead", "consentDetails", "analyze", "uncertain", "failed"]) {
       assert.equal(typeof copy[key], "string", `${locale}.${key}`);
       assert.ok(copy[key], `${locale}.${key}`);
     }
+    assert.equal(copy.priceEstimate, undefined);
+    assert.equal(copy.consentLabel, undefined);
+    assert.doesNotMatch(`${copy.consentLead} ${copy.consentDetails}`, /\$\{|USD/);
     for (const key of ["categories", "statuses", "overallStatuses", "confidence", "causes", "verticals"]) {
       const section = copy[key];
       assert.ok(section && typeof section === "object" && Object.values(section).every(Boolean), `${locale}.${key}`);

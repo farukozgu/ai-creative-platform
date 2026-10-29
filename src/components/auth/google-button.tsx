@@ -1,3 +1,5 @@
+
+import { Button } from "@/components/ui/button";
 import type { MouseEventHandler, ReactNode } from "react";
 
 type GoogleButtonProps = {
@@ -33,9 +35,9 @@ function GoogleIcon() {
 
 export function GoogleButton({ children, onClick }: GoogleButtonProps) {
   return (
-    <button type="button" className="signup-google-button" onClick={onClick}>
+    <Button variant="secondary" size="lg" type="button" className="signup-google-button" onClick={onClick}>
       <GoogleIcon />
       <span>{children}</span>
-    </button>
+    </Button>
   );
 }

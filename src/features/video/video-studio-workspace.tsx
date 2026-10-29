@@ -2,9 +2,12 @@
 
 import { useEffect, useReducer, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
+import { VideoProductReferences } from "./video-product-references";
 import { VideoPreservationControls } from "./video-preservation-controls";
 import { Button } from "@/components/ui/button";
-import { VideoDirectorPanel, VideoDirectorPresetSelector } from "./video-director-panel";
+import { DashboardIcon } from "@/components/dashboard/dashboard-icons";
+import { Link } from "@/i18n/navigation";
+import { VideoDirectorPanel, VideoDirectorPresetSelector, type VideoProductAnalysisDisplayStatus } from "./video-director-panel";
 import type { VideoDirectorSelection } from "@/lib/video-director/core";
 import type { VideoPresetId, VideoShotMode } from "@/lib/video-director/presets";
 import type { summarizeVideoPayload } from "@/lib/video-generation/payload-summary";
@@ -65,6 +68,7 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
   const [generationError, setGenerationError] = useState<string | null>(null);
   const [shotMode, setShotMode] = useState<VideoShotMode>("single");
   const [presetId, setPresetId] = useState<VideoPresetId>("minimal-studio");
+  const [referenceState, setReferenceState] = useState<{ key: string; refs: NonNullable<VideoGenerationDraft["productReferences"]> }>({ key: "", refs: [] });
   const [director, setDirector] = useState<{ key: string; selection: VideoDirectorSelection } | null>(null);
   const [submissionQuote, setSubmissionQuote] = useState<{ key: string; cost: number; receipt: string; expiresAt: number; preview: ReturnType<typeof summarizeVideoPayload>["preview"] } | null>(null);
   const [confirmedReceipt, setConfirmedReceipt] = useState<string | null>(null);
@@ -128,6 +132,11 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
   const currentQuote = quote?.quality === draft.quality && quote.duration === draft.duration && quote.hasRegion === Boolean(draft.criticalRegion) ? quote : null;
   const analysisAvailable = currentQuote?.analysis ?? { enabled: false, maximumEstimatedCostUsd: null };
   const [view, setView] = useState<WorkspaceView>("controls");
+  useEffect(() => {
+    if (view !== "preview") return;
+    document.getElementById("video-studio-canvas")?.scrollIntoView({ block: "start" });
+    document.getElementById("video-studio-canvas")?.focus({ preventScroll: true });
+  }, [view]);
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [libraryStatus, setLibraryStatus] = useState<VideoLibraryStatus>("idle");
   const [libraryAssets, setLibraryAssets] = useState<VideoLibraryAsset[]>([]);
@@ -141,6 +150,7 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
     key: string; aspectRatio: VideoAspectRatio; status: "preparing" | "error" | "ready";
     frame?: Extract<Awaited<ReturnType<typeof prepareVideoSourceAction>>, { status: "success" }>;
   } | null>(null);
+  const [productAnalysisState, setProductAnalysisState] = useState<{ sourceAssetId: string; status: VideoProductAnalysisDisplayStatus } | null>(null);
 
   useEffect(() => {
     const source = draft.source;
@@ -173,9 +183,14 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
   }, [draft.source, draft.aspectRatio, generationAvailable]);
   const currentPreparation = prepared?.key === draft.source?.id && prepared?.aspectRatio === draft.aspectRatio ? prepared : null;
   const preparedFrame = currentPreparation?.status === "ready" ? currentPreparation.frame : null;
+  const productAnalysisStatus: VideoProductAnalysisDisplayStatus = preparedFrame
+    ? productAnalysisState?.sourceAssetId === preparedFrame.source.sourceAssetId ? productAnalysisState.status
+      : preparedFrame.presetContext.category === "unknown" ? "not_analyzed" : "verified"
+    : "not_analyzed";
   const preparationFailed = currentPreparation?.status === "error";
   const previewSource = draft.source && preparedFrame ? { ...draft.source, previewUrl: preparedFrame.previewUrl } : null;
-  const generationDraft: VideoGenerationDraft = { clientSubmissionId: submissionId, criticalRegion: draft.criticalRegion,
+  const referenceKey = JSON.stringify([draft.source?.id, draft.aspectRatio]);
+  const generationDraft: VideoGenerationDraft = { productReferences: referenceState.key === referenceKey ? referenceState.refs : [], clientSubmissionId: submissionId, criticalRegion: draft.criticalRegion,
     analysisConsent: draft.analyzeAfterGeneration && currentQuote?.analysis.maximumEstimatedCostUsd != null
       && currentQuote.analysis.model && currentQuote.analysis.pricingVersion
       ? { model: currentQuote.analysis.model, maximumCostUsd: currentQuote.analysis.maximumEstimatedCostUsd,
@@ -356,8 +371,8 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
       if (approvalGeneration.current.value !== requestedApprovalGeneration) return;
       if (result.status === "success") setSubmissionQuote({ key: approvalKey, cost: result.cost, receipt: result.receipt, expiresAt: result.expiresAt, preview: result.preview });
       else if (result.status === "used") { setSubmissionUsed(true); setGenerationError("submissionUsed"); }
-      else setGenerationError("approval");
-    } catch { setGenerationError("approval"); }
+      else setGenerationError(`quote_${result.reasonCode}`);
+    } catch { setGenerationError("quote_repository_unavailable"); }
     finally { setPreparingQuote(false); }
   }
 
@@ -379,6 +394,9 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
         if (error === "approval" || error === "unsafeMotion") {
           try { sessionStorage.setItem(recoveryKey!, `draft:${submissionId}`); } catch { /* A later reload remains safely blocked. */ }
           setSubmissionQuote(null); setConfirmedReceipt(null);
+        }
+        if (error === "providerRejected") {
+          setSubmissionUsed(true); setSubmissionQuote(null); setConfirmedReceipt(null);
         }
         setGenerationError(error);
       }
@@ -408,12 +426,20 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
 
   return (
     <main className={styles.workspace} data-view={view} aria-label={t("title")}>
+      <header className={styles.workspaceHeader}>
+        <div>
+          <span className={styles.eyebrow}><DashboardIcon name="video" />{t("layout.eyebrow")}</span>
+          <h1 id="video-studio-title">{t("title")}</h1>
+          <p>{t("description")}</p>
+        </div>
+        <Link className={styles.headerLibraryLink} href="/dashboard/videos"><DashboardIcon name="projects" />{t("beta.libraryLink")}<DashboardIcon name="arrow" /></Link>
+      </header>
       <div className={styles.viewSwitch} role="group" aria-label={t("mobile.viewLabel")}>
         <button
           type="button"
           aria-pressed={view === "controls"}
           aria-controls="video-studio-inspector"
-          onClick={() => setView("controls")}
+          onClick={() => { setView("controls"); document.getElementById("video-studio-inspector")?.scrollIntoView({ block: "start" }); document.getElementById("video-source-heading")?.focus({ preventScroll: true }); }}
         >
           {t("mobile.controls")}
         </button>
@@ -421,7 +447,7 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
           type="button"
           aria-pressed={view === "preview"}
           aria-controls="video-studio-canvas"
-          onClick={() => setView("preview")}
+          onClick={() => { setView("preview"); document.getElementById("video-studio-canvas")?.scrollIntoView({ block: "start" }); document.getElementById("video-studio-canvas")?.focus({ preventScroll: true }); }}
         >
           {t("mobile.preview")}
         </button>
@@ -429,8 +455,14 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
 
       <div id="video-studio-inspector" className={styles.inspectorRegion}>
         <VideoGenerationInspector
+          costSummary={<div className={styles.costSummary} aria-live="polite">
+            <div><span>{t(activeSubmissionQuote ? "layout.verifiedCost" : "layout.estimatedCost")}</span>
+              <strong>{activeSubmissionQuote ? t("layout.usd", { cost: activeSubmissionQuote.cost.toFixed(6) }) : currentQuote ? t("layout.usd", { cost: currentQuote.estimatedMaxCostUsd.toFixed(6) }) : "—"}</strong>
+            </div>
+            <p>{t(activeSubmissionQuote ? "layout.costApprovalHint" : "layout.costEstimateHint")}</p>
+          </div>}
           approvalControls={<>
-            <Button variant="secondary" size="sm" onClick={() => void prepareSubmissionQuote()}
+            <Button variant="secondary" className={styles.quoteButton} onClick={() => void prepareSubmissionQuote()}
               disabled={!generationAvailable || !submissionId || !preparedFrame || !isVideoStudioDraftReady(draft) || !directorReady
                 || busy || preparingQuote || restoringJob || restoreUnavailable || submissionUsed || Boolean(jobId)}>
               {t(preparingQuote ? "beta.preparingQuote" : "beta.prepareQuote")}
@@ -438,6 +470,7 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
             {activeSubmissionQuote ? <details className={styles.payloadDetails}>
               <summary>{t("beta.payloadPreview")}</summary>
               <div className={styles.directorPlan}>
+              {activeSubmissionQuote.preview.referenceReviews.map(review => <p key={review.index}>{review.index + 1}: {t(`references.${review.status}`)} — <span lang="en">{review.reason}</span></p>)}
               <p>{t(activeSubmissionQuote.preview.mode === "multi" ? "director.multi" : "director.single")} · {t("beta.shotCount", { count: activeSubmissionQuote.preview.shots.length })}</p>
               <ol>{activeSubmissionQuote.preview.shots.map((shot, index) => <li key={index}>
                 <h4>{t("director.shot", { number: index + 1, seconds: shot.duration })}</h4>
@@ -452,19 +485,28 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
             {(jobId || submissionUsed || restoreUnavailable || generationError === "failed" || generationError === "ambiguous") && !busy
               ? <Button variant="ghost" size="sm" onClick={newSubmission}>{t("beta.newSubmission")}</Button> : null}
           </>}
+          referenceControls={preparedFrame ? <VideoProductReferences key={referenceKey} sourceKey={referenceKey}
+            product={preparedFrame.presetContext} presetId={presetId} aspectRatio={draft.aspectRatio} disabled={busy || preparingQuote}
+            onChange={refs => { setReferenceState({ key: referenceKey, refs }); setDirector(null); setSubmissionQuote(null); setConfirmedReceipt(null); }} /> : null}
           presetControls={<VideoDirectorPresetSelector presetId={presetId}
             disabled={busy}
+            product={preparedFrame?.presetContext}
+            analysisStatus={productAnalysisStatus}
             onChange={nextPresetId => {
               setPresetId(nextPresetId); setDirector(null); setSubmissionQuote(null); setConfirmedReceipt(null);
             }} />}
           directorControls={
             <VideoDirectorPanel key={directorPanelKey} draft={generationDraft} draftKey={directorDraftKey}
-              presetId={presetId} shotMode={shotMode} quote={currentQuote?.director ?? null}
+              presetId={presetId} shotMode={shotMode}
               planDisabled={Boolean(directorPlanDisabledReason)} disabledReason={directorPlanDisabledReason}
-              onPrepared={selection => {
+              onPrepared={(selection, productContext, analysisStatus) => {
                 setDirector(selection ? { key: directorDraftKey, selection } : null);
                 setSubmissionQuote(null);
                 setConfirmedReceipt(null);
+                if (preparedFrame && productContext && analysisStatus) {
+                  setPrepared(current => current?.frame ? { ...current, frame: { ...current.frame, presetContext: productContext } } : current);
+                  setProductAnalysisState({ sourceAssetId: preparedFrame.source.sourceAssetId, status: analysisStatus });
+                }
               }} />}
           advancedSettings={<details className={styles.advancedSettings}>
             <summary>{t("advancedSettings")}</summary>
@@ -530,6 +572,7 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
             secondsLabel: (seconds) => t("output.seconds", { seconds }),
             generate: busy ? t("beta.submitting") : t("generate"),
             libraryLink: t("beta.libraryLink"),
+            approvalHeading: t("layout.approvalHeading"),
           }}
           source={draft.source}
           prompt={draft.prompt}
@@ -562,8 +605,14 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
         />
       </div>
 
-      <div id="video-studio-canvas" className={styles.canvasRegion}>
+      <div id="video-studio-canvas" className={styles.canvasRegion} tabIndex={-1}>
+        <VideoJobProgress key={jobId ?? "new"} jobId={jobId} submitting={busy} showPlayer restoreUnavailable={restoreUnavailable} submissionError={generationError === "ambiguous" || generationError === "failed" ? generationError : null} />
+        {!jobId && !busy ? <>
         <VideoCanvas
+          showExample={!draft.source}
+          onUpload={() => document.getElementById("video-source-upload")?.click()}
+          onChooseLibrary={() => { if (!libraryOpen) toggleLibrary(); document.getElementById("video-studio-inspector")?.scrollIntoView({ block: "start" }); document.getElementById("video-source-library-toggle")?.focus({ preventScroll: true }); }}
+          emptyCopy={{ upload: t("source.upload"), library: t("source.chooseLibrary"), example: t("layout.styleExample"), exampleAlt: t("layout.exampleAlt"), steps: [t("layout.guideSource"), t("layout.guideStyle"), t("layout.guideCreate")] }}
           criticalRegion={draft.criticalRegion && preparedFrame ? mapRegionToFrame(draft.criticalRegion, preparedFrame.geometry) : null}
           source={previewSource}
           aspectRatio={draft.aspectRatio}
@@ -573,11 +622,9 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
           sourceAlt={t("canvas.sourceAlt")}
           imageEmptyTitle={t(draft.source ? preparationFailed ? "preparation.failed" : "preparation.preparing" : "canvas.imageEmptyTitle")}
           imageEmptyDescription={t(draft.source ? "preparation.description" : "canvas.imageEmptyDescription")}
-          generationsTitle={t("generations.title")}
-          generationsEmptyTitle={t("generations.emptyTitle")}
-          generationsEmptyDescription={t("generations.emptyDescription")}
         />
-        <VideoJobProgress key={jobId ?? "new"} jobId={jobId} submitting={busy} restoreUnavailable={restoreUnavailable} submissionError={generationError === "ambiguous" || generationError === "failed" ? generationError : null} />
+        <div className={styles.previewNote}><DashboardIcon name="image" /><p>{t("layout.previewHint")}</p></div>
+        </> : null}
       </div>
     </main>
   );

@@ -4,13 +4,14 @@ import sharp from "sharp";
 
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import type { VideoSourceReference } from "@/lib/video-generation/types";
+import { isAvifImage } from "./prepare-source-image";
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-const allowedSourceTypes = new Set(["image/jpeg", "image/png"]);
+const allowedSourceTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 export async function createVideoSourceUploadTicket(ownerId: string, fileName: string) {
   const id = crypto.randomUUID();
-  const extension = fileName.toLowerCase().endsWith(".png") ? "png" : "jpg";
+  const extension = fileName.toLowerCase().endsWith(".png") ? "png" : fileName.toLowerCase().endsWith(".webp") ? "webp" : "jpg";
   const objectPath = `${ownerId}/${id}/source.${extension}`;
   const { data, error } = await getSupabaseAdminClient().storage.from("video-source-images").createSignedUploadUrl(objectPath, { upsert: false });
   if (error || !data) throw new Error("Unable to create a private video source upload.");
@@ -18,14 +19,15 @@ export async function createVideoSourceUploadTicket(ownerId: string, fileName: s
 }
 
 export async function finalizeVideoSourceUpload(ownerId: string, sourceAssetId: string, objectPath: string) {
-  if (!uuidPattern.test(sourceAssetId) || ![`${ownerId}/${sourceAssetId}/source.jpg`, `${ownerId}/${sourceAssetId}/source.png`].includes(objectPath)) return null;
+  if (!uuidPattern.test(sourceAssetId) || ![`${ownerId}/${sourceAssetId}/source.jpg`, `${ownerId}/${sourceAssetId}/source.png`, `${ownerId}/${sourceAssetId}/source.webp`].includes(objectPath)) return null;
   const supabase = getSupabaseAdminClient();
   const { data, error } = await supabase.storage.from("video-source-images").download(objectPath);
   if (error || !data || data.size <= 0 || data.size > 25 * 1024 * 1024 || !allowedSourceTypes.has(data.type)) return null;
   const bytes = Buffer.from(await data.arrayBuffer());
   const metadata = await sharp(bytes, { failOn: "error", limitInputPixels: 40_000_000 }).metadata();
-  if (!metadata.width || !metadata.height || metadata.width < 360 || metadata.height < 360 || metadata.width > 2000 || metadata.height > 2000
-    || !["jpeg", "png"].includes(metadata.format ?? "") || (metadata.pages ?? 1) > 1 || (metadata.orientation ?? 1) !== 1) return null;
+  if (!metadata.width || !metadata.height || metadata.width * metadata.height > 40_000_000
+    || (!["jpeg", "png", "webp"].includes(metadata.format ?? "") && !(metadata.format === "heif" && isAvifImage(bytes)))
+    || (metadata.pages ?? 1) > 1) return null;
   const { data: row, error: insertError } = await supabase.from("video_source_assets").insert({
     id: sourceAssetId, owner_id: ownerId, object_path: objectPath, mime_type: data.type,
     size_bytes: data.size, width: metadata.width, height: metadata.height,

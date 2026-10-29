@@ -49,9 +49,10 @@ export async function POST(request: Request, context: RouteContext) {
   const quote = quoteVideoFidelity(Boolean(job.preservation?.criticalRegion));
   if (!getVideoFidelityAnalysisAvailability(ownerId, Boolean(job.preservation?.criticalRegion)).enabled) return NextResponse.json({ status: "disabled" }, { status: 409 });
   const automatic = body.resume === true && Boolean(job.preservation?.analysisConsent);
-  if (!automatic && (!quote || body.consent !== true || body.confirmedMaximumCostUsd !== quote.maximumEstimatedCostUsd || body.pricingVersion !== quote.pricingVersion)) return NextResponse.json({ status: "confirmation_required" }, { status: 400 });
+  if (!automatic && body.request !== true) return NextResponse.json({ status: "invalid" }, { status: 400 });
+  if (!quote) return NextResponse.json({ status: "disabled" }, { status: 409 });
   try {
-    const review = await resumeOwnedVideoReview(ownerId, videoId, automatic ? undefined : { model: "gpt-4o-mini", maximumCostUsd: quote!.maximumEstimatedCostUsd, pricingVersion: quote!.pricingVersion }, body.locale === "en" ? "en" : "tr");
+    const review = await resumeOwnedVideoReview(ownerId, videoId, automatic ? undefined : { model: quote.model, maximumCostUsd: quote.maximumEstimatedCostUsd, pricingVersion: quote.pricingVersion }, body.locale === "en" ? "en" : "tr");
     return NextResponse.json({ status: review?.status === "succeeded" ? "success" : review?.status ?? "uncertain", report: review?.report ?? null }, { headers: privateHeaders });
   } catch { return NextResponse.json({ status: "uncertain" }, { status: 502, headers: privateHeaders }); }
 }

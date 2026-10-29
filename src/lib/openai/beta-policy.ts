@@ -1,3 +1,5 @@
+import { canAccessVideoBeta } from "@/lib/video-generation/beta-policy";
+
 export type OpenAIBudgetKind = "image" | "analysis";
 export type OpenAIBetaPolicy = {
   limits: Record<OpenAIBudgetKind, { user: number; global: number }>;
@@ -13,6 +15,15 @@ function limit(value: string | undefined, fallback: number, maximum: number): nu
   if (!/^\d+$/.test(value)) return null;
   const parsed = Number(value);
   return Number.isSafeInteger(parsed) && parsed <= maximum ? parsed : null;
+}
+/** The authenticated Video Studio uses the same atomic analysis budget without OpenAI beta allowlisting. */
+export function getVideoStudioOpenAIPolicy(userId: string | null, model: string, env: Environment = process.env): OpenAIBetaPolicy | null {
+  if (!userId || !uuid.test(userId) || !canAccessVideoBeta(userId, env) || model !== "gpt-4o-mini") return null;
+  const analysis = limit(env.OPENAI_BETA_USER_DAILY_ANALYSES, 24, 1000);
+  const globalAnalysis = limit(env.OPENAI_BETA_GLOBAL_DAILY_ANALYSES, 120, 10000);
+  if (analysis === null || globalAnalysis === null) return null;
+  return { limits: { image: { user: 0, global: 0 }, analysis: { user: analysis, global: globalAnalysis } },
+    imageModel: "", analysisModels: [model] };
 }
 
 /** Server-only configuration: missing, malformed or wildcard access always denies. */

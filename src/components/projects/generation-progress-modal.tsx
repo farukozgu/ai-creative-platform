@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+
 import { createPortal } from "react-dom";
 import { useEffect, useRef, useState } from "react";
 import { GenerationLoadingIndicator } from "@/components/projects/generation-loading-indicator";
@@ -59,7 +61,7 @@ export function GenerationProgressModal({ open, onClose, closeLabel, title, desc
   if (!open || !portalRoot) return null;
   return createPortal(<div className="generation-progress-overlay" onMouseDown={(event) => event.preventDefault()} onClick={(event) => event.preventDefault()}>
     <div ref={dialogRef} className="generation-progress-modal" role="dialog" aria-modal="true" aria-labelledby="generation-progress-title" aria-describedby="generation-progress-description" tabIndex={-1}>
-      <button type="button" className="generation-progress-close" aria-label={closeLabel} onClick={onClose}>×</button>
+      <Button variant="icon" size="sm" type="button" className="generation-progress-close" aria-label={closeLabel} onClick={onClose}>×</Button>
       <GenerationLoadingIndicator />
       <h2 id="generation-progress-title">{title}</h2>
       <p id="generation-progress-description">{description}</p>
