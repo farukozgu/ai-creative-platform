@@ -19,7 +19,7 @@ export type VideoPreparationSource =
   | { kind: "generated-image"; generationId: string };
 
 export type VideoGenerationDraft = {
-  productReferences?: { source: VideoSourceReference; sha256: string; purpose: string }[];
+  productReferences?: { source: VideoSourceReference; sha256: string; purpose: string; aspectRatio?: VideoGenerationAspectRatio }[];
   shotMode?: "single" | "multi";
   director?: import("../video-director/core").VideoDirectorSelection;
   method?: import("./preservation").VideoGenerationMethod;

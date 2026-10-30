@@ -24,6 +24,16 @@ export async function prepareVideoDirectorAction(draft: unknown, presetId: unkno
     const context = await readOwnedPreparedVideoSource(ownerId, parsed.value.source, parsed.value.aspectRatio);
     logVideoDiagnostic(correlationId, "video_source_prepare", "success", { durationMs: Date.now() - startedAt });
     const referenceImages = await readProductReferences(ownerId, parsed.value);
+    logVideoDiagnostic(correlationId, "director_primary_source", "success", {
+      sourceAssetId: parsed.value.source.sourceAssetId, hashPrefix: context.sourceSha256.slice(0, 12), referenceCount: referenceImages.length,
+    });
+    for (const [index, ref] of (parsed.value.productReferences ?? []).entries()) {
+      logVideoDiagnostic(correlationId, "director_reference_source", "success", {
+        index, sourceAssetId: ref.source.kind === "uploaded-image" ? ref.source.sourceAssetId : null,
+        hashPrefix: referenceImages[index].sourceSha256.slice(0, 12),
+        existingProfile: referenceImages[index].profile ? "available" : "absent", reviewer: "director-image-comparison",
+      });
+    }
     let profile = context.profile;
     let analysisStatus: "verified" | "not_analyzed" | "unsupported" | "quota_limited" | "budget_unavailable" | "configuration_error" | "provider_failed" | "pending" = profile ? "verified" : "not_analyzed";
     if (!profile) {

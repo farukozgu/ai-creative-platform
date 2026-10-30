@@ -120,12 +120,12 @@ function productClaimText(value: string) {
  * Creative language stays open; evidence matching uses word boundaries, aliases
  * and attribute/part binding rather than substring matches across unrelated atoms.
  */
-export function unsupportedProductClaim(text: string, profile: ProductProfile | null): string | null {
+export function unsupportedProductClaim(text: string, profile: ProductProfile | null, verifiedEvidence?: readonly string[]): string | null {
   const confidence = profile?.confidence?.overall ?? 0;
   const classification = confidence >= 0.6 && (profile?.confidence.fields?.subcategory ?? confidence) >= 0.6
     ? profile?.subcategory ?? "" : "";
   const watch = confidence >= 0.6 && profile?.vertical === "watches";
-  const evidenceItems = directorIdentityEvidence(profile).map(item => claimWording(item, watch)
+  const evidenceItems = (verifiedEvidence ?? directorIdentityEvidence(profile)).map(item => claimWording(item, watch)
     .replace(/\b(?:diamond|gemstone)\b/g, "$& stone")
     .replace(/\bdiamond\b/g, "diamond gemstone"));
   const classified = claimWording(classification, watch);

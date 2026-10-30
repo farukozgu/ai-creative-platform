@@ -1,7 +1,9 @@
 import type { ProductProfile } from "@/lib/product-understanding/product-profile";
 import { isUnsafeProductMotion, productVideoNegativePrompt, VIDEO_PRESERVATION_VERSION } from "@/lib/video-generation/preservation";
 import type { VideoGenerationDraft } from "@/lib/video-generation/types";
-import { VIDEO_DIRECTOR_VERSION, videoDirectorPresets, shotPurposes, type ShotPurpose, type VideoPresetId, type VideoShotMode } from "./presets";
+import { VIDEO_DIRECTOR_VERSION, videoDirectorPresets, getVideoDirectorPreset, shotPurposes, type ShotPurpose, type VideoPresetId, type VideoShotMode } from "./presets";
+import { cinematicHeroSingleNegativeTerms } from "./preset-library";
+import { isQualityPreset, qualityFallbackDirection, qualityPresetDirection } from "./preset-quality-directions";
 import { compileKlingShot } from "./kling-compiler";
 import { unsupportedProductClaim, interpretCreativeIntent, type CreativeIntentContract } from "./creative-request";
 import { KLING_MULTI_PROMPT_MAX_CHARS } from "../video-generation/fal-request";
@@ -10,7 +12,7 @@ import { presetFocusEvidence } from "./preset-recommendations";
 import { DIRECTOR_GENERIC_FOCUS_VALUES, DIRECTOR_SHOT_TEXT_LIMIT, DIRECTOR_TEXT_LIMIT, DirectorStructuredOutputError, directorShotContract, selectedCameras, shotFields } from "./plan-contract";
 export { DIRECTOR_GENERIC_FOCUS_VALUES, shotFields } from "./plan-contract";
 
-import { parseReferenceReviews, type ReferenceReview } from "../video-generation/product-references";
+import { backViewTerms, parseReferenceReviews, referenceClaimDetails, referenceShotPrefix, type ReferenceReview } from "../video-generation/product-references";
 
 export type VideoDirectorSelection = { presetId: VideoPresetId; shotMode: VideoShotMode; receipt: string };
 export type VideoDirectorInput = {
@@ -20,7 +22,7 @@ export type VideoDirectorInput = {
   shotMode: VideoShotMode;
   profile: ProductProfile | null;
 };
-export type VideoDirectorShot = Record<typeof shotFields[number], string> & { durationSeconds: number; purpose: ShotPurpose; evidenceRefs: number[] };
+export type VideoDirectorShot = Record<typeof shotFields[number], string> & { durationSeconds: number; purpose: ShotPurpose; evidenceRefs: number[]; referenceIndex?: number };
 export type VideoDirectorPlan = {
   version: typeof VIDEO_DIRECTOR_VERSION;
   presetId: VideoPresetId;
@@ -113,15 +115,19 @@ export function directorPlanDescriptions(input: VideoDirectorInput, shotCount: n
 }
 export function parseDirectorOutput(value: unknown, input: VideoDirectorInput, onReject?: (failure: DirectorValidationFailure) => void): VideoDirectorPlan | null {
   const reject = (jsonPath: string, reasonCode: string, expected: string, matchedTerm?: string) => { onReject?.({ jsonPath, reasonCode, expected, ...(matchedTerm ? { matchedTerm: matchedTerm.slice(0, 60) } : {}) }); return null; };
-  const contractBounds = directorShotContract(input.shotMode, input.draft.durationSeconds);
+  if (![5, 10].includes(input.draft.durationSeconds)) return reject("$.durationSeconds", "unsupported_duration", "5 or 10 seconds");
+  const contractBounds = directorShotContract(input.shotMode, input.draft.durationSeconds, input.presetId);
   if (input.draft.cameraMovement === "orbit" || !record(value) || !text(value.summary, DIRECTOR_TEXT_LIMIT) || !text(value.intent, DIRECTOR_TEXT_LIMIT) || !Array.isArray(value.shots)
     || value.shots.length < contractBounds.minShots || value.shots.length > contractBounds.maxShots
 ) return reject("$", "invalid_plan_envelope", "summary/intent <= 240 chars and shot count matching shotMode and duration");
+  // Receipts from the removed feature must be replanned, not silently reused.
+  if ("identity" in value || "identityEvidence" in value) return reject("$", "unsupported_plan_fields", "current Director schema");
   const count = input.draft.productReferences?.length ?? 0;
   const referenceReviews = parseReferenceReviews(value.referenceReviews, count);
   if (!referenceReviews && !(value.origin === "fallback" && count)) return reject("$.referenceReviews", "invalid_reference_reviews", `exactly ${count} ordered reviews`);
   const baseEvidence = directorProductContext(input.profile).evidence;
-  const additions = (referenceReviews ?? []).filter(r => r.status === "matched").flatMap(r => r.details);
+  const additionsWithSource = (referenceReviews ?? []).filter(r => r.status === "matched").flatMap(review => review.details.map(detail => ({ detail, review })));
+  const additions = additionsWithSource.map(item => item.detail);
   const evidence = [...baseEvidence, ...additions.map((detail, index) => ({ id: baseEvidence.length + index, detail }))];
   const enrichedProfile = input.profile ? { ...input.profile, identityCriticalAttributes: [...input.profile.identityCriticalAttributes,
     ...additions.map(attribute => ({ attribute, rationale: "reference-visible", regions: [] }))] } : null;
@@ -155,12 +161,33 @@ export function parseDirectorOutput(value: unknown, input: VideoDirectorInput, o
       || shot.durationSeconds < (input.shotMode === "multi" ? contractBounds.minDuration : 1) || shot.durationSeconds > 10
       || !shotPurposes.includes(shot.purpose as ShotPurpose)
       || !shotFields.every(field => text(shot[field], DIRECTOR_SHOT_TEXT_LIMIT))) return reject(`$.shots[${shots.length}]`, "invalid_shot_fields", "valid duration, purpose, evidenceRefs and bounded text");
+    const referenceIndex = shot.referenceIndex == null ? undefined : shot.referenceIndex;
+    const shotReference = (referenceReviews ?? []).find(review => review.index === referenceIndex && review.status === "matched");
+    if (referenceIndex !== undefined && (!Number.isInteger(referenceIndex) || !shotReference || value.origin === "fallback")) {
+      return reject(`$.shots[${shots.length}].referenceIndex`, "invalid_shot_reference", "an index of a matched product image");
+    }
+    const backShot = shotReference?.view === "back";
+    if ((backShot || shotReference?.view === "side") && (input.shotMode !== "multi" || shots.length === 0)) {
+      return reject(`$.shots[${shots.length}].referenceIndex`, "incompatible_reference_view", "alternate view only after the primary start shot in multi-shot");
+    }
     if (hasEvidenceRefs && !Array.isArray(shot.evidenceRefs) || evidenceRefs.length > 1
       || evidenceRefs.some(id => !Number.isInteger(id) || !evidence[Number(id)])) {
       return reject(`$.shots[${shots.length}].evidenceRefs`, "invalid_evidence_reference", "at most one existing verified evidence id");
     }
     // Specific focus must quote an existing evidence atom, not model-invented detail.
     const focus = evidenceRefs.length ? evidence[Number(evidenceRefs[0])].detail : resolvedFocus;
+    const focusSource = evidenceRefs.length ? additionsWithSource[Number(evidenceRefs[0]) - baseEvidence.length]?.review : undefined;
+    if (input.presetId === "cinematic-hero" && (shotReference?.view === "detail" || focusSource?.view === "detail")
+      || focusSource && /\b(?:logo|label|text|symbol|mark|brand|emblem|embroider\w*)\b/i.test(focus)
+      || shotReference && /\b(?:logo|label|text|symbol|mark|brand|emblem)\b/i.test(input.draft.productReferences![shotReference.index].purpose)) {
+      return reject(`$.shots[${shots.length}].focus`, "preservation_reference_focus", "identity references preserve identity; primary product remains the shot subject");
+    }
+    if (backShot && evidenceRefs.length && focusSource?.index !== referenceIndex) {
+      return reject(`$.shots[${shots.length}].focus`, "reference_focus_mismatch", "back focus from its own review, or generic visible form");
+    }
+    if (focusSource?.view === "back" && (!backShot || focusSource.index !== referenceIndex)) {
+      return reject(`$.shots[${shots.length}].focus`, "reference_focus_mismatch", "back detail bound to the matching verified back image");
+    }
     if (!text(focus, DIRECTOR_SHOT_TEXT_LIMIT)) return reject(`$.shots[${shots.length}].focus`, "invalid_shot_fields", "focus <= 100 characters");
     if ((focusEvidenceToken && (!tokenEvidence || evidenceRefs.length !== 1 || evidenceRefs[0] !== tokenEvidence.id))
       || focus !== resolvedFocus || !evidenceRefs.length && !DIRECTOR_GENERIC_FOCUS_VALUES.includes(focus as typeof DIRECTOR_GENERIC_FOCUS_VALUES[number])) {
@@ -169,19 +196,24 @@ export function parseDirectorOutput(value: unknown, input: VideoDirectorInput, o
     for (const field of shotFields) {
       const direction = field === "focus" ? focus : shot[field] as string;
       if (isUnsafeProductMotion(direction, input.draft.cameraMovement)
-        || /\b(?:rear|backside|underside|interior|hidden mechanism|unseen surface|new (?:logo|label|accessory|prop)|open (?:the )?(?:cap|lid|clasp|zipper))\b/i.test(direction)) {
+        || /\b(?:underside|interior|hidden mechanism|unseen surface|new (?:logo|label|accessory|prop)|open (?:the )?(?:cap|lid|clasp|zipper))\b/i.test(direction)
+        || backViewTerms.test(direction.replace(/\b(?:pull[ -]back|pulling back)\b/gi, "")) && !backShot) {
         return reject(`$.shots[${shots.length}].${field}`, "unsafe_product_action", "source-facing action without hidden surfaces or identity changes");
       }
-      if (/\b(?:cut to|cutaway|crossfade|dissolve to|montage|jump cut|scene change)\b/i.test(direction)) {
+      if (/\b(?:cuts? to|cutaway|crossfade|dissolve(?: to)?|montage|(?:hard|match|smash|jump) cuts?|scene changes?)\b/i.test(direction)) {
         return reject(`$.shots[${shots.length}].${field}`, "internal_scene_cut", "one continuous action per shot");
       }
       // Resolved focus is copied from canonical evidence, never reinterpreted prose.
-      const matchedTerm = field !== "focus" ? unsupportedProductClaim(direction, enrichedProfile) : null;
+      // A rear view inherits evidenced identity/color/material, not front-only parts.
+      const backEvidence = backShot ? [...baseEvidence.filter(item => [...(input.profile?.materials ?? []), ...(input.profile?.dominantColors ?? [])].includes(item.detail)).map(item => item.detail),
+        ...referenceClaimDetails(shotReference!)] : undefined;
+      const matchedTerm = field !== "focus" ? unsupportedProductClaim(direction, enrichedProfile, backEvidence) : null;
       if (matchedTerm) {
         return reject(`$.shots[${shots.length}].${field}`, "unsupported_product_claim", "only claims supported by verified product evidence", matchedTerm);
       }
     }
     const resolved = resolveShotCamera({ durationSeconds: shot.durationSeconds, purpose: shot.purpose as ShotPurpose, evidenceRefs: evidenceRefs as number[],
+      ...(referenceIndex !== undefined ? { referenceIndex: Number(referenceIndex) } : {}),
       ...Object.fromEntries(shotFields.map(field => [field, field === "focus" ? focus : shot[field]])) } as VideoDirectorShot, input.draft.cameraMovement);
     const movements = new Set(cameraKinds(resolved.camera));
     for (const field of ["composition", "motion", "pace", "lighting", "focus"] as const) {
@@ -196,6 +228,19 @@ export function parseDirectorOutput(value: unknown, input: VideoDirectorInput, o
     if (new Set(shots.map(shot => `${shot.camera}|${shot.composition}|${shot.focus}`.toLowerCase())).size !== shots.length) return reject("$.shots[*]", "repeated_shot_direction", "distinct camera/composition/focus per shot");
     // With automatic direction, multiple identical push-ins are not a shot strategy.
     if (input.draft.cameraMovement === "auto" && shots.every(shot => cameraKinds(shot.camera).includes("dolly-in"))) return reject("$.shots[*].camera", "repeated_push_in", "vary shot scale or camera direction for automatic multi-shot");
+    if (isQualityPreset(input.presetId) && !expectedIntent.focusRequested) {
+      const accents = shots.filter(shot => shot.evidenceRefs.length && ["macro-detail", "material-study"].includes(shot.purpose));
+      if (new Set(accents.map(shot => `${shot.referenceIndex ?? "primary"}:${shot.focus}`)).size !== accents.length) {
+        return reject("$.shots[*].focus", "repeated_detail_focus", "different verified detail per accent, or fewer shots");
+      }
+    }
+    if (input.presetId === "cinematic-hero" && input.draft.durationSeconds === 5
+      && referenceReviews?.some(review => review.status === "matched" && review.view === "back")) {
+      const detailShots = shots.filter(shot => ["macro-detail", "material-study"].includes(shot.purpose));
+      if (new Set(detailShots.map(shot => `${shot.referenceIndex ?? "primary"}:${shot.focus}`)).size !== detailShots.length) {
+        return reject("$.shots[*].focus", "repeated_detail_focus", "distinct evidence or a verified alternate view instead of repeated detail");
+      }
+    }
   }
   const contract = expectedIntent;
   const movementMatches = (shot: VideoDirectorShot, direction: CreativeIntentContract["camera"]) => direction === "auto"
@@ -221,39 +266,66 @@ export function parseDirectorOutput(value: unknown, input: VideoDirectorInput, o
     shotMode: input.shotMode, ...(referenceReviews?.length ? { referenceReviews } : {}), origin: "ai", intent: value.intent.trim(), intentContract: expectedIntent, summary: value.summary.trim(), shots };
 }
 
+function fallbackMark(detail: string) {
+  return /\b(?:text|embroider\w*|logo\w*|label\w*|symbol\w*|lettering|letters?|inscription\w*|typograph\w*|monogram\w*|emblem\w*|(?:embroidered|printed)\s+(?:mark\w*|text|logo|graphic\w*|artwork))\b/i.test(detail);
+}
+
 export function fallbackDirectorPlan(input: VideoDirectorInput): VideoDirectorPlan {
-  const preset = videoDirectorPresets[input.presetId];
-  const evidence = directorProductContext(input.profile).evidence;
-  const intentContract = interpretCreativeIntent(input.draft.prompt, evidence, input.shotMode, input.draft.cameraMovement);
-  const durations = input.shotMode === "single" ? [input.draft.durationSeconds]
-    : input.draft.durationSeconds === 5 ? [2, 3] : [3, 4, 3];
-  const requestedEvidence = intentContract.focusEvidenceId === null ? undefined : evidence[intentContract.focusEvidenceId];
+  if (![5, 10].includes(input.draft.durationSeconds)) throw new Error("unsupported_director_duration");
+  let preset = getVideoDirectorPreset(input.presetId, input.shotMode, input.draft.durationSeconds);
+  const allEvidence = directorProductContext(input.profile).evidence;
+  const evidence = allEvidence.filter(item => !fallbackMark(item.detail));
+  const quality = qualityPresetDirection(input.presetId, input.shotMode, input.draft.durationSeconds);
+  const qualityFallback = quality ? qualityFallbackDirection(quality, evidence) : null;
+  if (qualityFallback) preset = { ...preset, execution: qualityFallback, shots: qualityFallback.shots };
+  const intentContract = interpretCreativeIntent(input.draft.prompt, allEvidence, input.shotMode, input.draft.cameraMovement);
+  const durations = preset.execution?.durations ?? (input.shotMode === "single" ? [input.draft.durationSeconds]
+    : input.draft.durationSeconds === 5 ? [2, 3] : [3, 4, 3]);
+  const requestedEvidence = evidence.find(item => item.id === intentContract.focusEvidenceId);
   const isDetailPreset = preset.strategy.detailTerms.length > 0 && /macro|detail|label|stitch|hardware|texture|dial|craft/i.test(`${preset.brief} ${preset.strategy.objective} ${preset.strategy.detailTerms.join(" ")}`);
   const fallbackDetail = requestedEvidence ?? presetFocusEvidence(input.presetId, evidence)
     ?? (isDetailPreset ? evidence.find(item => item.detail.length <= 100 && !/silhouette|shape|form|geometr/i.test(item.detail)) : undefined);
   const form = evidence.find(item => item.detail.length <= 100 && /silhouette|shape|form|geometr/i.test(item.detail));
   const supportingEvidence = evidence.find(item => item.id !== fallbackDetail?.id);
-  const singleDetail = intentContract.focusRequested || isDetailPreset;
+  const singleDetail = intentContract.focusRequested || (quality ? quality.focusRoles[0] !== "form"
+    : preset.execution ? input.presetId === "macro-detail-reveal" : isDetailPreset);
+  const missingDetail = qualityFallback && !intentContract.focusRequested ? qualityFallback.focusIds[0] === null : !fallbackDetail;
   const summary = intentContract.safeAdjustment === "unseen-side-to-source-facing-camera"
     ? "The requested unseen-side turn is replaced with a source-facing camera move; verified product details and color remain unchanged."
     : intentContract.focusRequested && !requestedEvidence
       ? "The requested detail is not verified in the product profile, so the plan uses a wider source-visible view without inventing it."
-    : singleDetail && !fallbackDetail && input.shotMode === "single"
+    : singleDetail && missingDetail && input.shotMode === "single"
       ? "No verified close-detail evidence is available, so this continuous take stays at a clear product view instead of inventing a feature."
       : "Preset direction adapted to the explicit camera and focus request using only verified product evidence.";
   return { version: VIDEO_DIRECTOR_VERSION, presetId: input.presetId, presetVersion: preset.version, shotMode: input.shotMode,
     origin: "fallback", intent: input.draft.prompt.trim() ? "Explicit camera, evidence-backed focus and feasible shot order are applied; unsupported details stay source-bound." : "Preset direction selected from verified product evidence.", intentContract,
     summary,
     shots: durations.map((durationSeconds, index) => {
-      const presetIndex = durations.length === 2 ? index + 1 : index;
+      const presetIndex = !preset.execution && durations.length === 2 ? index + 1 : index;
       const direction = input.shotMode === "single" ? preset : preset.shots[presetIndex];
       const sequenceDetail = intentContract.sequence === "detail-to-hero" && (index === 0 || index === durations.length - 1);
-      const isDetail = input.shotMode === "single" ? singleDetail : presetIndex === 1 || sequenceDetail;
+      const isDetail = input.shotMode === "single" ? singleDetail : (preset.execution
+        ? ["macro-detail", "material-study"].includes(preset.shots[presetIndex].purpose) : presetIndex === 1) || sequenceDetail;
       const requestedFocusShot = intentContract.focusPosition === "first" && index === 0
-        || intentContract.focusPosition === "last" && index === durations.length - 1;
-      const chosen = requestedFocusShot ? requestedEvidence : isDetail ? fallbackDetail : form ?? supportingEvidence;
+        || intentContract.focusPosition === "last" && index === durations.length - 1
+        || Boolean(quality && requestedEvidence && intentContract.focusPosition === "any" && index === 0);
+      const alternateDetail = preset.execution && isDetail && index > 1
+        ? evidence.find(item => item.detail.length <= 80 && item.id !== fallbackDetail?.id && /stitch|seam|edge|construction|texture|grain/i.test(item.detail)) : undefined;
+      const surfaceDetail = preset.execution && input.shotMode === "multi" && preset.shots[presetIndex].purpose === "material-study"
+        ? evidence.find(item => item.detail.length <= 80 && /texture|grain|weave|surface|finish/i.test(item.detail))
+          ?? evidence.find(item => item.detail.length <= 80 && /fabric|leather|material/i.test(item.detail)) : undefined;
+      const chosen = requestedFocusShot ? requestedEvidence : qualityFallback && !intentContract.focusRequested
+        ? evidence.find(item => item.id === qualityFallback.focusIds[index]) : isDetail
+        ? intentContract.focusRequested ? fallbackDetail : surfaceDetail ?? alternateDetail ?? fallbackDetail
+        : form ?? supportingEvidence;
       let camera = direction.camera;
       let composition = direction.composition;
+      let pace = direction.pace;
+      if (quality && input.shotMode === "single" && intentContract.sequence === "preset"
+        && /pull-back/i.test(camera) && intentContract.camera !== "auto" && intentContract.camera !== "dolly-out") {
+        composition = singleDetail ? "Resolvable evidenced feature with clear margins" : "Complete product with balanced campaign space";
+        pace = "Measured light study; final hold";
+      }
       if (sequenceDetail) {
         camera = carryLens(index === 0 ? "Slow dolly-in into source-resolved close framing" : "Slow pull-back to the complete visible product", direction.camera);
         composition = index === 0 ? "Close framing on the requested visible detail" : "Complete visible product with balanced margins";
@@ -262,7 +334,7 @@ export function fallbackDirectorPlan(input: VideoDirectorInput): VideoDirectorPl
         camera = carryLens("Slow pull-back from a source-resolved close view to the complete product", direction.camera);
         composition = `Start close on ${chosen?.detail ?? "the visible product form"}, then finish on the complete visible product`;
       }
-      if (input.shotMode === "single" && isDetailPreset && !fallbackDetail && intentContract.focusEvidenceId === null) {
+      if (input.shotMode === "single" && singleDetail && missingDetail && intentContract.focusEvidenceId === null) {
         camera = "Locked medium product framing";
         composition = "Wide clear view of the source-visible product form; no unverified detail enlarged";
       }
@@ -276,12 +348,14 @@ export function fallbackDirectorPlan(input: VideoDirectorInput): VideoDirectorPl
       if (intentContract.camera === "lateral") camera = carryLens("Short lateral camera glide across the visible source view", direction.camera);
       if (intentContract.camera === "static") camera = carryLens("Locked camera; stable source viewpoint", direction.camera);
       if (intentContract.focusPosition === "last" && index === durations.length - 1 && requestedEvidence) composition = `Finish on the verified ${requestedEvidence.detail}`;
-      return resolveShotCamera({ durationSeconds, purpose: input.shotMode === "single"
+      return resolveShotCamera({ durationSeconds, purpose: qualityFallback ? qualityFallback.shots[index].purpose : input.shotMode === "single"
         ? isDetail ? "material-study" : "hero-reveal" : preset.shots[presetIndex].purpose,
         evidenceRefs: chosen ? [chosen.id] : [],
         camera, lighting: direction.lighting,
-        composition: isDetail && !chosen ? "Wider view of the source-visible product form; no unverified detail is enlarged" : composition,
-        motion: direction.motion, pace: direction.pace,
+        composition: isDetail && !chosen ? (preset.execution && index > 1
+          ? "Wider visible form with offset margins; no unverified detail enlarged"
+          : "Wider view of the source-visible product form; no unverified detail is enlarged") : composition,
+        motion: direction.motion, pace,
         focus: chosen?.detail ?? (isDetail ? "Source-visible surface detail" : "Source-visible product form"),
       }, input.draft.cameraMovement);
     }) };
@@ -296,9 +370,31 @@ export function compileDirectorPlan(plan: VideoDirectorPlan, input: VideoDirecto
   const multi = plan.shotMode === "multi";
   const limit = multi ? KLING_MULTI_PROMPT_MAX_CHARS : 2500;
   const usesReferences = plan.origin === "ai" && validated.referenceReviews?.some(r => r.status === "matched");
-  const prefix = usesReferences ? "@Element1: " : "";
-  const prompts = validated.shots.map(shot => prefix + compileKlingShot(shot, limit - prefix.length, Boolean(input.draft.criticalRegion)));
-  const negativePrompt = productVideoNegativePrompt.replace("object rotation, ", "");
+  const branding = input.profile?.visibleBranding;
+  const verifiedDetails = new Set(directorProductContext(input.profile).evidence.map(item => item.detail));
+  const primaryMarks = Boolean(branding && ([branding.logoRegions, branding.textRegions, branding.artworkRegions]
+    .some(regions => regions?.some(region => verifiedDetails.has(region.description)))));
+  const fallbackMarks = plan.origin === "fallback" ? [...verifiedDetails].filter(fallbackMark) : [];
+  const markNames = [
+    fallbackMarks.some(detail => /\bembroider\w*\b/i.test(detail)) ? (fallbackMarks.some(detail => /\btext\b/i.test(detail)) ? "embroidered text" : "embroidered marks") : fallbackMarks.some(detail => /\b(?:text|letter\w*|inscription\w*|typograph\w*)\b/i.test(detail)) ? "text" : null,
+    fallbackMarks.some(detail => /logo|monogram|emblem/i.test(detail)) ? "logos" : null,
+    fallbackMarks.some(detail => /label/i.test(detail)) ? "labels" : null,
+    fallbackMarks.some(detail => /symbol/i.test(detail)) ? "symbols" : null,
+    fallbackMarks.some(detail => /printed\s+(?:mark|graphic|artwork)/i.test(detail)) ? "printed marks" : null,
+  ].filter((name): name is string => name !== null);
+  const markList = markNames.length > 1 ? `${markNames.slice(0, -1).join(", ")} and ${markNames.at(-1)}` : markNames[0];
+  const fallbackPreservation = markList ? `Keep the ${markList} exactly as in the source; do not enlarge, restyle or reposition them.` : undefined;
+  const prompts = validated.shots.map(shot => {
+    const prefix = usesReferences ? referenceShotPrefix(shot.referenceIndex, validated.referenceReviews ?? []) : "";
+    const backShot = validated.referenceReviews?.some(review => review.index === shot.referenceIndex && review.view === "back");
+    const referenceMarks = validated.referenceReviews?.some(review => review.status === "matched"
+      && (backShot ? review.index === shot.referenceIndex : review.view === "detail")
+      && review.details.some(detail => /\b(?:text|letter\w*|logo|symbol|label|pattern|print|emblem|embroider\w*)\b/i.test(detail)));
+    return prefix + compileKlingShot(shot, limit - prefix.length, Boolean(input.draft.criticalRegion) && !backShot, !backShot && primaryMarks || Boolean(referenceMarks), fallbackPreservation);
+  });
+  const baseNegativePrompt = productVideoNegativePrompt.replace("object rotation, ", "");
+  const negativePrompt = input.presetId === "cinematic-hero" && input.shotMode === "single" && input.draft.durationSeconds === 5
+    ? `${baseNegativePrompt}, ${cinematicHeroSingleNegativeTerms}` : baseNegativePrompt;
   return { prompt: prompts[0], multiPrompt: multi
     ? prompts.map((prompt, index) => ({ prompt, duration: String(validated.shots[index].durationSeconds) })) : undefined,
     negativePrompt: multi ? negativePrompt.replace("scene cuts, ", "") : negativePrompt,

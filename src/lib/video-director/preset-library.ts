@@ -4,6 +4,16 @@ export const extraVideoPresetIds = ["floating-fashion", "precision-macro", "glas
 type ExtraPresetId = typeof extraVideoPresetIds[number];
 type Seed = Pick<PresetStrategy, "categories" | "objective" | "cameraStrategy" | "framing" | "lighting" | "tempo" | "detailTerms" | "risks" | "variations"> & { purpose: ShotPurpose };
 
+// Retained single 5s direction; other pilot modes use duration-strategy.
+export const cinematicHeroSingleFiveSeconds = {
+  camera: "Slow steady push-in with a level, stable horizon",
+  lighting: "A soft highlight travels slowly across the surface during the approach",
+  composition: "Centered product with wide clean margins on all sides, calm backdrop",
+  motion: "Only the camera and the light move; the product stays still",
+  pace: "Calm, premium, unhurried",
+};
+export const cinematicHeroSingleNegativeTerms = "rotation, orbit, camera turn, cropped product, product leaving frame, morphing, extra parts, texture change";
+
 // These are production strategies, not final prompts. AI chooses evidence and actions.
 const seeds: Record<ExtraPresetId, Seed> = {
   "floating-fashion": {
@@ -110,6 +120,9 @@ function makePreset(seed: Seed): VideoPreset {
 export const additionalVideoPresets = Object.fromEntries(extraVideoPresetIds.map(id => [id, makePreset(seeds[id])])) as Record<ExtraPresetId, VideoPreset>;
 
 export function safePresetStrategy(preset: VideoPreset) {
-  return { ...preset.strategy, structure: preset.structure, preservation: preset.preservation,
+  return { ...preset.strategy, structure: preset.execution
+    ? { mode: preset.execution.mode, durations: preset.execution.durations, grammar: preset.execution.grammar }
+    : preset.structure, preservation: preset.preservation,
+    ...(preset.execution ? { execution: preset.execution } : {}),
     riskConditions: preset.strategy.risks.map(risk => riskAlternatives[risk]) };
 }

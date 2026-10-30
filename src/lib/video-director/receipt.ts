@@ -3,15 +3,18 @@ import { deflateRawSync, inflateRawSync } from "node:zlib";
 import { isProductProfile, type ProductProfile } from "@/lib/product-understanding/product-profile";
 import { videoDraftHash } from "@/lib/video-generation/request-identity";
 import { parseDirectorOutput, type DirectorPlanningDiagnostic, type VideoDirectorInput, type VideoDirectorPlan } from "./core";
-import { VIDEO_DIRECTOR_VERSION, videoDirectorPresets } from "./presets";
+import { VIDEO_DIRECTOR_VERSION, videoDirectorPresets, getVideoDirectorPreset } from "./presets";
 import { DIRECTOR_CONTRACT_VERSION } from "./plan-contract";
 
 export function directorCacheKey(ownerId: string, sourceSha256: string, model: string, input: VideoDirectorInput) {
   const profile = input.profile?.source ? { ...input.profile, source: { ...input.profile.source, analyzedAt: undefined } } : input.profile;
   return createHash("sha256").update(JSON.stringify({ ownerId, sourceSha256, model,
-    version: VIDEO_DIRECTOR_VERSION, contractVersion: DIRECTOR_CONTRACT_VERSION, preset: videoDirectorPresets[input.presetId], presetId: input.presetId,
+    version: VIDEO_DIRECTOR_VERSION, contractVersion: DIRECTOR_CONTRACT_VERSION,
+    preset: getVideoDirectorPreset(input.presetId, input.shotMode, input.draft.durationSeconds), presetId: input.presetId,
     shotMode: input.shotMode, profile,
     draft: videoDraftHash({ ...input.draft, director: undefined }),
+    ...(input.presetId === "cinematic-hero" && input.draft.productReferences?.some(ref => /\b(?:logo|label|text|symbol|mark|brand|emblem)\b/i.test(ref.purpose))
+      ? { referencePolicy: "preservation-only-v1" } : {}),
   })).digest("hex");
 }
 

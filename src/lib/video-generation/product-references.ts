@@ -1,6 +1,21 @@
 import type { VideoPresetProduct } from "../video-director/preset-recommendations";
 import { videoDirectorPresets, type VideoPresetId } from "../video-director/presets";
-export type ReferenceReview = { index: number; status: "matched" | "conflict" | "uncertain"; reason: string; details: string[] };
+export const referenceViews = ["front", "back", "side", "detail", "unknown"] as const;
+export type ReferenceView = typeof referenceViews[number];
+export type ReferenceReview = { index: number; status: "matched" | "conflict" | "uncertain"; reason: string; details: string[]; view?: ReferenceView };
+export const backViewTerms = /\b(?:back|rear|backside|back-facing)\b/i;
+/** Orientation is established by the image review, never the upload-slot label. */
+export function referenceClaimDetails(review: ReferenceReview) {
+  return review.details.map(detail => detail.replace(/\b(?:front|back|rear|backside|side)[ -]?(?:facing)?\b/gi, " ").replace(/\s+/g, " ").trim());
+}
+export const REFERENCE_SHOT_PREFIX_MAX_CHARS = 52;
+export function referenceShotPrefix(referenceIndex: number | undefined, reviews: ReferenceReview[]) {
+  const matched = reviews.filter(review => review.status === "matched");
+  const position = matched.findIndex(review => review.index === referenceIndex);
+  const view = matched[position]?.view;
+  return position >= 0 && view && view !== "unknown" && view !== "detail"
+    ? `@Element1: Use ${view} view from reference image ${position + 1}. ` : "@Element1: ";
+}
 const suggestions: Record<string, string[]> = {
   apparel: ["texture", "construction", "side"], watches: ["dial", "case", "strap"], cosmetics: ["label", "cap", "side"],
   bags: ["label", "hardware", "side"], footwear: ["sole", "side", "texture"], jewelry: ["craft", "angle", "texture"],
@@ -24,7 +39,10 @@ export function parseReferenceReviews(value: unknown, count: number): ReferenceR
       || typeof item.reason !== "string" || !item.reason.trim() || item.reason.length > 120 || !Array.isArray(item.details)
       || item.details.length > 2 || item.details.some((d: unknown) => typeof d !== "string" || !d.trim() || d.length > 70)) return null;
     if (item.status !== "matched" && item.details.length) return null;
-    if (item.details.some((d: string) => /\b(?:leather|silk|cotton|gold|diamond|steel|rear|interior|hidden|genuine|brand)\b/i.test(d))) return null;
+    if (item.view !== undefined && !referenceViews.includes(item.view)) return null;
+    if (item.status !== "matched" && item.view !== undefined && item.view !== "unknown") return null;
+    if (item.details.some((d: string) => /\b(?:leather|silk|cotton|gold|diamond|steel|interior|hidden|genuine|brand|underside)\b/i.test(d)
+      || backViewTerms.test(d) && item.view !== "back")) return null;
     result.push(item);
   }
   return result;

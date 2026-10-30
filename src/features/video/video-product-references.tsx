@@ -1,6 +1,6 @@
 "use client";
 /* eslint-disable @next/next/no-img-element -- private expiring Storage URLs */
-import { useRef, useState, type ChangeEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
@@ -13,13 +13,16 @@ import type { VideoGenerationDraft, VideoPreparationSource } from "@/lib/video-g
 import type { VideoLibraryAsset } from "./video-studio-types";
 import styles from "./video-studio-workspace.module.css";
 type Reference = NonNullable<VideoGenerationDraft["productReferences"]>[number] & { previewUrl: string };
-export function VideoProductReferences({ product, presetId, aspectRatio, disabled, onChange }: {
+export function VideoProductReferences({ product, presetId, aspectRatio, disabled, onChange, onBusyChange }: {
   sourceKey: string; product: VideoPresetProduct; presetId: VideoPresetId; aspectRatio: "9:16" | "16:9" | "1:1";
   disabled: boolean; onChange: (refs: NonNullable<VideoGenerationDraft["productReferences"]>) => void;
+  onBusyChange: (busy: boolean) => void;
 }) {
   const t = useTranslations("Dashboard.videoStudio.references");
   const [refs, setRefs] = useState<(Reference | null)[]>([null, null, null]);
   const [busy, setBusy] = useState(false), [error, setError] = useState(false);
+  useEffect(() => { onBusyChange(busy); }, [busy, onBusyChange]);
+  useEffect(() => () => onBusyChange(false), [onBusyChange]);
   const [library, setLibrary] = useState<VideoLibraryAsset[] | null>(null);
   const [slot, setSlot] = useState(0);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -27,12 +30,12 @@ export function VideoProductReferences({ product, presetId, aspectRatio, disable
   const suggestions = suggestProductReferences(product, presetId);
   const update = (index: number, ref: Reference | null) => {
     const next = refs.map((old, i) => index === i ? ref : old); setRefs(next);
-    onChange(next.filter((r): r is Reference => r !== null).map(({ source, sha256, purpose }) => ({ source, sha256, purpose })));
+    onChange(next.filter((r): r is Reference => r !== null).map(({ source, sha256, purpose, aspectRatio }) => ({ source, sha256, purpose, aspectRatio })));
   };
   async function prepare(index: number, origin: VideoPreparationSource) {
     const result = await prepareVideoSourceAction(origin, aspectRatio);
     if (result.status !== "success") throw new Error("Reference preparation failed");
-    update(index, { source: result.source, sha256: result.sourceSha256, purpose: suggestions[index] ?? "detail", previewUrl: result.previewUrl });
+    update(index, { source: result.source, sha256: result.sourceSha256, aspectRatio: result.aspectRatio, purpose: suggestions[index] ?? "detail", previewUrl: result.previewUrl });
   }
   async function upload(index: number, file: File) {
     if (lock.current || disabled) return;

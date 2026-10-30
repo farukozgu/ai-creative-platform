@@ -1,6 +1,7 @@
 import type { VideoDirectorInput, VideoDirectorPlan, VideoDirectorShot } from "../../src/lib/video-director/core";
 import { directorProductContext } from "../../src/lib/video-director/product-context";
 import { hasUnsupportedProductClaims } from "../../src/lib/video-director/creative-request";
+import { directorShotContract } from "../../src/lib/video-director/plan-contract";
 import type { IntentContract, BenchmarkProduct } from "./dataset";
 
 export type Failure = "invented-detail" | "unjustified-intent-loss" | "shot-mode-conflict" | "repeated-scene" | "payload-limit" | "signed-preview-payload-mismatch" | "unseen-surface" | "unexplained-risk" | "five-second-overload";
@@ -68,8 +69,9 @@ export function assessPlan(plan: VideoDirectorPlan, input: VideoDirectorInput, p
   if ((unseen || /exploded|manufactur|workshop|spray from|new hands/i.test(directions)) && notices.length === 0) failures.push("unexplained-risk");
   if (plan.shotMode !== input.shotMode || input.shotMode === "single" && plan.shots.length !== 1 || /\b(?:cut to|montage|jump cut|crossfade)\b/i.test(directions)) failures.push("shot-mode-conflict");
   if (input.shotMode === "multi" && plan.shots.some((s, i) => i > 0 && visualSignature(s, product) === visualSignature(plan.shots[i - 1], product))) failures.push("repeated-scene");
-  const overload = input.draft.durationSeconds === 5 && (plan.shots.length > (input.shotMode === "single" ? 1 : 2)
-    || plan.shots.some(s => s.durationSeconds < 2 || cameraMoves(s.camera).filter(m => m !== "static").length > 1));
+  const contract = directorShotContract(input.shotMode, input.draft.durationSeconds, input.presetId);
+  const overload = input.draft.durationSeconds === 5 && (plan.shots.length > contract.maxShots
+    || plan.shots.some(s => !Number.isFinite(s.durationSeconds) || s.durationSeconds < contract.minDuration || cameraMoves(s.camera).filter(m => m !== "static").length > 1));
   if (overload) failures.push("five-second-overload");
   const moves = plan.shots.map(s => cameraMoves(s.camera));
   let cameraSatisfied = true;

@@ -7,8 +7,8 @@ import ts from "typescript";
 import sharp from "sharp";
 import * as core from "../src/lib/video-director/core";
 import * as receipt from "../src/lib/video-director/receipt";
-import { videoPresetIds, legacyVideoPresetIds, videoDirectorPresets, shotPurposes } from "../src/lib/video-director/presets";
-import { safePresetStrategy } from "../src/lib/video-director/preset-library";
+import { videoPresetIds, legacyVideoPresetIds, videoDirectorPresets, getVideoDirectorPreset, shotPurposes } from "../src/lib/video-director/presets";
+import { safePresetStrategy, cinematicHeroSingleFiveSeconds } from "../src/lib/video-director/preset-library";
 import { directorProductContext } from "../src/lib/video-director/product-context";
 import { buildFalVideoRequestInput, validateKlingMultiPrompt } from "../src/lib/video-generation/fal-request";
 import { videoDraftHash } from "../src/lib/video-generation/request-identity";
@@ -72,12 +72,14 @@ test("leather jacket matrix has distinct role-based scenes, preservation and val
       const prompts = result.multiPrompt ?? [{ prompt: result.prompt, duration: String(durationSeconds) }];
       assert.equal(prompts.reduce((sum, shot) => sum + Number(shot.duration), 0), durationSeconds);
       if (shotMode === "multi") {
-        assert.deepEqual(prompts.map(shot => shot.duration), durationSeconds === 5 ? ["2", "3"] : ["3", "4", "3"]);
+        const execution = getVideoDirectorPreset(presetId, shotMode, durationSeconds).execution;
+        assert.deepEqual(prompts.map(shot => shot.duration), execution ? execution.durations.map(String)
+          : durationSeconds === 5 ? ["2", "3"] : ["3", "4", "3"]);
         assert.equal(new Set(prompts.map(shot => shot.prompt)).size, prompts.length);
-        const detail = plan.shots[durationSeconds === 5 ? 0 : 1];
-        assert.match(detail.composition, /close|detail|crop/i);
-        assert.match(detail.focus, /silver asymmetric front zipper/);
-        assert.match(plan.shots.at(-1)!.composition, /return/i);
+        const detail = plan.shots.find(shot => ["macro-detail", "material-study"].includes(shot.purpose))!;
+        assert.match(detail.composition, /close|detail|crop|feature/i);
+        assert.ok(directorProductContext(jacket).evidence.some(item => item.detail === detail.focus));
+        assert.match(plan.shots.at(-1)!.composition, /return|full|complete/i);
         assert.doesNotMatch(detail.camera, /complete product/i);
       }
       for (const shot of prompts) {
@@ -273,7 +275,7 @@ test("all AI shot focuses bind to verified evidence or approved generic values",
   const failures: Array<{ jsonPath: string; reasonCode: string; expected: string }> = [];
   const accepted = core.parseDirectorOutput(candidate, input, failure => failures.push(failure));
   assert.ok(accepted, JSON.stringify(failures));
-  assert.equal(accepted.shots.length, 3);
+  assert.equal(accepted.shots.length, candidate.shots.length);
   const verified = directorProductContext(shoe).evidence;
   assert.ok(accepted.shots.every(shot => shot.evidenceRefs.length === 1
     ? shot.focus === verified[shot.evidenceRefs[0]].detail
@@ -484,7 +486,7 @@ test("OpenAI adapter sends bounded source/profile/preset context using existing 
     "@/lib/openai/structured-response": { structuredResponseText: (format: unknown) => ({ format }) },
     "@/lib/openai/response-telemetry": { attachOpenAIResponseTelemetry: (value: unknown) => value },
     "@/lib/generation/prompts/prompt-enhancer-config": { getPromptEnhancementModel: () => "gpt-4o-mini" },
-    "./core": core, "./presets": { videoDirectorPresets, shotPurposes }, "./product-context": { directorProductContext }, "./preset-library": { safePresetStrategy },
+    "./core": core, "./presets": { videoDirectorPresets, getVideoDirectorPreset, shotPurposes }, "./product-context": { directorProductContext }, "./preset-library": { safePresetStrategy, cinematicHeroSingleFiveSeconds },
     "./creative-request": { interpretCreativeIntent },
     "./plan-contract": planContract, "./kling-compiler": { compileKlingShot },
   });
@@ -496,6 +498,12 @@ test("OpenAI adapter sends bounded source/profile/preset context using existing 
   await api.createOpenAIVideoPlan(refInput, source);
   assert.equal((JSON.stringify(captured).match(/data:image\/jpeg;base64/g) ?? []).length, 4);
   const refRequest = api.buildDirectorRequest(refInput);
+  const singleHero = { ...input, presetId: "cinematic-hero" as const, shotMode: "single" as const,
+    draft: { ...input.draft, shotMode: "single" as const, durationSeconds: 5 as const } };
+  const heroContext = JSON.parse(api.buildDirectorRequest(singleHero).context);
+  assert.deepEqual(heroContext.preset.singleDirection, cinematicHeroSingleFiveSeconds);
+  assert.deepEqual(heroContext.preset.strategy.cameraStrategy, Array(3).fill(cinematicHeroSingleFiveSeconds.camera));
+  assert.equal(JSON.parse(api.buildDirectorRequest({ ...singleHero, draft: { ...singleHero.draft, durationSeconds: 10 } }).context).preset.singleDirection, undefined);
   assert.ok(refRequest.schema.required.includes("referenceReviews"));
   assert.ok(Buffer.byteLength(refRequest.context + refRequest.instructions + JSON.stringify(refRequest.schema), "utf8") <= 16000);
   assert.ok(captured);

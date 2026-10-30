@@ -42,7 +42,7 @@ function compact(value: string) {
 /** Mandatory action, chosen evidence, light, rhythm and fidelity reserve space first.
  * No unrelated profile atoms fill the remaining budget; no substring truncation.
  */
-export function compileKlingShot(shot: VideoDirectorShot, limit: number, marked: boolean) {
+export function compileKlingShot(shot: VideoDirectorShot, limit: number, marked: boolean, preserveMarks = false, fallbackPreservation?: string) {
   const render = (short: boolean) => {
     const wording = (value: string) => short ? compact(value) : value;
     const focus = lower(wording(shot.focus)).replace(/^source-visible /, "visible ");
@@ -50,9 +50,11 @@ export function compileKlingShot(shot: VideoDirectorShot, limit: number, marked:
     const action = /^Locked close framing$/i.test(clean(shot.camera))
       ? `Frame ${subject} in a locked close view.`
       : `${wording(cameraAction(shot.camera))}, framing ${subject}.`;
-    const fidelity = marked
+    const fidelity = fallbackPreservation ?? (preserveMarks
+      ? "Exact form/color/material/pattern/parts/text/logos/art & layout/ratios; no guesses. Known faces only."
+      : marked
       ? "Keep source geometry, color, material, texture, pattern, parts and markings exact, especially the marked logo/label; show only known surfaces."
-      : "Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.";
+      : "Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.");
     return [action, sentence(wording(compositionDirection(shot.composition))), sentence(wording(lightDirection(shot.lighting))),
       wording(subjectAction(shot.motion)), `Allow ${/^(?:a|an|the)\b/i.test(shot.pace) ? "" : "a "}${lower(wording(clean(shot.pace)))}.`, fidelity].filter(Boolean).join(" ");
   };

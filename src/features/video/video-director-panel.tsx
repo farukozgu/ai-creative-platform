@@ -95,7 +95,7 @@ export function VideoDirectorPanel({ draft, draftKey, presetId, planDisabled, di
   draftKey: string;
   presetId: VideoPresetId;
   planDisabled: boolean;
-  disabledReason: "planLocked" | "planNeedsSource" | "planNeedsPreparedSource" | "planNeedsReadyDraft" | null;
+  disabledReason: "planLocked" | "planNeedsReferences" | "planNeedsSource" | "planNeedsPreparedSource" | "planNeedsReadyDraft" | null;
   onPrepared(selection: VideoDirectorSelection | null, productContext?: VideoPresetProduct, analysisStatus?: VideoProductAnalysisDisplayStatus): void;
   shotMode: VideoShotMode;
 }) {

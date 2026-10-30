@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useReducer, useRef, useState } from "react";
+import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { VideoProductReferences } from "./video-product-references";
 import { VideoPreservationControls } from "./video-preservation-controls";
@@ -69,10 +69,15 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
   const [shotMode, setShotMode] = useState<VideoShotMode>("single");
   const [presetId, setPresetId] = useState<VideoPresetId>("minimal-studio");
   const [referenceState, setReferenceState] = useState<{ key: string; refs: NonNullable<VideoGenerationDraft["productReferences"]> }>({ key: "", refs: [] });
+  const [referenceBusy, setReferenceBusy] = useState(false);
   const [director, setDirector] = useState<{ key: string; selection: VideoDirectorSelection } | null>(null);
   const [submissionQuote, setSubmissionQuote] = useState<{ key: string; cost: number; receipt: string; expiresAt: number; preview: ReturnType<typeof summarizeVideoPayload>["preview"] } | null>(null);
   const [confirmedReceipt, setConfirmedReceipt] = useState<string | null>(null);
   const [preparingQuote, setPreparingQuote] = useState(false);
+  const handleReferenceBusy = useCallback((value: boolean) => {
+    setReferenceBusy(value);
+    if (value) { setDirector(null); setSubmissionQuote(null); setConfirmedReceipt(null); }
+  }, []);
   const submitting = useRef(false);
   const recoveryKey = recoveryScope ? `video-studio-submission-v1:${recoveryScope}` : null;
   useEffect(() => {
@@ -189,7 +194,7 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
     : "not_analyzed";
   const preparationFailed = currentPreparation?.status === "error";
   const previewSource = draft.source && preparedFrame ? { ...draft.source, previewUrl: preparedFrame.previewUrl } : null;
-  const referenceKey = JSON.stringify([draft.source?.id, draft.aspectRatio]);
+  const referenceKey = JSON.stringify([draft.source?.id]);
   const generationDraft: VideoGenerationDraft = { productReferences: referenceState.key === referenceKey ? referenceState.refs : [], clientSubmissionId: submissionId, criticalRegion: draft.criticalRegion,
     analysisConsent: draft.analyzeAfterGeneration && currentQuote?.analysis.maximumEstimatedCostUsd != null
       && currentQuote.analysis.model && currentQuote.analysis.pricingVersion
@@ -217,6 +222,7 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
   }, [approvalKey]);
   const directorPlanDisabledReason = busy || restoringJob || restoreUnavailable || submissionUsed || Boolean(jobId)
     ? "planLocked"
+    : referenceBusy ? "planNeedsReferences"
     : !draft.source ? "planNeedsSource"
       : !preparedFrame ? "planNeedsPreparedSource"
         : !isVideoStudioDraftReady(draft) ? "planNeedsReadyDraft" : null;
@@ -362,7 +368,7 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
   }
 
   async function prepareSubmissionQuote() {
-    if (preparingQuote || busy || !preparedFrame || !submissionId || !isVideoStudioDraftReady(draft)
+    if (preparingQuote || busy || referenceBusy || !preparedFrame || !submissionId || !isVideoStudioDraftReady(draft)
       || !directorReady || restoringJob || restoreUnavailable || submissionUsed || jobId) return;
     setPreparingQuote(true); setSubmissionQuote(null); setConfirmedReceipt(null); setGenerationError(null);
     const requestedApprovalGeneration = approvalGeneration.current.value;
@@ -379,7 +385,7 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
   async function handleGenerate() {
     const validationError = validateVideoStudioDraft(draft);
     if (validationError) { dispatch({ type: "set-feedback", feedback: validationError }); return; }
-    if (submitting.current || !activeSubmissionQuote || !quoteConfirmed || !preparedFrame || (draft.analyzeAfterGeneration && !analysisAvailable.enabled)) return;
+    if (submitting.current || referenceBusy || !activeSubmissionQuote || !quoteConfirmed || !preparedFrame || (draft.analyzeAfterGeneration && !analysisAvailable.enabled)) return;
     if (!directorReady) return;
     try {
       if (!recoveryKey) throw new Error("Recovery unavailable.");
@@ -485,8 +491,9 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
             {(jobId || submissionUsed || restoreUnavailable || generationError === "failed" || generationError === "ambiguous") && !busy
               ? <Button variant="ghost" size="sm" onClick={newSubmission}>{t("beta.newSubmission")}</Button> : null}
           </>}
-          referenceControls={preparedFrame ? <VideoProductReferences key={referenceKey} sourceKey={referenceKey}
-            product={preparedFrame.presetContext} presetId={presetId} aspectRatio={draft.aspectRatio} disabled={busy || preparingQuote}
+          referenceControls={draft.source ? <VideoProductReferences key={referenceKey} sourceKey={referenceKey}
+            product={prepared?.frame?.presetContext ?? { category: "unknown", evidence: [] }} presetId={presetId} aspectRatio={draft.aspectRatio} disabled={busy || preparingQuote || !preparedFrame}
+            onBusyChange={handleReferenceBusy}
             onChange={refs => { setReferenceState({ key: referenceKey, refs }); setDirector(null); setSubmissionQuote(null); setConfirmedReceipt(null); }} /> : null}
           presetControls={<VideoDirectorPresetSelector presetId={presetId}
             disabled={busy}

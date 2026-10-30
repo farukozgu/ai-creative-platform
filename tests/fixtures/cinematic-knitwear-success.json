@@ -1,0 +1,226 @@
+{
+  "provenance": {
+    "jobId": "e1f44b4c-e246-457a-99ef-b0a85925cfff",
+    "sourceAssetId": "dd5ccbcd-f8d1-504f-ac73-4e9020ed7fee",
+    "endpointId": "fal-ai/kling-video/v3/standard/image-to-video",
+    "kind": "persisted successful job; no raw HTTP payload retained"
+  },
+  "profile": {
+    "source": {
+      "model": "gpt-4o-mini",
+      "analyzedAt": "2026-10-30T13:47:47.610Z",
+      "analysisVersion": "product-understanding-v3"
+    },
+    "rigidity": "unknown",
+    "vertical": "apparel",
+    "materials": [],
+    "productId": "dd5ccbcd-f8d1-504f-ac73-4e9020ed7fee",
+    "confidence": {
+      "fields": {
+        "vertical": 0.95
+      },
+      "overall": 0.95
+    },
+    "subcategory": null,
+    "wearability": "context_dependent",
+    "productShape": "loose fit",
+    "schemaVersion": 3,
+    "dominantColors": [],
+    "analysisVersion": "product-understanding-v3",
+    "identitySummary": [
+      "long-sleeve top",
+      "v-neck collar"
+    ],
+    "sceneAffinities": {
+      "discouragedSceneTags": [],
+      "recommendedSceneTags": []
+    },
+    "visibleBranding": {
+      "hasLogo": null,
+      "hasArtwork": null,
+      "logoRegions": [],
+      "textRegions": [],
+      "artworkRegions": [],
+      "hasReadableText": null
+    },
+    "interactionRules": [],
+    "interactionTargets": [
+      "none"
+    ],
+    "sourceObservations": [
+      "green with a white collar",
+      "striped design",
+      "embroidery on the front"
+    ],
+    "verticalAttributes": {
+      "details": {
+        "closures": [],
+        "garmentType": "unknown",
+        "hoodOrCollar": null,
+        "primaryColor": null,
+        "identitySides": [],
+        "pocketStructure": [],
+        "constructionDetails": [
+          "green with a white collar",
+          "striped design",
+          "embroidery on the front"
+        ],
+        "artworkOrLogoLocations": []
+      },
+      "vertical": "apparel"
+    },
+    "visibleProductCount": 1,
+    "allowedTransformations": [
+      "perspective_change",
+      "lighting_or_reflection_change"
+    ],
+    "forbiddenTransformations": [
+      "recolor",
+      "logo_movement",
+      "geometry_redesign",
+      "text_or_artwork_change"
+    ],
+    "identityCriticalAttributes": [
+      {
+        "regions": [],
+        "attribute": "long-sleeve top",
+        "rationale": "Visible source identity observation."
+      },
+      {
+        "regions": [],
+        "attribute": "v-neck collar",
+        "rationale": "Visible source identity observation."
+      }
+    ]
+  },
+  "draft": {
+    "clientSubmissionId": "20000000-0000-4000-8000-000000000001",
+    "mode": "image",
+    "quality": "standard",
+    "aspectRatio": "16:9",
+    "durationSeconds": 5,
+    "cameraMovement": "auto",
+    "prompt": "",
+    "shotMode": "multi",
+    "source": {
+      "kind": "uploaded-image",
+      "sourceAssetId": "dd5ccbcd-f8d1-504f-ac73-4e9020ed7fee"
+    },
+    "productReferences": []
+  },
+  "plan": {
+    "shots": [
+      {
+        "pace": "Crisp opening",
+        "focus": "green with a white collar",
+        "camera": "Locked medium overview",
+        "motion": "Keep the product still",
+        "purpose": "hero-reveal",
+        "lighting": "Directional edge light shapes the contour",
+        "composition": "Complete product; strong diagonal space",
+        "evidenceRefs": [
+          0
+        ],
+        "durationSeconds": 1
+      },
+      {
+        "pace": "Quick tactile accent",
+        "focus": "Source-visible surface detail",
+        "camera": "Locked close framing",
+        "motion": "Keep the product still",
+        "purpose": "material-study",
+        "lighting": "Grazing light defines existing relief",
+        "composition": "Wider view of the source-visible product form; no unverified detail is enlarged",
+        "evidenceRefs": [],
+        "durationSeconds": 1
+      },
+      {
+        "pace": "Brisk visual reset",
+        "focus": "green with a white collar",
+        "camera": "Short lateral camera glide",
+        "motion": "Keep the product still",
+        "purpose": "controlled-motion",
+        "lighting": "Narrow side light defines visible edges",
+        "composition": "Offset medium view of the same visible face",
+        "evidenceRefs": [
+          0
+        ],
+        "durationSeconds": 1
+      },
+      {
+        "pace": "Precise detail accent",
+        "focus": "Source-visible surface detail",
+        "camera": "Locked off-center close framing",
+        "motion": "Keep the product still",
+        "purpose": "macro-detail",
+        "lighting": "Raking light reveals existing relief",
+        "composition": "Wider visible form with offset margins; no unverified detail enlarged",
+        "evidenceRefs": [],
+        "durationSeconds": 1
+      },
+      {
+        "pace": "Decisive final hold",
+        "focus": "green with a white collar",
+        "camera": "Locked symmetrical hero frame",
+        "motion": "Keep the product still",
+        "purpose": "final-hero",
+        "lighting": "Balanced edge light preserves source colors",
+        "composition": "Full product with clean campaign space",
+        "evidenceRefs": [
+          0
+        ],
+        "durationSeconds": 1
+      }
+    ],
+    "intent": "Preset direction selected from verified product evidence.",
+    "origin": "fallback",
+    "summary": "Preset direction adapted to the explicit camera and focus request using only verified product evidence.",
+    "version": "video-director-3.2-reference-views-v2",
+    "presetId": "cinematic-hero",
+    "shotMode": "multi",
+    "presetVersion": 1,
+    "intentContract": {
+      "camera": "auto",
+      "sequence": "preset",
+      "focusPosition": "any",
+      "focusRequested": false,
+      "safeAdjustment": "none",
+      "focusEvidenceId": null
+    }
+  },
+  "compiled": {
+    "prompt": "Use locked medium overview, framing the green with a white collar. Compose the complete product; strong diagonal space. Directional edge light shapes the contour. Allow a crisp opening. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+    "multiPrompt": [
+      {
+        "prompt": "Use locked medium overview, framing the green with a white collar. Compose the complete product; strong diagonal space. Directional edge light shapes the contour. Allow a crisp opening. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+        "duration": "1"
+      },
+      {
+        "prompt": "Frame the visible surface detail in a locked close view. Compose the wider view of the source-visible product form; no unverified detail is enlarged. Grazing light defines existing relief. Allow a quick tactile accent. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+        "duration": "1"
+      },
+      {
+        "prompt": "Glide laterally over a short distance, framing the green with a white collar. Compose the offset medium view of the same visible face. Narrow side light defines visible edges. Allow a brisk visual reset. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+        "duration": "1"
+      },
+      {
+        "prompt": "Use locked off-center close framing, framing the visible surface detail. Compose the wider visible form with offset margins; no unverified detail enlarged. Raking light reveals existing relief. Allow a precise detail accent. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+        "duration": "1"
+      },
+      {
+        "prompt": "Use locked symmetrical hero frame, framing the green with a white collar. Compose the full product with clean campaign space. Balanced edge light preserves source colors. Allow a decisive final hold. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+        "duration": "1"
+      }
+    ],
+    "negativePrompt": "changed logo, changed brand mark, rewritten text, misspelled text, illegible label, morphing letters, altered color, changed hue, changed pattern, changed print, altered material, changed surface texture, redesigned product, altered silhouette, changed proportions, stretched or compressed geometry, extra or missing parts, extra or missing buttons, extra or missing belt, broken seams, warped hardware, melting texture, garment deformation, new hidden surfaces, blur",
+    "cfgScale": 0.5,
+    "version": "product-preservation-v2"
+  },
+  "promptHashes": [
+    "5222ef5783fabe29f6c1b0a45128ced063fd3e41df6c3781a8c591f7dd2b4eb7",
+    "d69ff039ba4faec5d8731b6ab64aa9f81f7ba60b70d936fa9a6651bef69d60e1",
+    "4c940490d7cabe002ae38eb5b4153db75caeff5c24f6890fdf0506e6da8a217f",
+    "0367100b891cf24a8b82b10ddfd18c591041d8f7090e045675541d0cbb7f2490",
+    "46b849fc5e57c406121e2e6a0fa171cf4a36849b51b5371f47378f59f2654621"
+  ]
+}

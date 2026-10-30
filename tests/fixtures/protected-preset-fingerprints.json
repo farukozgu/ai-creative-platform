@@ -1,0 +1,86 @@
+{
+  "luxury-fashion-film": {
+    "cases": 128,
+    "fingerprint": "78f2cd62a8ca3ae48cef8161009f16672e8e78f09b0b2b1557995643a2b8efac"
+  },
+  "minimal-studio": {
+    "cases": 128,
+    "fingerprint": "6355726c69bee840637671e424f6353603484787f86a6d85ebc834738c1c5e09"
+  },
+  "floating-fashion": {
+    "cases": 128,
+    "fingerprint": "d944b3408a679dc72922accc2725106ac3da827d509a3bd3be363b4461970669"
+  },
+  "precision-macro": {
+    "cases": 128,
+    "fingerprint": "55a65ea2db0e99a02aa4dbc32962b7ac394a5c0bdaaa7177eb21f21be7585be3"
+  },
+  "glass-reflection": {
+    "cases": 128,
+    "fingerprint": "1d3c1aee71f2ed58257bfe7c119113bfce1290a56c70121fd9a63c5a3fb5cab0"
+  },
+  "elegant-orbit": {
+    "cases": 128,
+    "fingerprint": "3d227a97b6aa38caba0d0c7e4ce9f759ee1b92d4cdc5ee579bad1685d92fa1aa"
+  },
+  "cinematic-hero": {
+    "cases": 129,
+    "fingerprint": "cc2eef0543db1b02d5adee6b30e990d2cabce14b394e8c0155c17d4ec6af65cf"
+  },
+  "macro-stitching": {
+    "cases": 128,
+    "fingerprint": "80ea244211d3b60831e30769e2e4777ba11c9b60ae9bd20e79dcb57f6e668af4"
+  },
+  "fabric-motion": {
+    "cases": 128,
+    "fingerprint": "e607c009cee8dd5a553a108e1c2c4cc3b9a675d44c215064bcf29c511e8941b7"
+  },
+  "label-reveal": {
+    "cases": 128,
+    "fingerprint": "b2f82167cbd3ea284267c3aabb71d43f526e8dee0fb1acf418b7775e722a1333"
+  },
+  "dramatic-backlight": {
+    "cases": 128,
+    "fingerprint": "80661fbc7ffe6b0c572b7c4ba7149eba7c938ce6448029f12f5326de20413d97"
+  },
+  "cinematic-dial": {
+    "cases": 128,
+    "fingerprint": "fc1d9648b6c907637af3e299c6c5a324ff02624a2b51c3dfa86809cd885fa7ce"
+  },
+  "metallic-light-sweep": {
+    "cases": 128,
+    "fingerprint": "cea5dd17534f64d1083864929a682a5f3e869c4fe07059bc32b354c4acad0692"
+  },
+  "hardware-reveal": {
+    "cases": 128,
+    "fingerprint": "45cb2b9d09b09189ccf58b0079c525576d807c34e44ac70e46f2465bba4d90b9"
+  },
+  "floating-accessory": {
+    "cases": 128,
+    "fingerprint": "6fa52d04a8fcd5ff8863efa4da863b154572de38156bccac9e1293791ffaca6e"
+  },
+  "sneaker-hero": {
+    "cases": 128,
+    "fingerprint": "679e137fd0c819907443ac0ffed4f93c7fbdf19aa0069d490e038f19c686d0b8"
+  },
+  "upholstery-macro": {
+    "cases": 128,
+    "fingerprint": "75bcba80edec44db5920ad2057f4dbc8b040e5b6ceb859af96c1faee84b578f2"
+  },
+  "culinary-texture": {
+    "cases": 128,
+    "fingerprint": "d9c7b4964525a0a1fa2c7ce563824693f8800bb3517b33d1027fd24da7805651"
+  },
+  "optical-lines": {
+    "cases": 128,
+    "fingerprint": "57ae226b252487082b22a8f2a3f2e794dc78ae55a5de96869189f77abbb88942"
+  },
+  "craftsmanship-study": {
+    "cases": 128,
+    "fingerprint": "71fb5bf99121f5941dd0e0ca30c702ff81987b4ef7238fe1de29da36015f8e71"
+  },
+  "window-display": {
+    "cases": 128,
+    "fingerprint": "108d2842f04c5e1df0ca47c1ea59aec34c7a3d3381350ed39a3044644122b631"
+  }
+}

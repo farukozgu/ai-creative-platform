@@ -921,6 +921,11 @@
           }
         },
         "automaticPlanning": "The AI shot plan is prepared without a separate user fee or price approval. Video generation still requires price approval.",
+        "planNeedsReferences": "Reload or remove the additional product views before preparing a shot plan.",
+        "planNeedsSource": "Select a product image first.",
+        "planNeedsPreparedSource": "Wait for the product image to finish preparing before planning shots.",
+        "planNeedsReadyDraft": "Complete the video settings before preparing a shot plan.",
+        "planLocked": "Shot planning is unavailable for this video.",
         "prepare": "Prepare AI plan",
         "planHeading": "AI shot plan",
         "preparing": "Preparing plan…",

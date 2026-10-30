@@ -23,7 +23,7 @@ export function runMutationProbes() {
     probe("renamed-duplicate-scenes", "repeated-scene", { ...base, shots: [{ ...base.shots[0], durationSeconds: 3 }, { ...base.shots[0], durationSeconds: 7, purpose: "final-hero" }] }),
     probe("unknown-rear-as-a-real-view", "unseen-surface", { ...base, shots: base.shots.map(s => ({ ...s, camera: "Reveal the back in a rear view" })) }),
     probe("unsafe-orbit-with-no-notice", "unexplained-risk", { ...base, shots: base.shots.map(s => ({ ...s, camera: "Complete 360 turn" })) }, input, []),
-    probe("three-shots-in-five-seconds", "five-second-overload", { ...base, shots: base.shots.map((s, i) => ({ ...s, durationSeconds: [1, 1, 3][i] })) }, { ...input, draft: { ...input.draft, durationSeconds: 5 } }),
+    probe("subsecond-shots-in-five-seconds", "five-second-overload", { ...base, shots: base.shots.slice(0, 3).map((s, i) => ({ ...s, durationSeconds: [0.5, 0.5, 4][i] })) }, { ...input, draft: { ...input.draft, durationSeconds: 5 } }),
   ];
   const long = "x".repeat(513);
   let rejectedLength = false;

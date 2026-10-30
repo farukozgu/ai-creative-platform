@@ -1,6 +1,8 @@
+import { durationStrategy } from "./duration-strategy";
+import { qualityPresetDirection, qualityPresetVersions } from "./preset-quality-directions";
 import { additionalVideoPresets, extraVideoPresetIds } from "./preset-library";
 import { sourcePreservation, sourceStructure, type VideoPreset as LibraryPreset } from "./preset-contract";
-export const VIDEO_DIRECTOR_VERSION = "video-director-3.1-canonical-descriptions-v2";
+export const VIDEO_DIRECTOR_VERSION = "video-director-3.2-reference-views-v2";
 export const legacyVideoPresetIds = ["luxury-fashion-film", "macro-detail-reveal", "minimal-studio"] as const;
 export const videoPresetIds = [...legacyVideoPresetIds, ...extraVideoPresetIds] as const;
 export type VideoPresetId = typeof videoPresetIds[number];
@@ -75,7 +77,25 @@ const compatiblePresets = {
   "minimal-studio": compatiblePreset("minimal-studio"),
 };
 
-export const videoDirectorPresets: Record<VideoPresetId, LibraryPreset> = { ...compatiblePresets, ...additionalVideoPresets };
+const basePresets = { ...compatiblePresets, ...additionalVideoPresets };
+export const videoDirectorPresets: Record<VideoPresetId, LibraryPreset> = { ...basePresets,
+  "material-detail": { ...basePresets["material-detail"], version: qualityPresetVersions["material-detail"] },
+  "macro-detail-reveal": { ...basePresets["macro-detail-reveal"], version: qualityPresetVersions["macro-detail-reveal"] },
+  "product-spotlight": { ...basePresets["product-spotlight"], version: qualityPresetVersions["product-spotlight"] },
+};
+
+export function getVideoDirectorPreset(id: VideoPresetId, shotMode: VideoShotMode, durationSeconds: number): LibraryPreset {
+  const preset = videoDirectorPresets[id];
+  const execution = qualityPresetDirection(id, shotMode, durationSeconds) ?? durationStrategy(id, shotMode, durationSeconds);
+  if (!execution?.available) return preset;
+  const direction = execution.shots[0];
+  return { ...preset, ...(shotMode === "single" ? direction : {}), execution,
+    shots: shotMode === "multi" ? execution.shots : preset.shots,
+    strategy: { ...preset.strategy,
+      ...(shotMode === "single" ? { cameraStrategy: [direction.camera, direction.camera, direction.camera] as const,
+        framing: [direction.composition, direction.composition, direction.composition] as const } : {}),
+      lighting: direction.lighting, tempo: direction.pace } };
+}
 
 export function isVideoPresetId(value: unknown): value is VideoPresetId {
   return typeof value === "string" && videoPresetIds.some(id => id === value);

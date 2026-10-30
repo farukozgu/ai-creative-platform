@@ -313,7 +313,9 @@ test("reference-review schema agrees with matched/uncertain business rules", () 
   }] } };
   const api = mockAdapter(() => ({ status: "completed", output_text: "{}" }));
   const schema = api.buildDirectorRequest(input).schema as Schema;
-  const candidate = { ...responseFor(scenario), referenceReviews: [{ index: 0, status: "uncertain", reason: "Ambiguous crop", details: [] as string[] }] };
+  const response = responseFor(scenario);
+  const candidate = { ...response, shots: response.shots.map(shot => ({ ...shot, referenceIndex: null })),
+    referenceReviews: [{ index: 0, status: "uncertain", view: "unknown", reason: "Ambiguous crop", details: [] as string[] }] };
   assertSchema(wireResponse(candidate), schema);
   assert.ok(core.parseDirectorOutput(candidate, input));
   candidate.referenceReviews[0].details = ["new visible notch"];
@@ -363,8 +365,8 @@ test("server field bounds reserve expanded 100-char evidence, critical-region pr
     const id = directorProductContext(profile).evidence.find(item => item.detail === evidenceDetail)!.id;
     const candidate = { summary: "A source-facing cinematic study", intent: "Resolve the existing form with measured light",
       intentContract: creative.interpretCreativeIntent("", directorProductContext(profile).evidence, "multi", cameraMovement),
-      ...(references ? { referenceReviews: [{ index: 0, status: "matched", reason: "Consistent visible identity", details: [] }] } : {}),
-      shots: ["hero-reveal", "macro-detail", "final-hero"].map((purpose, index) => ({ ...fields, purpose, durationSeconds: [3, 4, 3][index],
+      ...(references ? { referenceReviews: [{ index: 0, status: "matched", view: "unknown", reason: "Consistent visible identity", details: [] }] } : {}),
+      shots: ["hero-reveal", "macro-detail", "final-hero"].map((purpose, index) => ({ ...fields, ...(references ? { referenceIndex: null } : {}), purpose, durationSeconds: [3, 4, 3][index],
         focus: `verified-evidence:${id}`, composition: String(fields.composition).slice(1) + String(index) })),
     };
     assertSchema(wireResponse(candidate), request.schema as Schema);
@@ -541,9 +543,11 @@ test("offline Chat Completions alternative keeps the plan contract and rejects i
   assert.equal(count, 2);
 });
 
-test("only 10-second multi-shot Director requests use the larger bounded output", async () => {
+test("10s multi and pilot 5s montage use the larger bounded output without raising the transport ceiling", async () => {
   const image = await sharp({ create: { width: 16, height: 16, channels: 3, background: "white" } }).png().toBuffer();
-  for (const [scenario, expected] of [[scenarios[0], 4000], [scenarios[2], 2200]] as const) {
+  for (const [scenario, expected] of [[scenarios[0], 4000], [scenarios[2], 2200],
+    [{ ...scenarios[0], input: selected(watch, "cinematic-hero", "multi", 5) }, 4000],
+    [{ ...scenarios[0], input: selected(watch, "minimal-studio", "multi", 5) }, 2200]] as const) {
     const requests: Array<Record<string, unknown>> = [];
     const logs: Array<Record<string, unknown>> = [];
     const api = mockAdapter(() => ({ status: "incomplete", output_text: "{", incomplete_details: { reason: "max_output_tokens" }, usage: { output_tokens: 0 } }), logs, requests);

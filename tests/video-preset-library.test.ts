@@ -1,16 +1,77 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
-import { videoDirectorPresets, videoPresetIds, legacyVideoPresetIds } from "../src/lib/video-director/presets";
+import { createHash } from "node:crypto";
+import { VIDEO_DIRECTOR_VERSION, videoDirectorPresets, videoPresetIds, legacyVideoPresetIds } from "../src/lib/video-director/presets";
+import { DIRECTOR_CONTRACT_VERSION } from "../src/lib/video-director/plan-contract";
+import { videoDraftHash } from "../src/lib/video-generation/request-identity";
 import { videoCategories, riskAlternatives } from "../src/lib/video-director/preset-contract";
 import { presetProduct, recommendVideoPresets } from "../src/lib/video-director/preset-recommendations";
 import { directorProductContext } from "../src/lib/video-director/product-context";
-import { compileDirectorPlan, fallbackDirectorPlan } from "../src/lib/video-director/core";
+import { compileDirectorPlan, fallbackDirectorPlan, parseDirectorOutput, type VideoDirectorInput } from "../src/lib/video-director/core";
+import { cinematicHeroSingleFiveSeconds, cinematicHeroSingleNegativeTerms } from "../src/lib/video-director/preset-library";
+import { productVideoNegativePrompt } from "../src/lib/video-generation/preservation";
 import { buildFalVideoRequestInput } from "../src/lib/video-generation/fal-request";
 import { summarizeVideoPayload } from "../src/lib/video-generation/payload-summary";
 import { directorProducts, directorFixtureInput } from "./fixtures/video-director-fixtures";
 import { libraryFixtures } from "./fixtures/video-preset-library-fixtures";
 import { directorCacheKey, openDirectorPlan, sealDirectorPlan } from "../src/lib/video-director/receipt";
+
+test("cinematic-hero single 5s validates steady framing and stationary product through Kling payload", () => {
+  const base = directorFixtureInput(directorProducts[0]);
+  const input: VideoDirectorInput = { ...base, presetId: "cinematic-hero", shotMode: "single",
+    draft: { ...base.draft, shotMode: "single", durationSeconds: 5 } };
+  const plan = fallbackDirectorPlan(input);
+  const oldCacheKey = (selected: VideoDirectorInput) => createHash("sha256").update(JSON.stringify({
+    ownerId: "owner", sourceSha256: "hash", model: "fixture", version: VIDEO_DIRECTOR_VERSION,
+    contractVersion: DIRECTOR_CONTRACT_VERSION, preset: videoDirectorPresets[selected.presetId], presetId: selected.presetId,
+    shotMode: selected.shotMode, profile: { ...selected.profile, source: { ...selected.profile!.source, analyzedAt: undefined } },
+    draft: videoDraftHash({ ...selected.draft, director: undefined }),
+  })).digest("hex");
+  assert.notEqual(directorCacheKey("owner", "hash", "fixture", input), oldCacheKey(input));
+  assert.ok(parseDirectorOutput(plan, input));
+  for (const [field, value] of Object.entries(cinematicHeroSingleFiveSeconds)) {
+    assert.ok(value.length <= 100, field);
+    assert.equal(plan.shots[0][field as keyof typeof cinematicHeroSingleFiveSeconds], value);
+  }
+  const compiled = compileDirectorPlan(plan, input);
+  const payload = buildFalVideoRequestInput({ ...input.draft, ...compiled, modelId: "kling-v3-standard-image",
+    endpointId: "fixture", sourceUrl: "https://invalid.example/source" });
+  assert.match(payload.prompt!, /level, stable horizon/);
+  assert.match(payload.prompt!, /product stays still/);
+  assert.match(payload.prompt!, /wide clean margins on all sides/);
+  assert.ok(payload.prompt!.length <= 2500);
+  assert.equal(payload.cfg_scale, 0.5);
+  assert.equal(payload.duration, "5");
+  assert.equal(payload.multi_prompt, undefined);
+  assert.equal(payload.negative_prompt, `${productVideoNegativePrompt.replace("object rotation, ", "")}, ${cinematicHeroSingleNegativeTerms}`);
+
+  // Product stays still is excluded from camera classification; fixed horizon is not.
+  for (const replacement of [
+    { camera: "Slow steady push-in on a level, fixed horizon" },
+    { lighting: "A soft highlight glides slowly across the surface as the camera moves" },
+  ]) {
+    let reason = "";
+    assert.equal(parseDirectorOutput({ ...plan, shots: [{ ...plan.shots[0], ...replacement }] }, input,
+      failure => { reason = failure.reasonCode; }), null);
+    assert.equal(reason, "conflicting_camera_directions");
+  }
+
+  for (const presetId of videoPresetIds) for (const shotMode of ["single", "multi"] as const)
+    for (const durationSeconds of [5, 10] as const) {
+      if (presetId === "cinematic-hero" && shotMode === "single" && durationSeconds === 5) continue;
+      const other = { ...input, presetId, shotMode, draft: { ...input.draft, shotMode, durationSeconds } };
+      const otherPlan = fallbackDirectorPlan(other);
+      const changed = ["cinematic-hero", "macro-detail-reveal", "luxury-fashion-film", "material-detail", "product-spotlight"].includes(presetId);
+      assert.equal(directorCacheKey("owner", "hash", "fixture", other) === oldCacheKey(other), !changed);
+      const result = compileDirectorPlan(otherPlan, other);
+      const expected = productVideoNegativePrompt.replace("object rotation, ", "");
+      assert.equal(result.negativePrompt, shotMode === "multi" ? expected.replace("scene cuts, ", "") : expected);
+      if (presetId === "cinematic-hero") {
+        assert.equal(otherPlan.shots[0].camera, shotMode === "single" ? "Short lateral camera glide" : "Locked medium overview");
+      }
+    }
+});
 
 test("24 distinct executable strategies retain the three legacy IDs and cover every category", () => {
   assert.equal(videoPresetIds.length, 24);
@@ -25,7 +86,7 @@ test("24 distinct executable strategies retain the three legacy IDs and cover ev
     assert.equal(new Set(p.shots.map(shot => shot.purpose)).size, 3);
     assert.equal(new Set(p.shots.map(shot => shot.camera + shot.composition)).size, 3);
     for (const risk of p.strategy.risks) assert.ok(riskAlternatives[risk].condition && riskAlternatives[risk].alternative);
-    if (legacyVideoPresetIds.some(legacy => legacy === id)) assert.equal(p.version, 3);
+    if (legacyVideoPresetIds.some(legacy => legacy === id)) assert.equal(p.version, id === "macro-detail-reveal" ? 4 : 3);
   }
 });
 

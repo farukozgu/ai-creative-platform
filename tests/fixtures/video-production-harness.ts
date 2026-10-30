@@ -23,7 +23,7 @@ const root = process.cwd();
 const requirePackage = createRequire(import.meta.url);
 const compiled = new Map<string, string>();
 type Row = Record<string, unknown>;
-type Stored = { bytes: Buffer; contentType: string };
+type Stored = { bytes: Buffer; contentType: string; aspectRatio?: "1:1" | "16:9" | "9:16" };
 type Task = { status: "IN_QUEUE" | "IN_PROGRESS" | "COMPLETED"; error?: string; input: Row; resultStatus?: number; missingVideo?: boolean; url?: string };
 
 const json = (data: unknown, status = 200) => new Response(JSON.stringify(data), { status, headers: { "content-type": "application/json" } });
@@ -60,6 +60,10 @@ export class VideoProductionHarness {
   private modules = new Map<string, unknown>();
   private client = createClient("https://video-test.invalid", "fake-service-key", { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: (url, init) => this.http(url, init) } });
   readonly profile = structuredClone(directorProducts[2]);
+  directorResponse?: unknown;
+  directorInputs: core.VideoDirectorInput[] = [];
+  analysisProfile?: import("../../src/lib/product-understanding/product-profile").ProductProfile;
+  analysisSourceIds: string[] = [];
   readonly env: Record<string, string> = { NODE_ENV: "development", FAL_KEY: "fake-fal-key", SUPABASE_SECRET_KEY: secret,
     VIDEO_STUDIO_ENABLED: "true", VIDEO_STUDIO_ACCESS_MODE: "allowlist", VIDEO_STUDIO_USER_IDS: videoTestOwner,
     VIDEO_STUDIO_SPENDING_ENABLED: "true", VIDEO_GENERATION_ENABLED: "true" };
@@ -116,6 +120,13 @@ export class VideoProductionHarness {
   signedQuote(draft: VideoGenerationDraft, cost: number, hash: string, now: number) {
     return this.load<typeof quotes>("src/lib/video-generation/quote-receipt.ts").sealVideoQuote(videoTestOwner, draft, cost, secret, now, hash);
   }
+  prepareDirector(input: core.VideoDirectorInput) {
+    return this.load<typeof import("../../src/app/[locale]/dashboard/video/director-actions")>("src/app/[locale]/dashboard/video/director-actions.ts")
+      .prepareVideoDirectorAction(input.draft, input.presetId, input.shotMode);
+  }
+  directorRequest(input: core.VideoDirectorInput) {
+    return this.load<typeof import("../../src/lib/video-director/openai-director")>("src/lib/video-director/openai-director.ts").buildDirectorRequest(input);
+  }
   snapshotHash(draft: VideoGenerationDraft, snapshot: VideoPreservationSnapshot) {
     return this.load<typeof import("../../src/lib/video-generation/payload-summary")>("src/lib/video-generation/payload-summary.ts").summarizeVideoPayload(draft, snapshot).snapshotHash;
   }
@@ -160,7 +171,13 @@ export class VideoProductionHarness {
         if (name === "@/lib/supabase/admin") return { getSupabaseAdminClient: () => this.client };
         if (name === "@/lib/video-fidelity/availability") return { getVideoFidelityAnalysisAvailability: () => ({ enabled: false }) };
         if (name === "@/lib/video-fidelity/reviews") return { videoFidelitySchemaReady: async () => false };
-        if (name === "./openai-director" || name === "@/lib/video-director/openai-director") return { createOpenAIVideoPlan: () => { throw new Error("OpenAI calls forbidden in this fixture"); } };
+        if (name === "./openai-director" || name === "@/lib/video-director/openai-director") return { createOpenAIVideoPlan: (input: core.VideoDirectorInput) => {
+          if (!this.directorResponse) throw new Error("OpenAI calls forbidden in this fixture");
+          this.directorInputs.push(input); return this.directorResponse;
+        } };
+        if (name === "@/lib/video-generation/video-product-analysis" && this.analysisProfile) return { analyzeOwnedVideoProduct: async (input: { sourceAssetId: string }) => {
+          this.analysisSourceIds.push(input.sourceAssetId); return { status: "supported", profile: this.analysisProfile };
+        } };
         if (name.startsWith("@/")) return this.load(`${name.replace("@/", "src/")}.ts`);
         if (name.startsWith(".")) return this.load(`${resolve(dirname(filename), name)}.ts`);
         return requirePackage(name);
@@ -253,7 +270,7 @@ export class VideoProductionHarness {
         const [, operation, path] = storage;
         if (operation === "sign/" && method === "POST") return json({ signedURL: `/object/sign/${path}?token=mock-private-token` });
         const file = this.objects.get(path);
-        if (operation === "info/") return file ? json({ metadata: { aspect_ratio: "1:1", mimetype: file.contentType, size: file.bytes.length } }) : json({ message: "Object not found" }, 404);
+        if (operation === "info/") return file ? json({ metadata: { aspect_ratio: file.aspectRatio ?? "1:1", mimetype: file.contentType, size: file.bytes.length } }) : json({ message: "Object not found" }, 404);
         if (method === "GET") return file ? new Response(new Uint8Array(file.bytes), { headers: { "content-type": file.contentType } }) : json({ message: "Object not found" }, 404);
         assert.equal(method, "POST");
         this.uploadAttempts++;

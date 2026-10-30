@@ -921,6 +921,11 @@
           }
         },
         "automaticPlanning": "AI çekim planı ek kullanıcı ücreti veya ayrı fiyat onayı olmadan hazırlanır. Gerçek video üretimi için fiyat onayı gerekir.",
+        "planNeedsReferences": "Çekim planı hazırlamak için ek ürün açılarını yeniden yükleyin veya kaldırın.",
+        "planNeedsSource": "Önce bir ürün görseli seçin.",
+        "planNeedsPreparedSource": "Çekim planından önce ürün görselinin hazırlanmasını bekleyin.",
+        "planNeedsReadyDraft": "Çekim planı hazırlamak için önce video ayarlarını tamamlayın.",
+        "planLocked": "Bu video için çekim planı kullanılamıyor.",
         "prepare": "AI planı hazırla",
         "planHeading": "AI çekim planı",
         "preparing": "Plan hazırlanıyor…",

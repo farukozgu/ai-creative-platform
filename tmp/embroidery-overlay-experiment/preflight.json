@@ -1,0 +1,9 @@
+{
+  "status": "blocked_missing_inputs",
+  "missing": [
+    "/mnt/user-data/uploads/output_kazak.mp4",
+    "/mnt/user-data/uploads/04087367500-e1_1.jpg"
+  ],
+  "processedFrames": 0,
+  "overlayRatio": null
+}

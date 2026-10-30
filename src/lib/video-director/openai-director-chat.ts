@@ -5,7 +5,7 @@ import { attachOpenAIResponseTelemetry } from "@/lib/openai/response-telemetry";
 import { getPromptEnhancementModel } from "@/lib/generation/prompts/prompt-enhancer-config";
 import { directorPlanDescriptions, type VideoDirectorInput } from "./core";
 import { buildDirectorRequest } from "./openai-director";
-import { DirectorStructuredOutputError } from "./plan-contract";
+import { directorShotContract, DirectorStructuredOutputError } from "./plan-contract";
 
 /** Offline-testable alternative; deliberately not connected to the production Director. */
 export async function createChatVideoPlan(input: VideoDirectorInput, source: Buffer) {
@@ -18,7 +18,8 @@ export async function createChatVideoPlan(input: VideoDirectorInput, source: Buf
   const model = getPromptEnhancementModel();
   const response = await getOpenAIVideoStudioAnalysisClient(model, "director-chat").chat.completions.create({
     model, store: false,
-    max_completion_tokens: input.shotMode === "multi" && input.draft.durationSeconds === 10 ? 4000 : 2200,
+    max_completion_tokens: input.shotMode === "multi" && (input.draft.durationSeconds === 10
+      || directorShotContract(input.shotMode, input.draft.durationSeconds, input.presetId).maxShots > 3) ? 4000 : 2200,
     messages: [{ role: "system", content: instructions }, { role: "user", content: [
       { type: "text", text: context }, ...images.map(image => ({ type: "image_url" as const,
         image_url: { url: `data:image/jpeg;base64,${image.toString("base64")}`, detail: "low" as const } })),

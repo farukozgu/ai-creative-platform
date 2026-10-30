@@ -30,6 +30,7 @@ export type PresetStrategy = {
   variations: Partial<Record<VideoCategory, string>>;
 };
 export type VideoPreset = Direction & {
+  execution?: import("./duration-strategy").DurationStrategy;
   version: number; brief: string;
   shots: readonly (Direction & { purpose: ShotPurpose })[];
   strategy: PresetStrategy;

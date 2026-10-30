@@ -9,7 +9,7 @@ export const KLING_SINGLE_PROMPT_MAX_CHARS = 2500;
 
 /** Local 5/10 second product policy is deliberately narrower than Kling's 3–15 second API. */
 export function validateKlingMultiPrompt(value: unknown, duration: number): value is NonNullable<VideoProviderRequest["multiPrompt"]> {
-  return [5, 10].includes(duration) && Array.isArray(value) && value.length >= 2 && value.length <= 3
+  return [5, 10].includes(duration) && Array.isArray(value) && value.length >= 2 && value.length <= 5
     && value.every(shot => shot && typeof shot.prompt === "string" && shot.prompt.trim() && shot.prompt.length <= KLING_MULTI_PROMPT_MAX_CHARS
       && typeof shot.duration === "string" && /^(?:[1-9]|10)$/.test(shot.duration))
     && value.reduce((sum, shot) => sum + Number(shot.duration), 0) === duration;

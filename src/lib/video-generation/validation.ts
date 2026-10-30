@@ -43,6 +43,7 @@ export function validateVideoGenerationDraft(value: unknown): VideoDraftValidati
   if (prompt.length > 2500) return { ok: false, field: "prompt", message: "The prompt must be 2,500 characters or fewer." };
   if (input.productReferences !== undefined && (!Array.isArray(input.productReferences) || input.productReferences.length > 3
     || input.productReferences.some(ref => !ref || typeof ref !== "object" || typeof ref.purpose !== "string" || ref.purpose.length > 60
+      || ref.aspectRatio !== undefined && !aspectRatios.has(ref.aspectRatio)
       || typeof ref.sha256 !== "string" || !/^[a-f0-9]{64}$/.test(ref.sha256) || ref.source?.kind !== "uploaded-image" || !uuidPattern.test(ref.source.sourceAssetId))
     || new Set(input.productReferences.map(ref => ref.source.sourceAssetId)).size !== input.productReferences.length))
     return { ok: false, field: "productReferences", message: "Invalid private product references." };

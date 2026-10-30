@@ -1,0 +1,1721 @@
+{
+  "provenance": "Offline synthetic bag fixture; fallback plans compiled by the production compiler; no API calls.",
+  "productEvidenceFixture": {
+    "schemaVersion": 3,
+    "analysisVersion": "fixture",
+    "wearability": "non_wearable",
+    "rigidity": "rigid",
+    "visibleBranding": {
+      "hasLogo": true,
+      "hasReadableText": true,
+      "hasArtwork": false,
+      "logoRegions": [],
+      "textRegions": [],
+      "artworkRegions": []
+    },
+    "interactionTargets": [
+      "none"
+    ],
+    "allowedTransformations": [
+      "lighting_or_reflection_change"
+    ],
+    "forbiddenTransformations": [
+      "recolor",
+      "geometry_redesign",
+      "logo_movement",
+      "text_or_artwork_change"
+    ],
+    "sceneAffinities": {
+      "recommendedSceneTags": [],
+      "discouragedSceneTags": []
+    },
+    "confidence": {
+      "overall": 0.95
+    },
+    "source": {
+      "model": "fixture-only",
+      "analysisVersion": "fixture",
+      "analyzedAt": "2026-10-28"
+    },
+    "productId": "bag",
+    "vertical": "bags",
+    "subcategory": "handbag",
+    "materials": [
+      "pebbled leather"
+    ],
+    "dominantColors": [
+      "brown"
+    ],
+    "productShape": "structured bag silhouette",
+    "identityCriticalAttributes": [
+      {
+        "attribute": "arched front handle",
+        "rationale": "source-visible",
+        "regions": []
+      }
+    ],
+    "verticalAttributes": {
+      "vertical": "bags",
+      "details": {
+        "bagType": "handbag",
+        "silhouette": "structured bag silhouette",
+        "proportions": null,
+        "bodyStructure": null,
+        "handleCount": 1,
+        "handleGeometry": "arched front handle",
+        "handleAttachmentPoints": [],
+        "strapCount": null,
+        "strapPlacement": [],
+        "strapWidth": null,
+        "strapLengthClass": null,
+        "closureType": "front clasp",
+        "flapOrOpeningShape": null,
+        "zipperLayout": [],
+        "pocketLayout": [],
+        "panelConstruction": [],
+        "stitchingPattern": "visible edge stitching",
+        "pipingOrEdgeTreatment": null,
+        "hardwareLayout": [],
+        "hardwareColor": null,
+        "logoOrMonogramPlacement": [],
+        "material": "pebbled leather",
+        "materialTexture": "pebbled leather grain",
+        "colorBlocking": [],
+        "patternOrPrint": null,
+        "baseShape": null,
+        "baseFeetHardware": null,
+        "chainStrap": null,
+        "decorativeCharms": [],
+        "asymmetricDetails": []
+      }
+    }
+  },
+  "matrix": [
+    {
+      "presetId": "cinematic-hero",
+      "durationSeconds": 5,
+      "mode": "single",
+      "available": true,
+      "durations": [
+        5
+      ],
+      "shots": [
+        {
+          "purpose": "hero-reveal",
+          "camera": "Slow steady push-in with a level, stable horizon",
+          "composition": "Centered product with wide clean margins on all sides, calm backdrop",
+          "lighting": "A soft highlight travels slowly across the surface during the approach",
+          "pace": "Calm, premium, unhurried",
+          "motion": "Only the camera and the light move; the product stays still",
+          "focus": "Source-visible product form"
+        }
+      ],
+      "grammar": "One continuous take; one camera trajectory, staged light or focus, final hold",
+      "transitions": "Continuous only; no montage, cuts, dissolves or scene changes"
+    },
+    {
+      "presetId": "cinematic-hero",
+      "durationSeconds": 5,
+      "mode": "multi",
+      "available": true,
+      "durations": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "shots": [
+        {
+          "purpose": "hero-reveal",
+          "camera": "Locked medium overview",
+          "composition": "Complete product; strong diagonal space",
+          "lighting": "Directional edge light shapes the contour",
+          "pace": "Crisp opening",
+          "motion": "Keep the product still",
+          "focus": "Source-visible product form"
+        },
+        {
+          "purpose": "material-study",
+          "camera": "Locked close framing",
+          "composition": "Resolvable surface crop",
+          "lighting": "Grazing light defines existing relief",
+          "pace": "Quick tactile accent",
+          "motion": "Keep the product still",
+          "focus": "Source-visible surface detail"
+        },
+        {
+          "purpose": "controlled-motion",
+          "camera": "Short lateral camera glide",
+          "composition": "Offset medium view of the same visible face",
+          "lighting": "Narrow side light defines visible edges",
+          "pace": "Brisk visual reset",
+          "motion": "Keep the product still",
+          "focus": "Source-visible product form"
+        },
+        {
+          "purpose": "macro-detail",
+          "camera": "Locked off-center close framing",
+          "composition": "Alternate evidenced detail; clear margins",
+          "lighting": "Raking light reveals existing relief",
+          "pace": "Precise detail accent",
+          "motion": "Keep the product still",
+          "focus": "Source-visible surface detail"
+        },
+        {
+          "purpose": "final-hero",
+          "camera": "Locked symmetrical hero frame",
+          "composition": "Full product with clean campaign space",
+          "lighting": "Balanced edge light preserves source colors",
+          "pace": "Decisive final hold",
+          "motion": "Keep the product still",
+          "focus": "Source-visible product form"
+        }
+      ],
+      "grammar": "Fast accents and direct scale changes: Overview, surface, reframed visible angle, evidenced construction, hero",
+      "transitions": "Direct cuts between entries only; match visible outline or detail position. No in-shot cuts or invented angles."
+    },
+    {
+      "presetId": "cinematic-hero",
+      "durationSeconds": 10,
+      "mode": "single",
+      "available": true,
+      "durations": [
+        10
+      ],
+      "shots": [
+        {
+          "purpose": "hero-reveal",
+          "camera": "Short lateral camera glide",
+          "composition": "Full product; offset start to balanced finish",
+          "lighting": "A narrow highlight traces the visible contour",
+          "pace": "Two-second settle; six-second glide; final hold",
+          "motion": "Keep the product still",
+          "focus": "Source-visible product form"
+        }
+      ],
+      "grammar": "One continuous take; one camera trajectory, staged light or focus, final hold",
+      "transitions": "Continuous only; no montage, cuts, dissolves or scene changes"
+    },
+    {
+      "presetId": "cinematic-hero",
+      "durationSeconds": 10,
+      "mode": "multi",
+      "available": true,
+      "durations": [
+        2,
+        2,
+        2,
+        1,
+        3
+      ],
+      "shots": [
+        {
+          "purpose": "hero-reveal",
+          "camera": "Locked medium overview",
+          "composition": "Complete product; strong diagonal space",
+          "lighting": "Directional edge light shapes the contour",
+          "pace": "Measured establishment",
+          "motion": "Keep the product still",
+          "focus": "Source-visible product form"
+        },
+        {
+          "purpose": "material-study",
+          "camera": "Short lateral macro camera glide",
+          "composition": "Resolvable surface crop",
+          "lighting": "Grazing light defines existing relief",
+          "pace": "Sustained surface study",
+          "motion": "Keep the product still",
+          "focus": "Source-visible surface detail"
+        },
+        {
+          "purpose": "controlled-motion",
+          "camera": "Short lateral camera glide",
+          "composition": "Offset medium view of the same visible face",
+          "lighting": "Narrow side light defines visible edges",
+          "pace": "Deliberate visual reset",
+          "motion": "Keep the product still",
+          "focus": "Source-visible product form"
+        },
+        {
+          "purpose": "macro-detail",
+          "camera": "Locked off-center close framing",
+          "composition": "Alternate evidenced detail; clear margins",
+          "lighting": "Raking light reveals existing relief",
+          "pace": "Resolved detail pause",
+          "motion": "Keep the product still",
+          "focus": "Source-visible surface detail"
+        },
+        {
+          "purpose": "final-hero",
+          "camera": "Locked symmetrical hero frame",
+          "composition": "Full product with clean campaign space",
+          "lighting": "Balanced edge light preserves source colors",
+          "pace": "Extended hero hold",
+          "motion": "Keep the product still",
+          "focus": "Source-visible product form"
+        }
+      ],
+      "grammar": "Develop each view with travel and a resolved hold: Overview, surface, reframed visible angle, evidenced construction, hero",
+      "transitions": "Direct cuts between entries only; match visible outline or detail position. No in-shot cuts or invented angles."
+    },
+    {
+      "presetId": "cinematic-hero",
+      "durationSeconds": 15,
+      "mode": "single",
+      "available": false,
+      "durations": [
+        15
+      ],
+      "shots": [
+        {
+          "purpose": "hero-reveal",
+          "camera": "Slow pull-back within the visible face",
+          "composition": "Begin medium; finish full with campaign space",
+          "lighting": "Directional contour light with steady fill",
+          "pace": "Three-second settle; eight-second reveal; hold",
+          "motion": "Keep the product still",
+          "focus": "Source-visible product form"
+        }
+      ],
+      "grammar": "One continuous take; one camera trajectory, staged light or focus, final hold",
+      "transitions": "Continuous only; no montage, cuts, dissolves or scene changes"
+    },
+    {
+      "presetId": "cinematic-hero",
+      "durationSeconds": 15,
+      "mode": "multi",
+      "available": false,
+      "durations": [
+        3,
+        3,
+        3,
+        2,
+        4
+      ],
+      "shots": [
+        {
+          "purpose": "hero-reveal",
+          "camera": "Locked medium overview",
+          "composition": "Complete product; strong diagonal space",
+          "lighting": "Directional edge light shapes the contour",
+          "pace": "Patient establishment",
+          "motion": "Keep the product still",
+          "focus": "Source-visible product form"
+        },
+        {
+          "purpose": "material-study",
+          "camera": "Short lateral macro camera glide",
+          "composition": "Resolvable surface crop",
+          "lighting": "Grazing light defines existing relief",
+          "pace": "Slow tactile inspection",
+          "motion": "Keep the product still",
+          "focus": "Source-visible surface detail"
+        },
+        {
+          "purpose": "controlled-motion",
+          "camera": "Short lateral camera glide",
+          "composition": "Offset medium view of the same visible face",
+          "lighting": "Narrow side light defines visible edges",
+          "pace": "Breathing-space reset",
+          "motion": "Keep the product still",
+          "focus": "Source-visible product form"
+        },
+        {
+          "purpose": "macro-detail",
+          "camera": "Locked off-center close framing",
+          "composition": "Alternate evidenced detail; clear margins",
+          "lighting": "Raking light reveals existing relief",
+          "pace": "Lingering detail study",
+          "motion": "Keep the product still",
+          "focus": "Source-visible surface detail"
+        },
+        {
+          "purpose": "final-hero",
+          "camera": "Locked symmetrical hero frame",
+          "composition": "Full product with clean campaign space",
+          "lighting": "Balanced edge light preserves source colors",
+          "pace": "Campaign closing hold",
+          "motion": "Keep the product still",
+          "focus": "Source-visible product form"
+        }
+      ],
+      "grammar": "Patient discovery, breathing space and extended campaign resolution: Overview, surface, reframed visible angle, evidenced construction, hero",
+      "transitions": "Direct cuts between entries only; match visible outline or detail position. No in-shot cuts or invented angles."
+    },
+    {
+      "presetId": "macro-detail-reveal",
+      "durationSeconds": 5,
+      "mode": "single",
+      "available": true,
+      "durations": [
+        5
+      ],
+      "shots": [
+        {
+          "purpose": "macro-detail",
+          "camera": "Locked close framing",
+          "composition": "Resolvable evidenced detail; clear margins",
+          "lighting": "Grazing light reveals existing relief",
+          "pace": "Brief focus settle; sustained detail hold",
+          "motion": "Keep the product still",
+          "focus": "Source-visible surface detail"
+        }
+      ],
+      "grammar": "One continuous take; one camera trajectory, staged light or focus, final hold",
+      "transitions": "Continuous only; no montage, cuts, dissolves or scene changes"
+    },
+    {
+      "presetId": "macro-detail-reveal",
+      "durationSeconds": 5,
+      "mode": "multi",
+      "available": true,
+      "durations": [
+        1,
+        1,
+        1,
+        2
+      ],
+      "shots": [
+        {
+          "purpose": "macro-detail",
+          "camera": "Locked close framing",
+          "composition": "Resolvable evidenced detail fills the frame",
+          "lighting": "Raking light defines existing relief",
+          "pace": "Immediate detail hook",
+          "motion": "Keep the product still",
+          "focus": "Source-visible surface detail"
+        },
+        {
+          "purpose": "material-study",
+          "camera": "Short lateral macro camera glide",
+          "composition": "Adjacent evidenced surface; clear margins",
+          "lighting": "Grazing light traces existing relief",
+          "pace": "Tactile inspection",
+          "motion": "Keep the product still",
+          "focus": "Source-visible surface detail"
+        },
+        {
+          "purpose": "lighting-reveal",
+          "camera": "Locked medium framing",
+          "composition": "Recognizable visible form around the detail",
+          "lighting": "A narrow highlight defines visible edges",
+          "pace": "Scale reset",
+          "motion": "Keep the product still",
+          "focus": "Source-visible product form"
+        },
+        {
+          "purpose": "final-hero",
+          "camera": "Slow pull-back within the visible face",
+          "composition": "Full recognizable product with clean margins",
+          "lighting": "Even fill preserves source colors",
+          "pace": "Calm recognition hold",
+          "motion": "Keep the product still",
+          "focus": "Source-visible product form"
+        }
+      ],
+      "grammar": "Fast accents and direct scale changes: Detail first, adjacent texture, context reset, recognizable hero",
+      "transitions": "Direct cuts between entries only; match visible outline or detail position. No in-shot cuts or invented angles."
+    },
+    {
+      "presetId": "macro-detail-reveal",
+      "durationSeconds": 10,
+      "mode": "single",
+      "available": true,
+      "durations": [
+        10
+      ],
+      "shots": [
+        {
+          "purpose": "material-study",
+          "camera": "Short lateral macro camera glide",
+          "composition": "Trace one evidenced detail at resolvable scale",
+          "lighting": "Raking light defines existing relief",
+          "pace": "Two-second settle; six-second trace; hold",
+          "motion": "Keep the product still",
+          "focus": "Source-visible surface detail"
+        }
+      ],
+      "grammar": "One continuous take; one camera trajectory, staged light or focus, final hold",
+      "transitions": "Continuous only; no montage, cuts, dissolves or scene changes"
+    },
+    {
+      "presetId": "macro-detail-reveal",
+      "durationSeconds": 10,
+      "mode": "multi",
+      "available": true,
+      "durations": [
+        3,
+        3,
+        1,
+        3
+      ],
+      "shots": [
+        {
+          "purpose": "macro-detail",
+          "camera": "Slow optical push toward the visible detail",
+          "composition": "Resolvable evidenced detail fills the frame",
+          "lighting": "Raking light defines existing relief",
+          "pace": "Three-second detail discovery",
+          "motion": "Keep the product still",
+          "focus": "Source-visible surface detail"
+        },
+        {
+          "purpose": "material-study",
+          "camera": "Short lateral macro camera glide",
+          "composition": "Adjacent evidenced surface; clear margins",
+          "lighting": "Grazing light traces existing relief",
+          "pace": "Sustained surface study",
+          "motion": "Keep the product still",
+          "focus": "Source-visible surface detail"
+        },
+        {
+          "purpose": "lighting-reveal",
+          "camera": "Locked medium framing",
+          "composition": "Recognizable visible form around the detail",
+          "lighting": "A narrow highlight defines visible edges",
+          "pace": "Deliberate visual reset",
+          "motion": "Keep the product still",
+          "focus": "Source-visible product form"
+        },
+        {
+          "purpose": "final-hero",
+          "camera": "Slow pull-back within the visible face",
+          "composition": "Full recognizable product with clean margins",
+          "lighting": "Even fill preserves source colors",
+          "pace": "Extended hero hold",
+          "motion": "Keep the product still",
+          "focus": "Source-visible product form"
+        }
+      ],
+      "grammar": "Develop each view with travel and a resolved hold: Detail first, adjacent texture, context reset, recognizable hero",
+      "transitions": "Direct cuts between entries only; match visible outline or detail position. No in-shot cuts or invented angles."
+    },
+    {
+      "presetId": "macro-detail-reveal",
+      "durationSeconds": 15,
+      "mode": "single",
+      "available": false,
+      "durations": [
+        15
+      ],
+      "shots": [
+        {
+          "purpose": "final-hero",
+          "camera": "Slow pull-back within the visible face",
+          "composition": "Start on evidenced detail; finish full product",
+          "lighting": "Steady grazing light and gentle fill",
+          "pace": "Four-second detail; eight-second reveal; hold",
+          "motion": "Keep the product still",
+          "focus": "Source-visible product form"
+        }
+      ],
+      "grammar": "One continuous take; one camera trajectory, staged light or focus, final hold",
+      "transitions": "Continuous only; no montage, cuts, dissolves or scene changes"
+    },
+    {
+      "presetId": "macro-detail-reveal",
+      "durationSeconds": 15,
+      "mode": "multi",
+      "available": false,
+      "durations": [
+        4,
+        4,
+        2,
+        5
+      ],
+      "shots": [
+        {
+          "purpose": "macro-detail",
+          "camera": "Slow optical push toward the visible detail",
+          "composition": "Resolvable evidenced detail fills the frame",
+          "lighting": "Raking light defines existing relief",
+          "pace": "Four-second detail discovery",
+          "motion": "Keep the product still",
+          "focus": "Source-visible surface detail"
+        },
+        {
+          "purpose": "material-study",
+          "camera": "Short lateral macro camera glide",
+          "composition": "Adjacent evidenced surface; clear margins",
+          "lighting": "Grazing light traces existing relief",
+          "pace": "Slow tactile inspection",
+          "motion": "Keep the product still",
+          "focus": "Source-visible surface detail"
+        },
+        {
+          "purpose": "lighting-reveal",
+          "camera": "Locked medium framing",
+          "composition": "Recognizable visible form around the detail",
+          "lighting": "A narrow highlight defines visible edges",
+          "pace": "Breathing-space reset",
+          "motion": "Keep the product still",
+          "focus": "Source-visible product form"
+        },
+        {
+          "purpose": "final-hero",
+          "camera": "Slow pull-back within the visible face",
+          "composition": "Full recognizable product with clean margins",
+          "lighting": "Even fill preserves source colors",
+          "pace": "Campaign closing hold",
+          "motion": "Keep the product still",
+          "focus": "Source-visible product form"
+        }
+      ],
+      "grammar": "Patient discovery, breathing space and extended campaign resolution: Detail first, adjacent texture, context reset, recognizable hero",
+      "transitions": "Direct cuts between entries only; match visible outline or detail position. No in-shot cuts or invented angles."
+    },
+    {
+      "presetId": "luxury-fashion-film",
+      "durationSeconds": 5,
+      "mode": "single",
+      "available": true,
+      "durations": [
+        5
+      ],
+      "shots": [
+        {
+          "purpose": "lighting-reveal",
+          "camera": "Locked long-lens overview",
+          "composition": "Complete silhouette; asymmetric negative space",
+          "lighting": "A narrow contour highlight travels slowly",
+          "pace": "Poised reveal; confident final hold",
+          "motion": "Keep the product still",
+          "focus": "Source-visible product form"
+        }
+      ],
+      "grammar": "One continuous take; one camera trajectory, staged light or focus, final hold",
+      "transitions": "Continuous only; no montage, cuts, dissolves or scene changes"
+    },
+    {
+      "presetId": "luxury-fashion-film",
+      "durationSeconds": 5,
+      "mode": "multi",
+      "available": true,
+      "durations": [
+        1,
+        1,
+        1,
+        2
+      ],
+      "shots": [
+        {
+          "purpose": "hero-reveal",
+          "camera": "Locked long-lens overview",
+          "composition": "Full silhouette; generous negative space",
+          "lighting": "Sculpted side light shapes the contour",
+          "pace": "Poised opening",
+          "motion": "Keep the product still",
+          "focus": "Source-visible product form"
+        },
+        {
+          "purpose": "lighting-reveal",
+          "camera": "Short lateral long-lens camera glide",
+          "composition": "Offset medium crop; same visible face",
+          "lighting": "Narrow contour light with restrained fill",
+          "pace": "Editorial accent",
+          "motion": "Keep the product still",
+          "focus": "Source-visible product form"
+        },
+        {
+          "purpose": "material-study",
+          "camera": "Locked close framing",
+          "composition": "Isolated evidenced detail; quiet margins",
+          "lighting": "Feathered side light defines existing relief",
+          "pace": "Deliberate detail pause",
+          "motion": "Keep the product still",
+          "focus": "Source-visible surface detail"
+        },
+        {
+          "purpose": "final-hero",
+          "camera": "Locked long-lens hero frame",
+          "composition": "Complete silhouette; asymmetric campaign space",
+          "lighting": "Sculpted contour light preserves source colors",
+          "pace": "Confident lingering hold",
+          "motion": "Keep the product still",
+          "focus": "Source-visible product form"
+        }
+      ],
+      "grammar": "Fast accents and direct scale changes: Silhouette, editorial contour, isolated detail, campaign hero",
+      "transitions": "Direct cuts between entries only; match visible outline or detail position. No in-shot cuts or invented angles."
+    },
+    {
+      "presetId": "luxury-fashion-film",
+      "durationSeconds": 10,
+      "mode": "single",
+      "available": true,
+      "durations": [
+        10
+      ],
+      "shots": [
+        {
+          "purpose": "hero-reveal",
+          "camera": "Short lateral long-lens camera glide",
+          "composition": "Full silhouette across generous campaign space",
+          "lighting": "Sculpted side light with restrained fill",
+          "pace": "Three-second poise; four-second glide; hold",
+          "motion": "Keep the product still",
+          "focus": "Source-visible product form"
+        }
+      ],
+      "grammar": "One continuous take; one camera trajectory, staged light or focus, final hold",
+      "transitions": "Continuous only; no montage, cuts, dissolves or scene changes"
+    },
+    {
+      "presetId": "luxury-fashion-film",
+      "durationSeconds": 10,
+      "mode": "multi",
+      "available": true,
+      "durations": [
+        2,
+        2,
+        3,
+        3
+      ],
+      "shots": [
+        {
+          "purpose": "hero-reveal",
+          "camera": "Slow long-lens pull-back within the visible face",
+          "composition": "Full silhouette; generous negative space",
+          "lighting": "Sculpted side light shapes the contour",
+          "pace": "Measured spatial reveal",
+          "motion": "Keep the product still",
+          "focus": "Source-visible product form"
+        },
+        {
+          "purpose": "lighting-reveal",
+          "camera": "Short lateral long-lens camera glide",
+          "composition": "Offset medium crop; same visible face",
+          "lighting": "Narrow contour light with restrained fill",
+          "pace": "Sustained surface study",
+          "motion": "Keep the product still",
+          "focus": "Source-visible product form"
+        },
+        {
+          "purpose": "material-study",
+          "camera": "Locked close framing",
+          "composition": "Isolated evidenced detail; quiet margins",
+          "lighting": "Feathered side light defines existing relief",
+          "pace": "Deliberate visual reset",
+          "motion": "Keep the product still",
+          "focus": "Source-visible surface detail"
+        },
+        {
+          "purpose": "final-hero",
+          "camera": "Locked long-lens hero frame",
+          "composition": "Complete silhouette; asymmetric campaign space",
+          "lighting": "Sculpted contour light preserves source colors",
+          "pace": "Extended hero hold",
+          "motion": "Keep the product still",
+          "focus": "Source-visible product form"
+        }
+      ],
+      "grammar": "Develop each view with travel and a resolved hold: Silhouette, editorial contour, isolated detail, campaign hero",
+      "transitions": "Direct cuts between entries only; match visible outline or detail position. No in-shot cuts or invented angles."
+    },
+    {
+      "presetId": "luxury-fashion-film",
+      "durationSeconds": 15,
+      "mode": "single",
+      "available": false,
+      "durations": [
+        15
+      ],
+      "shots": [
+        {
+          "purpose": "hero-reveal",
+          "camera": "Slow long-lens pull-back within the visible face",
+          "composition": "Medium opening opens to full campaign margins",
+          "lighting": "Feathered side light shapes the contour",
+          "pace": "Four-second poise; seven-second reveal; hold",
+          "motion": "Keep the product still",
+          "focus": "Source-visible product form"
+        }
+      ],
+      "grammar": "One continuous take; one camera trajectory, staged light or focus, final hold",
+      "transitions": "Continuous only; no montage, cuts, dissolves or scene changes"
+    },
+    {
+      "presetId": "luxury-fashion-film",
+      "durationSeconds": 15,
+      "mode": "multi",
+      "available": false,
+      "durations": [
+        3,
+        3,
+        4,
+        5
+      ],
+      "shots": [
+        {
+          "purpose": "hero-reveal",
+          "camera": "Slow long-lens pull-back within the visible face",
+          "composition": "Full silhouette; generous negative space",
+          "lighting": "Sculpted side light shapes the contour",
+          "pace": "Patient spatial reveal",
+          "motion": "Keep the product still",
+          "focus": "Source-visible product form"
+        },
+        {
+          "purpose": "lighting-reveal",
+          "camera": "Short lateral long-lens camera glide",
+          "composition": "Offset medium crop; same visible face",
+          "lighting": "Narrow contour light with restrained fill",
+          "pace": "Slow tactile inspection",
+          "motion": "Keep the product still",
+          "focus": "Source-visible product form"
+        },
+        {
+          "purpose": "material-study",
+          "camera": "Locked close framing",
+          "composition": "Isolated evidenced detail; quiet margins",
+          "lighting": "Feathered side light defines existing relief",
+          "pace": "Breathing-space reset",
+          "motion": "Keep the product still",
+          "focus": "Source-visible surface detail"
+        },
+        {
+          "purpose": "final-hero",
+          "camera": "Locked long-lens hero frame",
+          "composition": "Complete silhouette; asymmetric campaign space",
+          "lighting": "Sculpted contour light preserves source colors",
+          "pace": "Campaign closing hold",
+          "motion": "Keep the product still",
+          "focus": "Source-visible product form"
+        }
+      ],
+      "grammar": "Patient discovery, breathing space and extended campaign resolution: Silhouette, editorial contour, isolated detail, campaign hero",
+      "transitions": "Direct cuts between entries only; match visible outline or detail position. No in-shot cuts or invented angles."
+    }
+  ],
+  "examples": [
+    {
+      "presetId": "cinematic-hero",
+      "durationSeconds": 5,
+      "shotMode": "single",
+      "plan": {
+        "version": "video-director-3.2-duration-aware-v1",
+        "presetId": "cinematic-hero",
+        "presetVersion": 1,
+        "shotMode": "single",
+        "origin": "fallback",
+        "intent": "Preset direction selected from verified product evidence.",
+        "intentContract": {
+          "camera": "auto",
+          "focusRequested": false,
+          "focusEvidenceId": null,
+          "focusPosition": "any",
+          "sequence": "preset",
+          "safeAdjustment": "none"
+        },
+        "summary": "Preset direction adapted to the explicit camera and focus request using only verified product evidence.",
+        "shots": [
+          {
+            "durationSeconds": 5,
+            "purpose": "hero-reveal",
+            "evidenceRefs": [
+              1
+            ],
+            "camera": "Slow steady push-in with a level, stable horizon",
+            "lighting": "A soft highlight travels slowly across the surface during the approach",
+            "composition": "Centered product with wide clean margins on all sides, calm backdrop",
+            "motion": "Only the camera and the light move; the product stays still",
+            "pace": "Calm, premium, unhurried",
+            "focus": "structured bag silhouette"
+          }
+        ]
+      },
+      "payload": {
+        "start_image_url": "https://invalid.example/synthetic-source",
+        "prompt": "Use a slow steady push-in with a level, stable horizon, framing the structured bag silhouette. Compose the centered product with wide clean margins on all sides, calm backdrop. A soft highlight travels slowly across the surface during the approach. Only the camera and the light move; the product stays still. Allow a calm, premium, unhurried. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+        "duration": "5",
+        "generate_audio": false,
+        "enable_safety_checker": true,
+        "negative_prompt": "changed logo, changed brand mark, rewritten text, misspelled text, illegible label, morphing letters, altered color, changed hue, changed pattern, changed print, altered material, changed surface texture, redesigned product, altered silhouette, changed proportions, stretched or compressed geometry, extra or missing parts, extra or missing buttons, extra or missing belt, broken seams, warped hardware, melting texture, garment deformation, new hidden surfaces, scene cuts, blur, rotation, orbit, camera turn, cropped product, product leaving frame, morphing, extra parts, texture change",
+        "cfg_scale": 0.5
+      }
+    },
+    {
+      "presetId": "cinematic-hero",
+      "durationSeconds": 5,
+      "shotMode": "multi",
+      "plan": {
+        "version": "video-director-3.2-duration-aware-v1",
+        "presetId": "cinematic-hero",
+        "presetVersion": 1,
+        "shotMode": "multi",
+        "origin": "fallback",
+        "intent": "Preset direction selected from verified product evidence.",
+        "intentContract": {
+          "camera": "auto",
+          "focusRequested": false,
+          "focusEvidenceId": null,
+          "focusPosition": "any",
+          "sequence": "preset",
+          "safeAdjustment": "none"
+        },
+        "summary": "Preset direction adapted to the explicit camera and focus request using only verified product evidence.",
+        "shots": [
+          {
+            "durationSeconds": 1,
+            "purpose": "hero-reveal",
+            "evidenceRefs": [
+              1
+            ],
+            "camera": "Locked medium overview",
+            "lighting": "Directional edge light shapes the contour",
+            "composition": "Complete product; strong diagonal space",
+            "motion": "Keep the product still",
+            "pace": "Crisp opening",
+            "focus": "structured bag silhouette"
+          },
+          {
+            "durationSeconds": 1,
+            "purpose": "material-study",
+            "evidenceRefs": [
+              5
+            ],
+            "camera": "Locked close framing",
+            "lighting": "Grazing light defines existing relief",
+            "composition": "Resolvable surface crop",
+            "motion": "Keep the product still",
+            "pace": "Quick tactile accent",
+            "focus": "pebbled leather grain"
+          },
+          {
+            "durationSeconds": 1,
+            "purpose": "controlled-motion",
+            "evidenceRefs": [
+              1
+            ],
+            "camera": "Short lateral camera glide",
+            "lighting": "Narrow side light defines visible edges",
+            "composition": "Offset medium view of the same visible face",
+            "motion": "Keep the product still",
+            "pace": "Brisk visual reset",
+            "focus": "structured bag silhouette"
+          },
+          {
+            "durationSeconds": 1,
+            "purpose": "macro-detail",
+            "evidenceRefs": [
+              4
+            ],
+            "camera": "Locked off-center close framing",
+            "lighting": "Raking light reveals existing relief",
+            "composition": "Alternate evidenced detail; clear margins",
+            "motion": "Keep the product still",
+            "pace": "Precise detail accent",
+            "focus": "visible edge stitching"
+          },
+          {
+            "durationSeconds": 1,
+            "purpose": "final-hero",
+            "evidenceRefs": [
+              1
+            ],
+            "camera": "Locked symmetrical hero frame",
+            "lighting": "Balanced edge light preserves source colors",
+            "composition": "Full product with clean campaign space",
+            "motion": "Keep the product still",
+            "pace": "Decisive final hold",
+            "focus": "structured bag silhouette"
+          }
+        ]
+      },
+      "payload": {
+        "start_image_url": "https://invalid.example/synthetic-source",
+        "multi_prompt": [
+          {
+            "prompt": "Use locked medium overview, framing the structured bag silhouette. Compose the complete product; strong diagonal space. Directional edge light shapes the contour. Allow a crisp opening. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+            "duration": "1"
+          },
+          {
+            "prompt": "Frame the pebbled leather grain in a locked close view. Compose the resolvable surface crop. Grazing light defines existing relief. Allow a quick tactile accent. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+            "duration": "1"
+          },
+          {
+            "prompt": "Glide laterally over a short distance, framing the structured bag silhouette. Compose the offset medium view of the same visible face. Narrow side light defines visible edges. Allow a brisk visual reset. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+            "duration": "1"
+          },
+          {
+            "prompt": "Use locked off-center close framing, framing the visible edge stitching. Compose the alternate evidenced detail; clear margins. Raking light reveals existing relief. Allow a precise detail accent. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+            "duration": "1"
+          },
+          {
+            "prompt": "Use locked symmetrical hero frame, framing the structured bag silhouette. Compose the full product with clean campaign space. Balanced edge light preserves source colors. Allow a decisive final hold. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+            "duration": "1"
+          }
+        ],
+        "shot_type": "customize",
+        "duration": "5",
+        "generate_audio": false,
+        "enable_safety_checker": true,
+        "negative_prompt": "changed logo, changed brand mark, rewritten text, misspelled text, illegible label, morphing letters, altered color, changed hue, changed pattern, changed print, altered material, changed surface texture, redesigned product, altered silhouette, changed proportions, stretched or compressed geometry, extra or missing parts, extra or missing buttons, extra or missing belt, broken seams, warped hardware, melting texture, garment deformation, new hidden surfaces, blur",
+        "cfg_scale": 0.5
+      }
+    },
+    {
+      "presetId": "cinematic-hero",
+      "durationSeconds": 10,
+      "shotMode": "single",
+      "plan": {
+        "version": "video-director-3.2-duration-aware-v1",
+        "presetId": "cinematic-hero",
+        "presetVersion": 1,
+        "shotMode": "single",
+        "origin": "fallback",
+        "intent": "Preset direction selected from verified product evidence.",
+        "intentContract": {
+          "camera": "auto",
+          "focusRequested": false,
+          "focusEvidenceId": null,
+          "focusPosition": "any",
+          "sequence": "preset",
+          "safeAdjustment": "none"
+        },
+        "summary": "Preset direction adapted to the explicit camera and focus request using only verified product evidence.",
+        "shots": [
+          {
+            "durationSeconds": 10,
+            "purpose": "hero-reveal",
+            "evidenceRefs": [
+              1
+            ],
+            "camera": "Short lateral camera glide",
+            "lighting": "A narrow highlight traces the visible contour",
+            "composition": "Full product; offset start to balanced finish",
+            "motion": "Keep the product still",
+            "pace": "Two-second settle; six-second glide; final hold",
+            "focus": "structured bag silhouette"
+          }
+        ]
+      },
+      "payload": {
+        "start_image_url": "https://invalid.example/synthetic-source",
+        "prompt": "Glide laterally over a short distance, framing the structured bag silhouette. Compose the full product; offset start to balanced finish. A narrow highlight traces the visible contour. Allow a two-second settle; six-second glide; final hold. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+        "duration": "10",
+        "generate_audio": false,
+        "enable_safety_checker": true,
+        "negative_prompt": "changed logo, changed brand mark, rewritten text, misspelled text, illegible label, morphing letters, altered color, changed hue, changed pattern, changed print, altered material, changed surface texture, redesigned product, altered silhouette, changed proportions, stretched or compressed geometry, extra or missing parts, extra or missing buttons, extra or missing belt, broken seams, warped hardware, melting texture, garment deformation, new hidden surfaces, scene cuts, blur",
+        "cfg_scale": 0.5
+      }
+    },
+    {
+      "presetId": "cinematic-hero",
+      "durationSeconds": 10,
+      "shotMode": "multi",
+      "plan": {
+        "version": "video-director-3.2-duration-aware-v1",
+        "presetId": "cinematic-hero",
+        "presetVersion": 1,
+        "shotMode": "multi",
+        "origin": "fallback",
+        "intent": "Preset direction selected from verified product evidence.",
+        "intentContract": {
+          "camera": "auto",
+          "focusRequested": false,
+          "focusEvidenceId": null,
+          "focusPosition": "any",
+          "sequence": "preset",
+          "safeAdjustment": "none"
+        },
+        "summary": "Preset direction adapted to the explicit camera and focus request using only verified product evidence.",
+        "shots": [
+          {
+            "durationSeconds": 2,
+            "purpose": "hero-reveal",
+            "evidenceRefs": [
+              1
+            ],
+            "camera": "Locked medium overview",
+            "lighting": "Directional edge light shapes the contour",
+            "composition": "Complete product; strong diagonal space",
+            "motion": "Keep the product still",
+            "pace": "Measured establishment",
+            "focus": "structured bag silhouette"
+          },
+          {
+            "durationSeconds": 2,
+            "purpose": "material-study",
+            "evidenceRefs": [
+              5
+            ],
+            "camera": "Short lateral macro camera glide",
+            "lighting": "Grazing light defines existing relief",
+            "composition": "Resolvable surface crop",
+            "motion": "Keep the product still",
+            "pace": "Sustained surface study",
+            "focus": "pebbled leather grain"
+          },
+          {
+            "durationSeconds": 2,
+            "purpose": "controlled-motion",
+            "evidenceRefs": [
+              1
+            ],
+            "camera": "Short lateral camera glide",
+            "lighting": "Narrow side light defines visible edges",
+            "composition": "Offset medium view of the same visible face",
+            "motion": "Keep the product still",
+            "pace": "Deliberate visual reset",
+            "focus": "structured bag silhouette"
+          },
+          {
+            "durationSeconds": 1,
+            "purpose": "macro-detail",
+            "evidenceRefs": [
+              4
+            ],
+            "camera": "Locked off-center close framing",
+            "lighting": "Raking light reveals existing relief",
+            "composition": "Alternate evidenced detail; clear margins",
+            "motion": "Keep the product still",
+            "pace": "Resolved detail pause",
+            "focus": "visible edge stitching"
+          },
+          {
+            "durationSeconds": 3,
+            "purpose": "final-hero",
+            "evidenceRefs": [
+              1
+            ],
+            "camera": "Locked symmetrical hero frame",
+            "lighting": "Balanced edge light preserves source colors",
+            "composition": "Full product with clean campaign space",
+            "motion": "Keep the product still",
+            "pace": "Extended hero hold",
+            "focus": "structured bag silhouette"
+          }
+        ]
+      },
+      "payload": {
+        "start_image_url": "https://invalid.example/synthetic-source",
+        "multi_prompt": [
+          {
+            "prompt": "Use locked medium overview, framing the structured bag silhouette. Compose the complete product; strong diagonal space. Directional edge light shapes the contour. Allow a measured establishment. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+            "duration": "2"
+          },
+          {
+            "prompt": "Use a short lateral macro camera glide, framing the pebbled leather grain. Compose the resolvable surface crop. Grazing light defines existing relief. Allow a sustained surface study. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+            "duration": "2"
+          },
+          {
+            "prompt": "Glide laterally over a short distance, framing the structured bag silhouette. Compose the offset medium view of the same visible face. Narrow side light defines visible edges. Allow a deliberate visual reset. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+            "duration": "2"
+          },
+          {
+            "prompt": "Use locked off-center close framing, framing the visible edge stitching. Compose the alternate evidenced detail; clear margins. Raking light reveals existing relief. Allow a resolved detail pause. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+            "duration": "1"
+          },
+          {
+            "prompt": "Use locked symmetrical hero frame, framing the structured bag silhouette. Compose the full product with clean campaign space. Balanced edge light preserves source colors. Allow a extended hero hold. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+            "duration": "3"
+          }
+        ],
+        "shot_type": "customize",
+        "duration": "10",
+        "generate_audio": false,
+        "enable_safety_checker": true,
+        "negative_prompt": "changed logo, changed brand mark, rewritten text, misspelled text, illegible label, morphing letters, altered color, changed hue, changed pattern, changed print, altered material, changed surface texture, redesigned product, altered silhouette, changed proportions, stretched or compressed geometry, extra or missing parts, extra or missing buttons, extra or missing belt, broken seams, warped hardware, melting texture, garment deformation, new hidden surfaces, blur",
+        "cfg_scale": 0.5
+      }
+    },
+    {
+      "presetId": "macro-detail-reveal",
+      "durationSeconds": 5,
+      "shotMode": "single",
+      "plan": {
+        "version": "video-director-3.2-duration-aware-v1",
+        "presetId": "macro-detail-reveal",
+        "presetVersion": 3,
+        "shotMode": "single",
+        "origin": "fallback",
+        "intent": "Preset direction selected from verified product evidence.",
+        "intentContract": {
+          "camera": "auto",
+          "focusRequested": false,
+          "focusEvidenceId": null,
+          "focusPosition": "any",
+          "sequence": "preset",
+          "safeAdjustment": "none"
+        },
+        "summary": "Preset direction adapted to the explicit camera and focus request using only verified product evidence.",
+        "shots": [
+          {
+            "durationSeconds": 5,
+            "purpose": "material-study",
+            "evidenceRefs": [
+              3
+            ],
+            "camera": "Locked close framing",
+            "lighting": "Grazing light reveals existing relief",
+            "composition": "Resolvable evidenced detail; clear margins",
+            "motion": "Keep the product still",
+            "pace": "Brief focus settle; sustained detail hold",
+            "focus": "front clasp"
+          }
+        ]
+      },
+      "payload": {
+        "start_image_url": "https://invalid.example/synthetic-source",
+        "prompt": "Frame the front clasp in a locked close view. Compose the resolvable evidenced detail; clear margins. Grazing light reveals existing relief. Allow a brief focus settle; sustained detail hold. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+        "duration": "5",
+        "generate_audio": false,
+        "enable_safety_checker": true,
+        "negative_prompt": "changed logo, changed brand mark, rewritten text, misspelled text, illegible label, morphing letters, altered color, changed hue, changed pattern, changed print, altered material, changed surface texture, redesigned product, altered silhouette, changed proportions, stretched or compressed geometry, extra or missing parts, extra or missing buttons, extra or missing belt, broken seams, warped hardware, melting texture, garment deformation, new hidden surfaces, scene cuts, blur",
+        "cfg_scale": 0.5
+      }
+    },
+    {
+      "presetId": "macro-detail-reveal",
+      "durationSeconds": 5,
+      "shotMode": "multi",
+      "plan": {
+        "version": "video-director-3.2-duration-aware-v1",
+        "presetId": "macro-detail-reveal",
+        "presetVersion": 3,
+        "shotMode": "multi",
+        "origin": "fallback",
+        "intent": "Preset direction selected from verified product evidence.",
+        "intentContract": {
+          "camera": "auto",
+          "focusRequested": false,
+          "focusEvidenceId": null,
+          "focusPosition": "any",
+          "sequence": "preset",
+          "safeAdjustment": "none"
+        },
+        "summary": "Preset direction adapted to the explicit camera and focus request using only verified product evidence.",
+        "shots": [
+          {
+            "durationSeconds": 1,
+            "purpose": "macro-detail",
+            "evidenceRefs": [
+              3
+            ],
+            "camera": "Locked close framing",
+            "lighting": "Raking light defines existing relief",
+            "composition": "Resolvable evidenced detail fills the frame",
+            "motion": "Keep the product still",
+            "pace": "Immediate detail hook",
+            "focus": "front clasp"
+          },
+          {
+            "durationSeconds": 1,
+            "purpose": "material-study",
+            "evidenceRefs": [
+              5
+            ],
+            "camera": "Short lateral macro camera glide",
+            "lighting": "Grazing light traces existing relief",
+            "composition": "Adjacent evidenced surface; clear margins",
+            "motion": "Keep the product still",
+            "pace": "Tactile inspection",
+            "focus": "pebbled leather grain"
+          },
+          {
+            "durationSeconds": 1,
+            "purpose": "lighting-reveal",
+            "evidenceRefs": [
+              1
+            ],
+            "camera": "Locked medium framing",
+            "lighting": "A narrow highlight defines visible edges",
+            "composition": "Recognizable visible form around the detail",
+            "motion": "Keep the product still",
+            "pace": "Scale reset",
+            "focus": "structured bag silhouette"
+          },
+          {
+            "durationSeconds": 2,
+            "purpose": "final-hero",
+            "evidenceRefs": [
+              1
+            ],
+            "camera": "Slow pull-back within the visible face",
+            "lighting": "Even fill preserves source colors",
+            "composition": "Full recognizable product with clean margins",
+            "motion": "Keep the product still",
+            "pace": "Calm recognition hold",
+            "focus": "structured bag silhouette"
+          }
+        ]
+      },
+      "payload": {
+        "start_image_url": "https://invalid.example/synthetic-source",
+        "multi_prompt": [
+          {
+            "prompt": "Frame the front clasp in a locked close view. Compose the resolvable evidenced detail fills the frame. Raking light defines existing relief. Allow a immediate detail hook. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+            "duration": "1"
+          },
+          {
+            "prompt": "Use a short lateral macro camera glide, framing the pebbled leather grain. Compose the adjacent evidenced surface; clear margins. Grazing light traces existing relief. Allow a tactile inspection. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+            "duration": "1"
+          },
+          {
+            "prompt": "Use locked medium framing, framing the structured bag silhouette. Compose the recognizable visible form around the detail. A narrow highlight defines visible edges. Allow a scale reset. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+            "duration": "1"
+          },
+          {
+            "prompt": "Use a slow pull-back within the visible face, framing the structured bag silhouette. Compose the full recognizable product with clean margins. Even fill preserves source colors. Allow a calm recognition hold. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+            "duration": "2"
+          }
+        ],
+        "shot_type": "customize",
+        "duration": "5",
+        "generate_audio": false,
+        "enable_safety_checker": true,
+        "negative_prompt": "changed logo, changed brand mark, rewritten text, misspelled text, illegible label, morphing letters, altered color, changed hue, changed pattern, changed print, altered material, changed surface texture, redesigned product, altered silhouette, changed proportions, stretched or compressed geometry, extra or missing parts, extra or missing buttons, extra or missing belt, broken seams, warped hardware, melting texture, garment deformation, new hidden surfaces, blur",
+        "cfg_scale": 0.5
+      }
+    },
+    {
+      "presetId": "macro-detail-reveal",
+      "durationSeconds": 10,
+      "shotMode": "single",
+      "plan": {
+        "version": "video-director-3.2-duration-aware-v1",
+        "presetId": "macro-detail-reveal",
+        "presetVersion": 3,
+        "shotMode": "single",
+        "origin": "fallback",
+        "intent": "Preset direction selected from verified product evidence.",
+        "intentContract": {
+          "camera": "auto",
+          "focusRequested": false,
+          "focusEvidenceId": null,
+          "focusPosition": "any",
+          "sequence": "preset",
+          "safeAdjustment": "none"
+        },
+        "summary": "Preset direction adapted to the explicit camera and focus request using only verified product evidence.",
+        "shots": [
+          {
+            "durationSeconds": 10,
+            "purpose": "material-study",
+            "evidenceRefs": [
+              3
+            ],
+            "camera": "Short lateral macro camera glide",
+            "lighting": "Raking light defines existing relief",
+            "composition": "Trace one evidenced detail at resolvable scale",
+            "motion": "Keep the product still",
+            "pace": "Two-second settle; six-second trace; hold",
+            "focus": "front clasp"
+          }
+        ]
+      },
+      "payload": {
+        "start_image_url": "https://invalid.example/synthetic-source",
+        "prompt": "Use a short lateral macro camera glide, framing the front clasp. Compose the trace one evidenced detail at resolvable scale. Raking light defines existing relief. Allow a two-second settle; six-second trace; hold. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+        "duration": "10",
+        "generate_audio": false,
+        "enable_safety_checker": true,
+        "negative_prompt": "changed logo, changed brand mark, rewritten text, misspelled text, illegible label, morphing letters, altered color, changed hue, changed pattern, changed print, altered material, changed surface texture, redesigned product, altered silhouette, changed proportions, stretched or compressed geometry, extra or missing parts, extra or missing buttons, extra or missing belt, broken seams, warped hardware, melting texture, garment deformation, new hidden surfaces, scene cuts, blur",
+        "cfg_scale": 0.5
+      }
+    },
+    {
+      "presetId": "macro-detail-reveal",
+      "durationSeconds": 10,
+      "shotMode": "multi",
+      "plan": {
+        "version": "video-director-3.2-duration-aware-v1",
+        "presetId": "macro-detail-reveal",
+        "presetVersion": 3,
+        "shotMode": "multi",
+        "origin": "fallback",
+        "intent": "Preset direction selected from verified product evidence.",
+        "intentContract": {
+          "camera": "auto",
+          "focusRequested": false,
+          "focusEvidenceId": null,
+          "focusPosition": "any",
+          "sequence": "preset",
+          "safeAdjustment": "none"
+        },
+        "summary": "Preset direction adapted to the explicit camera and focus request using only verified product evidence.",
+        "shots": [
+          {
+            "durationSeconds": 3,
+            "purpose": "macro-detail",
+            "evidenceRefs": [
+              3
+            ],
+            "camera": "Slow optical push toward the visible detail",
+            "lighting": "Raking light defines existing relief",
+            "composition": "Resolvable evidenced detail fills the frame",
+            "motion": "Keep the product still",
+            "pace": "Three-second detail discovery",
+            "focus": "front clasp"
+          },
+          {
+            "durationSeconds": 3,
+            "purpose": "material-study",
+            "evidenceRefs": [
+              5
+            ],
+            "camera": "Short lateral macro camera glide",
+            "lighting": "Grazing light traces existing relief",
+            "composition": "Adjacent evidenced surface; clear margins",
+            "motion": "Keep the product still",
+            "pace": "Sustained surface study",
+            "focus": "pebbled leather grain"
+          },
+          {
+            "durationSeconds": 1,
+            "purpose": "lighting-reveal",
+            "evidenceRefs": [
+              1
+            ],
+            "camera": "Locked medium framing",
+            "lighting": "A narrow highlight defines visible edges",
+            "composition": "Recognizable visible form around the detail",
+            "motion": "Keep the product still",
+            "pace": "Deliberate visual reset",
+            "focus": "structured bag silhouette"
+          },
+          {
+            "durationSeconds": 3,
+            "purpose": "final-hero",
+            "evidenceRefs": [
+              1
+            ],
+            "camera": "Slow pull-back within the visible face",
+            "lighting": "Even fill preserves source colors",
+            "composition": "Full recognizable product with clean margins",
+            "motion": "Keep the product still",
+            "pace": "Extended hero hold",
+            "focus": "structured bag silhouette"
+          }
+        ]
+      },
+      "payload": {
+        "start_image_url": "https://invalid.example/synthetic-source",
+        "multi_prompt": [
+          {
+            "prompt": "Use a slow optical push toward the visible detail, framing the front clasp. Compose the resolvable evidenced detail fills the frame. Raking light defines existing relief. Allow a three-second detail discovery. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+            "duration": "3"
+          },
+          {
+            "prompt": "Use a short lateral macro camera glide, framing the pebbled leather grain. Compose the adjacent evidenced surface; clear margins. Grazing light traces existing relief. Allow a sustained surface study. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+            "duration": "3"
+          },
+          {
+            "prompt": "Use locked medium framing, framing the structured bag silhouette. Compose the recognizable visible form around the detail. A narrow highlight defines visible edges. Allow a deliberate visual reset. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+            "duration": "1"
+          },
+          {
+            "prompt": "Use a slow pull-back within the visible face, framing the structured bag silhouette. Compose the full recognizable product with clean margins. Even fill preserves source colors. Allow a extended hero hold. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+            "duration": "3"
+          }
+        ],
+        "shot_type": "customize",
+        "duration": "10",
+        "generate_audio": false,
+        "enable_safety_checker": true,
+        "negative_prompt": "changed logo, changed brand mark, rewritten text, misspelled text, illegible label, morphing letters, altered color, changed hue, changed pattern, changed print, altered material, changed surface texture, redesigned product, altered silhouette, changed proportions, stretched or compressed geometry, extra or missing parts, extra or missing buttons, extra or missing belt, broken seams, warped hardware, melting texture, garment deformation, new hidden surfaces, blur",
+        "cfg_scale": 0.5
+      }
+    },
+    {
+      "presetId": "luxury-fashion-film",
+      "durationSeconds": 5,
+      "shotMode": "single",
+      "plan": {
+        "version": "video-director-3.2-duration-aware-v1",
+        "presetId": "luxury-fashion-film",
+        "presetVersion": 3,
+        "shotMode": "single",
+        "origin": "fallback",
+        "intent": "Preset direction selected from verified product evidence.",
+        "intentContract": {
+          "camera": "auto",
+          "focusRequested": false,
+          "focusEvidenceId": null,
+          "focusPosition": "any",
+          "sequence": "preset",
+          "safeAdjustment": "none"
+        },
+        "summary": "Preset direction adapted to the explicit camera and focus request using only verified product evidence.",
+        "shots": [
+          {
+            "durationSeconds": 5,
+            "purpose": "hero-reveal",
+            "evidenceRefs": [
+              1
+            ],
+            "camera": "Locked long-lens overview",
+            "lighting": "A narrow contour highlight travels slowly",
+            "composition": "Complete silhouette; asymmetric negative space",
+            "motion": "Keep the product still",
+            "pace": "Poised reveal; confident final hold",
+            "focus": "structured bag silhouette"
+          }
+        ]
+      },
+      "payload": {
+        "start_image_url": "https://invalid.example/synthetic-source",
+        "prompt": "Use locked long-lens overview, framing the structured bag silhouette. Compose the complete silhouette; asymmetric negative space. A narrow contour highlight travels slowly. Allow a poised reveal; confident final hold. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+        "duration": "5",
+        "generate_audio": false,
+        "enable_safety_checker": true,
+        "negative_prompt": "changed logo, changed brand mark, rewritten text, misspelled text, illegible label, morphing letters, altered color, changed hue, changed pattern, changed print, altered material, changed surface texture, redesigned product, altered silhouette, changed proportions, stretched or compressed geometry, extra or missing parts, extra or missing buttons, extra or missing belt, broken seams, warped hardware, melting texture, garment deformation, new hidden surfaces, scene cuts, blur",
+        "cfg_scale": 0.5
+      }
+    },
+    {
+      "presetId": "luxury-fashion-film",
+      "durationSeconds": 5,
+      "shotMode": "multi",
+      "plan": {
+        "version": "video-director-3.2-duration-aware-v1",
+        "presetId": "luxury-fashion-film",
+        "presetVersion": 3,
+        "shotMode": "multi",
+        "origin": "fallback",
+        "intent": "Preset direction selected from verified product evidence.",
+        "intentContract": {
+          "camera": "auto",
+          "focusRequested": false,
+          "focusEvidenceId": null,
+          "focusPosition": "any",
+          "sequence": "preset",
+          "safeAdjustment": "none"
+        },
+        "summary": "Preset direction adapted to the explicit camera and focus request using only verified product evidence.",
+        "shots": [
+          {
+            "durationSeconds": 1,
+            "purpose": "hero-reveal",
+            "evidenceRefs": [
+              1
+            ],
+            "camera": "Locked long-lens overview",
+            "lighting": "Sculpted side light shapes the contour",
+            "composition": "Full silhouette; generous negative space",
+            "motion": "Keep the product still",
+            "pace": "Poised opening",
+            "focus": "structured bag silhouette"
+          },
+          {
+            "durationSeconds": 1,
+            "purpose": "lighting-reveal",
+            "evidenceRefs": [
+              1
+            ],
+            "camera": "Short lateral long-lens camera glide",
+            "lighting": "Narrow contour light with restrained fill",
+            "composition": "Offset medium crop; same visible face",
+            "motion": "Keep the product still",
+            "pace": "Editorial accent",
+            "focus": "structured bag silhouette"
+          },
+          {
+            "durationSeconds": 1,
+            "purpose": "material-study",
+            "evidenceRefs": [
+              5
+            ],
+            "camera": "Locked close framing",
+            "lighting": "Feathered side light defines existing relief",
+            "composition": "Isolated evidenced detail; quiet margins",
+            "motion": "Keep the product still",
+            "pace": "Deliberate detail pause",
+            "focus": "pebbled leather grain"
+          },
+          {
+            "durationSeconds": 2,
+            "purpose": "final-hero",
+            "evidenceRefs": [
+              1
+            ],
+            "camera": "Locked long-lens hero frame",
+            "lighting": "Sculpted contour light preserves source colors",
+            "composition": "Complete silhouette; asymmetric campaign space",
+            "motion": "Keep the product still",
+            "pace": "Confident lingering hold",
+            "focus": "structured bag silhouette"
+          }
+        ]
+      },
+      "payload": {
+        "start_image_url": "https://invalid.example/synthetic-source",
+        "multi_prompt": [
+          {
+            "prompt": "Use locked long-lens overview, framing the structured bag silhouette. Compose the full silhouette; generous negative space. Sculpted side light shapes the contour. Allow a poised opening. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+            "duration": "1"
+          },
+          {
+            "prompt": "Use a short lateral long-lens camera glide, framing the structured bag silhouette. Compose the offset medium crop; same visible face. Light the scene with narrow contour light with restrained fill. Allow a editorial accent. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+            "duration": "1"
+          },
+          {
+            "prompt": "Frame the pebbled leather grain in a locked close view. Compose the isolated evidenced detail; quiet margins. Feathered side light defines existing relief. Allow a deliberate detail pause. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+            "duration": "1"
+          },
+          {
+            "prompt": "Use a locked long-lens hero frame, framing the structured bag silhouette. Compose the complete silhouette; asymmetric campaign space. Sculpted contour light preserves source colors. Allow a confident lingering hold. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+            "duration": "2"
+          }
+        ],
+        "shot_type": "customize",
+        "duration": "5",
+        "generate_audio": false,
+        "enable_safety_checker": true,
+        "negative_prompt": "changed logo, changed brand mark, rewritten text, misspelled text, illegible label, morphing letters, altered color, changed hue, changed pattern, changed print, altered material, changed surface texture, redesigned product, altered silhouette, changed proportions, stretched or compressed geometry, extra or missing parts, extra or missing buttons, extra or missing belt, broken seams, warped hardware, melting texture, garment deformation, new hidden surfaces, blur",
+        "cfg_scale": 0.5
+      }
+    },
+    {
+      "presetId": "luxury-fashion-film",
+      "durationSeconds": 10,
+      "shotMode": "single",
+      "plan": {
+        "version": "video-director-3.2-duration-aware-v1",
+        "presetId": "luxury-fashion-film",
+        "presetVersion": 3,
+        "shotMode": "single",
+        "origin": "fallback",
+        "intent": "Preset direction selected from verified product evidence.",
+        "intentContract": {
+          "camera": "auto",
+          "focusRequested": false,
+          "focusEvidenceId": null,
+          "focusPosition": "any",
+          "sequence": "preset",
+          "safeAdjustment": "none"
+        },
+        "summary": "Preset direction adapted to the explicit camera and focus request using only verified product evidence.",
+        "shots": [
+          {
+            "durationSeconds": 10,
+            "purpose": "hero-reveal",
+            "evidenceRefs": [
+              1
+            ],
+            "camera": "Short lateral long-lens camera glide",
+            "lighting": "Sculpted side light with restrained fill",
+            "composition": "Full silhouette across generous campaign space",
+            "motion": "Keep the product still",
+            "pace": "Three-second poise; four-second glide; hold",
+            "focus": "structured bag silhouette"
+          }
+        ]
+      },
+      "payload": {
+        "start_image_url": "https://invalid.example/synthetic-source",
+        "prompt": "Use a short lateral long-lens camera glide, framing the structured bag silhouette. Compose the full silhouette across generous campaign space. Light the scene with sculpted side light with restrained fill. Allow a three-second poise; four-second glide; hold. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+        "duration": "10",
+        "generate_audio": false,
+        "enable_safety_checker": true,
+        "negative_prompt": "changed logo, changed brand mark, rewritten text, misspelled text, illegible label, morphing letters, altered color, changed hue, changed pattern, changed print, altered material, changed surface texture, redesigned product, altered silhouette, changed proportions, stretched or compressed geometry, extra or missing parts, extra or missing buttons, extra or missing belt, broken seams, warped hardware, melting texture, garment deformation, new hidden surfaces, scene cuts, blur",
+        "cfg_scale": 0.5
+      }
+    },
+    {
+      "presetId": "luxury-fashion-film",
+      "durationSeconds": 10,
+      "shotMode": "multi",
+      "plan": {
+        "version": "video-director-3.2-duration-aware-v1",
+        "presetId": "luxury-fashion-film",
+        "presetVersion": 3,
+        "shotMode": "multi",
+        "origin": "fallback",
+        "intent": "Preset direction selected from verified product evidence.",
+        "intentContract": {
+          "camera": "auto",
+          "focusRequested": false,
+          "focusEvidenceId": null,
+          "focusPosition": "any",
+          "sequence": "preset",
+          "safeAdjustment": "none"
+        },
+        "summary": "Preset direction adapted to the explicit camera and focus request using only verified product evidence.",
+        "shots": [
+          {
+            "durationSeconds": 2,
+            "purpose": "hero-reveal",
+            "evidenceRefs": [
+              1
+            ],
+            "camera": "Slow long-lens pull-back within the visible face",
+            "lighting": "Sculpted side light shapes the contour",
+            "composition": "Full silhouette; generous negative space",
+            "motion": "Keep the product still",
+            "pace": "Measured spatial reveal",
+            "focus": "structured bag silhouette"
+          },
+          {
+            "durationSeconds": 2,
+            "purpose": "lighting-reveal",
+            "evidenceRefs": [
+              1
+            ],
+            "camera": "Short lateral long-lens camera glide",
+            "lighting": "Narrow contour light with restrained fill",
+            "composition": "Offset medium crop; same visible face",
+            "motion": "Keep the product still",
+            "pace": "Sustained surface study",
+            "focus": "structured bag silhouette"
+          },
+          {
+            "durationSeconds": 3,
+            "purpose": "material-study",
+            "evidenceRefs": [
+              5
+            ],
+            "camera": "Locked close framing",
+            "lighting": "Feathered side light defines existing relief",
+            "composition": "Isolated evidenced detail; quiet margins",
+            "motion": "Keep the product still",
+            "pace": "Deliberate visual reset",
+            "focus": "pebbled leather grain"
+          },
+          {
+            "durationSeconds": 3,
+            "purpose": "final-hero",
+            "evidenceRefs": [
+              1
+            ],
+            "camera": "Locked long-lens hero frame",
+            "lighting": "Sculpted contour light preserves source colors",
+            "composition": "Complete silhouette; asymmetric campaign space",
+            "motion": "Keep the product still",
+            "pace": "Extended hero hold",
+            "focus": "structured bag silhouette"
+          }
+        ]
+      },
+      "payload": {
+        "start_image_url": "https://invalid.example/synthetic-source",
+        "multi_prompt": [
+          {
+            "prompt": "Use a slow long-lens pull-back within the visible face, framing the structured bag silhouette. Compose the full silhouette; generous negative space. Sculpted side light shapes the contour. Allow a measured spatial reveal. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+            "duration": "2"
+          },
+          {
+            "prompt": "Use a short lateral long-lens camera glide, framing the structured bag silhouette. Compose the offset medium crop; same visible face. Light the scene with narrow contour light with restrained fill. Allow a sustained surface study. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+            "duration": "2"
+          },
+          {
+            "prompt": "Frame the pebbled leather grain in a locked close view. Compose the isolated evidenced detail; quiet margins. Feathered side light defines existing relief. Allow a deliberate visual reset. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+            "duration": "3"
+          },
+          {
+            "prompt": "Use a locked long-lens hero frame, framing the structured bag silhouette. Compose the complete silhouette; asymmetric campaign space. Sculpted contour light preserves source colors. Allow a extended hero hold. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+            "duration": "3"
+          }
+        ],
+        "shot_type": "customize",
+        "duration": "10",
+        "generate_audio": false,
+        "enable_safety_checker": true,
+        "negative_prompt": "changed logo, changed brand mark, rewritten text, misspelled text, illegible label, morphing letters, altered color, changed hue, changed pattern, changed print, altered material, changed surface texture, redesigned product, altered silhouette, changed proportions, stretched or compressed geometry, extra or missing parts, extra or missing buttons, extra or missing belt, broken seams, warped hardware, melting texture, garment deformation, new hidden surfaces, blur",
+        "cfg_scale": 0.5
+      }
+    }
+  ]
+}

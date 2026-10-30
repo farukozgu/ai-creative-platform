@@ -43,6 +43,10 @@ export async function prepareVideoDirectorPlan(ownerId: string, source: Buffer, 
       if (event.result === "failed" && event.stage !== "director_repair_attempt") cache.recordFailure(key, event);
     })) : fallbackDirectorPlan(input);
   compileDirectorPlan(plan, input);
+  for (const review of plan.referenceReviews ?? []) {
+    log("director_reference_review", "success", { index: review.index, status: review.status, view: review.view ?? "unknown",
+      shotIndexes: plan.shots.flatMap((shot, index) => shot.referenceIndex === review.index ? [index] : []).join(",") });
+  }
   const failure = !fallbackReason ? cache.getFailure(key) : undefined;
   log(plan.origin === "ai" ? "director_success" : "director_fallback", plan.origin === "ai" ? "success" : "fallback",
     { code: plan.origin === "ai" ? null : fallbackReason ?? failure?.reasonCode ?? "director_plan_rejected",

@@ -76,7 +76,9 @@ export async function submitVideoGeneration(ownerId: string, unknownDraft: unkno
     durationSeconds: draft.durationSeconds, aspectRatio: draft.aspectRatio, sourceUrl };
   try { buildFalVideoRequestInput(providerRequest); }
   catch { return { ok: false, code: "invalid_input", message: "Invalid provider payload." }; }
-  log("video_provider_payload", "success", { modelId: providerRequest.modelId, durationSeconds: draft.durationSeconds, shotMode: draft.shotMode ?? "single" });
+  log("video_provider_payload", "success", { modelId: providerRequest.modelId, durationSeconds: draft.durationSeconds, shotMode: draft.shotMode ?? "single",
+    referenceCount: elementImageUrls.length,
+    referenceShotIndexes: dependencies.preservation?.director?.plan.shots.flatMap((shot, index) => shot.referenceIndex !== undefined ? [index] : []).join(",") ?? "" });
   const estimate = estimateVerifiedProviderCost(dependencies.capability, draft.durationSeconds);
   if (estimate === null) return { ok: false, code: "billing_unavailable", message: "Verified provider pricing is unavailable." };
   const billing = await dependencies.billing.reserve(ownerId, draft.clientSubmissionId, estimate, draft);
