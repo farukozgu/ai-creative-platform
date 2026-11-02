@@ -9,6 +9,7 @@ import { matchesVideoRequest } from "./request-identity";
 import type { VideoPreservationSnapshot } from "./types";
 import { buildFalVideoRequestInput, validateKlingMultiPrompt } from "./fal-request";
 import { logVideoDiagnostic } from "./diagnostics";
+import { klingElementReferences } from "./product-references";
 
 export type SubmitVideoResult =
   | { ok: true; jobId: string; status: VideoJobRecord["status"]; duplicate: boolean }
@@ -62,8 +63,9 @@ export async function submitVideoGeneration(ownerId: string, unknownDraft: unkno
   const reviews = dependencies.preservation?.director?.plan.referenceReviews ?? [];
   const elementImageUrls: string[] = [];
   if (draft.productReferences?.length && !dependencies.preservation?.director) return { ok: false, code: "invalid_input", message: "Reference plan required." };
-  for (const [index, ref] of (draft.productReferences ?? []).entries()) {
-    if (!reviews.some(r => r.index === index && r.status === "matched") || dependencies.preservation?.director?.plan.origin !== "ai") continue;
+  if (draft.productReferences?.some((_, index) => !reviews.some(review => review.index === index && review.status === "matched"))) return { ok: false, code: "invalid_input", message: "Every reference must be verified before generation." };
+  for (const review of klingElementReferences(reviews, draft.productReferences)) {
+    const ref = draft.productReferences![review.index];
     const resolved = await dependencies.sourceResolver.resolveOwned(ownerId, ref.source);
     if (!resolved || !isSourceUrlFresh(resolved) || resolved.sizeBytes > 10 * 1024 * 1024
       || resolved.width < 300 || resolved.height < 300) return { ok: false, code: "source_unavailable", message: "Reference unavailable." };

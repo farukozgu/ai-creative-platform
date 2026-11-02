@@ -42,7 +42,7 @@ export function frontBackResponse(input: VideoDirectorInput) {
     shots: [
       { durationSeconds: 1, purpose: "hero-reveal" as const, camera: "Locked medium overview", composition: "Complete front product with clean margins", lighting: "Side light shapes the contour", motion: "Product stays still", pace: "Crisp opening", focus: `verified-evidence:${form}`, referenceIndex: null },
       { durationSeconds: 1, purpose: "material-study" as const, camera: "Locked close framing", composition: "Resolvable visible surface crop", lighting: "Grazing light defines existing relief", motion: "Product stays still", pace: "Quick tactile accent", focus: `verified-evidence:${surface}`, referenceIndex: null },
-      { durationSeconds: 1, purpose: "controlled-motion" as const, camera: "Locked medium framing", composition: "Complete rear view with balanced margins", lighting: "Contour light defines the rear outline", motion: "Product stays still", pace: "Clear angle reset", focus: `verified-evidence:${evidence.length + 1}`, referenceIndex: 0 },
+      { durationSeconds: 1, purpose: "controlled-motion" as const, camera: "Locked medium framing", composition: "Complete rear view with balanced margins", lighting: "Contour light defines the rear outline", motion: "Product stays still", pace: "Clear angle reset", focus: "Source-visible product form", referenceIndex: 0 },
       { durationSeconds: 2, purpose: "final-hero" as const, camera: "Locked hero frame", composition: "Full front silhouette with campaign space", lighting: "Directional light preserves source colors", motion: "Product stays still", pace: "Confident closing hold", focus: `verified-evidence:${form}`, referenceIndex: null },
     ] };
 }

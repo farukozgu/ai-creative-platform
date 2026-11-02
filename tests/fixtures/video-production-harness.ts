@@ -124,8 +124,8 @@ export class VideoProductionHarness {
     return this.load<typeof import("../../src/app/[locale]/dashboard/video/director-actions")>("src/app/[locale]/dashboard/video/director-actions.ts")
       .prepareVideoDirectorAction(input.draft, input.presetId, input.shotMode);
   }
-  directorRequest(input: core.VideoDirectorInput) {
-    return this.load<typeof import("../../src/lib/video-director/openai-director")>("src/lib/video-director/openai-director.ts").buildDirectorRequest(input);
+  directorRequest(input: core.VideoDirectorInput, referenceOnly = false) {
+    return this.load<typeof import("../../src/lib/video-director/openai-director")>("src/lib/video-director/openai-director.ts").buildDirectorRequest(input, undefined, referenceOnly);
   }
   snapshotHash(draft: VideoGenerationDraft, snapshot: VideoPreservationSnapshot) {
     return this.load<typeof import("../../src/lib/video-generation/payload-summary")>("src/lib/video-generation/payload-summary.ts").summarizeVideoPayload(draft, snapshot).snapshotHash;

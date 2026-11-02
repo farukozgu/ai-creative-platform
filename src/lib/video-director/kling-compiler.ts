@@ -53,7 +53,7 @@ export function compileKlingShot(shot: VideoDirectorShot, limit: number, marked:
     const fidelity = fallbackPreservation ?? (preserveMarks
       ? "Exact form/color/material/pattern/parts/text/logos/art & layout/ratios; no guesses. Known faces only."
       : marked
-      ? "Keep source geometry, color, material, texture, pattern, parts and markings exact, especially the marked logo/label; show only known surfaces."
+      ? "Keep source geometry, color, material, texture, pattern, parts and markings exact; preserve marked details in place. Known surfaces only."
       : "Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.");
     return [action, sentence(wording(compositionDirection(shot.composition))), sentence(wording(lightDirection(shot.lighting))),
       wording(subjectAction(shot.motion)), `Allow ${/^(?:a|an|the)\b/i.test(shot.pace) ? "" : "a "}${lower(wording(clean(shot.pace)))}.`, fidelity].filter(Boolean).join(" ");

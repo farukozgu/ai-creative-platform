@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { klingElementReferences, parseReferenceReviews } from "../src/lib/video-generation/product-references";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { runInNewContext } from "node:vm";
@@ -21,6 +22,7 @@ import type { ProductProfile } from "../src/lib/product-understanding/product-pr
 import type * as adapter from "../src/lib/video-director/openai-director";
 import type * as runtime from "../src/lib/video-director/runtime";
 import { directorProducts, directorFixtureInput } from "./fixtures/video-director-fixtures";
+import { frontBackInput, frontBackResponse } from "./fixtures/video-front-back-fixture";
 
 const requirePackage = createRequire(import.meta.url);
 function isolated<T>(file: string, overrides: Record<string, unknown>, env: Record<string, string> = {}): T {
@@ -87,9 +89,10 @@ function responseFor(scenario: typeof scenarios[number]) {
   };
 }
 
-function wireResponse<T extends { intentContract: unknown; summary: unknown; intent: unknown }>(plan: T): Omit<T, "intentContract" | "summary" | "intent"> {
+function wireResponse<T extends { intentContract: unknown; summary: unknown; intent: unknown; referenceReviews?: { index: number }[] }>(plan: T) {
   const { intentContract: _intentContract, summary: _summary, intent: _intent, ...wire } = plan;
   void _intentContract; void _summary; void _intent;
+  if (plan.referenceReviews) return { ...wire, referenceReviews: Object.fromEntries(plan.referenceReviews.map(({ index, ...review }) => [`r${index}`, review])) };
   return wire;
 }
 
@@ -162,6 +165,7 @@ function assertSchema(value: unknown, schema: Schema, path = "$") {
 function mockAdapter(output: () => { status: string; output_text?: string; output?: readonly unknown[]; incomplete_details?: { reason: string }; usage?: { output_tokens: number } },
   diagnostics?: Array<Record<string, unknown>>, requests?: Array<Record<string, unknown>>, sdkClient?: OpenAI) {
   return isolated<typeof adapter>("src/lib/video-director/openai-director.ts", {
+    "../video-generation/product-references": { parseReferenceReviews },
     "@/lib/openai/client": { getOpenAIVideoStudioAnalysisClient: (_model: string, purpose: string) => sdkClient ?? ({ responses: { create: async (request: Record<string, unknown>) => { requests?.push({ ...request, purpose }); return output(); } } }) },
     "@/lib/openai/structured-response": { structuredResponseText: (format: unknown) => ({ format }) },
     "@/lib/openai/response-telemetry": { attachOpenAIResponseTelemetry: (plan: unknown) => plan },
@@ -312,18 +316,113 @@ test("reference-review schema agrees with matched/uncertain business rules", () 
     source: { kind: "uploaded-image" as const, sourceAssetId: "10000000-0000-4000-8000-000000000001" }, sha256: "a".repeat(64), purpose: "detail",
   }] } };
   const api = mockAdapter(() => ({ status: "completed", output_text: "{}" }));
-  const schema = api.buildDirectorRequest(input).schema as Schema;
+  const schema = api.buildDirectorRequest(input, undefined, true).schema as Schema;
   const response = responseFor(scenario);
   const candidate = { ...response, shots: response.shots.map(shot => ({ ...shot, referenceIndex: null })),
     referenceReviews: [{ index: 0, status: "uncertain", view: "unknown", reason: "Ambiguous crop", details: [] as string[] }] };
-  assertSchema(wireResponse(candidate), schema);
-  assert.ok(core.parseDirectorOutput(candidate, input));
+  assertSchema({ referenceReviews: wireResponse(candidate).referenceReviews }, schema);
+  assert.equal(core.parseDirectorOutput(candidate, input), null); // Uncertain references must not be silently dropped.
   candidate.referenceReviews[0].details = ["new visible notch"];
   // Array cardinality is now enforced by the server, not the provider schema.
-  assertSchema(wireResponse(candidate), schema);
+  assertSchema({ referenceReviews: wireResponse(candidate).referenceReviews }, schema);
   const failures: core.DirectorValidationFailure[] = [];
   assert.equal(core.parseDirectorOutput(candidate, input, failure => failures.push(failure)), null);
   assert.equal(failures[0].reasonCode, "invalid_reference_reviews");
+});
+
+test("provider review slots bind two images to exactly two server-owned ordered indices", async () => {
+  const scenario = scenarios[0];
+  const pixels = await sharp({ create: { width: 64, height: 64, channels: 3, background: "green" } }).jpeg().toBuffer();
+  const refs = [0, 1].map(index => ({ source: { kind: "uploaded-image" as const, sourceAssetId: `10000000-0000-4000-8000-00000000000${index + 2}` }, sha256: "a".repeat(64), purpose: "logo" }));
+  const input = { ...scenario.input, draft: { ...scenario.input.draft, productReferences: refs }, referenceImages: refs.map(ref => ({ prepared: pixels, sourceSha256: ref.sha256, purpose: ref.purpose })) };
+  const wire = wireResponse(responseFor(scenario));
+  let slots: Record<string, unknown> = { r0: { status: "matched", view: "front", reason: "Same product", details: [] }, r1: { status: "matched", view: "back", reason: "Same product rear", details: ["rear panel outline"] } };
+  const api = mockAdapter(() => ({ status: "completed", output_text: JSON.stringify({ ...wire, referenceReviews: slots, shots: wire.shots.map(shot => ({ ...shot, referenceIndex: null })) }) }));
+  const schema = api.buildDirectorRequest(input, undefined, true).schema;
+  assert.deepEqual([...schema.properties.referenceReviews!.required], ["r0", "r1"]);
+  const plan = await api.createOpenAIVideoPlan(input, pixels);
+  assert.deepEqual(JSON.parse(JSON.stringify((plan as { referenceReviews: { index: number }[] }).referenceReviews.map(review => review.index))), [0, 1]);
+  slots = { ...slots, r0: { status: "matched", view: "front", reason: "Same product outline", details: ["cotton knit"] } };
+  const sanitized = await api.createOpenAIVideoPlan(input, pixels);
+  assert.ok(Array.isArray(sanitized.shots));
+  assert.deepEqual(JSON.parse(JSON.stringify(sanitized.shots)), JSON.parse(JSON.stringify(plan.shots))); // Accuracy claims cannot rewrite directing.
+  const fallback = await core.directVideoWithClient(input, { createPlan: async () => sanitized });
+  assert.equal(fallback.origin, "ai");
+  assert.equal(fallback.referenceReviews!.length, 2);
+  assert.equal(fallback.referenceReviews![0].details.length, 0);
+  assert.ok(core.compileDirectorPlan(fallback, input).multiPrompt!.every(shot => !shot.prompt.includes("@Element1")));
+  slots = { r0: { status: "uncertain", view: "front", reason: "Cannot verify", details: ["cotton knit"] }, r1: slots.r1 };
+  const uncertain = await api.createOpenAIVideoPlan(input, pixels);
+  await assert.rejects(() => core.directVideoWithClient(input, { createPlan: async () => uncertain }), /references_not_verified/);
+  slots = { r0: slots.r0 };
+  await assert.rejects(() => api.createOpenAIVideoPlan(input, pixels), /invalid_reference_reviews/);
+});
+
+test("all 24 presets have identical creative requests with or without logo/detail/angle references", () => {
+  const api = mockAdapter(() => ({ status: "completed", output_text: "{}" }));
+  for (const presetId of presets.videoPresetIds) for (const mode of ["single", "multi"] as const) for (const duration of [5, 10] as const) {
+    const primary = selected(directorProducts[0], presetId, mode, duration);
+    const references = ["logo", "texture", "angle"].map(purpose => ({
+      source: { kind: "uploaded-image" as const, sourceAssetId: "10000000-0000-4000-8000-000000000002" }, sha256: "b".repeat(64), purpose,
+    }));
+    const supplemented = { ...primary, draft: { ...primary.draft, productReferences: references },
+      referenceImages: references.map(ref => ({ prepared: Buffer.from("not-planning-pixels"), sourceSha256: ref.sha256, purpose: ref.purpose, profile: watch })) };
+    assert.equal(JSON.stringify(api.buildDirectorRequest(supplemented)), JSON.stringify(api.buildDirectorRequest(primary)), `${presetId}/${mode}/${duration}`);
+    const review = api.buildDirectorRequest(supplemented, undefined, true);
+    assert.deepEqual([...review.schema.required], ["referenceReviews"]);
+    assert.equal(Object.hasOwn(review.schema.properties, "shots"), false);
+    assert.doesNotMatch(review.context, /preset|shotContract|userRequest|allowedEvidence|existingProfile/);
+  }
+});
+
+test("real adapter isolates logo pixels and ignores reference-authored shots before compiling the exact primary plan", async () => {
+  const primary = scenarios[0].input;
+  const pixels = await sharp({ create: { width: 32, height: 32, channels: 3, background: "red" } }).png().toBuffer();
+  for (const purpose of ["logo", "label", "texture"]) {
+    const supplemented = { ...primary, draft: { ...primary.draft, productReferences: [{
+      source: { kind: "uploaded-image" as const, sourceAssetId: "10000000-0000-4000-8000-000000000002" }, sha256: "b".repeat(64), purpose,
+    }] }, referenceImages: [{ prepared: pixels, sourceSha256: "b".repeat(64), purpose }] };
+    const requests: Record<string, unknown>[] = [];
+    const api = mockAdapter(() => ({ status: "completed", output_text: JSON.stringify({ ...wireResponse(responseFor(scenarios[0])),
+      referenceReviews: { r0: { status: "matched", view: "detail", reason: "Matching mark crop", details: ["visible label text"] } },
+    }) }), undefined, requests);
+    const original = await core.directVideoWithClient(primary, { createPlan: input => api.createOpenAIVideoPlan(input, pixels) });
+    const plan = await core.directVideoWithClient(supplemented, { createPlan: input => api.createOpenAIVideoPlan(input, pixels) });
+    assert.equal(requests.length, 3);
+    assert.equal(JSON.stringify(requests[0]), JSON.stringify(requests[1])); // Same source pixels, schema, budget and creative context.
+    assert.equal((JSON.stringify(requests[1]).match(/data:image\/jpeg;base64/g) ?? []).length, 1);
+    assert.equal((JSON.stringify(requests[2]).match(/data:image\/jpeg;base64/g) ?? []).length, 2);
+    assert.equal(JSON.stringify(plan.shots), JSON.stringify(original.shots));
+    assert.equal(JSON.stringify(core.compileDirectorPlan(plan, supplemented)), JSON.stringify(core.compileDirectorPlan(original, primary)));
+    assert.deepEqual(klingElementReferences(plan.referenceReviews ?? [], supplemented.draft.productReferences), []);
+  }
+});
+
+test("real adapter binds a verified back only to an existing suitable beat without rewriting any creative field", async () => {
+  const supplemented = frontBackInput("b".repeat(64));
+  supplemented.draft.prompt = "Create a campaign film"; // Exercise AI planning rather than the saved classic preset.
+  const primary = { ...supplemented, draft: { ...supplemented.draft, productReferences: undefined } };
+  const response = frontBackResponse(supplemented);
+  const shots = response.shots.map((shot, index) => ({ ...shot, referenceIndex: null,
+    ...(index === 2 ? { composition: "Complete product with balanced margins", lighting: "Contour light defines the outline" } : {}),
+  }));
+  const pixels = await sharp({ create: { width: 32, height: 32, channels: 3, background: "black" } }).png().toBuffer();
+  supplemented.referenceImages = [{ prepared: pixels, sourceSha256: "b".repeat(64), purpose: "texture" }];
+  const api = mockAdapter(() => ({ status: "completed", output_text: JSON.stringify({ ...wireResponse({ ...response, shots }),
+    referenceReviews: { r0: { status: "matched", view: "back", reason: "Same complete product", details: ["rear panel outline"] } },
+  }) }));
+  const original = await core.directVideoWithClient(primary, { createPlan: input => api.createOpenAIVideoPlan(input, pixels) });
+  const plan = await core.directVideoWithClient(supplemented, { createPlan: input => api.createOpenAIVideoPlan(input, pixels) });
+  assert.equal(plan.shots[2].referenceIndex, 0);
+  const creativeShots = plan.shots.map(({ referenceIndex: _index, ...shot }) => { void _index; return shot; });
+  assert.equal(JSON.stringify(creativeShots), JSON.stringify(original.shots));
+  assert.match(core.compileDirectorPlan(plan, supplemented).multiPrompt![2].prompt, /@Element1: Use back view from reference image 1/);
+  assert.equal(klingElementReferences(plan.referenceReviews ?? [], supplemented.draft.productReferences).length, 1);
+  const classicInput = { ...supplemented, draft: { ...supplemented.draft, prompt: "" } };
+  const classic = await core.directVideoWithClient(classicInput, { createPlan: input => api.createOpenAIVideoPlan(input, pixels) });
+  assert.equal(classic.shots[2].referenceIndex, 0);
+  const classicCreative = classic.shots.map(({ referenceIndex: _index, ...shot }) => { void _index; return shot; });
+  assert.equal(JSON.stringify(classicCreative), JSON.stringify(core.fallbackDirectorPlan(classicInput).shots));
 });
 
 test("selected camera, requested evidence and sequence use the same schema and runtime contract", () => {
@@ -348,7 +447,7 @@ test("selected camera, requested evidence and sequence use the same schema and r
   assert.ok(core.compileDirectorPlan(core.fallbackDirectorPlan(sequence), sequence));
 });
 
-test("server field bounds reserve expanded 100-char evidence, critical-region prose and reference prefix", () => {
+test("server field bounds preserve the same primary budget with accuracy references", () => {
   const api = mockAdapter(() => ({ status: "completed", output_text: "{}" }));
   const evidenceDetail = "visible surface relief " + "x".repeat(77);
   assert.equal(evidenceDetail.length, 100);
@@ -360,8 +459,8 @@ test("server field bounds reserve expanded 100-char evidence, critical-region pr
     if (references) input.draft.productReferences = [{ source: { kind: "uploaded-image", sourceAssetId: "10000000-0000-4000-8000-000000000001" }, sha256: "a".repeat(64), purpose: "detail" }];
     const request = api.buildDirectorRequest(input);
     const fields = Object.fromEntries(contract.shotFields.map(field => [field, field === "focus" ? evidenceDetail : "x".repeat(request.fieldLimits[field])]));
-    const prompt = compiler.compileKlingShot({ ...fields, durationSeconds: 3, purpose: "hero-reveal", evidenceRefs: [0] } as core.VideoDirectorShot, references ? 502 : 512, marked);
-    assert.ok(prompt.length + (references ? 10 : 0) <= 512);
+    const prompt = compiler.compileKlingShot({ ...fields, durationSeconds: 3, purpose: "hero-reveal", evidenceRefs: [0] } as core.VideoDirectorShot, 512, marked);
+    assert.ok(prompt.length <= 512);
     const id = directorProductContext(profile).evidence.find(item => item.detail === evidenceDetail)!.id;
     const candidate = { summary: "A source-facing cinematic study", intent: "Resolve the existing form with measured light",
       intentContract: creative.interpretCreativeIntent("", directorProductContext(profile).evidence, "multi", cameraMovement),
@@ -369,7 +468,9 @@ test("server field bounds reserve expanded 100-char evidence, critical-region pr
       shots: ["hero-reveal", "macro-detail", "final-hero"].map((purpose, index) => ({ ...fields, ...(references ? { referenceIndex: null } : {}), purpose, durationSeconds: [3, 4, 3][index],
         focus: `verified-evidence:${id}`, composition: String(fields.composition).slice(1) + String(index) })),
     };
-    assertSchema(wireResponse(candidate), request.schema as Schema);
+    const { referenceReviews: _reviews, ...primaryWire } = wireResponse(candidate);
+    void _reviews;
+    assertSchema({ ...primaryWire, shots: primaryWire.shots.map(({ referenceIndex: _index, ...shot }) => { void _index; return shot; }) }, request.schema as Schema);
     const plan = core.parseDirectorOutput(candidate, input);
     assert.ok(plan);
     assert.ok(core.compileDirectorPlan(plan, input).multiPrompt!.every(shot => shot.prompt.length <= 512));

@@ -387,12 +387,12 @@ test("a committed task attachment with a lost response is recovered without a se
   assert.equal(repository.records.get(jobId)?.status, "queued");
 });
 
-test("reference submit resolves only matched images before reserving credits and preserves the exact element prompt", async () => {
+test("reference submit resolves only verified full-product views before reserving credits and preserves the exact prompt", async () => {
   for (const available of [false, true]) {
     const reference = { source: { kind: "uploaded-image" as const, sourceAssetId: "10000000-0000-4000-8000-000000000002" }, sha256: "a".repeat(64), purpose: "dial" };
     const draft = { ...imageDraft, shotMode: "single" as const, productReferences: [reference], director: { presetId: "minimal-studio" as const, shotMode: "single" as const, receipt: "fixture" } };
     const input = { draft, presetId: "minimal-studio" as const, shotMode: "single" as const, profile: null };
-    const plan = { ...fallbackDirectorPlan(input), origin: "ai" as const, referenceReviews: [{ index: 0, status: "matched" as const, reason: "Same visible outline", details: [] }] };
+    const plan = { ...fallbackDirectorPlan(input), origin: "ai" as const, referenceReviews: [{ index: 0, status: "matched" as const, view: "front" as const, reason: "Same complete product outline", details: [] }] };
     const compiled = compileDirectorPlan(plan, input);
     const budget = billing(); let calls = 0;
     const result = await submitVideoGeneration(ownerId, draft, {

@@ -195,7 +195,8 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
   const preparationFailed = currentPreparation?.status === "error";
   const previewSource = draft.source && preparedFrame ? { ...draft.source, previewUrl: preparedFrame.previewUrl } : null;
   const referenceKey = JSON.stringify([draft.source?.id]);
-  const generationDraft: VideoGenerationDraft = { productReferences: referenceState.key === referenceKey ? referenceState.refs : [], clientSubmissionId: submissionId, criticalRegion: draft.criticalRegion,
+  const classicCinematic = presetId === "cinematic-hero" && shotMode === "multi" && draft.duration === 5;
+  const generationDraft: VideoGenerationDraft = { productReferences: !classicCinematic && referenceState.key === referenceKey ? referenceState.refs : [], clientSubmissionId: submissionId, criticalRegion: draft.criticalRegion,
     analysisConsent: draft.analyzeAfterGeneration && currentQuote?.analysis.maximumEstimatedCostUsd != null
       && currentQuote.analysis.model && currentQuote.analysis.pricingVersion
       ? { model: currentQuote.analysis.model, maximumCostUsd: currentQuote.analysis.maximumEstimatedCostUsd,
@@ -491,10 +492,15 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
             {(jobId || submissionUsed || restoreUnavailable || generationError === "failed" || generationError === "ambiguous") && !busy
               ? <Button variant="ghost" size="sm" onClick={newSubmission}>{t("beta.newSubmission")}</Button> : null}
           </>}
-          referenceControls={draft.source ? <VideoProductReferences key={referenceKey} sourceKey={referenceKey}
-            product={prepared?.frame?.presetContext ?? { category: "unknown", evidence: [] }} presetId={presetId} aspectRatio={draft.aspectRatio} disabled={busy || preparingQuote || !preparedFrame}
+          referenceControls={draft.source ? <>
+            {classicCinematic ? <p role="status">{t("references.classicCinematic")}</p> : null}
+            <div hidden={classicCinematic}>
+            <VideoProductReferences key={referenceKey} sourceKey={referenceKey}
+            product={prepared?.frame?.presetContext ?? { category: "unknown", evidence: [] }} presetId={presetId} aspectRatio={draft.aspectRatio} disabled={classicCinematic || busy || preparingQuote || !preparedFrame}
             onBusyChange={handleReferenceBusy}
-            onChange={refs => { setReferenceState({ key: referenceKey, refs }); setDirector(null); setSubmissionQuote(null); setConfirmedReceipt(null); }} /> : null}
+            onChange={refs => { setReferenceState({ key: referenceKey, refs }); setDirector(null); setSubmissionQuote(null); setConfirmedReceipt(null); }} />
+            </div>
+          </> : null}
           presetControls={<VideoDirectorPresetSelector presetId={presetId}
             disabled={busy}
             product={preparedFrame?.presetContext}

@@ -104,6 +104,8 @@ export function VideoDirectorPanel({ draft, draftKey, presetId, planDisabled, di
   const [prepared, setPrepared] = useState<PreparedPlan | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(false);
+  const [referencesUnverified, setReferencesUnverified] = useState(false);
+  const [referenceErrorReason, setReferenceErrorReason] = useState<"invalid_review" | "unavailable" | "unverified">("unverified");
   const inFlight = useRef(false);
   const active = useRef(true);
   const selectionVersion = useRef(0);
@@ -126,7 +128,8 @@ export function VideoDirectorPanel({ draft, draftKey, presetId, planDisabled, di
 
   async function prepare() {
     if (inFlight.current || planDisabled) return;
-    inFlight.current = true; setBusy(true); setError(false);
+    inFlight.current = true; setBusy(true); setError(false); setReferencesUnverified(false);
+    setPrepared(null); onPrepared(null);
     const version = selectionVersion.current;
     let existingReceipt: string | undefined;
     try {
@@ -137,6 +140,7 @@ export function VideoDirectorPanel({ draft, draftKey, presetId, planDisabled, di
     try {
       const result = await prepareVideoDirectorAction(draft, presetId, shotMode, existingReceipt);
       if (!active.current || version !== selectionVersion.current) return;
+      if (result.status === "references_unverified") { setReferenceErrorReason(result.reason); setReferencesUnverified(true); setError(true); return; }
       if (result.status !== "success" || result.plan.presetId !== presetId || result.plan.shotMode !== shotMode) {
         setError(true); return;
       }
@@ -163,7 +167,7 @@ export function VideoDirectorPanel({ draft, draftKey, presetId, planDisabled, di
       </Button>
     </div>
     <div aria-live="polite">
-      {error ? <p className={styles.errorMessage} role="alert">{t("error")}</p> : null}
+      {error ? <p className={styles.errorMessage} role="alert">{t(referencesUnverified ? referenceErrorReason === "invalid_review" ? "referenceReviewInvalid" : referenceErrorReason === "unavailable" ? "referenceReviewUnavailable" : "referencesUnverified" : "error")}</p> : null}
       {prepared ? <article className={styles.directorPlan}>
         <h3>{t(prepared.plan.origin === "ai" ? "aiPlan" : "fallbackPlan")}</h3>
         {prepared.plan.origin === "fallback" ? <p>{t("fallbackNotice")}</p> : null}

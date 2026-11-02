@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import type { VideoGenerationDraft, VideoPreservationSnapshot } from "./types";
 import { buildFalVideoRequestInput } from "./fal-request";
+import { klingElementReferences } from "./product-references";
 
 const hash = (value: string) => createHash("sha256").update(value).digest("hex");
 
@@ -9,10 +10,11 @@ export function summarizeVideoPayload(draft: VideoGenerationDraft, snapshot: Vid
   const requestedMulti = snapshot.director?.multiPrompt;
   if ((draft.shotMode ?? "single") === "multi" && (!plan || plan.shotMode !== "multi" || !requestedMulti)) throw new Error("Multi-shot plan required.");
   if ((draft.shotMode ?? "single") === "single" && requestedMulti) throw new Error("Unexpected multi-shot payload.");
+  if (draft.productReferences?.some((_, index) => !plan?.referenceReviews?.some(review => review.index === index && review.status === "matched"))) throw new Error("Every reference must be verified before quoting.");
   // Compile through the exact provider payload builder, with a placeholder URL
   // that is neither persisted nor included in the signed or displayed summary.
   const input = buildFalVideoRequestInput({ modelId: `kling-v3-${draft.quality}-image`, endpointId: "", mode: draft.mode,
-    elementImageUrls: draft.productReferences?.filter((_, i) => plan?.origin === "ai" && plan.referenceReviews?.some(r => r.index === i && r.status === "matched")).map((_, i) => `https://invalid.example/private-reference-${i}`),
+    elementImageUrls: klingElementReferences(plan?.referenceReviews ?? [], draft.productReferences).map((_, i) => `https://invalid.example/private-reference-${i}`),
     prompt: snapshot.compiledPrompt, multiPrompt: requestedMulti, negativePrompt: snapshot.negativePrompt, cfgScale: snapshot.cfgScale,
     durationSeconds: draft.durationSeconds, aspectRatio: draft.aspectRatio, sourceUrl: "https://invalid.example/private-source" });
   const multi = Array.isArray(input.multi_prompt) ? input.multi_prompt : undefined;

@@ -29,11 +29,22 @@ export async function prepareVideoDirectorPlan(ownerId: string, source: Buffer, 
   log("director_start", "success");
   const key = directorCacheKey(ownerId, sourceSha256, getPromptEnhancementModel(), input);
   const secret = process.env.SUPABASE_SECRET_KEY ?? "";
+  if (input.presetId === "cinematic-hero" && input.shotMode === "multi" && input.draft.durationSeconds === 5
+    && !input.draft.productReferences?.length && !input.draft.prompt.trim() && input.draft.cameraMovement === "auto") {
+    const plan = fallbackDirectorPlan(input);
+    compileDirectorPlan(plan, input);
+    log("director_preset", "success", { code: "classic_cinematic" });
+    return { plan, receipt: sealDirectorPlan(key, plan, secret, Date.now(), input.profile) };
+  }
   const existing = openDirectorPlan(existingReceipt, key, input, secret);
-  if (allowAI && existing?.origin === "ai") { log("director_result", "cache_hit"); return { plan: existing, receipt: existingReceipt! }; }
+  if (allowAI && existing && (existing.origin === "ai" || existing.referenceReviews?.length)) { log("director_result", "cache_hit"); return { plan: existing, receipt: existingReceipt! }; }
   let fallbackReason: string | null = null;
   if (!allowAI) fallbackReason = diagnostics?.fallbackReason ?? "product_analysis_failed";
   else if (!isVideoDirectorAIAvailable(ownerId)) fallbackReason = "configuration_error";
+  if (fallbackReason && input.draft.productReferences?.length) {
+    log("director_reference_review", "failed", { code: fallbackReason });
+    throw Object.assign(new Error("references_not_verified"), { referenceFailure: "unavailable" });
+  }
   const plan = !fallbackReason ? await cache.getOrCreate(key, () =>
     directVideoWithClient(input, {
       createPlan: value => createOpenAIVideoPlan(value, source, diagnostics?.correlationId),

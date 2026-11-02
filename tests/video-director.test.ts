@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { parseReferenceReviews } from "../src/lib/video-generation/product-references";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { runInNewContext } from "node:vm";
@@ -86,9 +87,7 @@ test("leather jacket matrix has distinct role-based scenes, preservation and val
         assert.ok(shot.prompt.length <= (shotMode === "multi" ? 512 : 2500));
         assert.doesNotMatch(shot.prompt, /Focus:|Visible:/);
         assert.doesNotMatch(shot.prompt, /hidden interior serial label/);
-        if (shotMode === "single") for (const rule of ["markings exact", "geometry", "texture", "color", "pattern", "known surfaces"])
-          assert.ok(shot.prompt.includes(rule));
-        else for (const rule of ["geometry", "texture", "markings exact", "known surfaces"]) assert.ok(shot.prompt.includes(rule));
+        assert.match(shot.prompt, /exactly as in the source; do not enlarge, restyle or reposition them/);
         if (shotMode === "multi") assert.doesNotMatch(shot.prompt, /single continuous|no scene cuts/i);
       }
       const payload = buildFalVideoRequestInput({ modelId: `kling-v3-${quality}-image`, endpointId: "fixture", mode: "image",
@@ -144,7 +143,7 @@ test("director budget reserves complete rules and creative direction before opti
   const parsed = core.parseDirectorOutput(plan, selected)!;
   const compiled = core.compileDirectorPlan({ ...plan, shots: parsed.shots }, selected).prompt;
   assert.ok(compiled.length <= 2500); assert.doesNotMatch(compiled, /Visible:/);
-  assert.match(compiled, /markings exact/); assert.match(compiled, /known surfaces/);
+  assert.match(compiled, /exactly as in the source; do not enlarge, restyle or reposition them/);
   assert.ok(compiled.includes(`${value}.`));
   if (compiled.includes("silver zipper detail 0")) assert.ok(compiled.includes(`silver zipper detail 0 ${"x".repeat(80)}.`));
 });
@@ -154,7 +153,7 @@ test("partial historical profile details do not prevent a safe fallback", () => 
     verticalAttributes: { vertical: "apparel" as const, details: {} as Extract<ProductProfile["verticalAttributes"], { vertical: "apparel" }>["details"] } };
   const selected: core.VideoDirectorInput = { ...input, profile: incomplete };
   const plan = core.fallbackDirectorPlan(selected);
-  assert.match(core.compileDirectorPlan(plan, selected).prompt, /Keep source geometry/);
+  assert.match(core.compileDirectorPlan(plan, selected).prompt, /Keep the logos exactly as in the source/);
 });
 
 test("plan validation rejects malformed duration, fields, unsafe directions and stale version", () => {
@@ -392,7 +391,7 @@ test("product evidence remains bounded while every shot preserves critical ident
     const compiled = core.compileDirectorPlan(core.fallbackDirectorPlan(selected), selected);
     for (const shot of compiled.multiPrompt!) {
       assert.ok(shot.prompt.length <= 2500);
-      assert.match(shot.prompt, /marked logo\/label/); assert.match(shot.prompt, /locked|static|fixed/i);
+      assert.match(shot.prompt, presetId === "cinematic-hero" && draft.durationSeconds === 5 ? /preserve marked details in place/ : /Keep the embroidered marks exactly as in the source/); assert.match(shot.prompt, /locked|static|fixed/i);
     }
   }
 });
@@ -479,6 +478,7 @@ test("runtime prepares AI plans without a separate quote approval and preserves 
 test("OpenAI adapter sends bounded source/profile/preset context using existing strict structured output", async () => {
   let captured: Record<string, unknown> | null = null;
   const api = loadIsolated<typeof adapter>("src/lib/video-director/openai-director.ts", {
+    "../video-generation/product-references": { parseReferenceReviews },
     "@/lib/openai/client": { getOpenAIVideoStudioAnalysisClient: () => ({ responses: { create: async (body: Record<string, unknown>) => {
       captured = body; const { intentContract: _intentContract, summary: _summary, intent: _intent, ...wire } = core.fallbackDirectorPlan(input);
       void _intentContract; void _summary; void _intent; return { status: "completed", output_text: JSON.stringify(wire) };
@@ -497,7 +497,7 @@ test("OpenAI adapter sends bounded source/profile/preset context using existing 
   })) }, referenceImages: [1,2,3].map(() => ({ prepared: source, sourceSha256: "a".repeat(64), purpose: "detail" })) };
   await api.createOpenAIVideoPlan(refInput, source);
   assert.equal((JSON.stringify(captured).match(/data:image\/jpeg;base64/g) ?? []).length, 4);
-  const refRequest = api.buildDirectorRequest(refInput);
+  const refRequest = api.buildDirectorRequest(refInput, undefined, true);
   const singleHero = { ...input, presetId: "cinematic-hero" as const, shotMode: "single" as const,
     draft: { ...input.draft, shotMode: "single" as const, durationSeconds: 5 as const } };
   const heroContext = JSON.parse(api.buildDirectorRequest(singleHero).context);
@@ -510,7 +510,8 @@ test("OpenAI adapter sends bounded source/profile/preset context using existing 
   const body = captured as Record<string, unknown>;
   assert.equal(body.store, false); assert.equal(body.max_output_tokens, 2200);
   assert.match(JSON.stringify(body.input), /data:image\/jpeg;base64/);
-  assert.match(JSON.stringify(body.input), /productProfile/); assert.match(JSON.stringify(body.input), /userRequest/);
+  assert.match(JSON.stringify(body.input), /referenceImages/);
+  assert.doesNotMatch(JSON.stringify(body.input), /userRequest|preset|allowedEvidence/);
   assert.equal((body.text as { format: { strict: boolean } }).format.strict, true);
   for (const prompt of ["Cekete yavaş yaklaş, detayları göster.", "Do not zoom. Start close, slide left, then hold.", "Önce makro, sonra genel çekim; 360 dön ama etiketi koru.", ""]) {
     const selected = directorFixtureInput(directorProducts[0], prompt);

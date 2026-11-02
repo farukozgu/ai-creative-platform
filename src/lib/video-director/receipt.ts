@@ -13,6 +13,8 @@ export function directorCacheKey(ownerId: string, sourceSha256: string, model: s
     preset: getVideoDirectorPreset(input.presetId, input.shotMode, input.draft.durationSeconds), presetId: input.presetId,
     shotMode: input.shotMode, profile,
     draft: videoDraftHash({ ...input.draft, director: undefined }),
+    ...(input.draft.productReferences?.length ? { referenceReviewContract: "isolated-accuracy-v3" } : {}),
+    ...(input.presetId === "cinematic-hero" && input.shotMode === "multi" && input.draft.durationSeconds === 5 ? { cinematicExecution: "classic-five-shot-v1" } : {}),
     ...(input.presetId === "cinematic-hero" && input.draft.productReferences?.some(ref => /\b(?:logo|label|text|symbol|mark|brand|emblem)\b/i.test(ref.purpose))
       ? { referencePolicy: "preservation-only-v1" } : {}),
   })).digest("hex");

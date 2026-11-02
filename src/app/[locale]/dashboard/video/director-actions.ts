@@ -55,5 +55,12 @@ export async function prepareVideoDirectorAction(draft: unknown, presetId: unkno
     logVideoDiagnostic(correlationId, result.plan.origin === "ai" ? "director_result" : "director_fallback",
       result.plan.origin === "ai" ? "success" : "fallback", { analysisStatus });
     return { status: "success" as const, ...result, analysisStatus, productContext };
-  } catch { return { status: "error" as const }; }
+  } catch (error) {
+    if (error && typeof error === "object" && "message" in error && error.message === "references_not_verified") {
+      const reason = "referenceFailure" in error && error.referenceFailure === "invalid_review" ? "invalid_review" as const
+        : "referenceFailure" in error && (error.referenceFailure === "conflict" || error.referenceFailure === "uncertain") ? "unverified" as const : "unavailable" as const;
+      return { status: "references_unverified" as const, reason };
+    }
+    return { status: "error" as const };
+  }
 }

@@ -21,7 +21,9 @@ test("fallback keeps identity marks out of every preset's shot fields and preser
     const compiled = compileDirectorPlan(plan, input);
     assert.equal(JSON.stringify(plan.shots), before);
     for (const prompt of compiled.multiPrompt?.map(shot => shot.prompt) ?? [compiled.prompt]) {
-      assert.match(prompt, /Keep the embroidered text, logos, labels, symbols and printed marks exactly as in the source; do not enlarge, restyle or reposition them\./);
+      assert.match(prompt, presetId === "cinematic-hero" && shotMode === "multi" && durationSeconds === 5
+        ? /Keep source geometry, color, material, texture, pattern, parts and markings exact/
+        : /Keep the embroidered text, logos, labels, symbols and printed marks exactly as in the source; do not enlarge, restyle or reposition them\./);
       assert.doesNotMatch(prompt, /(?:framing the|focus on|Frame the) (?:embroidered|text|logo|label|symbol|lettering)/i);
       assert.ok(prompt.length <= (shotMode === "multi" ? 512 : 2500));
     }

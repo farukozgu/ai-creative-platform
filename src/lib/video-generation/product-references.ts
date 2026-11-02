@@ -9,8 +9,13 @@ export function referenceClaimDetails(review: ReferenceReview) {
   return review.details.map(detail => detail.replace(/\b(?:front|back|rear|backside|side)[ -]?(?:facing)?\b/gi, " ").replace(/\s+/g, " ").trim());
 }
 export const REFERENCE_SHOT_PREFIX_MAX_CHARS = 52;
-export function referenceShotPrefix(referenceIndex: number | undefined, reviews: ReferenceReview[]) {
-  const matched = reviews.filter(review => review.status === "matched");
+/** Crops are accuracy evidence, never independently renderable Kling subjects. */
+export function klingElementReferences(reviews: ReferenceReview[], references: readonly { purpose: string }[] = []) {
+  return reviews.filter(review => review.status === "matched" && ["front", "back", "side"].includes(review.view ?? "")
+    && !/\b(?:logo|label|text|symbol|mark|brand|emblem)\b/i.test(references[review.index]?.purpose ?? ""));
+}
+export function referenceShotPrefix(referenceIndex: number | undefined, reviews: ReferenceReview[], references: readonly { purpose: string }[] = []) {
+  const matched = klingElementReferences(reviews, references);
   const position = matched.findIndex(review => review.index === referenceIndex);
   const view = matched[position]?.view;
   return position >= 0 && view && view !== "unknown" && view !== "detail"
@@ -30,19 +35,20 @@ export function suggestProductReferences(product: VideoPresetProduct, presetId: 
   return [...new Set([...(priority && category.includes(priority) ? [priority] : []), ...category])].slice(0, 3);
 }
 /** Unknown identity never becomes evidence. Reviews are persisted in the signed plan. */
-export function parseReferenceReviews(value: unknown, count: number): ReferenceReview[] | null {
+export function parseReferenceReviews(value: unknown, count: number, onReject?: (path: string, reason: string) => void): ReferenceReview[] | null {
+  const reject = (path: string, reason: string) => { onReject?.(path, reason); return null; };
   if (!count) return value === undefined || Array.isArray(value) && !value.length ? [] : null;
-  if (!Array.isArray(value) || value.length !== count) return null;
+  if (!Array.isArray(value) || value.length !== count) return reject("$.referenceReviews", `exactly ${count} ordered reviews`);
   const result: ReferenceReview[] = [];
   for (const [index, item] of value.entries()) {
     if (!item || item.index !== index || !["matched", "conflict", "uncertain"].includes(item.status)
       || typeof item.reason !== "string" || !item.reason.trim() || item.reason.length > 120 || !Array.isArray(item.details)
-      || item.details.length > 2 || item.details.some((d: unknown) => typeof d !== "string" || !d.trim() || d.length > 70)) return null;
-    if (item.status !== "matched" && item.details.length) return null;
-    if (item.view !== undefined && !referenceViews.includes(item.view)) return null;
-    if (item.status !== "matched" && item.view !== undefined && item.view !== "unknown") return null;
+      || item.details.length > 2 || item.details.some((d: unknown) => typeof d !== "string" || !d.trim() || d.length > 70)) return reject(`$.referenceReviews[${index}]`, "ordered index, valid status, reason <=120 chars, at most two details <=70 chars");
+    if (item.status !== "matched" && item.details.length) return reject(`$.referenceReviews[${index}].details`, "unverified references cannot add evidence");
+    if (item.view !== undefined && !referenceViews.includes(item.view)) return reject(`$.referenceReviews[${index}].view`, "supported reference view");
+    if (item.status !== "matched" && item.view !== undefined && item.view !== "unknown") return reject(`$.referenceReviews[${index}].view`, "unverified reference view must be unknown");
     if (item.details.some((d: string) => /\b(?:leather|silk|cotton|gold|diamond|steel|interior|hidden|genuine|brand|underside)\b/i.test(d)
-      || backViewTerms.test(d) && item.view !== "back")) return null;
+      || backViewTerms.test(d) && item.view !== "back")) return reject(`$.referenceReviews[${index}].details`, "no unverified materials, brands or hidden surfaces; rear details require a back view");
     result.push(item);
   }
   return result;
