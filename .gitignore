@@ -47,3 +47,6 @@ yarn-error.log*
 next-env.d.ts
 # Isolated disposable Video Studio browser QA build output
 .next-video-qa/
+
+/tmp/cinematic-comparison/
+/codex-step2-review.patch
