@@ -693,7 +693,12 @@ export function compileDirectorPlan(plan: VideoDirectorPlan, input: VideoDirecto
     const referenceMarks = validated.referenceReviews?.some(review => review.status === "matched"
       && backShot && review.index === shot.referenceIndex
       && review.details.some(detail => /\b(?:text|letter\w*|logo|symbol|label|pattern|print|emblem|embroider\w*)\b/i.test(detail)));
-    return prefix + compileKlingShot(shot, limit - prefix.length, Boolean(input.draft.criticalRegion) && !backShot, !classicCinematic && (!backShot && primaryMarks || Boolean(referenceMarks)), classicCinematic || backShot ? undefined : fallbackPreservation);
+    return prefix + compileKlingShot(shot, limit - prefix.length, Boolean(input.draft.criticalRegion) && !backShot, !classicCinematic && (!backShot && primaryMarks || Boolean(referenceMarks)), classicCinematic || backShot ? undefined : fallbackPreservation,
+      ["culinary-texture", "fabric-motion"].includes(input.presetId) ? "surface"
+        : ["elegant-orbit", "optical-lines", "cinematic-dial", "sneaker-hero"].includes(input.presetId) ? "perspective"
+        : ["glass-reflection", "dramatic-backlight", "metallic-light-sweep"].includes(input.presetId) ? "lighting"
+        : ["macro-stitching", "hardware-reveal", "craftsmanship-study", "upholstery-macro"].includes(input.presetId) ? "craft"
+        : ["minimal-studio", "luxury-fashion-film", "product-spotlight", "macro-detail-reveal", "material-detail", "precision-macro", "label-reveal", "window-display"].includes(input.presetId));
   });
   const baseNegativePrompt = productVideoNegativePrompt.replace("object rotation, ", "");
   const negativePrompt = input.presetId === "cinematic-hero" && input.shotMode === "single" && input.draft.durationSeconds === 5

@@ -221,7 +221,7 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
     approvalGeneration.current = { key: approvalKey, value: approvalGeneration.current.value + 1 };
     queueMicrotask(() => { setSubmissionQuote(null); setConfirmedReceipt(null); });
   }, [approvalKey]);
-  const directorPlanDisabledReason = busy || restoringJob || restoreUnavailable || submissionUsed || Boolean(jobId)
+  const directorPlanDisabledReason = busy || restoringJob || submissionUsed || Boolean(jobId)
     ? "planLocked"
     : referenceBusy ? "planNeedsReferences"
     : !draft.source ? "planNeedsSource"

@@ -42,7 +42,7 @@ function compact(value: string) {
 /** Mandatory action, chosen evidence, light, rhythm and fidelity reserve space first.
  * No unrelated profile atoms fill the remaining budget; no substring truncation.
  */
-export function compileKlingShot(shot: VideoDirectorShot, limit: number, marked: boolean, preserveMarks = false, fallbackPreservation?: string) {
+export function compileKlingShot(shot: VideoDirectorShot, limit: number, marked: boolean, preserveMarks = false, fallbackPreservation?: string, physicalStaging: boolean | "craft" | "lighting" | "perspective" | "surface" = false) {
   const render = (short: boolean) => {
     const wording = (value: string) => short ? compact(value) : value;
     const focus = lower(wording(shot.focus)).replace(/^source-visible /, "visible ");
@@ -50,7 +50,9 @@ export function compileKlingShot(shot: VideoDirectorShot, limit: number, marked:
     const action = /^Locked close framing$/i.test(clean(shot.camera))
       ? `Frame ${subject} in a locked close view.`
       : `${wording(cameraAction(shot.camera))}, framing ${subject}.`;
-    const fidelity = fallbackPreservation ?? (preserveMarks
+    const fidelity = physicalStaging
+      ? "Exact geometry/color/material/pattern/parts/text/logos/layout; known sides. Keep source pose/orientation/support/contact/shadows & gravity. No new floating/flat-lay/stands/props." + (physicalStaging === "craft" ? " Keep parts attached." : physicalStaging === "lighting" ? " Light moves; product stays still." : physicalStaging === "perspective" ? " No product turn or unseen views." : physicalStaging === "surface" ? " Keep source layers/folds; no wind, deformation or new content." : "")
+      : fallbackPreservation ?? (preserveMarks
       ? "Exact form/color/material/pattern/parts/text/logos/art & layout/ratios; no guesses. Known faces only."
       : marked
       ? "Keep source geometry, color, material, texture, pattern, parts and markings exact; preserve marked details in place. Known surfaces only."

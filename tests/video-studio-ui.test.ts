@@ -86,10 +86,22 @@ test("Director selections stay available before source preparation and invalidat
   assert.match(workspace, /setSubmissionQuote\(null\); setConfirmedReceipt\(null\); setShotMode\(mode\)/);
   assert.match(workspace, /presetControls=\{<VideoDirectorPresetSelector presetId=\{presetId\}\s+disabled=\{busy\}/);
   assert.match(workspace, /name="video-director-mode" checked=\{shotMode === mode\}\s+disabled=\{busy\}/);
-  assert.match(workspace, /directorPlanDisabledReason = busy \|\| restoringJob \|\| restoreUnavailable \|\| submissionUsed \|\| Boolean\(jobId\)/);
+  assert.match(workspace, /directorPlanDisabledReason = busy \|\| restoringJob \|\| submissionUsed \|\| Boolean\(jobId\)/);
   assert.match(workspace, /planDisabled=\{Boolean\(directorPlanDisabledReason\)\}/);
   assert.match(workspace, /setSubmissionQuote\(null\);\s*setConfirmedReceipt\(null\);\s*\}\} \/>/);
   assert.match(workspace, /approvalGeneration\.current\.value !== requestedApprovalGeneration/);
+});
+
+test("unavailable recovery allows planning while keeping quote and generation blocked", () => {
+  const workspace = read("src/features/video/video-studio-workspace.tsx");
+  const planning = workspace.match(/const directorPlanDisabledReason = ([\s\S]*?);/)?.[1];
+  assert.ok(planning);
+  assert.doesNotMatch(planning, /restoreUnavailable/);
+  const quote = workspace.match(/async function prepareSubmissionQuote\(\) \{([\s\S]*?)setPreparingQuote\(true\)/)?.[1];
+  assert.ok(quote);
+  assert.match(quote, /restoreUnavailable/);
+  assert.match(workspace, /generationAvailable=\{[^\n]*!restoreUnavailable/);
+  assert.match(workspace, /restoreUnavailable=\{restoreUnavailable\}/);
 });
 
 test("Video Studio keeps secondary controls and full prompts out of the primary flow", () => {

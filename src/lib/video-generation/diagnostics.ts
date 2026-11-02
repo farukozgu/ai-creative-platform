@@ -7,7 +7,7 @@ export function createVideoCorrelationId() { return randomUUID(); }
 export function logVideoDiagnostic(correlationId: string, stage: string, result: VideoDiagnosticResult,
   fields: Record<string, string | number | null | undefined> = {}) {
   if (process.env.NODE_ENV !== "development") return;
-  console.info("[video-studio]", { correlationId, stage, result, ...fields });
+  console.info("[video-studio]", JSON.stringify({ correlationId, stage, result, ...fields }));
 }
 
 export function safeOpenAIStatus(error: unknown): { status: number | null; code: string | null } {
