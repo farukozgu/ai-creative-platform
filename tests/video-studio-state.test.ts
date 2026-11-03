@@ -32,6 +32,7 @@ test("Video Studio defaults are provider-neutral and ready for V1 settings", () 
   assert.equal(initialVideoStudioDraft.quality, "standard");
   assert.equal(initialVideoStudioDraft.aspectRatio, "16:9");
   assert.equal(initialVideoStudioDraft.duration, 5);
+  assert.equal(initialVideoStudioDraft.shotMode, null);
   assert.equal(validateVideoStudioDraft(initialVideoStudioDraft), "source-required");
 });
 
@@ -52,7 +53,7 @@ test("image source and motion prompt form the only studio draft", () => {
 test("source selection and removal update readiness without touching prompts", () => {
   let state: VideoStudioDraft = {
     ...initialVideoStudioDraft,
-    source: null, prompt: "Natural fabric movement",
+    source: null, prompt: "Natural fabric movement", shotMode: "single",
   };
   state = videoStudioReducer(state, { type: "set-source", source: librarySource });
   assert.equal(isVideoStudioDraftReady(state), true);
@@ -95,7 +96,7 @@ test("original source sizes and ratios are accepted for automatic preparation wi
   assert.equal(validateVideoSourceDimensions(0, 0), "source-dimensions-unsupported");
 });
 
-test("camera, quality, aspect ratio, and duration update independently", () => {
+test("legacy camera input normalizes to auto while quality, aspect ratio and duration update independently", () => {
   let state = videoStudioReducer(initialVideoStudioDraft, {
     type: "set-camera",
     cameraMovement: "orbit",
@@ -107,7 +108,7 @@ test("camera, quality, aspect ratio, and duration update independently", () => {
   });
   state = videoStudioReducer(state, { type: "set-duration", duration: 10 });
 
-  assert.equal(state.cameraMovement, "orbit");
+  assert.equal(state.cameraMovement, "auto");
   assert.equal(state.quality, "pro");
   assert.equal(state.aspectRatio, "9:16");
   assert.equal(state.duration, 10);
@@ -117,7 +118,7 @@ test("camera, quality, aspect ratio, and duration update independently", () => {
 test("complete drafts report readiness without creating a generation", () => {
   const imageDraft: VideoStudioDraft = {
     ...initialVideoStudioDraft,
-    source: librarySource, prompt: "Slow dolly in",
+    source: librarySource, prompt: "Slow dolly in", shotMode: "single",
   };
 
   assert.equal(validateVideoStudioDraft(imageDraft), null);

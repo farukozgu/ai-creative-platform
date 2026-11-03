@@ -2,15 +2,15 @@ import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { deflateRawSync, inflateRawSync } from "node:zlib";
 import { isProductProfile, type ProductProfile } from "@/lib/product-understanding/product-profile";
 import { videoDraftHash } from "@/lib/video-generation/request-identity";
-import { parseDirectorOutput, type DirectorPlanningDiagnostic, type VideoDirectorInput, type VideoDirectorPlan } from "./core";
-import { VIDEO_DIRECTOR_VERSION, videoDirectorPresets, getVideoDirectorPreset } from "./presets";
+import { directorPresetVersion, parseDirectorOutput, type DirectorPlanningDiagnostic, type VideoDirectorInput, type VideoDirectorPlan } from "./core";
+import { VIDEO_DIRECTOR_VERSION, getVideoDirectorPreset } from "./presets";
 import { DIRECTOR_CONTRACT_VERSION } from "./plan-contract";
 
 export function directorCacheKey(ownerId: string, sourceSha256: string, model: string, input: VideoDirectorInput) {
   const profile = input.profile?.source ? { ...input.profile, source: { ...input.profile.source, analyzedAt: undefined } } : input.profile;
   return createHash("sha256").update(JSON.stringify({ ownerId, sourceSha256, model,
     version: VIDEO_DIRECTOR_VERSION, contractVersion: DIRECTOR_CONTRACT_VERSION,
-    preset: getVideoDirectorPreset(input.presetId, input.shotMode, input.draft.durationSeconds), presetId: input.presetId,
+    preset: input.presetId === "custom" ? null : getVideoDirectorPreset(input.presetId, input.shotMode, input.draft.durationSeconds), presetId: input.presetId,
     shotMode: input.shotMode, profile,
     draft: videoDraftHash({ ...input.draft, director: undefined }),
     ...(input.draft.productReferences?.length ? { referenceReviewContract: "isolated-accuracy-v3" } : {}),
@@ -57,7 +57,7 @@ export function openDirectorPlan(receipt: unknown, key: string, input: VideoDire
     const cached = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
     if (cached.key !== key || !Number.isFinite(cached.expiresAt) || cached.expiresAt <= now
       || cached.expiresAt > now + 60 * 60 * 1000 || cached.plan?.version !== VIDEO_DIRECTOR_VERSION
-      || cached.plan?.presetId !== input.presetId || cached.plan?.presetVersion !== videoDirectorPresets[input.presetId].version
+      || cached.plan?.presetId !== input.presetId || cached.plan?.presetVersion !== directorPresetVersion(input.presetId)
       || cached.plan?.shotMode !== input.shotMode || !["ai", "fallback"].includes(cached.plan?.origin)) return null;
     const plan = parseDirectorOutput(cached.plan, input);
     return plan ? { ...plan, origin: cached.plan.origin } : null;

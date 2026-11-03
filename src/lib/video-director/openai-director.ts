@@ -45,11 +45,17 @@ export function buildDirectorRequest(input: VideoDirectorInput, repair?: Pick<Di
   const multi = input.shotMode === "multi";
   // Identical planning contract with or without accuracy references.
   const refs = referenceOnly ? input.draft.productReferences ?? [] : [];
-  const creativeInstructions = referenceOnly ? referenceInstructions : multi
-    ? `${instructions}\nMulti-shot: each dedicated detail/mark/surface/region appears once, including explicit focus requests. New camera/light/purpose wording is not a new task. Whole-product context may naturally show it. Preserve preset direction; use another verified detail.`
+  const modeInstructions = input.presetId === "custom"
+    ? instructions.split("\n").filter(line => !line.startsWith("The selected preset brief") && !line.startsWith("Use the structured preset strategy"))
+      .join("\n").replace("Empty text means direct from product and preset.", "")
+      + "\nCustom Creative Mode: userRequest is the only creative brief. No preset, fixed shot grammar or preset fallback applies. Plan distinct shots from that request within the supplied evidence and duration limits."
     : instructions;
+  const creativeInstructions = referenceOnly ? referenceInstructions : multi
+    ? `${modeInstructions}\nMulti-shot: each dedicated detail/mark/surface/region appears once, including explicit focus requests. New camera/light/purpose wording is not a new task. Whole-product context may naturally show it. ${input.presetId === "custom" ? "Preserve user direction" : "Preserve preset direction"}; use another verified detail.`
+    : modeInstructions;
   const contract = directorShotContract(input.shotMode, input.draft.durationSeconds, input.presetId);
-  const { execution, ...strategy } = safePresetStrategy(getVideoDirectorPreset(input.presetId, input.shotMode, input.draft.durationSeconds));
+  const { execution, ...strategy } = input.presetId === "custom" ? { execution: undefined }
+    : safePresetStrategy(getVideoDirectorPreset(input.presetId, input.shotMode, input.draft.durationSeconds));
   const intentContract = interpretCreativeIntent(input.draft.prompt, productProfile.evidence, input.shotMode, input.draft.cameraMovement);
   const fieldLimits = { ...contract.fieldLimits };
   // Compact evidence tokens keep strict Structured Outputs bounded even for
@@ -111,11 +117,11 @@ export function buildDirectorRequest(input: VideoDirectorInput, repair?: Pick<Di
     referenceImages: refs.map((r, index) => ({ index, imagePosition: index + 2, role: "same-product-reference", purpose: r.purpose, sourceSha256: r.sha256, existingProfile: directorProductContext(input.referenceImages?.[index]?.profile ?? null) })), userRequest: input.draft.prompt.trim(),
     primaryImage: { imagePosition: 1, role: "start-frame-and-primary-identity" },
     intentContract,
-    preset: { id: input.presetId, brief: videoDirectorPresets[input.presetId].brief,
+    ...(input.presetId === "custom" ? { creativeMode: "custom" } : { preset: { id: input.presetId, brief: videoDirectorPresets[input.presetId].brief,
       strategy: { ...strategy, ...(execution ? { execution: { ...execution, shots: undefined } } : {}) },
       ...(input.presetId === "cinematic-hero" && input.shotMode === "single" && input.draft.durationSeconds === 5
         ? { singleDirection: cinematicHeroSingleFiveSeconds } : {}),
-    }, shotMode: input.shotMode,
+    } }), shotMode: input.shotMode,
     shotContract: { minShots: contract.minShots, maxShots: contract.maxShots, minDuration: contract.minDuration, maxDuration: contract.maxDuration },
     durationSeconds: input.draft.durationSeconds, tier: input.draft.quality, camera: input.draft.cameraMovement,
     aspectRatio: input.draft.aspectRatio, criticalRegion: input.draft.criticalRegion ? { marked: true } : null,

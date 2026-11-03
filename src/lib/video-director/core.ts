@@ -14,18 +14,21 @@ export { DIRECTOR_GENERIC_FOCUS_VALUES, shotFields } from "./plan-contract";
 
 import { backViewTerms, klingElementReferences, parseReferenceReviews, referenceClaimDetails, referenceShotPrefix, type ReferenceReview } from "../video-generation/product-references";
 
-export type VideoDirectorSelection = { presetId: VideoPresetId; shotMode: VideoShotMode; receipt: string };
+export type VideoDirectorSelection = ({ presetId: VideoPresetId; creativeMode?: "preset" } | { creativeMode: "custom"; presetId?: never }) & { shotMode: VideoShotMode; receipt: string };
+export type VideoDirectionId = VideoPresetId | "custom";
+export const directorSelectionId = (selection: VideoDirectorSelection): VideoDirectionId => selection.creativeMode === "custom" ? "custom" : selection.presetId;
+export const directorPresetVersion = (id: VideoDirectionId) => id === "custom" ? 1 : videoDirectorPresets[id].version;
 export type VideoDirectorInput = {
   referenceImages?: { profile?: ProductProfile | null; prepared: Buffer; sourceSha256: string; purpose: string }[];
   draft: VideoGenerationDraft;
-  presetId: VideoPresetId;
+  presetId: VideoDirectionId;
   shotMode: VideoShotMode;
   profile: ProductProfile | null;
 };
 export type VideoDirectorShot = Record<typeof shotFields[number], string> & { durationSeconds: number; purpose: ShotPurpose; evidenceRefs: number[]; referenceIndex?: number };
 export type VideoDirectorPlan = {
   version: typeof VIDEO_DIRECTOR_VERSION;
-  presetId: VideoPresetId;
+  presetId: VideoDirectionId;
   presetVersion: number;
   shotMode: VideoShotMode;
   referenceReviews?: ReferenceReview[];
@@ -182,7 +185,7 @@ export function fixedMacroDirectorPlan(input: VideoDirectorInput): VideoDirector
     if (detail) assigned.push(shot);
     return shot;
   });
-  return { version: VIDEO_DIRECTOR_VERSION, presetId: input.presetId, presetVersion: videoDirectorPresets[input.presetId].version,
+  return { version: VIDEO_DIRECTOR_VERSION, presetId: input.presetId, presetVersion: directorPresetVersion(input.presetId),
     shotMode: input.shotMode, origin: "fallback", ...directorPlanDescriptions(input, shots.length),
     intentContract: interpretCreativeIntent(input.draft.prompt, context.evidence, input.shotMode, input.draft.cameraMovement), shots };
 }
@@ -203,7 +206,7 @@ export function fixedMaterialDirectorPlan(input: VideoDirectorInput): VideoDirec
     if (detail) assigned.push(shot);
     return shot;
   });
-  return { version: VIDEO_DIRECTOR_VERSION, presetId: input.presetId, presetVersion: videoDirectorPresets[input.presetId].version,
+  return { version: VIDEO_DIRECTOR_VERSION, presetId: input.presetId, presetVersion: directorPresetVersion(input.presetId),
     shotMode: input.shotMode, origin: "fallback", ...directorPlanDescriptions(input, shots.length),
     intentContract: interpretCreativeIntent(input.draft.prompt, context.evidence, input.shotMode, input.draft.cameraMovement), shots };
 }
@@ -224,7 +227,7 @@ export function fixedPrecisionDirectorPlan(input: VideoDirectorInput): VideoDire
     if (detail) assigned.push(shot);
     return shot;
   });
-  return { version: VIDEO_DIRECTOR_VERSION, presetId: input.presetId, presetVersion: videoDirectorPresets[input.presetId].version,
+  return { version: VIDEO_DIRECTOR_VERSION, presetId: input.presetId, presetVersion: directorPresetVersion(input.presetId),
     shotMode: input.shotMode, origin: "fallback", ...directorPlanDescriptions(input, shots.length),
     intentContract: interpretCreativeIntent(input.draft.prompt, context.evidence, input.shotMode, input.draft.cameraMovement), shots };
 }
@@ -245,7 +248,7 @@ export function fixedCraftDirectorPlan(input: VideoDirectorInput): VideoDirector
     if (detail) assigned.push(shot);
     return shot;
   });
-  return { version: VIDEO_DIRECTOR_VERSION, presetId: input.presetId, presetVersion: videoDirectorPresets[input.presetId].version,
+  return { version: VIDEO_DIRECTOR_VERSION, presetId: input.presetId, presetVersion: directorPresetVersion(input.presetId),
     shotMode: input.shotMode, origin: "fallback", ...directorPlanDescriptions(input, shots.length),
     intentContract: interpretCreativeIntent(input.draft.prompt, context.evidence, input.shotMode, input.draft.cameraMovement), shots };
 }
@@ -266,7 +269,7 @@ export function fixedPerspectiveDirectorPlan(input: VideoDirectorInput): VideoDi
     if (detail) assigned.push(shot);
     return shot;
   });
-  return { version: VIDEO_DIRECTOR_VERSION, presetId: input.presetId, presetVersion: videoDirectorPresets[input.presetId].version,
+  return { version: VIDEO_DIRECTOR_VERSION, presetId: input.presetId, presetVersion: directorPresetVersion(input.presetId),
     shotMode: input.shotMode, origin: "fallback", ...directorPlanDescriptions(input, shots.length),
     intentContract: interpretCreativeIntent(input.draft.prompt, context.evidence, input.shotMode, input.draft.cameraMovement), shots };
 }
@@ -287,7 +290,7 @@ export function fixedFashionMotionDirectorPlan(input: VideoDirectorInput): Video
     if (detail) assigned.push(shot);
     return shot;
   });
-  return { version: VIDEO_DIRECTOR_VERSION, presetId: input.presetId, presetVersion: videoDirectorPresets[input.presetId].version,
+  return { version: VIDEO_DIRECTOR_VERSION, presetId: input.presetId, presetVersion: directorPresetVersion(input.presetId),
     shotMode: input.shotMode, origin: "fallback", ...directorPlanDescriptions(input, shots.length),
     intentContract: interpretCreativeIntent(input.draft.prompt, context.evidence, input.shotMode, input.draft.cameraMovement), shots };
 }
@@ -308,7 +311,7 @@ export function fixedProductDetailDirectorPlan(input: VideoDirectorInput): Video
     if (detail) assigned.push(shot);
     return shot;
   });
-  return { version: VIDEO_DIRECTOR_VERSION, presetId: input.presetId, presetVersion: videoDirectorPresets[input.presetId].version,
+  return { version: VIDEO_DIRECTOR_VERSION, presetId: input.presetId, presetVersion: directorPresetVersion(input.presetId),
     shotMode: input.shotMode, origin: "fallback", ...directorPlanDescriptions(input, shots.length),
     intentContract: interpretCreativeIntent(input.draft.prompt, context.evidence, input.shotMode, input.draft.cameraMovement), shots };
 }
@@ -329,7 +332,7 @@ export function fixedPresentationDirectorPlan(input: VideoDirectorInput): VideoD
     if (detail) assigned.push(shot);
     return shot;
   });
-  return { version: VIDEO_DIRECTOR_VERSION, presetId: input.presetId, presetVersion: videoDirectorPresets[input.presetId].version,
+  return { version: VIDEO_DIRECTOR_VERSION, presetId: input.presetId, presetVersion: directorPresetVersion(input.presetId),
     shotMode: input.shotMode, origin: "fallback", ...directorPlanDescriptions(input, shots.length),
     intentContract: interpretCreativeIntent(input.draft.prompt, context.evidence, input.shotMode, input.draft.cameraMovement), shots };
 }
@@ -351,7 +354,7 @@ export function fixedLuxuryDirectorPlan(input: VideoDirectorInput): VideoDirecto
     if (detail) assigned.push(shot);
     return shot;
   });
-  return { version: VIDEO_DIRECTOR_VERSION, presetId: input.presetId, presetVersion: videoDirectorPresets[input.presetId].version,
+  return { version: VIDEO_DIRECTOR_VERSION, presetId: input.presetId, presetVersion: directorPresetVersion(input.presetId),
     shotMode: input.shotMode, origin: "fallback", ...directorPlanDescriptions(input, shots.length),
     intentContract: interpretCreativeIntent(input.draft.prompt, context.evidence, input.shotMode, input.draft.cameraMovement), shots };
 }
@@ -360,7 +363,7 @@ export function fixedSpotlightDirectorPlan(input: VideoDirectorInput): VideoDire
   const context = directorProductContext(input.profile);
   const template = categorySpotlightDirection(context.category, input.shotMode, input.draft.durationSeconds);
   if (!template) return null;
-  return { version: VIDEO_DIRECTOR_VERSION, presetId: input.presetId, presetVersion: videoDirectorPresets[input.presetId].version,
+  return { version: VIDEO_DIRECTOR_VERSION, presetId: input.presetId, presetVersion: directorPresetVersion(input.presetId),
     shotMode: input.shotMode, origin: "fallback", ...directorPlanDescriptions(input, template.shots.length),
     intentContract: interpretCreativeIntent(input.draft.prompt, context.evidence, input.shotMode, input.draft.cameraMovement),
     shots: template.shots.map((direction, index) => ({ ...direction, durationSeconds: template.durations[index], focus: "Source-visible product form", evidenceRefs: [] })) };
@@ -370,7 +373,7 @@ export function fixedMinimalDirectorPlan(input: VideoDirectorInput): VideoDirect
   const context = directorProductContext(input.profile);
   const template = categoryMinimalDirection(context.category, input.shotMode, input.draft.durationSeconds);
   if (!template) return null;
-  return { version: VIDEO_DIRECTOR_VERSION, presetId: input.presetId, presetVersion: videoDirectorPresets[input.presetId].version,
+  return { version: VIDEO_DIRECTOR_VERSION, presetId: input.presetId, presetVersion: directorPresetVersion(input.presetId),
     shotMode: input.shotMode, origin: "fallback", ...directorPlanDescriptions(input, template.shots.length),
     intentContract: interpretCreativeIntent(input.draft.prompt, context.evidence, input.shotMode, input.draft.cameraMovement),
     shots: template.shots.map((direction, index) => ({ ...direction, durationSeconds: template.durations[index], focus: "Source-visible product form", evidenceRefs: [] })) };
@@ -380,7 +383,7 @@ export function fixedLightingDirectorPlan(input: VideoDirectorInput): VideoDirec
   const context = directorProductContext(input.profile);
   const template = categoryLightingDirection(input.presetId, context.category, input.shotMode, input.draft.durationSeconds);
   if (!template) return null;
-  return { version: VIDEO_DIRECTOR_VERSION, presetId: input.presetId, presetVersion: videoDirectorPresets[input.presetId].version,
+  return { version: VIDEO_DIRECTOR_VERSION, presetId: input.presetId, presetVersion: directorPresetVersion(input.presetId),
     shotMode: input.shotMode, origin: "fallback", ...directorPlanDescriptions(input, template.shots.length),
     intentContract: interpretCreativeIntent(input.draft.prompt, context.evidence, input.shotMode, input.draft.cameraMovement),
     shots: template.shots.map((direction, index) => ({ ...direction, durationSeconds: template.durations[index], focus: "Source-visible product form", evidenceRefs: [] })) };
@@ -538,7 +541,7 @@ export function parseDirectorOutput(value: unknown, input: VideoDirectorInput, o
     if (!targetShots.length || contract.focusPosition === "first" && shots[0].focus !== target
       || contract.focusPosition === "last" && shots.at(-1)!.focus !== target) return reject("$.shots[*].focus", "requested_focus_not_preserved", "requested verified evidence at requested position");
   }
-  return { version: VIDEO_DIRECTOR_VERSION, presetId: input.presetId, presetVersion: videoDirectorPresets[input.presetId].version,
+  return { version: VIDEO_DIRECTOR_VERSION, presetId: input.presetId, presetVersion: directorPresetVersion(input.presetId),
     shotMode: input.shotMode, ...(referenceReviews?.length ? { referenceReviews } : {}), origin: "ai", intent: value.intent.trim(), intentContract: expectedIntent, summary: value.summary.trim(), shots };
 }
 
@@ -547,6 +550,8 @@ function fallbackMark(detail: string) {
 }
 
 export function fallbackDirectorPlan(input: VideoDirectorInput, referenceReviews: ReferenceReview[] = []): VideoDirectorPlan {
+  // Custom direction must never silently become a preset when planning fails.
+  if (input.presetId === "custom") throw new DirectorStructuredOutputError("custom_director_unavailable");
   const fixed = ["culinary-texture", "window-display"].includes(input.presetId) ? fixedPresentationDirectorPlan(input) : ["label-reveal", "sneaker-hero", "upholstery-macro"].includes(input.presetId) ? fixedProductDetailDirectorPlan(input) : ["floating-fashion", "fabric-motion", "floating-accessory"].includes(input.presetId) ? fixedFashionMotionDirectorPlan(input) : ["elegant-orbit", "optical-lines", "cinematic-dial"].includes(input.presetId) ? fixedPerspectiveDirectorPlan(input) : ["glass-reflection", "dramatic-backlight", "metallic-light-sweep"].includes(input.presetId) ? fixedLightingDirectorPlan(input) : ["macro-stitching", "hardware-reveal", "craftsmanship-study"].includes(input.presetId) ? fixedCraftDirectorPlan(input) : input.presetId === "precision-macro" ? fixedPrecisionDirectorPlan(input) : input.presetId === "luxury-fashion-film" ? fixedLuxuryDirectorPlan(input) : input.presetId === "minimal-studio" ? fixedMinimalDirectorPlan(input) : input.presetId === "product-spotlight" ? fixedSpotlightDirectorPlan(input) : input.presetId === "material-detail" ? fixedMaterialDirectorPlan(input) : fixedMacroDirectorPlan(input);
   if (fixed) return { ...fixed, ...(referenceReviews.length ? { referenceReviews } : {}) };
   if (![5, 10].includes(input.draft.durationSeconds)) throw new Error("unsupported_director_duration");
@@ -665,7 +670,7 @@ export function fallbackDirectorPlan(input: VideoDirectorInput, referenceReviews
 /** Preserve actual directing decisions; never replace them with generic zoom/hero templates. */
 export function compileDirectorPlan(plan: VideoDirectorPlan, input: VideoDirectorInput) {
   if (plan.version !== VIDEO_DIRECTOR_VERSION || plan.presetId !== input.presetId || plan.shotMode !== input.shotMode
-    || plan.presetVersion !== videoDirectorPresets[input.presetId].version) throw new Error("invalid_director_plan");
+    || plan.presetVersion !== directorPresetVersion(input.presetId)) throw new Error("invalid_director_plan");
   const validated = parseDirectorOutput(plan, input);
   if (!validated) throw new Error("invalid_director_plan");
   const multi = plan.shotMode === "multi";

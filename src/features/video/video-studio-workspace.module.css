@@ -643,7 +643,6 @@
   .canvasStatus { display: none; }
 }
 @media (max-width: 639px) {
-  .presetCopy small { display: none; }
   .promptEditor { font-size: var(--text-body); }
   .planActions button { flex-basis: 100%; }
 }

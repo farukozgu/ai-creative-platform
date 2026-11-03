@@ -83,9 +83,9 @@ test("Director selections stay available before source preparation and invalidat
   assert.match(panel, /disabled=\{planDisabled \|\| busy\}/);
   assert.match(workspace, /name="video-director-mode"/);
   assert.match(workspace, /setPresetId\(nextPresetId\); setDirector\(null\); setSubmissionQuote\(null\); setConfirmedReceipt\(null\)/);
-  assert.match(workspace, /setSubmissionQuote\(null\); setConfirmedReceipt\(null\); setShotMode\(mode\)/);
-  assert.match(workspace, /presetControls=\{<VideoDirectorPresetSelector presetId=\{presetId\}\s+disabled=\{busy\}/);
-  assert.match(workspace, /name="video-director-mode" checked=\{shotMode === mode\}\s+disabled=\{busy\}/);
+  assert.match(workspace, /setSubmissionQuote\(null\); setConfirmedReceipt\(null\); dispatch\(\{ type: "set-shot-mode", mode \}\)/);
+  assert.match(workspace, /presetControls=\{draft.creativeMode === "preset" \? <VideoDirectorPresetSelector presetId=\{presetId\}\s+disabled=\{busy\}/);
+  assert.match(workspace, /name="video-director-mode" value=\{mode\} required checked=\{shotMode === mode\}/);
   assert.match(workspace, /directorPlanDisabledReason = busy \|\| restoringJob \|\| submissionUsed \|\| Boolean\(jobId\)/);
   assert.match(workspace, /planDisabled=\{Boolean\(directorPlanDisabledReason\)\}/);
   assert.match(workspace, /setSubmissionQuote\(null\);\s*setConfirmedReceipt\(null\);\s*\}\} \/>/);
@@ -116,9 +116,9 @@ test("Video Studio keeps secondary controls and full prompts out of the primary 
   assert.match(workspace, /const durationValues: VideoDuration\[\] = \[5, 10\]/);
   assert.match(workspace, /studioOptions\.tiers\.includes\(value\)/);
   assert.match(workspace, /studioOptions\.durations\.includes\(value\)/);
-  assert.match(workspace, /singleImageNotice/);
+  assert.doesNotMatch(workspace, /video-camera|cameraValues|camera\.options/);
   assert.match(workspace, /directorPlanDisabledReason/);
-  assert.match(workspace, /setSubmissionQuote\(null\); setConfirmedReceipt\(null\); setShotMode\(mode\)/);
+  assert.match(workspace, /setSubmissionQuote\(null\); setConfirmedReceipt\(null\); dispatch\(\{ type: "set-shot-mode", mode \}\)/);
 });
 
 test("Video Studio recovers the owned submission and exposes explicit per-request cost approval", () => {

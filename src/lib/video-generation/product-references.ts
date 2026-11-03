@@ -27,8 +27,8 @@ const suggestions: Record<string, string[]> = {
   furniture: ["texture", "construction", "side"], electronics: ["controls", "label", "side"], eyewear: ["frame", "hinge", "side"],
   headwear: ["texture", "construction", "side"], food: ["texture", "angle", "packaging"], "packaged-food": ["label", "packaging", "side"],
 };
-export function suggestProductReferences(product: VideoPresetProduct, presetId: VideoPresetId) {
-  const terms = videoDirectorPresets[presetId].strategy.detailTerms.join(" ");
+export function suggestProductReferences(product: VideoPresetProduct, presetId?: VideoPresetId) {
+  const terms = presetId ? videoDirectorPresets[presetId].strategy.detailTerms.join(" ") : "";
   const category = suggestions[product.category] ?? ["detail", "angle", "label"];
   const priority = /label|logo/.test(terms) ? "label" : /texture|fabric|stitch|seam/.test(terms) ? "texture"
     : /dial|marker/.test(terms) ? "dial" : /hardware|clasp|zip/.test(terms) ? "hardware" : null;

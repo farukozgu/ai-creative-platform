@@ -788,6 +788,18 @@
       "emptyDescription": "Kontrolleri kullanarak görselinizi hazırlayın. Henüz üretilmiş bir görsel yok."
     },
     "videoStudio": {
+      "shotSelection": {
+        "required": "Devam etmek için Tek Çekim veya Çoklu Çekim seçin.",
+        "single": "Kesme veya montaj içermeyen tek, sürekli çekim.",
+        "multi": "Farklı görsel amaçlar taşıyan sahneler arasında geçişler."
+      },
+      "creativeMode": {
+        "heading": "Yaratıcı yönlendirme",
+        "preset": "Preset Modu",
+        "custom": "Özel Yaratıcı Mod",
+        "presetDescription": "Hazır stilin çekim akışı uygulanır; serbest yaratıcı yönlendirme kullanılmaz.",
+        "customDescription": "Çekim fikrinizi siz yazın; hazır preset akışı uygulanmaz."
+      },
       "advancedSettings": "Gelişmiş ayarlar",
       "configurationUnavailable": "Yönetici ayarlarında etkin değil.",
       "singleImageNotice": "Tek görselden 360° dönüş, görünmeyen yüzlerin tahmin edilmesini gerektirir; ürünün tüm açılardan doğruluğu garanti edilmez.",
@@ -801,122 +813,122 @@
         "presets": {
           "luxury-fashion-film": {
             "title": "Luxury Fashion Film",
-            "description": "Ölçülü editoryal kadraj, yumuşak vurgular ve sakin bir kampanya finali.",
+            "description": "Yontulmuş yan ışık ve uzun lens kadrajlarıyla lüks reklam estetiği. Çoklu çekimde ürün silüeti, yanal geçiş ve görünür detaydan güçlü bir kampanya finaline ilerler.",
             "caption": "Editoryal ve sinematik"
           },
           "macro-detail-reveal": {
             "title": "Macro Detail Reveal",
-            "description": "Görünür malzeme ve işçiliğe kontrollü bir yakın bakış.",
+            "description": "Yumuşak yan ışıkla görünür detaylara net bir yakın bakış. Çoklu çekimde detaydan ürünün bütününe geçilir; 10 saniyede ikinci doğrulanmış ayrıntı da incelenir.",
             "caption": "Doku ve işçilik"
           },
           "minimal-studio": {
             "title": "Minimal Studio",
-            "description": "Dengeli boşluk ve sabit ışıkla ürünü öne çıkaran durağan kadraj.",
+            "description": "Yumuşak stüdyo ışığı ve sade, dengeli kadrajlarla sakin ürün sunumu. Çoklu çekimde genel görünümden simetrik finale geçilir; 10 saniyede araya orta ölçekli bir kadraj girer.",
             "caption": "Sade ve ürün odaklı"
           },
           "floating-fashion": {
             "title": "Süzülen Moda",
-            "description": "Kaynak silüeti koruyan hafif bir yükseliş hissi.",
+            "description": "Yumuşak yan ışık ve ferah boşluklarla hafif bir moda sunumu. Çoklu çekimde tam ürün kadrajları kullanılır; 10 saniyede yukarı kayan kamera geçişi akışa hafiflik katar.",
             "caption": "Hafif silüet"
           },
           "precision-macro": {
             "title": "Hassas Makro",
-            "description": "Görünür küçük ayrıntılara ölçülü, net bir bakış.",
+            "description": "Dar, yumuşak ışıkla doğrulanmış bir ayrıntıya hassas ve net bakış. Çoklu çekimde yakın inceleme tam ürün finaline bağlanır; 10 saniyede önce genel görünüm sunulur.",
             "caption": "Hassas ayrıntılar"
           },
           "glass-reflection": {
             "title": "Cam ve Yansıma",
-            "description": "Doğrulanmış yüzey üzerinde yumuşak bir ışık gezintisi.",
+            "description": "Mevcut yüzeyde gezinen geniş, yumuşak ışık vurgusuyla parlak bir sunum. Çoklu çekimde ışık geçişi tam ürün finaline bağlanır; 10 saniyede kamera geri açılarak bütünü gösterir.",
             "caption": "Işık ve yüzey"
           },
           "product-spotlight": {
             "title": "Ürün Spotu",
-            "description": "Formu ışıkla öne çıkaran kontrollü bir sunum.",
+            "description": "Dramatik ışık ve grafik boşluklarla dikkat çeken reklam estetiği. Çoklu çekimde ışıkla sunum ve kısa yanal kamera geçişi, güçlü ve simetrik bir ürün finaline bağlanır.",
             "caption": "Kontrollü ışık"
           },
           "elegant-orbit": {
             "title": "Zarif Yörünge",
-            "description": "Tam tur yerine görünür yüzde kısa yanal bir gezinti.",
+            "description": "Yumuşak kenar ışığı ve kısa yanal kamera geçişiyle zarif perspektif hissi. Çoklu çekimde kaynakta görünen yüz üzerinde gezinti, dengeli bir tam ürün finaline bağlanır.",
             "caption": "Sınırlı yanal hareket"
           },
           "cinematic-hero": {
             "title": "Sinematik Ürün",
-            "description": "Dramatik bir girişten güçlü bir kampanya finaline.",
+            "description": "Yönlü ışık ve tempolu kadraj değişimleriyle sinematik reklam estetiği. Çoklu çekimde genel görünüm, görünür yüzey ve ayrıntılar, yanal kamera geçişiyle güçlü bir ürün finaline taşınır.",
             "caption": "Güçlü kampanya finali"
           },
           "material-detail": {
             "title": "Yüzey ve Doku",
-            "description": "Malzeme varsaymadan mevcut yüzey dokusunu hissettirir.",
+            "description": "Yüzeyi tarayan yumuşak ışıkla dokusal bir ürün sunumu. Çoklu çekimde yakın yüzeyden ürünün bütününe geçilir; 10 saniyede farklı bir doğrulanmış birleşim detayı da gösterilir.",
             "caption": "Dokusal yakın bakış"
           },
           "macro-stitching": {
             "title": "Makro Dikiş",
-            "description": "Görünür dikiş ve birleşim çizgilerini takip eder.",
+            "description": "Yandan gelen yumuşak ışıkla görünür dikiş veya birleşim çizgilerine yakın bakış. Çoklu çekimde çizgiyi izleyen kamera tam ürün finaline bağlanır; 10 saniyede orta kadraj da eklenir.",
             "caption": "Görünür işçilik"
           },
           "fabric-motion": {
             "title": "Kumaş Ritmi",
-            "description": "Mevcut dökümü koruyan ışık ve kamera ritmi.",
+            "description": "Mevcut kumaş dokusunu ve kıvrımları ışıkla hissettiren sakin bir akış. Çoklu çekimde kamera görünür dokuyu tarar ve bütüne açılır; 10 saniyede önce genel ürün görünür.",
             "caption": "Döküm ve ışık"
           },
           "label-reveal": {
             "title": "Etiket Tanıtımı",
-            "description": "Görünür özgün etiketi ürünün bütünüyle ilişkilendirir.",
+            "description": "Dengeli ışıkla kaynakta görünen etiket veya yazıya kontrollü yakın bakış. Çoklu çekimde doğrulanmış marka alanı tam ürün görünümüne bağlanır; 10 saniyede önce genel kadraj gelir.",
             "caption": "Özgün marka alanı"
           },
           "dramatic-backlight": {
             "title": "Dramatik Kontur",
-            "description": "Işıkla belirginleşen silüet; şeffaflık varsayılmaz.",
+            "description": "Kenar ışığıyla belirginleşen silüet ve dramatik boşluklar. Çoklu çekimde genel görünüm simetrik bir ürün finaline bağlanır; 10 saniyede orta kadrajda kontur ışığı incelenir.",
             "caption": "Belirgin konturlar"
           },
           "cinematic-dial": {
             "title": "Sinematik Kadran",
-            "description": "Görünür kadran düzeninden tam saat görünümüne.",
+            "description": "Biçim veren yan ışıkla doğrulanmış yüzey yerleşimine sinematik yakın bakış. Çoklu çekimde ayrıntıdan tam ürüne açılır; 10 saniyede önce genel görünüm sunulur.",
             "caption": "Kadran ve düzen"
           },
           "metallic-light-sweep": {
             "title": "Yüzeyde Işık",
-            "description": "Mevcut yüzeyde ilerleyen kontrollü bir ışık şeridi.",
+            "description": "Mevcut yüzey üzerinde ilerleyen dar ışık vurgusuyla keskin bir sunum. Çoklu çekimde ışık incelemesi tam ürün finaline bağlanır; 10 saniyede genel görünümle başlanır.",
             "caption": "Gezinen ışık şeridi"
           },
           "hardware-reveal": {
             "title": "Aksam Detayı",
-            "description": "Görünür bağlantı ve aksamı açmadan inceler.",
+            "description": "Yumuşak kenar ışığıyla görünür toka, kapak veya bağlantıya kontrollü bakış. Çoklu çekimde mevcut aksam incelenip tam ürünle bitirilir; 10 saniyede önce genel görünüm gelir.",
             "caption": "Bağlantı ve aksam"
           },
           "floating-accessory": {
             "title": "Süzülen Aksesuar",
-            "description": "Kaynak yönünü koruyan hafif ve dengeli bir sunum.",
+            "description": "Yumuşak kenar ışığı ve açık boşluklarla hafif, dengeli aksesuar sunumu. Çoklu çekimde kısa yanal kamera geçişi sakin bir tam ürün finaline bağlanır; 10 saniyede genel kadrajla başlanır.",
             "caption": "Dengeli yükseliş hissi"
           },
           "sneaker-hero": {
             "title": "Ayakkabı Sahnesi",
-            "description": "Gerçek silüeti ve görünür detaylarıyla grafik bir sunum.",
+            "description": "Yönlü yan ışık ve çapraz boşluklarla güçlü, grafik ürün sunumu. Çoklu çekimde kısa yanal kamera geçişinden tam ürün finaline gidilir; 10 saniyede önce silüet gösterilir.",
             "caption": "Grafik silüet"
           },
           "upholstery-macro": {
             "title": "Döşeme Detayı",
-            "description": "Doğrulanmış yüzey ve birleşimlere sakin bir yakın bakış.",
+            "description": "Yüzeyi yalayan yumuşak ışıkla doğrulanmış doku ve birleşimlere yakın bakış. Çoklu çekimde kamera yüzeyi tarayıp tam ürüne açılır; 10 saniyede araya orta kadraj girer.",
             "caption": "Yüzey ve birleşimler"
           },
           "culinary-texture": {
             "title": "Lezzetin Dokusu",
-            "description": "İçerik veya tazelik iddiası olmadan görünür gıda dokusu.",
+            "description": "Yumuşak üst-yan ışıkla görünür yüzey veya katmanlara duyusal yakın bakış. Çoklu çekimde yakın yüzeyden tam ürüne açılır; 10 saniyede ürünün genel yapısını gösteren orta kadraj eklenir.",
             "caption": "Mevcut yüzey dokusu"
           },
           "optical-lines": {
             "title": "Optik Çizgiler",
-            "description": "Görünür kenarlardan dengeli, simetrik bir finale.",
+            "description": "Yumuşak kenar ışığıyla mevcut çizgileri öne çıkaran geometrik sunum. Çoklu çekimde grafik orta kadraj simetrik tam ürün finaline bağlanır; 10 saniyede önce genel görünüm gelir.",
             "caption": "Çizgiler ve simetri"
           },
           "craftsmanship-study": {
             "title": "İşçilik İncelemesi",
-            "description": "Üretim hikâyesi uydurmadan bitmiş işçiliği inceler.",
+            "description": "Yumuşak yan ışık ve kısa yanal yakın geçişle görünür işçiliğe sakin bakış. Çoklu çekimde bitmiş yüzeyden tam ürüne açılır; 10 saniyede ışıkla vurgulanan orta kadraj da eklenir.",
             "caption": "Bitmiş ürün detayları"
           },
           "window-display": {
             "title": "Vitrin Estetiği",
-            "description": "Yeni mağaza kurmadan kaynak ortamında vitrin estetiği.",
+            "description": "Dengeli üst ışık ve zarif boşluklarla vitrin estetiğinde ürün sunumu. Çoklu çekimde genel görünüm simetrik finale bağlanır; 10 saniyede yan ışıklı orta kadraj eklenir.",
             "caption": "Kaynak ortamında sunum"
           }
         },
@@ -1159,8 +1171,8 @@
       },
       "prompt": {
         "image": {
-          "heading": "Hareket açıklaması (isteğe bağlı)",
-          "description": "Kamera ve ürün hareketi için kısa bir yaratıcı yön ekleyin.",
+          "heading": "Yaratıcı / hareket açıklaması",
+          "description": "Kamera hareketini, ışığı ve atmosferi kısa bir açıklamayla tarif edin.",
           "placeholder": "Örn. Ürüne doğru yavaş sinematik yaklaşma ve yumuşak yansıma geçişleri…"
         },
         "inspirationLabel": "Açıklama önerileri"
@@ -1249,6 +1261,7 @@
         "emptyDescription": "Tamamlanan videolarınızı Video Kütüphanesi’nde izleyip indirebilirsiniz."
       },
       "validation": {
+        "shot-mode-required": "Devam etmek için Tek Çekim veya Çoklu Çekim seçin.",
         "source-required": "Devam etmek için bir kaynak görsel seçin.",
         "prompt-required": "Devam etmek için kısa bir hareket açıklaması yazın.",
         "invalid-source-type": "JPEG, PNG veya WebP biçiminde bir görsel seçin.",

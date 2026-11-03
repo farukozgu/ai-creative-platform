@@ -67,7 +67,7 @@ export function VideoDirectorPresetSelector({ presetId, disabled, onChange, prod
             </span>
             <span className={styles.presetCopy}>
               <strong>{t(`presets.${id}.title`)}</strong>
-              <small>{t(`presets.${id}.caption`)}</small>
+              <small>{t(`presets.${id}.description`)}</small>
               {recommended.includes(id) ? <Badge>{t("library.recommendedBadge")}</Badge> : null}
             </span>
           </span>
@@ -93,7 +93,7 @@ export function VideoDirectorPresetSelector({ presetId, disabled, onChange, prod
 export function VideoDirectorPanel({ draft, draftKey, presetId, planDisabled, disabledReason, onPrepared, shotMode }: {
   draft: VideoGenerationDraft;
   draftKey: string;
-  presetId: VideoPresetId;
+  presetId?: VideoPresetId;
   planDisabled: boolean;
   disabledReason: "planLocked" | "planNeedsReferences" | "planNeedsSource" | "planNeedsPreparedSource" | "planNeedsReadyDraft" | null;
   onPrepared(selection: VideoDirectorSelection | null, productContext?: VideoPresetProduct, analysisStatus?: VideoProductAnalysisDisplayStatus): void;
@@ -141,11 +141,11 @@ export function VideoDirectorPanel({ draft, draftKey, presetId, planDisabled, di
       const result = await prepareVideoDirectorAction(draft, presetId, shotMode, existingReceipt);
       if (!active.current || version !== selectionVersion.current) return;
       if (result.status === "references_unverified") { setReferenceErrorReason(result.reason); setReferencesUnverified(true); setError(true); return; }
-      if (result.status !== "success" || result.plan.presetId !== presetId || result.plan.shotMode !== shotMode) {
+      if (result.status !== "success" || result.plan.presetId !== (presetId ?? "custom") || result.plan.shotMode !== shotMode) {
         setError(true); return;
       }
       setPrepared({ ...result, analysisStatus: result.analysisStatus });
-      onPrepared({ presetId, shotMode, receipt: result.receipt }, result.productContext, result.analysisStatus);
+      onPrepared(presetId ? { presetId, shotMode, receipt: result.receipt } : { creativeMode: "custom", shotMode, receipt: result.receipt }, result.productContext, result.analysisStatus);
       try { sessionStorage.setItem(storageKey, JSON.stringify({ receipt: result.receipt })); } catch { /* Optional cache. */ }
     } catch { if (active.current && version === selectionVersion.current) setError(true); }
     finally { inFlight.current = false; if (active.current) setBusy(false); }

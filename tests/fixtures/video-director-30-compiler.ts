@@ -5,7 +5,7 @@ import { directorIdentityEvidence } from "../../src/lib/video-director/identity-
 import { productVideoNegativePrompt, VIDEO_PRESERVATION_VERSION } from "../../src/lib/video-generation/preservation";
 import { KLING_MULTI_PROMPT_MAX_CHARS } from "../../src/lib/video-generation/fal-request";
 export function compileDirector30(plan: VideoDirectorPlan, input: VideoDirectorInput) {
-  if (plan.version !== VIDEO_DIRECTOR_VERSION || plan.presetId !== input.presetId || plan.shotMode !== input.shotMode
+  if (input.presetId === "custom" || plan.version !== VIDEO_DIRECTOR_VERSION || plan.presetId !== input.presetId || plan.shotMode !== input.shotMode
     || plan.presetVersion !== videoDirectorPresets[input.presetId].version) throw new Error("invalid_director_plan");
   const validated = parseDirectorOutput(plan, input);
   if (!validated) throw new Error("invalid_director_plan");

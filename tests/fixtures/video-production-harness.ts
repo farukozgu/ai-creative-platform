@@ -113,7 +113,7 @@ export class VideoProductionHarness {
     const key = receipt.directorCacheKey(videoTestOwner, fingerprint(source.bytes), "gpt-4o-mini", input);
     const token = receipt.sealDirectorPlan(key, plan, secret, this.now, input.profile);
     assert.ok(token.length <= 14000);
-    draft.director = { presetId: input.presetId, shotMode: input.shotMode, receipt: token };
+    draft.director = { presetId: "cinematic-dial", shotMode: input.shotMode, receipt: token };
     return plan;
   }
 
@@ -122,7 +122,7 @@ export class VideoProductionHarness {
   }
   prepareDirector(input: core.VideoDirectorInput) {
     return this.load<typeof import("../../src/app/[locale]/dashboard/video/director-actions")>("src/app/[locale]/dashboard/video/director-actions.ts")
-      .prepareVideoDirectorAction(input.draft, input.presetId, input.shotMode);
+      .prepareVideoDirectorAction(input.draft, input.presetId === "custom" ? undefined : input.presetId, input.shotMode);
   }
   directorRequest(input: core.VideoDirectorInput, referenceOnly = false) {
     return this.load<typeof import("../../src/lib/video-director/openai-director")>("src/lib/video-director/openai-director.ts").buildDirectorRequest(input, undefined, referenceOnly);

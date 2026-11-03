@@ -43,6 +43,9 @@ type VideoGenerationInspectorProps = {
   costSummary?: React.ReactNode;
   referenceControls?: React.ReactNode;
   presetControls?: React.ReactNode;
+  creativeModeControls?: React.ReactNode;
+  shotModeControls?: React.ReactNode;
+  promptEnabled?: boolean;
   directorControls?: React.ReactNode;
   advancedSettings?: React.ReactNode;
   preservationControls?: React.ReactNode;
@@ -82,6 +85,9 @@ export function VideoGenerationInspector({
   costSummary,
   referenceControls,
   presetControls,
+  creativeModeControls,
+  shotModeControls,
+  promptEnabled = true,
   directorControls,
   advancedSettings,
   preservationControls,
@@ -133,9 +139,10 @@ export function VideoGenerationInspector({
         />
 
         {referenceControls}
+        {creativeModeControls}
         {presetControls}
 
-        <section className={styles.controlSection} aria-labelledby="video-prompt-heading">
+        {promptEnabled ? <section className={styles.controlSection} aria-labelledby="video-prompt-heading">
           <div className={styles.controlHeading}>
             <h2 id="video-prompt-heading"><span className={styles.stepNumber} aria-hidden="true">03</span>{copy.promptHeading}</h2>
           </div>
@@ -149,7 +156,9 @@ export function VideoGenerationInspector({
             onChange={(event) => onPromptChange(event.target.value)}
           />
           <p id="video-prompt-description" className={styles.fieldDescription}>{copy.promptDescription}</p>
-        </section>
+        </section> : null}
+
+        {shotModeControls}
 
         <fieldset className={styles.controlSection}>
           <legend><span className={styles.stepNumber} aria-hidden="true">04</span>{copy.qualityHeading}</legend>

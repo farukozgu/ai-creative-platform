@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import test from "node:test";
-import { compileDirectorPlan, directorPlanDescriptions, directVideoWithClient, fallbackDirectorPlan, parseDirectorOutput, type DirectorValidationFailure, type VideoDirectorInput, type VideoDirectorShot } from "../src/lib/video-director/core";
+import { compileDirectorPlan, directorPlanDescriptions, directorPresetVersion, directVideoWithClient, fallbackDirectorPlan, parseDirectorOutput, type DirectorValidationFailure, type VideoDirectorInput, type VideoDirectorShot } from "../src/lib/video-director/core";
 import { interpretCreativeIntent } from "../src/lib/video-director/creative-request";
 import { directorProductContext } from "../src/lib/video-director/product-context";
 import { DirectorStructuredOutputError } from "../src/lib/video-director/plan-contract";
@@ -10,7 +10,7 @@ import { directorFixtureInput, directorProducts } from "./fixtures/video-directo
 import { libraryFixtures } from "./fixtures/video-preset-library-fixtures";
 import type { ProductProfile } from "../src/lib/product-understanding/product-profile";
 
-function inputFor(profile = directorProducts[0], durationSeconds: 5 | 10 = 5): VideoDirectorInput {
+function inputFor(profile = directorProducts[0], durationSeconds: 5 | 10 = 5): VideoDirectorInput & { presetId: "cinematic-hero" } {
   const base = directorFixtureInput(profile);
   return { ...base, presetId: "cinematic-hero", draft: { ...base.draft, durationSeconds } };
 }
@@ -24,7 +24,7 @@ function candidate(input: VideoDirectorInput, first: string, second = first) {
     lighting: index ? "Even diffuse light" : "Soft side light", motion: "Keep the product still", pace: index ? "Patient hold" : "Precise accent",
     focus, evidenceRefs: evidence.filter(item => item.detail === focus).map(item => item.id),
   });
-  return { version: VIDEO_DIRECTOR_VERSION, presetId: input.presetId, presetVersion: getVideoDirectorPreset(input.presetId, input.shotMode, input.draft.durationSeconds).version,
+  return { version: VIDEO_DIRECTOR_VERSION, presetId: input.presetId, presetVersion: directorPresetVersion(input.presetId),
     origin: "ai" as const, shotMode: input.shotMode, ...directorPlanDescriptions(input, 2),
     intentContract: interpretCreativeIntent(input.draft.prompt, evidence, input.shotMode, input.draft.cameraMovement), shots: [shot(first, 0), shot(second, 1)] };
 }

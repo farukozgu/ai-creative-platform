@@ -17,7 +17,8 @@ export async function prepareVideoDirectorAction(draft: unknown, presetId: unkno
   const correlationId = createVideoCorrelationId();
   if (!ownerId || !canAccessVideoBeta(ownerId)) return { status: "unavailable" as const };
   const parsed = validateVideoGenerationDraft(draft);
-  if (!parsed.ok || !parsed.value.source || !isVideoPresetId(presetId) || (shotMode !== "single" && shotMode !== "multi")
+  const custom = parsed.ok && parsed.value.creativeMode === "custom";
+  if (!parsed.ok || !parsed.value.source || (custom ? presetId !== undefined : !isVideoPresetId(presetId)) || (shotMode !== "single" && shotMode !== "multi")
     || parsed.value.source.kind !== "uploaded-image" || parsed.value.cameraMovement === "orbit") return { status: "invalid" as const };
   try {
     const startedAt = Date.now();
@@ -48,7 +49,7 @@ export async function prepareVideoDirectorAction(draft: unknown, presetId: unkno
     }
     const productContext = presetProduct(profile);
     const result = await prepareVideoDirectorPlan(ownerId, context.prepared, context.sourceSha256,
-      { draft: parsed.value, presetId, shotMode, profile, referenceImages }, existingReceipt,
+      { draft: parsed.value, presetId: custom ? "custom" : presetId as import("@/lib/video-director/presets").VideoPresetId, shotMode, profile, referenceImages }, existingReceipt,
       analysisStatus === "verified" || analysisStatus === "unsupported", { correlationId,
         fallbackReason: analysisStatus === "quota_limited" || analysisStatus === "configuration_error" || analysisStatus === "provider_failed"
           ? analysisStatus : analysisStatus === "not_analyzed" || analysisStatus === "pending" ? "product_analysis_failed" : undefined });

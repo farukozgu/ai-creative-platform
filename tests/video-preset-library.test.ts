@@ -24,7 +24,7 @@ test("cinematic-hero single 5s validates steady framing and stationary product t
   const plan = fallbackDirectorPlan(input);
   const oldCacheKey = (selected: VideoDirectorInput) => createHash("sha256").update(JSON.stringify({
     ownerId: "owner", sourceSha256: "hash", model: "fixture", version: VIDEO_DIRECTOR_VERSION,
-    contractVersion: DIRECTOR_CONTRACT_VERSION, preset: videoDirectorPresets[selected.presetId], presetId: selected.presetId,
+    contractVersion: DIRECTOR_CONTRACT_VERSION, preset: selected.presetId === "custom" ? null : videoDirectorPresets[selected.presetId], presetId: selected.presetId,
     shotMode: selected.shotMode, profile: { ...selected.profile, source: { ...selected.profile!.source, analyzedAt: undefined } },
     draft: videoDraftHash({ ...selected.draft, director: undefined }),
   })).digest("hex");

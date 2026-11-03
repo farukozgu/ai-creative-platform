@@ -25,13 +25,14 @@ import { quoteVideoFidelity } from "@/lib/video-fidelity/pricing";
 import { resumeOwnedVideoReview, videoFidelitySchemaReady } from "@/lib/video-fidelity/reviews";
 import { readVerifiedDirectorPlan } from "@/lib/video-director/runtime";
 import { readDirectorProfileSnapshot } from "@/lib/video-director/receipt";
-import { compileDirectorPlan } from "@/lib/video-director/core";
+import { compileDirectorPlan, directorSelectionId } from "@/lib/video-director/core";
 import { matchesVideoRequest } from "@/lib/video-generation/request-identity";
 import { summarizeVideoPayload } from "@/lib/video-generation/payload-summary";
 import { validateKlingMultiPrompt } from "@/lib/video-generation/fal-request";
 import { createVideoCorrelationId, logVideoDiagnostic } from "@/lib/video-generation/diagnostics";
 
 async function verifiedVideoSnapshot(ownerId: string, draft: VideoGenerationDraft) {
+  if (draft.creativeMode && !draft.director) throw new Error("The active creative mode requires a verified plan.");
   if (!draft.source || !draft.shotMode || (draft.shotMode === "multi" && !draft.director)) throw new Error("A shot mode and verified plan are required.");
   const context = await readOwnedPreparedVideoSource(ownerId, draft.source, draft.aspectRatio);
   await readProductReferences(ownerId, draft);
@@ -39,7 +40,7 @@ async function verifiedVideoSnapshot(ownerId: string, draft: VideoGenerationDraf
   // Authenticate the profile snapshot first; plan verification then binds it to
   // this owner, current source hash, model and full draft before it can be used.
   const profile = context.profile ?? (draft.director ? readDirectorProfileSnapshot(draft.director.receipt, process.env.SUPABASE_SECRET_KEY ?? "") : null);
-  const input = draft.director ? { draft, profile, presetId: draft.director.presetId, shotMode: draft.director.shotMode } : null;
+  const input = draft.director ? { draft, profile, presetId: directorSelectionId(draft.director), shotMode: draft.director.shotMode } : null;
   if (input && input.shotMode !== draft.shotMode) throw new Error("Shot mode mismatch.");
   const plan = input ? readVerifiedDirectorPlan(ownerId, context.sourceSha256, input, draft.director?.receipt) : null;
   if (input && !plan) throw new Error("Director plan is invalid or expired.");

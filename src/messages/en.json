@@ -788,6 +788,18 @@
       "emptyDescription": "Configure your image using the controls. No generated image yet."
     },
     "videoStudio": {
+      "shotSelection": {
+        "required": "Choose Single Shot or Multi Shot to continue.",
+        "single": "One continuous take without internal cuts or montage.",
+        "multi": "Cuts between scenes with distinct visual purposes."
+      },
+      "creativeMode": {
+        "heading": "Creative direction",
+        "preset": "Preset Mode",
+        "custom": "Custom Creative Mode",
+        "presetDescription": "Use the selected style’s shot sequence without free-form creative direction.",
+        "customDescription": "Describe your own shot idea without applying a preset sequence."
+      },
       "advancedSettings": "Advanced settings",
       "configurationUnavailable": "Not enabled in administrator settings.",
       "singleImageNotice": "A 360° rotation from one image requires inferred unseen surfaces; accuracy from every angle is not guaranteed.",
@@ -801,122 +813,122 @@
         "presets": {
           "luxury-fashion-film": {
             "title": "Luxury Fashion Film",
-            "description": "Measured editorial framing, soft highlights and a composed campaign finish.",
+            "description": "Sculpted side light and long-lens framing create a luxury campaign mood. Multi-shot moves from the silhouette through a lateral glide and visible detail to a confident product finish.",
             "caption": "Editorial & cinematic"
           },
           "macro-detail-reveal": {
             "title": "Macro Detail Reveal",
-            "description": "A restrained closer view of visible materials and craftsmanship.",
+            "description": "Soft side light gives visible details a crisp close study. Multi-shot moves from detail to the complete product; at 10 seconds, a second verified feature is also studied.",
             "caption": "Texture & craft"
           },
           "minimal-studio": {
             "title": "Minimal Studio",
-            "description": "A stable hero frame with balanced space and consistent light.",
+            "description": "Soft studio light and clean, balanced framing create a calm product presentation. Multi-shot moves from an overview to a symmetrical finish, with a medium view added at 10 seconds.",
             "caption": "Clean & product-led"
           },
           "floating-fashion": {
             "title": "Floating Fashion",
-            "description": "An airy lift while retaining the source silhouette.",
+            "description": "Soft side light and airy space create a light fashion mood. Multi-shot uses full-product views; at 10 seconds, an upward camera glide adds a sense of lightness.",
             "caption": "Airy silhouette"
           },
           "precision-macro": {
             "title": "Precision Macro",
-            "description": "A precise look at resolved visible features.",
+            "description": "Narrow diffuse light gives one verified feature a precise, crisp study. Multi-shot links the close inspection to a full-product finish, adding an opening overview at 10 seconds.",
             "caption": "Precise detail"
           },
           "glass-reflection": {
             "title": "Glass Reflection",
-            "description": "Soft highlights travel over an evidenced surface.",
+            "description": "A broad, soft highlight crossing the existing surface creates a polished presentation. Multi-shot links the light passage to a full-product finish, adding a camera pull-back at 10 seconds.",
             "caption": "Light and surface"
           },
           "product-spotlight": {
             "title": "Product Spotlight",
-            "description": "A controlled light reveal of product form.",
+            "description": "Dramatic light and graphic space create a striking advertising mood. Multi-shot combines a light reveal and short lateral camera glide with a strong, symmetrical product finish.",
             "caption": "Controlled light"
           },
           "elegant-orbit": {
             "title": "Elegant Orbit",
-            "description": "A short lateral view of known surfaces instead of a full turn.",
+            "description": "Soft edge light and a short lateral camera glide create an elegant sense of perspective. Multi-shot stays within the source-visible face and ends on a balanced full-product view.",
             "caption": "Restrained parallax"
           },
           "cinematic-hero": {
             "title": "Cinematic Hero",
-            "description": "A dramatic introduction and a confident campaign finish.",
+            "description": "Directional light and brisk framing changes create a cinematic advertising mood. Multi-shot combines an overview, visible surfaces and details, and a lateral camera glide before a strong product finish.",
             "caption": "Confident campaign finish"
           },
           "material-detail": {
             "title": "Material Detail",
-            "description": "A tactile study of the existing surface without material assumptions.",
+            "description": "Soft grazing light creates a tactile surface study. Multi-shot moves from a close surface view to the complete product; at 10 seconds, a different verified junction is also shown.",
             "caption": "Tactile close study"
           },
           "macro-stitching": {
             "title": "Macro Stitching",
-            "description": "Trace evidenced seams and construction lines.",
+            "description": "Soft raking light gives visible stitching or junction lines a close study. Multi-shot follows the line with a camera pan before a full-product finish, adding a medium view at 10 seconds.",
             "caption": "Visible construction"
           },
           "fabric-motion": {
             "title": "Fabric Motion",
-            "description": "Light and camera rhythm preserve the existing drape.",
+            "description": "A calm flow uses light to bring out the existing textile texture and folds. Multi-shot pans across visible texture and pulls back to the whole product, adding an opening overview at 10 seconds.",
             "caption": "Drape and light"
           },
           "label-reveal": {
             "title": "Label Reveal",
-            "description": "Connect an original visible mark to the complete product.",
+            "description": "Balanced light gives a source-visible label or lettering a controlled close study. Multi-shot links the verified marking to a full-product view, adding an opening overview at 10 seconds.",
             "caption": "Original markings"
           },
           "dramatic-backlight": {
             "title": "Dramatic Backlight",
-            "description": "A rim-lit silhouette without assuming transparency.",
+            "description": "Rim light defines the silhouette against dramatic space. Multi-shot links an overview to a symmetrical product finish; at 10 seconds, a medium view studies the contour light.",
             "caption": "Sculpted contours"
           },
           "cinematic-dial": {
             "title": "Cinematic Dial",
-            "description": "From the evidenced dial layout to a complete timepiece view.",
+            "description": "Sculpted side light gives a verified surface arrangement a cinematic close study. Multi-shot pulls back from the detail to the full product, adding an opening overview at 10 seconds.",
             "caption": "Dial and layout"
           },
           "metallic-light-sweep": {
             "title": "Metallic Light Sweep",
-            "description": "A controlled light band travels over the existing finish.",
+            "description": "A narrow highlight moving across the existing surface creates a crisp presentation. Multi-shot links the light study to a full-product finish, adding an opening overview at 10 seconds.",
             "caption": "Traveling light band"
           },
           "hardware-reveal": {
             "title": "Hardware Reveal",
-            "description": "Inspect visible attachments without operating them.",
+            "description": "Soft edge light gives a visible clasp, cap or fitting a controlled study. Multi-shot inspects the existing fitting and ends on the full product, adding an opening overview at 10 seconds.",
             "caption": "Attachments and edges"
           },
           "floating-accessory": {
             "title": "Floating Accessory",
-            "description": "A poised presentation retaining source orientation.",
+            "description": "Soft edge light and open space create a light, balanced accessory presentation. Multi-shot links a short lateral camera glide to a calm full-product finish, adding an opening overview at 10 seconds.",
             "caption": "Poised sense of lift"
           },
           "sneaker-hero": {
             "title": "Sneaker Hero",
-            "description": "A graphic campaign around the actual footwear silhouette.",
+            "description": "Directional side light and diagonal space create a bold, graphic product presentation. Multi-shot moves from a short lateral camera glide to a full-product finish, adding a silhouette opening at 10 seconds.",
             "caption": "Graphic silhouette"
           },
           "upholstery-macro": {
             "title": "Upholstery Macro",
-            "description": "An unhurried study of evidenced surfaces and junctions.",
+            "description": "Soft grazing light gives verified texture and junctions a close study. Multi-shot pans across the surface and pulls back to the full product, adding a medium view at 10 seconds.",
             "caption": "Surfaces and junctions"
           },
           "culinary-texture": {
             "title": "Culinary Texture",
-            "description": "Study visible food texture without ingredient or freshness claims.",
+            "description": "Soft top-side light gives visible surfaces or layers a sensory close study. Multi-shot pulls back to the full product, adding a medium view of the existing form at 10 seconds.",
             "caption": "Existing surface texture"
           },
           "optical-lines": {
             "title": "Optical Lines",
-            "description": "From visible contours to a balanced symmetrical finish.",
+            "description": "Soft edge light brings out existing lines in a geometric presentation. Multi-shot links a graphic medium view to a symmetrical full-product finish, adding an opening overview at 10 seconds.",
             "caption": "Contours and symmetry"
           },
           "craftsmanship-study": {
             "title": "Craftsmanship Study",
-            "description": "Study finished workmanship without inventing production history.",
+            "description": "Soft side light and a short lateral close glide create a calm study of visible craftsmanship. Multi-shot pulls back from the finished surface to the full product, adding a lit medium view at 10 seconds.",
             "caption": "Finished workmanship"
           },
           "window-display": {
             "title": "Window Display",
-            "description": "Retail editorial framing within the existing source setting.",
+            "description": "Balanced overhead light and elegant space create a display-like product presentation. Multi-shot links an overview to a symmetrical finish, adding a side-lit medium view at 10 seconds.",
             "caption": "Source-setting editorial"
           }
         },
@@ -1159,8 +1171,8 @@
       },
       "prompt": {
         "image": {
-          "heading": "Motion direction (optional)",
-          "description": "Add a short creative direction for camera or product movement.",
+          "heading": "Creative / motion direction",
+          "description": "Describe the camera movement, light and atmosphere in a short brief.",
           "placeholder": "E.g. Slow cinematic dolly-in with subtle reflection changes…"
         },
         "inspirationLabel": "Prompt suggestions"
@@ -1249,6 +1261,7 @@
         "emptyDescription": "Watch and download completed videos in Video Library."
       },
       "validation": {
+        "shot-mode-required": "Choose Single Shot or Multi Shot to continue.",
         "source-required": "Choose a source image to continue.",
         "prompt-required": "Add a short motion prompt to continue.",
         "invalid-source-type": "Choose a JPEG, PNG, or WebP image.",

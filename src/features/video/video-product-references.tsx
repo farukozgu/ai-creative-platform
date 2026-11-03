@@ -14,7 +14,7 @@ import type { VideoLibraryAsset } from "./video-studio-types";
 import styles from "./video-studio-workspace.module.css";
 type Reference = NonNullable<VideoGenerationDraft["productReferences"]>[number] & { previewUrl: string };
 export function VideoProductReferences({ product, presetId, aspectRatio, disabled, onChange, onBusyChange }: {
-  sourceKey: string; product: VideoPresetProduct; presetId: VideoPresetId; aspectRatio: "9:16" | "16:9" | "1:1";
+  sourceKey: string; product: VideoPresetProduct; presetId?: VideoPresetId; aspectRatio: "9:16" | "16:9" | "1:1";
   disabled: boolean; onChange: (refs: NonNullable<VideoGenerationDraft["productReferences"]>) => void;
   onBusyChange: (busy: boolean) => void;
 }) {

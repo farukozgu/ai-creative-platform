@@ -10,8 +10,20 @@ import type {
 import {
   MAX_PRODUCT_IMAGE_FILE_SIZE,
 } from "@/lib/assets/product-asset-constraints";
+import type { VideoGenerationDraft } from "@/lib/video-generation/types";
+import type { VideoDirectorSelection } from "@/lib/video-director/core";
+
+/** Use the same exclusive creative fields for planning, quoting and submission. */
+export function videoStudioCreativeFields(state: VideoStudioDraft, selection?: VideoDirectorSelection | null): Pick<VideoGenerationDraft, "creativeMode" | "prompt" | "cameraMovement" | "director"> {
+  const custom = state.creativeMode === "custom";
+  const compatible = selection && selection.shotMode === state.shotMode && (selection.creativeMode === "custom") === custom;
+  return { creativeMode: state.creativeMode, prompt: custom ? state.prompt : "", cameraMovement: "auto",
+    ...(compatible ? { director: selection } : {}) };
+}
 
 export const initialVideoStudioDraft: VideoStudioDraft = {
+  shotMode: null,
+  creativeMode: "preset",
   criticalRegion: null, analyzeAfterGeneration: false,
   source: null,
   prompt: "",
@@ -23,6 +35,8 @@ export const initialVideoStudioDraft: VideoStudioDraft = {
 };
 
 export type VideoStudioAction =
+  | { type: "set-shot-mode"; mode: NonNullable<VideoStudioDraft["shotMode"]> }
+  | { type: "set-creative-mode"; mode: VideoStudioDraft["creativeMode"] }
   | { type: "set-critical-region"; region: VideoStudioDraft["criticalRegion"] }
   | { type: "set-analysis"; enabled: boolean }
   | { type: "set-source"; source: VideoSource }
@@ -39,6 +53,9 @@ export function videoStudioReducer(
   action: VideoStudioAction,
 ): VideoStudioDraft {
   switch (action.type) {
+    case "set-shot-mode": return { ...state, shotMode: action.mode, feedback: null };
+    case "set-creative-mode":
+      return action.mode === state.creativeMode ? state : { ...state, creativeMode: action.mode, prompt: "", cameraMovement: "auto", feedback: null };
     case "set-critical-region": return { ...state, criticalRegion: action.region, analyzeAfterGeneration: false };
     case "set-analysis": return { ...state, analyzeAfterGeneration: action.enabled };
     case "set-source":
@@ -64,7 +81,7 @@ export function videoStudioReducer(
         feedback: null,
       };
     case "set-camera":
-      return { ...state, cameraMovement: action.cameraMovement, feedback: null };
+      return { ...state, cameraMovement: "auto", feedback: null };
     case "set-quality":
       return { ...state, quality: action.quality, analyzeAfterGeneration: false, feedback: null };
     case "set-aspect-ratio":
@@ -100,6 +117,8 @@ export function validateVideoStudioDraft(
   state: VideoStudioDraft,
 ): VideoStudioFeedback | null {
   if (!state.source) return "source-required";
+  if (state.shotMode !== "single" && state.shotMode !== "multi") return "shot-mode-required";
+  if (state.creativeMode === "custom" && !state.prompt.trim()) return "prompt-required";
   return null;
 }
 

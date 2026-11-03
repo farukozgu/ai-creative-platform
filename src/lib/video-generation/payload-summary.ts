@@ -23,7 +23,7 @@ export function summarizeVideoPayload(draft: VideoGenerationDraft, snapshot: Vid
   const preview = { referenceReviews: plan?.referenceReviews ?? [], references: draft.productReferences ?? [], mode: multi ? "multi" as const : "single" as const, shotType: input.shot_type === "customize" ? "customize" as const : null, shots };
   const summary = { mode: preview.mode, shotType: preview.shotType, durations: shots.map(shot => shot.duration),
     promptHashes: shots.map(shot => hash(shot.prompt)), directorVersion: plan?.version ?? null,
-    presetId: plan?.presetId ?? null, presetVersion: plan?.presetVersion ?? null };
+    presetId: plan?.presetId === "custom" ? null : plan?.presetId ?? null, presetVersion: plan?.presetId === "custom" ? null : plan?.presetVersion ?? null };
   // Include negative prompt and settings in the signed comparison, without storing them in the audit summary.
   const snapshotHash = hash(JSON.stringify({ preview, summary, duration: input.duration, generateAudio: input.generate_audio,
     sourceSha256: snapshot.sourceSha256, geometry: snapshot.geometry,

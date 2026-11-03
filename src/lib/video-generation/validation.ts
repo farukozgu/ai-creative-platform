@@ -14,10 +14,23 @@ export type VideoDraftValidation = { ok: true; value: VideoGenerationDraft } | {
 export function validateVideoGenerationDraft(value: unknown): VideoDraftValidation {
   if (!value || typeof value !== "object") return { ok: false, field: "draft", message: "A generation draft is required." };
   const input = value as Record<string, unknown>;
+  if (input.creativeMode !== undefined && input.creativeMode !== "preset" && input.creativeMode !== "custom")
+    return { ok: false, field: "creativeMode", message: "Invalid creative mode." };
+  if (input.creativeMode && input.cameraMovement !== "auto")
+    return { ok: false, field: "cameraMovement", message: "Camera direction comes from the active creative brief." };
+  if (input.creativeMode && input.shotMode !== "single" && input.shotMode !== "multi")
+    return { ok: false, field: "shotMode", message: "Choose a shot mode before planning." };
+  if (input.creativeMode === "preset" && (input.prompt !== "" || input.cameraMovement !== "auto")
+    || input.creativeMode === "custom" && (typeof input.prompt !== "string" || !input.prompt.trim()))
+    return { ok: false, field: "prompt", message: "Only the active mode may supply creative direction." };
   if (input.shotMode !== undefined && input.shotMode !== "single" && input.shotMode !== "multi") return { ok: false, field: "shotMode", message: "Invalid shot mode." };
   if (input.director !== undefined) {
     const selection = input.director;
-    if (!selection || typeof selection !== "object" || !("presetId" in selection) || !isVideoPresetId(selection.presetId)
+    const custom = !!selection && typeof selection === "object" && "creativeMode" in selection && selection.creativeMode === "custom";
+    if (!selection || typeof selection !== "object"
+      || "creativeMode" in selection && selection.creativeMode !== "custom" && selection.creativeMode !== "preset"
+      || (custom ? input.creativeMode !== "custom" || "presetId" in selection
+        : input.creativeMode === "custom" || !("presetId" in selection) || !isVideoPresetId(selection.presetId))
       || !("shotMode" in selection) || !["single", "multi"].includes(String(selection.shotMode))
       || !("receipt" in selection) || typeof selection.receipt !== "string" || !selection.receipt || selection.receipt.length > 14000)
       return { ok: false, field: "director", message: "A verified director plan is required." };

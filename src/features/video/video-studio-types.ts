@@ -38,6 +38,7 @@ export type LibraryVideoSource = {
 export type VideoSource = LocalVideoSource | LibraryVideoSource;
 
 export type VideoStudioFeedback =
+  | "shot-mode-required"
   | "source-required"
   | "prompt-required"
   | "invalid-source-type"
@@ -47,6 +48,8 @@ export type VideoStudioFeedback =
   | "not-connected";
 
 export type VideoStudioDraft = {
+  shotMode: "single" | "multi" | null;
+  creativeMode: "preset" | "custom";
   criticalRegion: import("@/lib/video-generation/preservation").CriticalProductRegion | null;
   analyzeAfterGeneration: boolean;
   source: VideoSource | null;

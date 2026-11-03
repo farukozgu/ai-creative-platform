@@ -9,7 +9,7 @@ import { DashboardIcon } from "@/components/dashboard/dashboard-icons";
 import { Link } from "@/i18n/navigation";
 import { VideoDirectorPanel, VideoDirectorPresetSelector, type VideoProductAnalysisDisplayStatus } from "./video-director-panel";
 import type { VideoDirectorSelection } from "@/lib/video-director/core";
-import type { VideoPresetId, VideoShotMode } from "@/lib/video-director/presets";
+import type { VideoPresetId } from "@/lib/video-director/presets";
 import type { summarizeVideoPayload } from "@/lib/video-generation/payload-summary";
 import { mapRegionToFrame } from "@/lib/video-generation/preservation";
 
@@ -25,10 +25,10 @@ import {
   validateVideoSourceFile,
   validateVideoStudioDraft,
   videoStudioReducer,
+  videoStudioCreativeFields,
 } from "@/features/video/video-studio-state";
 import type {
   VideoAspectRatio,
-  VideoCameraMovement,
   VideoDuration,
   VideoLibraryAsset,
   VideoQuality,
@@ -66,7 +66,7 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
   const [restoreUnavailable, setRestoreUnavailable] = useState(false);
   const [submissionUsed, setSubmissionUsed] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
-  const [shotMode, setShotMode] = useState<VideoShotMode>("single");
+  const shotMode = draft.shotMode;
   const [presetId, setPresetId] = useState<VideoPresetId>("minimal-studio");
   const [referenceState, setReferenceState] = useState<{ key: string; refs: NonNullable<VideoGenerationDraft["productReferences"]> }>({ key: "", refs: [] });
   const [referenceBusy, setReferenceBusy] = useState(false);
@@ -81,7 +81,7 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
   const submitting = useRef(false);
   const recoveryKey = recoveryScope ? `video-studio-submission-v1:${recoveryScope}` : null;
   useEffect(() => {
-    if (!generationAvailable) return;
+    if (!generationAvailable || !draft.shotMode) return;
     let active = true;
     void quoteVideoGenerationAction(draft.quality, draft.duration, { hasRegion: Boolean(draft.criticalRegion) }).then(value => {
       if (!active) return;
@@ -89,7 +89,7 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
       if (!value?.analysis.enabled) dispatch({ type: "set-analysis", enabled: false });
     }).catch(() => { if (active) setQuote(null); });
     return () => { active = false; };
-  }, [draft.quality, draft.duration, draft.criticalRegion, generationAvailable]);
+  }, [draft.quality, draft.duration, draft.criticalRegion, draft.shotMode, generationAvailable]);
   useEffect(() => {
     if (!generationAvailable || !recoveryKey) return;
     let active = true;
@@ -195,23 +195,24 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
   const preparationFailed = currentPreparation?.status === "error";
   const previewSource = draft.source && preparedFrame ? { ...draft.source, previewUrl: preparedFrame.previewUrl } : null;
   const referenceKey = JSON.stringify([draft.source?.id]);
-  const classicCinematic = presetId === "cinematic-hero" && shotMode === "multi" && draft.duration === 5;
+  const classicCinematic = draft.creativeMode === "preset" && presetId === "cinematic-hero" && shotMode === "multi" && draft.duration === 5;
   const generationDraft: VideoGenerationDraft = { productReferences: !classicCinematic && referenceState.key === referenceKey ? referenceState.refs : [], clientSubmissionId: submissionId, criticalRegion: draft.criticalRegion,
     analysisConsent: draft.analyzeAfterGeneration && currentQuote?.analysis.maximumEstimatedCostUsd != null
       && currentQuote.analysis.model && currentQuote.analysis.pricingVersion
       ? { model: currentQuote.analysis.model, maximumCostUsd: currentQuote.analysis.maximumEstimatedCostUsd,
         pricingVersion: currentQuote.analysis.pricingVersion, locale: locale === "en" ? "en" : "tr" } : null,
-    mode: "image", shotMode, source: preparedFrame?.source ?? null, prompt: draft.prompt, quality: draft.quality,
-    aspectRatio: draft.aspectRatio, durationSeconds: draft.duration, cameraMovement: draft.cameraMovement };
-  const directorDraftKey = JSON.stringify({ ...generationDraft, clientSubmissionId: "" });
-  const directorPanelKey = JSON.stringify({ ...generationDraft, clientSubmissionId: "", shotMode: undefined });
+    mode: "image", shotMode: shotMode ?? undefined, source: preparedFrame?.source ?? null, quality: draft.quality,
+    aspectRatio: draft.aspectRatio, durationSeconds: draft.duration, ...videoStudioCreativeFields(draft) };
+  const activePresetId = draft.creativeMode === "preset" ? presetId : undefined;
+  const directorDraftKey = JSON.stringify({ ...generationDraft, clientSubmissionId: "", presetId: activePresetId });
+  const directorPanelKey = JSON.stringify({ ...generationDraft, clientSubmissionId: "", shotMode: undefined, presetId: activePresetId });
   const currentDirector = director?.key === directorDraftKey ? director.selection : null;
   useEffect(() => {
     // Discard an old plan even if a later edit restores the previous field values.
     queueMicrotask(() => setDirector(current => current && current.key !== directorDraftKey ? null : current));
   }, [directorDraftKey]);
-  const directorReady = Boolean(currentDirector);
-  const approvedDraft = { ...generationDraft, ...(currentDirector ? { director: currentDirector } : {}) };
+  const directorReady = Boolean(shotMode && currentDirector);
+  const approvedDraft = { ...generationDraft, ...videoStudioCreativeFields(draft, currentDirector) };
   const approvalKey = JSON.stringify(approvedDraft);
   const activeSubmissionQuote = submissionQuote?.key === approvalKey ? submissionQuote : null;
   const quoteConfirmed = Boolean(activeSubmissionQuote && confirmedReceipt === activeSubmissionQuote.receipt);
@@ -411,7 +412,6 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
     finally { setBusy(false); submitting.current = false; }
   }
 
-  const cameraValues: VideoCameraMovement[] = ["auto", "dolly-in", "dolly-out", "pan-left", "pan-right", "static"];
   const qualityValues: VideoQuality[] = ["standard", "pro"];
   const aspectRatioValues: VideoAspectRatio[] = ["16:9", "9:16", "1:1"];
   const durationValues: VideoDuration[] = [5, 10];
@@ -496,21 +496,45 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
             {classicCinematic ? <p role="status">{t("references.classicCinematic")}</p> : null}
             <div hidden={classicCinematic}>
             <VideoProductReferences key={referenceKey} sourceKey={referenceKey}
-            product={prepared?.frame?.presetContext ?? { category: "unknown", evidence: [] }} presetId={presetId} aspectRatio={draft.aspectRatio} disabled={classicCinematic || busy || preparingQuote || !preparedFrame}
+            product={prepared?.frame?.presetContext ?? { category: "unknown", evidence: [] }} presetId={activePresetId} aspectRatio={draft.aspectRatio} disabled={classicCinematic || busy || preparingQuote || !preparedFrame}
             onBusyChange={handleReferenceBusy}
             onChange={refs => { setReferenceState({ key: referenceKey, refs }); setDirector(null); setSubmissionQuote(null); setConfirmedReceipt(null); }} />
             </div>
           </> : null}
-          presetControls={<VideoDirectorPresetSelector presetId={presetId}
+          creativeModeControls={<fieldset className={styles.controlSection} disabled={busy || preparingQuote || referenceBusy || restoringJob || submissionUsed || Boolean(jobId)}>
+            <legend>{t("creativeMode.heading")}</legend>
+            <div className={styles.compactOptions}>{(["preset", "custom"] as const).map(mode => <label key={mode}>
+              <input type="radio" name="video-creative-mode" value={mode} checked={draft.creativeMode === mode}
+                onChange={() => {
+                  dispatch({ type: "set-creative-mode", mode });
+                  setDirector(null); setSubmissionQuote(null); setConfirmedReceipt(null);
+                }} />
+              <span>{t(`creativeMode.${mode}`)}</span>
+            </label>)}</div>
+            <p className={styles.fieldDescription}>{t(`creativeMode.${draft.creativeMode}Description`)}</p>
+          </fieldset>}
+          promptEnabled={draft.creativeMode === "custom"}
+          presetControls={draft.creativeMode === "preset" ? <VideoDirectorPresetSelector presetId={presetId}
             disabled={busy}
             product={preparedFrame?.presetContext}
             analysisStatus={productAnalysisStatus}
             onChange={nextPresetId => {
               setPresetId(nextPresetId); setDirector(null); setSubmissionQuote(null); setConfirmedReceipt(null);
-            }} />}
-          directorControls={
+            }} /> : null}
+          shotModeControls={<fieldset className={styles.controlSection} disabled={busy || preparingQuote || restoringJob || submissionUsed || Boolean(jobId)}>
+            <legend>{t("director.shotMode")}</legend>
+            <div className={styles.compactOptions}>{(["single", "multi"] as const).map(mode => <label key={mode}>
+              <input type="radio" name="video-director-mode" value={mode} required checked={shotMode === mode}
+                onChange={() => {
+                  setDirector(null); setSubmissionQuote(null); setConfirmedReceipt(null); dispatch({ type: "set-shot-mode", mode });
+                }} />
+              <span>{t(`director.${mode}`)}</span>
+            </label>)}</div>
+            <p className={styles.fieldDescription} role="status">{t(shotMode ? `shotSelection.${shotMode}` : "shotSelection.required")}</p>
+          </fieldset>}
+          directorControls={shotMode ?
             <VideoDirectorPanel key={directorPanelKey} draft={generationDraft} draftKey={directorDraftKey}
-              presetId={presetId} shotMode={shotMode}
+              presetId={activePresetId} shotMode={shotMode}
               planDisabled={Boolean(directorPlanDisabledReason)} disabledReason={directorPlanDisabledReason}
               onPrepared={(selection, productContext, analysisStatus) => {
                 setDirector(selection ? { key: directorDraftKey, selection } : null);
@@ -520,7 +544,7 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
                   setPrepared(current => current?.frame ? { ...current, frame: { ...current.frame, presetContext: productContext } } : current);
                   setProductAnalysisState({ sourceAssetId: preparedFrame.source.sourceAssetId, status: analysisStatus });
                 }
-              }} />}
+              }} /> : null}
           advancedSettings={<details className={styles.advancedSettings}>
             <summary>{t("advancedSettings")}</summary>
             <VideoPreservationControls region={draft.criticalRegion} sourceUrl={draft.source?.previewUrl ?? null}
@@ -530,26 +554,6 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
             }) : null}
             analysis={analysisAvailable} analyze={draft.analyzeAfterGeneration}
             onRegion={region => dispatch({ type: "set-critical-region", region })} onAnalyze={enabled => dispatch({ type: "set-analysis", enabled })} />
-            <fieldset className={styles.directorFields}>
-              <legend>{t("camera.heading")}</legend>
-              <p className={styles.fieldDescription}>{t("singleImageNotice")}</p>
-              <div className={styles.compactOptions}>{cameraValues.map(value => <label key={value}>
-                <input type="radio" name="video-camera" value={value} checked={draft.cameraMovement === value}
-                  onChange={() => dispatch({ type: "set-camera", cameraMovement: value })} />
-                <span>{t(`camera.options.${value}.label`)}</span>
-              </label>)}</div>
-            </fieldset>
-            <fieldset className={styles.directorFields}>
-              <legend>{t("director.shotMode")}</legend>
-              <div className={styles.compactOptions}>{(["single", "multi"] as const).map(mode => <label key={mode}>
-                <input type="radio" name="video-director-mode" checked={shotMode === mode}
-                  disabled={busy}
-                  onChange={() => {
-                    setDirector(null); setSubmissionQuote(null); setConfirmedReceipt(null); setShotMode(mode);
-                  }} />
-                <span>{t(`director.${mode}`)}</span>
-              </label>)}</div>
-            </fieldset>
           </details>}
           copy={{
             title: t("title"),

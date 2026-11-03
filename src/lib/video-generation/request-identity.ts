@@ -7,11 +7,11 @@ export function videoDraftHash(draft: VideoGenerationDraft) {
   return createHash("sha256").update(JSON.stringify({ method: draft.method ?? "kling", source, prompt: draft.prompt,
     quality: draft.quality, aspectRatio: draft.aspectRatio, durationSeconds: draft.durationSeconds, cameraMovement: draft.cameraMovement,
     criticalRegion: draft.criticalRegion ?? null, ...(draft.productReferences?.length ? { productReferences: draft.productReferences } : {}), analysisConsent, ...(draft.shotMode ? { shotMode: draft.shotMode } : {}),
-    ...(draft.director ? { director: draft.director } : {}) })).digest("hex");
+    ...(draft.director ? { director: draft.director } : {}), ...(draft.creativeMode ? { creativeMode: draft.creativeMode } : {}) })).digest("hex");
 }
 export function matchesVideoRequest(job: VideoJobRecord, draft: VideoGenerationDraft) {
   if (job.preservation) return job.preservation.draftHash === videoDraftHash(draft) && job.preservation.method === (draft.method ?? "kling");
-  return (draft.method ?? "kling") === "kling" && !draft.productReferences?.length && !draft.director && !draft.criticalRegion && !draft.analysisConsent && job.prompt === draft.prompt && job.quality === draft.quality
+  return !draft.creativeMode && (draft.method ?? "kling") === "kling" && !draft.productReferences?.length && !draft.director && !draft.criticalRegion && !draft.analysisConsent && job.prompt === draft.prompt && job.quality === draft.quality
     && job.aspectRatio === draft.aspectRatio && job.durationSeconds === draft.durationSeconds && job.cameraMovement === draft.cameraMovement
     && job.sourceKind === draft.source?.kind && job.sourceId === (draft.source?.kind === "uploaded-image" ? draft.source.sourceAssetId : draft.source?.generationId);
 }
