@@ -58,11 +58,11 @@ test("physical fidelity preserves markings and source support without inventing 
 
 test("Presets outside this and subsequently staged groups retain pre-change compiled outputs", () => {
   const output = [];
-  for (const presetId of videoPresetIds.filter(id => ![...presets, "macro-detail-reveal", "material-detail", "precision-macro", "macro-stitching", "hardware-reveal", "craftsmanship-study", "glass-reflection", "dramatic-backlight", "metallic-light-sweep", "elegant-orbit", "optical-lines", "cinematic-dial", "label-reveal", "sneaker-hero", "upholstery-macro", "culinary-texture", "window-display", "fabric-motion"].includes(id))) for (const { profile } of fixtures) for (const durationSeconds of [5, 10] as const) for (const shotMode of ["single", "multi"] as const) {
+  for (const presetId of videoPresetIds.filter(id => !["minimal-studio","luxury-fashion-film","product-spotlight","macro-detail-reveal","material-detail","precision-macro","macro-stitching","hardware-reveal","craftsmanship-study","glass-reflection","dramatic-backlight","metallic-light-sweep","elegant-orbit","optical-lines","cinematic-dial","label-reveal","sneaker-hero","upholstery-macro","culinary-texture","window-display","fabric-motion","floating-fashion","floating-accessory"].includes(id))) for (const { profile } of fixtures) for (const durationSeconds of [5, 10] as const) for (const shotMode of ["single", "multi"] as const) {
     const base = directorFixtureInput(profile!);
     const input = { ...base, presetId, shotMode, draft: { ...base.draft, durationSeconds, shotMode } };
     output.push(compileDirectorPlan(fallbackDirectorPlan(input), input));
   }
-  assert.equal(output.length, 144);
-  assert.equal(createHash("sha256").update(JSON.stringify(output)).digest("hex"), "3ad082ee5e191bef4f1d1e94c412f8d27912eed33f997d99c44b902897ae239b");
+  assert.equal(output.length, 48);
+  assert.equal(createHash("sha256").update(JSON.stringify(output)).digest("hex"), "79be753270ade968938fc52c3379e60c88be06a72121a52118110063b23b6a26");
 });

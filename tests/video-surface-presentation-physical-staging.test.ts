@@ -58,13 +58,13 @@ test("surface presentation physical fidelity preserves markings and source suppo
   }
 });
 
-test("Cinematic and the other 20 presets retain all 1008 pre-change compiled outputs", () => {
+test("Presets outside this and subsequently staged groups retain pre-change compiled outputs", () => {
   const output = [];
-  for (const presetId of videoPresetIds.filter(id => !presets.includes(id as typeof presets[number]))) for (const { profile } of fixtures) for (const durationSeconds of [5, 10] as const) for (const shotMode of ["single", "multi"] as const) {
+  for (const presetId of videoPresetIds.filter(id => !["culinary-texture","window-display","fabric-motion","floating-fashion","floating-accessory"].includes(id))) for (const { profile } of fixtures) for (const durationSeconds of [5, 10] as const) for (const shotMode of ["single", "multi"] as const) {
     const base = directorFixtureInput(profile!);
     const input = { ...base, presetId, shotMode, draft: { ...base.draft, durationSeconds, shotMode } };
     output.push(compileDirectorPlan(fallbackDirectorPlan(input), input));
   }
-  assert.equal(output.length, 1008);
-  assert.equal(createHash("sha256").update(JSON.stringify(output)).digest("hex"), "d1cc55f0e43d90a6424538e1cb3a23332ea68e894cd374f037cc8b3b0a65d124");
+  assert.equal(output.length, 912);
+  assert.equal(createHash("sha256").update(JSON.stringify(output)).digest("hex"), "e9e3dfb6686c2b21009711bb5cec790d225c326478fd4540121136456ca59e99");
 });

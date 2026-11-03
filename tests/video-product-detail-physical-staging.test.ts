@@ -60,11 +60,11 @@ test("product detail physical fidelity preserves markings and source support wit
 
 test("Presets outside this and subsequently staged groups retain pre-change compiled outputs", () => {
   const output = [];
-  for (const presetId of videoPresetIds.filter(id => ![...presets, "culinary-texture", "window-display", "fabric-motion"].includes(id))) for (const { profile } of fixtures) for (const durationSeconds of [5, 10] as const) for (const shotMode of ["single", "multi"] as const) {
+  for (const presetId of videoPresetIds.filter(id => !["label-reveal","sneaker-hero","upholstery-macro","culinary-texture","window-display","fabric-motion","floating-fashion","floating-accessory"].includes(id))) for (const { profile } of fixtures) for (const durationSeconds of [5, 10] as const) for (const shotMode of ["single", "multi"] as const) {
     const base = directorFixtureInput(profile!);
     const input = { ...base, presetId, shotMode, draft: { ...base.draft, durationSeconds, shotMode } };
     output.push(compileDirectorPlan(fallbackDirectorPlan(input), input));
   }
-  assert.equal(output.length, 864);
-  assert.equal(createHash("sha256").update(JSON.stringify(output)).digest("hex"), "51e71960a4b748ce6fdf73188961e07fbe2044c1c7704ac4be87216290055b8d");
+  assert.equal(output.length, 768);
+  assert.equal(createHash("sha256").update(JSON.stringify(output)).digest("hex"), "0729b41fd2343b38d659588f7696eec1105d53ee95d15d5601c0f93369efd2bf");
 });

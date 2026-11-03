@@ -59,11 +59,11 @@ test("perspective physical fidelity preserves markings and source support withou
 
 test("Presets outside this and subsequently staged groups retain pre-change compiled outputs", () => {
   const output = [];
-  for (const presetId of videoPresetIds.filter(id => ![...presets, "label-reveal", "sneaker-hero", "upholstery-macro", "culinary-texture", "window-display", "fabric-motion"].includes(id))) for (const { profile } of fixtures) for (const durationSeconds of [5, 10] as const) for (const shotMode of ["single", "multi"] as const) {
+  for (const presetId of videoPresetIds.filter(id => !["elegant-orbit","optical-lines","cinematic-dial","label-reveal","sneaker-hero","upholstery-macro","culinary-texture","window-display","fabric-motion","floating-fashion","floating-accessory"].includes(id))) for (const { profile } of fixtures) for (const durationSeconds of [5, 10] as const) for (const shotMode of ["single", "multi"] as const) {
     const base = directorFixtureInput(profile!);
     const input = { ...base, presetId, shotMode, draft: { ...base.draft, durationSeconds, shotMode } };
     output.push(compileDirectorPlan(fallbackDirectorPlan(input), input));
   }
-  assert.equal(output.length, 720);
-  assert.equal(createHash("sha256").update(JSON.stringify(output)).digest("hex"), "2872f000bc0038f056e2bebd1bc4f2b7082e18294c64c3f542396c63a1c1d63e");
+  assert.equal(output.length, 624);
+  assert.equal(createHash("sha256").update(JSON.stringify(output)).digest("hex"), "ba2a957c0dd7d35464a9b306528d22534da04ff9990354b85304f89605e7eae4");
 });

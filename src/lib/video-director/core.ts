@@ -699,7 +699,8 @@ export function compileDirectorPlan(plan: VideoDirectorPlan, input: VideoDirecto
       && backShot && review.index === shot.referenceIndex
       && review.details.some(detail => /\b(?:text|letter\w*|logo|symbol|label|pattern|print|emblem|embroider\w*)\b/i.test(detail)));
     return prefix + compileKlingShot(shot, limit - prefix.length, Boolean(input.draft.criticalRegion) && !backShot, !classicCinematic && (!backShot && primaryMarks || Boolean(referenceMarks)), classicCinematic || backShot ? undefined : fallbackPreservation,
-      ["culinary-texture", "fabric-motion"].includes(input.presetId) ? "surface"
+      ["floating-fashion", "floating-accessory"].includes(input.presetId) ? "floating"
+        : ["culinary-texture", "fabric-motion"].includes(input.presetId) ? "surface"
         : ["elegant-orbit", "optical-lines", "cinematic-dial", "sneaker-hero"].includes(input.presetId) ? "perspective"
         : ["glass-reflection", "dramatic-backlight", "metallic-light-sweep"].includes(input.presetId) ? "lighting"
         : ["macro-stitching", "hardware-reveal", "craftsmanship-study", "upholstery-macro"].includes(input.presetId) ? "craft"
