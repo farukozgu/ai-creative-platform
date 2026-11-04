@@ -5,7 +5,7 @@ export type VideoDiagnosticResult = "success" | "failed" | "skipped" | "cache_hi
 export function createVideoCorrelationId() { return randomUUID(); }
 
 export function logVideoDiagnostic(correlationId: string, stage: string, result: VideoDiagnosticResult,
-  fields: Record<string, string | number | null | undefined> = {}) {
+  fields: Record<string, string | number | boolean | readonly number[] | null | undefined> = {}) {
   if (process.env.NODE_ENV !== "development") return;
   console.info("[video-studio]", JSON.stringify({ correlationId, stage, result, ...fields }));
 }

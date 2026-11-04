@@ -6,13 +6,14 @@ import { cinematicHeroSingleNegativeTerms } from "./preset-library";
 import { categoryPresentationDirection, categoryProductDetailDirection, categoryFashionMotionDirection, categoryPerspectiveDirection, categoryLightingDirection, categoryCraftDirection, categoryPrecisionDirection, categoryLuxuryDirection, categoryMinimalDirection, categorySpotlightDirection, categoryMaterialDirection, categoryMacroDirection, qualityFallbackDirection, qualityPresetDirection } from "./preset-quality-directions";
 import { compileKlingShot } from "./kling-compiler";
 import { unsupportedProductClaim, interpretCreativeIntent, type CreativeIntentContract } from "./creative-request";
+import { customCreativeIntent, executableCustomCamera, numberedCreativeBeats, staticCustomFraming, cameraTrajectoryInMotion, unsafeCameraOrbit, foreignCameraContext, normalizeCustomCamera } from "./custom-brief";
 import { KLING_MULTI_PROMPT_MAX_CHARS } from "../video-generation/fal-request";
 import { directorProductContext } from "./product-context";
 import { presetFocusEvidence } from "./preset-recommendations";
 import { DIRECTOR_GENERIC_FOCUS_VALUES, DIRECTOR_SHOT_TEXT_LIMIT, DIRECTOR_TEXT_LIMIT, DirectorStructuredOutputError, directorShotContract, selectedCameras, shotFields } from "./plan-contract";
 export { DIRECTOR_GENERIC_FOCUS_VALUES, shotFields } from "./plan-contract";
 
-import { backViewTerms, klingElementReferences, parseReferenceReviews, referenceClaimDetails, referenceShotPrefix, type ReferenceReview } from "../video-generation/product-references";
+import { backViewTerms, klingElementReferences, parseReferenceReviews, referenceClaimDetails, referenceShotPrefix, referenceTextPreservation, type ReferenceReview } from "../video-generation/product-references";
 
 export type VideoDirectorSelection = ({ presetId: VideoPresetId; creativeMode?: "preset" } | { creativeMode: "custom"; presetId?: never }) & { shotMode: VideoShotMode; receipt: string };
 export type VideoDirectionId = VideoPresetId | "custom";
@@ -49,12 +50,26 @@ function matchesCreativeIntent(value: unknown, expected: CreativeIntentContract)
 }
 
 type CameraKind = "static" | "dolly-in" | "dolly-out" | "pan-left" | "pan-right" | "lateral" | "other";
-function cameraKinds(value: string): CameraKind[] {
+export function cameraKinds(value: string, custom = false): CameraKind[] {
   value = value.replace(/\b(?:fixed|static|stationary|still)\s+(?:lighting|lights?|background|product|model|subject|item|jacket)\b/gi, "")
     .replace(/\b(?:product|model|subject|item|jacket)\s+(?:stays?|remains?|is)\s+(?:stationary|still)\b/gi, "")
     .replace(/\b(?:all\s+)?product\s+parts\s+(?:still|stationary)\b/gi, "")
     .replace(/\b(?:then|and|to|with)\s+(?:(?:a|the)\s+)?(?:(?:brief|calm|final)\s+)*(?:locked|static|fixed|still)\s+(?:final\s+)?hold\b/gi, "");
   const matches: CameraKind[] = [];
+  let lockedFraming = false;
+  if (custom) {
+    // Consume a compound trajectory as one semantic unit before classifying
+    // the remaining independent instructions. Framing is orthogonal to motion.
+    value = value.replace(/\b(?:lateral\s+(?:(?:controlled|gentle|slow|short)\s+)?arc(?:s|ing)?|curved\s+lateral\s+(?:move|movement))\b/gi, () => {
+      matches.push("lateral");
+      return "";
+    }).replace(/\b(?:locked|fixed|static)\s+(?:(?:medium|close[ -]up|close|low[ -]angle|high[ -]angle|eye[ -]level|wide|full|overhead)\s+)*framing\b/gi, () => {
+      lockedFraming = true;
+      return "";
+    });
+    if (/\btrack(?:s|ing)?\s+forward\b/i.test(value)) matches.push("dolly-in");
+    if (/\btrack(?:s|ing)?\s+backward\b/i.test(value)) matches.push("dolly-out");
+  }
   if (/\b(?:locked|static|fixed|stationary|still)\b|\bno (?:camera )?movement\b/i.test(value)) matches.push("static");
   if (/\b(?:push(?:es|ing)?[ -]?(?:in|toward)|dolly[ -]?in|track(?:s|ing)?[ -]?in|zoom(?:s|ing)?[ -]?in|advance(?:s|ing)?|move(?:s|ment|ing)? closer|approach(?:es|ing)?)\b/i.test(value)) matches.push("dolly-in");
   if (/\b(?:pull(?:s|ing)?[ -]?(?:back|away)|dolly[ -]?out|zoom(?:s|ing)?[ -]?out|move(?:s|ment|ing)? away|retreat(?:s|ing)?)\b/i.test(value)) matches.push("dolly-out");
@@ -62,7 +77,8 @@ function cameraKinds(value: string): CameraKind[] {
   if (/\bpan(?:s|ning)?[ -]?right\b/i.test(value)) matches.push("pan-right");
   if (!matches.includes("pan-left") && !matches.includes("pan-right") && /\b(?:lateral|sideways|slid(?:e|es|ing)|glid(?:e|es|ing)|truck(?:s|ing)?)\b/i.test(value)) matches.push("lateral");
   if (/\b(?:tilt(?:s|ing)?|sweep(?:s|ing)?|crane(?:s|ing)?|swing(?:s|ing)?|arc(?:s|ing)?)\b/i.test(value)) matches.push("other");
-  return matches;
+  if (custom && lockedFraming && !matches.length) matches.push("static");
+  return [...new Set(matches)];
 }
 function frameScale(value: string): "close" | "full" | "medium" {
   return /macro|close|tight|crop/i.test(value) ? "close" : /full|wide|complete|silhouette|overview/i.test(value) ? "full" : "medium";
@@ -154,11 +170,84 @@ function resolveShotCamera(shot: VideoDirectorShot, preference: VideoGenerationD
 }
 
 /** Runtime validation remains necessary even with strict Structured Outputs. */
-export type DirectorValidationFailure = { jsonPath: string; reasonCode: string; expected: string; matchedTerm?: string };
+export type DirectorValidationFailure = { jsonPath: string; reasonCode: string; expected: string; matchedTerm?: string; originalShots?: unknown[]; failingPaths?: string[] };
+
+export function parseCameraRepairs(value: unknown, paths: string[], shotCount: number): { shotIndex: number; camera: string }[] | null {
+  const indices = paths.map(path => /^\$\.shots\[(\d+)\]\.camera$/.exec(path)).map(match => match ? Number(match[1]) : -1);
+  if (!indices.length || new Set(indices).size !== indices.length || indices.some(index => index < 0 || index >= shotCount)
+    || !record(value) || Object.keys(value).length !== 1 || !Array.isArray(value.cameraRepairs)
+    || value.cameraRepairs.length !== indices.length) return null;
+  const repairs: { shotIndex: number; camera: string }[] = [];
+  for (const repair of value.cameraRepairs) {
+    if (!record(repair) || Object.keys(repair).length !== 2 || !Number.isInteger(repair.shotIndex)
+      || !indices.includes(Number(repair.shotIndex)) || repairs.some(item => item.shotIndex === repair.shotIndex)
+      || !text(repair.camera, DIRECTOR_SHOT_TEXT_LIMIT) || !executableCustomCamera(repair.camera)) return null;
+    repairs.push({ shotIndex: Number(repair.shotIndex), camera: repair.camera });
+  }
+  return repairs;
+}
+
+export function cameraPatchDiagnostics(value: unknown, paths: string[]) {
+  const repairs: unknown[] = record(value) && Array.isArray(value.cameraRepairs) ? value.cameraRepairs : [];
+  const indices = repairs.flatMap(repair => record(repair) && Number.isSafeInteger(repair.shotIndex) ? [Number(repair.shotIndex)] : []);
+  const returnedPaths = indices.map(index => `$.shots[${index}].camera`);
+  return { requestedPathCount: paths.length, returnedRepairCount: repairs.length, returnedShotIndexes: indices,
+    duplicatePath: new Set(returnedPaths).size !== returnedPaths.length,
+    missingPath: paths.some(path => !returnedPaths.includes(path)),
+    extraPath: repairs.length !== indices.length || returnedPaths.some(path => !paths.includes(path)),
+    valueTooLong: repairs.some(repair => record(repair) && typeof repair.camera === "string" && repair.camera.length > DIRECTOR_SHOT_TEXT_LIMIT),
+    executableValidation: repairs.length > 0 && repairs.every(repair => record(repair) && typeof repair.camera === "string" && executableCustomCamera(repair.camera)) };
+}
+
+function parseShotFieldRepairs(value: unknown, paths: string[], shotCount: number): { shotIndex: number; field: "camera" | "motion"; value: string }[] | null {
+  if (!record(value) || Object.keys(value).length !== 1 || !Array.isArray(value.shotRepairs) || value.shotRepairs.length !== paths.length) return null;
+  const seen = new Set<string>();
+  const patches: { shotIndex: number; field: "camera" | "motion"; value: string }[] = [];
+  for (const patch of value.shotRepairs) {
+    if (!record(patch) || Object.keys(patch).length !== 3 || !Number.isInteger(patch.shotIndex)
+      || Number(patch.shotIndex) < 0 || Number(patch.shotIndex) >= shotCount || !["camera", "motion"].includes(String(patch.field))
+      || !text(patch.value, DIRECTOR_SHOT_TEXT_LIMIT)) return null;
+    const path = `$.shots[${patch.shotIndex}].${patch.field}`;
+    if (!paths.includes(path) || seen.has(path) || patch.field === "camera" && !executableCustomCamera(patch.value)
+      || patch.field === "motion" && cameraTrajectoryInMotion(patch.value)) return null;
+    seen.add(path);
+    patches.push({ shotIndex: Number(patch.shotIndex), field: patch.field as "camera" | "motion", value: patch.value });
+  }
+  return patches;
+}
+
+export function parseCoherenceFieldRepairs(value: unknown, paths: string[], shotCount: number) {
+  if (!paths.length || new Set(paths).size !== paths.length || paths.some(path => {
+    const match = /^\$\.shots\[(0|[1-9]\d*)\]\.(camera|motion)$/.exec(path);
+    return !match || Number(match[1]) >= shotCount;
+  }) || !record(value) || Object.keys(value).length !== 1 || !Array.isArray(value.fieldRepairs)) return null;
+  return parseShotFieldRepairs({ shotRepairs: value.fieldRepairs }, paths, shotCount);
+}
+
+function deterministicUnsafeActionPatch(output: unknown, paths: string[], profile: ProductProfile | null) {
+  if (!record(output) || !Array.isArray(output.shots)) return null;
+  const actionRepairs: { shotIndex: number; field: "camera" | "motion"; value: string }[] = [];
+  for (const path of paths) {
+    const match = /^\$\.shots\[(\d+)\]\.(camera|motion)$/.exec(path);
+    if (!match) return null;
+    const shotIndex = Number(match[1]), field = match[2] as "camera" | "motion";
+    const shot = output.shots[shotIndex];
+    if (!record(shot) || typeof shot[field] !== "string") return null;
+    const action = shot[field] as string;
+    const rotation = /\b(?:360|spin\w*|revolv\w*|full\s+orbit)\b/i.test(action);
+    if (!rotation || !/\b(?:product|garment|jacket|item|bottle|watch|ring|bag|shoe)\b/i.test(action)
+      || /\b(?:open|unzip|unbutton|remove|morph|deform|recolor|redesign|change|replace)\b/i.test(action)
+      || unsupportedProductClaim(action, profile)) return null;
+    actionRepairs.push({ shotIndex, field, value: field === "camera" ? "Short lateral source-facing reveal across visible surfaces"
+      : /\b(?:suspended|floating)\b/i.test(String(shot.composition)) ? "Product remains suspended, still and source-facing" : "Product remains still and source-facing" });
+  }
+  return actionRepairs.length ? { actionRepairs } : null;
+}
 
 /** Labels describe trusted plan metadata; focus labels are complete verified atoms. */
 export function directorPlanDescriptions(input: VideoDirectorInput, shotCount: number) {
   const summary = `${input.presetId} · ${input.shotMode} · ${shotCount} shots · ${input.draft.durationSeconds}s`;
+  if (input.presetId === "custom") return { summary, intent: "User-directed creative sequence; preserve source product identity." };
   const labels: string[] = [];
   for (const { detail } of directorProductContext(input.profile).evidence) {
     if (unsupportedProductClaim(detail, input.profile) || labels.includes(detail)) continue;
@@ -391,7 +480,9 @@ export function fixedLightingDirectorPlan(input: VideoDirectorInput): VideoDirec
 export function parseDirectorOutput(value: unknown, input: VideoDirectorInput, onReject?: (failure: DirectorValidationFailure) => void): VideoDirectorPlan | null {
   const reject = (jsonPath: string, reasonCode: string, expected: string, matchedTerm?: string) => { onReject?.({ jsonPath, reasonCode, expected, ...(matchedTerm ? { matchedTerm: matchedTerm.slice(0, 60) } : {}) }); return null; };
   if (![5, 10].includes(input.draft.durationSeconds)) return reject("$.durationSeconds", "unsupported_duration", "5 or 10 seconds");
-  const contractBounds = directorShotContract(input.shotMode, input.draft.durationSeconds, input.presetId);
+  const custom = input.presetId === "custom";
+  const beats = custom && input.shotMode === "multi" ? numberedCreativeBeats(input.draft.prompt) : [];
+  const contractBounds = directorShotContract(input.shotMode, input.draft.durationSeconds, input.presetId, input.draft.prompt);
   if (input.draft.cameraMovement === "orbit" || !record(value) || !text(value.summary, DIRECTOR_TEXT_LIMIT) || !text(value.intent, DIRECTOR_TEXT_LIMIT) || !Array.isArray(value.shots)
     || value.shots.length < contractBounds.minShots || value.shots.length > contractBounds.maxShots
 ) return reject("$", "invalid_plan_envelope", "summary/intent <= 240 chars and shot count matching shotMode and duration");
@@ -416,9 +507,13 @@ export function parseDirectorOutput(value: unknown, input: VideoDirectorInput, o
     const matchedTerm = unsupportedProductClaim(value[field] as string, enrichedProfile);
     if (matchedTerm) return reject(`$.${field}`, "unsupported_product_claim", "only claims supported by verified product evidence", matchedTerm);
   }
-  const expectedIntent = interpretCreativeIntent(input.draft.prompt, baseEvidence, input.shotMode, input.draft.cameraMovement);
+  const expectedIntent = (custom ? customCreativeIntent : interpretCreativeIntent)(input.draft.prompt, baseEvidence, input.shotMode, input.draft.cameraMovement);
   if (!matchesCreativeIntent(value.intentContract, expectedIntent)) return reject("$.intentContract", "intent_contract_mismatch", "exact supplied camera/focus/sequence contract");
   const shots: VideoDirectorShot[] = [];
+  const failingCameraPaths: string[] = [];
+  const coherencePaths: string[] = [];
+  const unsafeActionPaths: string[] = [];
+  const shotContexts = value.shots.map((shot, index) => record(shot) ? `${beats[index] ?? ""} ${shot.composition} ${shot.focus}` : "");
   for (const shot of value.shots) {
     const focusText = record(shot) && typeof shot.focus === "string" ? shot.focus : "";
     const hasEvidenceRefs = record(shot) && Object.hasOwn(shot, "evidenceRefs");
@@ -438,6 +533,17 @@ export function parseDirectorOutput(value: unknown, input: VideoDirectorInput, o
       || shot.durationSeconds < (input.shotMode === "multi" ? contractBounds.minDuration : 1) || shot.durationSeconds > 10
       || !shotPurposes.includes(shot.purpose as ShotPurpose)
       || !shotFields.every(field => text(shot[field], DIRECTOR_SHOT_TEXT_LIMIT))) return reject(`$.shots[${shots.length}]`, "invalid_shot_fields", "valid duration, purpose, evidenceRefs and bounded text");
+    if (custom && !executableCustomCamera(shot.camera as string)) {
+      failingCameraPaths.push(`$.shots[${shots.length}].camera`);
+    }
+    if (custom) {
+      if (unsafeCameraOrbit(shot.camera as string) || foreignCameraContext(shot.camera as string, shotContexts[shots.length], shotContexts.filter((_, index) => index !== shots.length))) {
+        coherencePaths.push(`$.shots[${shots.length}].camera`);
+      }
+      if (cameraTrajectoryInMotion(shot.motion as string)) {
+        coherencePaths.push(`$.shots[${shots.length}].camera`, `$.shots[${shots.length}].motion`);
+      }
+    }
     const referenceIndex = shot.referenceIndex == null ? undefined : shot.referenceIndex;
     const shotReference = klingElementReferences(referenceReviews, input.draft.productReferences).find(review => review.index === referenceIndex);
     if (referenceIndex !== undefined && (!Number.isInteger(referenceIndex) || !shotReference)) {
@@ -461,15 +567,32 @@ export function parseDirectorOutput(value: unknown, input: VideoDirectorInput, o
       return reject(`$.shots[${shots.length}].focus`, "reference_focus_mismatch", "primary product silhouette or generic visible form; no front-only details");
     }
     if (!text(focus, DIRECTOR_SHOT_TEXT_LIMIT)) return reject(`$.shots[${shots.length}].focus`, "invalid_shot_fields", "focus <= 100 characters");
+    if (custom) {
+      const beatIntent = customCreativeIntent(beats[shots.length] ?? input.draft.prompt, baseEvidence, beats.length ? "single" : input.shotMode, input.draft.cameraMovement);
+      const detailIntent = customCreativeIntent(`${focus} ${shot.composition}`, baseEvidence, "single", "auto");
+      if (evidenceRefs.some(id => id !== beatIntent.focusEvidenceId)
+        || dedicatedDetail(shot as VideoDirectorShot) && detailIntent.focusEvidenceId !== null && detailIntent.focusEvidenceId !== beatIntent.focusEvidenceId) {
+        return reject(`$.shots[${shots.length}].focus`, "unrequested_detail_focus", "user-requested verified detail only; evidence otherwise preserves identity");
+      }
+      if (beats.length && beatIntent.focusEvidenceId !== null && !evidenceRefs.includes(beatIntent.focusEvidenceId)) {
+        return reject(`$.shots[${shots.length}].focus`, "requested_focus_not_preserved", "requested verified focus in the same numbered beat");
+      }
+    }
     if ((focusEvidenceToken && (!tokenEvidence || evidenceRefs.length !== 1 || evidenceRefs[0] !== tokenEvidence.id))
       || focus !== resolvedFocus || !evidenceRefs.length && !DIRECTOR_GENERIC_FOCUS_VALUES.includes(focus as typeof DIRECTOR_GENERIC_FOCUS_VALUES[number])) {
       return reject(`$.shots[${shots.length}].focus`, "focus_not_evidence_bound", "a verified-evidence:<id> present in the validated product evidence, or an allowed generic focus without evidenceRefs");
     }
     for (const field of shotFields) {
+      if (custom && coherencePaths.includes(`$.shots[${shots.length}].${field}`)) continue;
+      if (custom && field === "camera" && !executableCustomCamera(shot.camera as string)) continue;
       const direction = field === "focus" ? focus : shot[field] as string;
       if (isUnsafeProductMotion(direction, input.draft.cameraMovement)
         || /\b(?:underside|interior|hidden mechanism|unseen surface|new (?:logo|label|accessory|prop)|open (?:the )?(?:cap|lid|clasp|zipper))\b/i.test(direction)
         || backViewTerms.test(direction.replace(/\b(?:pull[ -]back|pulling back)\b/gi, "")) && !backShot) {
+        if (custom && (field === "camera" || field === "motion")) {
+          unsafeActionPaths.push(`$.shots[${shots.length}].${field}`);
+          continue;
+        }
         return reject(`$.shots[${shots.length}].${field}`, "unsafe_product_action", "source-facing action without hidden surfaces or identity changes");
       }
       if (/\b(?:cuts? to|cutaway|crossfade|dissolve(?: to)?|montage|(?:hard|match|smash|jump) cuts?|scene changes?)\b/i.test(direction)) {
@@ -486,13 +609,32 @@ export function parseDirectorOutput(value: unknown, input: VideoDirectorInput, o
     }
     const resolved = resolveShotCamera({ durationSeconds: shot.durationSeconds, purpose: shot.purpose as ShotPurpose, evidenceRefs: evidenceRefs as number[],
       ...(referenceIndex !== undefined ? { referenceIndex: Number(referenceIndex) } : {}),
-      ...Object.fromEntries(shotFields.map(field => [field, field === "focus" ? focus : shot[field]])) } as VideoDirectorShot, input.draft.cameraMovement);
-    const movements = new Set(cameraKinds(resolved.camera));
+      ...Object.fromEntries(shotFields.map(field => [field, field === "focus" ? focus
+        : field === "camera" && custom && staticCustomFraming(shot.camera as string) && !/\b(?:locked|static|fixed)\b/i.test(shot.camera as string)
+          ? `Locked ${shot.camera}` : shot[field]])) } as VideoDirectorShot, input.draft.cameraMovement);
+    const movements = new Set(cameraKinds(resolved.camera, custom));
     for (const field of ["composition", "motion", "pace", "lighting", "focus"] as const) {
-      if (/\b(?:camera|frame|viewpoint|shot)\b/i.test(resolved[field])) cameraKinds(resolved[field]).forEach(kind => movements.add(kind));
+      if (custom && coherencePaths.includes(`$.shots[${shots.length}].${field}`)) continue;
+      if (/\b(?:camera|frame|viewpoint|shot)\b/i.test(resolved[field])) cameraKinds(resolved[field], custom).forEach(kind => movements.add(kind));
     }
     if (movements.size > 1) return reject(`$.shots[${shots.length}].camera`, "conflicting_camera_directions", "one coherent camera trajectory");
     shots.push(resolved);
+  }
+  if (unsafeActionPaths.length) {
+    onReject?.({ jsonPath: unsafeActionPaths[0], failingPaths: unsafeActionPaths, reasonCode: "unsafe_product_action",
+      expected: "source-facing action without hidden surfaces or identity changes" });
+    return null;
+  }
+  if (coherencePaths.length) {
+    const failingPaths = [...new Set([...failingCameraPaths, ...coherencePaths])];
+    onReject?.({ jsonPath: failingPaths[0], failingPaths, reasonCode: "custom_shot_coherence",
+      expected: "shot-local source-facing camera; motion contains subject/product/environment action only" });
+    return null;
+  }
+  if (failingCameraPaths.length) {
+    onReject?.({ jsonPath: failingCameraPaths[0], failingPaths: failingCameraPaths, reasonCode: "non_executable_camera",
+      expected: "concrete executable camera trajectory or framing; input auto is creative freedom" });
+    return null;
   }
   if (shots.reduce((sum, shot) => sum + shot.durationSeconds, 0) !== input.draft.durationSeconds) return reject("$.shots[*].durationSeconds", "total_duration_mismatch", `sum exactly ${input.draft.durationSeconds} seconds`);
   const fixedTemplate = ["culinary-texture", "window-display"].includes(input.presetId) ? categoryPresentationDirection(input.presetId, directorProductContext(input.profile).category, input.shotMode, input.draft.durationSeconds) : ["label-reveal", "sneaker-hero", "upholstery-macro"].includes(input.presetId) ? categoryProductDetailDirection(input.presetId, directorProductContext(input.profile).category, input.shotMode, input.draft.durationSeconds) : ["floating-fashion", "fabric-motion", "floating-accessory"].includes(input.presetId) ? categoryFashionMotionDirection(input.presetId, directorProductContext(input.profile).category, input.shotMode, input.draft.durationSeconds) : ["elegant-orbit", "optical-lines", "cinematic-dial"].includes(input.presetId) ? categoryPerspectiveDirection(input.presetId, directorProductContext(input.profile).category, input.shotMode, input.draft.durationSeconds) : ["glass-reflection", "dramatic-backlight", "metallic-light-sweep"].includes(input.presetId) ? categoryLightingDirection(input.presetId, directorProductContext(input.profile).category, input.shotMode, input.draft.durationSeconds) : ["macro-stitching", "hardware-reveal", "craftsmanship-study"].includes(input.presetId) ? categoryCraftDirection(input.presetId, directorProductContext(input.profile).category, input.shotMode, input.draft.durationSeconds) : input.presetId === "precision-macro" ? categoryPrecisionDirection(directorProductContext(input.profile).category, input.shotMode, input.draft.durationSeconds) : input.presetId === "luxury-fashion-film" ? categoryLuxuryDirection(directorProductContext(input.profile).category, input.shotMode, input.draft.durationSeconds) : input.presetId === "minimal-studio" ? categoryMinimalDirection(directorProductContext(input.profile).category, input.shotMode, input.draft.durationSeconds) : input.presetId === "product-spotlight" ? categorySpotlightDirection(directorProductContext(input.profile).category, input.shotMode, input.draft.durationSeconds) : input.presetId === "material-detail" ? categoryMaterialDirection(directorProductContext(input.profile).category, input.shotMode, input.draft.durationSeconds) : input.presetId === "macro-detail-reveal" ? categoryMacroDirection(directorProductContext(input.profile).category, input.shotMode, input.draft.durationSeconds) : null;
@@ -506,17 +648,17 @@ export function parseDirectorOutput(value: unknown, input: VideoDirectorInput, o
     return reject("$.shots", "fixed_macro_template_mismatch", "the category-specific fixed Macro Detail Reveal template");
   }
   if (input.shotMode === "multi") {
-    if (new Set(shots.map(shot => shot.purpose)).size !== shots.length) return reject("$.shots[*].purpose", "repeated_shot_purpose", "distinct purpose per shot");
+    if (!custom && new Set(shots.map(shot => shot.purpose)).size !== shots.length) return reject("$.shots[*].purpose", "repeated_shot_purpose", "distinct purpose per shot");
     if (new Set(shots.map(shot => `${shot.camera}|${shot.composition}|${shot.focus}`.toLowerCase())).size !== shots.length) return reject("$.shots[*]", "repeated_shot_direction", "distinct camera/composition/focus per shot");
     // With automatic direction, multiple identical push-ins are not a shot strategy.
     if (input.draft.cameraMovement === "auto" && shots.every(shot => cameraKinds(shot.camera).includes("dolly-in"))) return reject("$.shots[*].camera", "repeated_push_in", "vary shot scale or camera direction for automatic multi-shot");
-    const repeated = repeatedDetail(shots, input.profile);
+    const repeated = custom ? -1 : repeatedDetail(shots, input.profile);
     if (repeated >= 0) return reject(`$.shots[${repeated}].focus`, "repeated_detail_focus", "each dedicated shot targets a different verified detail or region");
     for (const [index, shot] of shots.entries()) {
       const duplicate = !dedicatedDetail(shot) && shots.slice(0, index).find(previous => !dedicatedDetail(previous)
         && detailWording(previous.composition) === detailWording(shot.composition));
       // Establishing the product and resolving it at the end are distinct tasks.
-      if (duplicate && !(duplicate.purpose === "hero-reveal" && shot.purpose === "final-hero")) {
+      if (!custom && duplicate && !(duplicate.purpose === "hero-reveal" && shot.purpose === "final-hero")) {
         return reject(`$.shots[${index}].composition`, "repeated_shot_direction", "different visual tasks, independent of camera and lighting wording");
       }
     }
@@ -691,6 +833,7 @@ export function compileDirectorPlan(plan: VideoDirectorPlan, input: VideoDirecto
   ].filter((name): name is string => name !== null);
   const markList = markNames.length > 1 ? `${markNames.slice(0, -1).join(", ")} and ${markNames.at(-1)}` : markNames[0];
   const fallbackPreservation = markList ? `Keep the ${markList} exactly as in the source; do not enlarge, restyle or reposition them.` : undefined;
+  const declaredTextPreservation = referenceTextPreservation(validated.referenceReviews ?? [], input.draft.productReferences);
   const prompts = validated.shots.map(shot => {
     const prefix = elementReferences.some(review => review.index === shot.referenceIndex)
       ? referenceShotPrefix(shot.referenceIndex, validated.referenceReviews ?? [], input.draft.productReferences) : "";
@@ -704,7 +847,7 @@ export function compileDirectorPlan(plan: VideoDirectorPlan, input: VideoDirecto
         : ["elegant-orbit", "optical-lines", "cinematic-dial", "sneaker-hero"].includes(input.presetId) ? "perspective"
         : ["glass-reflection", "dramatic-backlight", "metallic-light-sweep"].includes(input.presetId) ? "lighting"
         : ["macro-stitching", "hardware-reveal", "craftsmanship-study", "upholstery-macro"].includes(input.presetId) ? "craft"
-        : ["minimal-studio", "luxury-fashion-film", "product-spotlight", "macro-detail-reveal", "material-detail", "precision-macro", "label-reveal", "window-display"].includes(input.presetId));
+        : ["minimal-studio", "luxury-fashion-film", "product-spotlight", "macro-detail-reveal", "material-detail", "precision-macro", "label-reveal", "window-display"].includes(input.presetId), declaredTextPreservation);
   });
   const baseNegativePrompt = productVideoNegativePrompt.replace("object rotation, ", "");
   const negativePrompt = input.presetId === "cinematic-hero" && input.shotMode === "single" && input.draft.durationSeconds === 5
@@ -715,12 +858,15 @@ export function compileDirectorPlan(plan: VideoDirectorPlan, input: VideoDirecto
     cfgScale: 0.5, version: VIDEO_PRESERVATION_VERSION };
 }
 
-export type DirectorPlanningDiagnostic = { stage: "director_provider_response_received" | "structured_output_parsed" | "director_business_validation" | "plan_integrity_validation" | "director_repair_attempt"; result: "success" | "failed"; reasonCode?: string; jsonPath?: string; expected?: string; matchedTerm?: string };
+export type DirectorPlanningDiagnostic = { stage: "director_provider_response_received" | "structured_output_parsed" | "director_business_validation" | "plan_integrity_validation" | "director_repair_attempt"; result: "success" | "failed"; reasonCode?: string; jsonPath?: string; failingPaths?: string[]; expected?: string; matchedTerm?: string }
+  & Partial<ReturnType<typeof cameraPatchDiagnostics>>;
 
-export async function directVideoWithClient(input: VideoDirectorInput, client: { createPlan(input: VideoDirectorInput): Promise<unknown>; repairPlan?(input: VideoDirectorInput, failure: DirectorValidationFailure): Promise<unknown> },
+export async function directVideoWithClient(input: VideoDirectorInput, client: { createPlan(input: VideoDirectorInput): Promise<unknown>; repairPlan?(input: VideoDirectorInput, failure: DirectorValidationFailure, referenceReviews?: ReferenceReview[]): Promise<unknown> },
   onDiagnostic?: (event: DirectorPlanningDiagnostic) => void) {
   let failureReason = "provider_error";
   let referenceReviews: ReferenceReview[] | null = null;
+  let retryableUnsafeRepair = false;
+  let retryableCustomRepairValidation = false;
   try {
     const output = await client.createPlan(input);
     referenceReviews = record(output) ? parseReferenceReviews(output.referenceReviews, input.draft.productReferences?.length ?? 0) : null;
@@ -731,12 +877,91 @@ export async function directVideoWithClient(input: VideoDirectorInput, client: {
       onDiagnostic?.({ stage: "director_business_validation", result: "failed", ...failure });
     };
     let plan = parseDirectorOutput(output, input, reject);
-    if (!plan && rejection.current?.reasonCode === "unsupported_product_claim" && client.repairPlan) {
+    const customRepair = input.presetId === "custom" && referenceReviews !== null
+      && referenceReviews.every(review => review.status === "matched");
+    if (!plan && customRepair && input.draft.cameraMovement === "auto" && rejection.current?.reasonCode === "non_executable_camera"
+      && record(output) && Array.isArray(output.shots)) {
+      retryableCustomRepairValidation = true;
+      const originalShots: unknown[] = output.shots;
+      const candidate = structuredClone({ ...output, shots: originalShots });
+      const beats = input.shotMode === "multi" ? numberedCreativeBeats(input.draft.prompt) : [];
+      let normalized = true;
+      for (const path of rejection.current.failingPaths ?? [rejection.current.jsonPath]) {
+        const match = /^\$\.shots\[(\d+)\]\.camera$/.exec(path);
+        const index = match ? Number(match[1]) : -1;
+        const shot = candidate.shots[index];
+        if (!record(shot)) { normalized = false; break; }
+        const camera = typeof shot.camera === "string" && typeof shot.composition === "string"
+          ? normalizeCustomCamera(shot.camera, { composition: shot.composition, userBeat: beats[index] ?? input.draft.prompt }) : null;
+        if (!camera || !text(camera, DIRECTOR_SHOT_TEXT_LIMIT) || !executableCustomCamera(camera)) { normalized = false; break; }
+        shot.camera = camera;
+      }
+      if (normalized) {
+        const normalizedPlan = parseDirectorOutput(candidate, input);
+        if (normalizedPlan) {
+          try {
+            compileDirectorPlan(normalizedPlan, input);
+            plan = normalizedPlan;
+            onDiagnostic?.({ stage: "director_repair_attempt", result: "success", reasonCode: "deterministic_camera_normalization", failingPaths: rejection.current.failingPaths });
+          } catch { /* Keep the original candidate and strict repair if compilation fails. */ }
+        }
+      }
+    }
+    if (!plan && rejection.current && (input.presetId === "custom" ? customRepair
+      : rejection.current.reasonCode === "unsupported_product_claim") && client.repairPlan) {
       const failure = rejection.current;
-      onDiagnostic?.({ stage: "director_repair_attempt", result: "success", reasonCode: "repair_started", jsonPath: failure.jsonPath, matchedTerm: failure.matchedTerm });
+      onDiagnostic?.({ stage: "director_repair_attempt", result: "success", reasonCode: "repair_started", jsonPath: failure.jsonPath, failingPaths: failure.failingPaths, expected: failure.expected, matchedTerm: failure.matchedTerm });
       try {
-        const repaired = await client.repairPlan(input, failure);
-        plan = parseDirectorOutput(repaired, input, reject);
+        let repaired: unknown;
+        try {
+          repaired = customRepair
+            ? await client.repairPlan(input, { ...failure, ...(record(output) && Array.isArray(output.shots) ? { originalShots: output.shots } : {}) }, referenceReviews ?? [])
+            : await client.repairPlan(input, failure);
+        } catch (error) {
+          if (!customRepair || failure.reasonCode !== "unsafe_product_action" || !record(error) || error.unsafeRepairRequestFailed !== true) throw error;
+          retryableUnsafeRepair = true;
+          repaired = error.transportFailure === true ? deterministicUnsafeActionPatch(output, failure.failingPaths ?? [failure.jsonPath], input.profile) : null;
+          if (!repaired) throw error;
+          onDiagnostic?.({ stage: "director_repair_attempt", result: "success", reasonCode: "deterministic_unsafe_action_patch", jsonPath: failure.jsonPath });
+        }
+        let candidate = repaired;
+        if (customRepair && ["non_executable_camera", "custom_shot_coherence", "conflicting_camera_directions"].includes(failure.reasonCode)) {
+          const originals = record(output) && Array.isArray(output.shots) ? output.shots : [];
+          const paths = failure.failingPaths ?? [failure.jsonPath];
+          const coherence = failure.reasonCode === "custom_shot_coherence";
+          const patches = coherence ? parseCoherenceFieldRepairs(repaired, paths, originals.length)
+            : parseCameraRepairs(repaired, paths, originals.length)?.map(patch => ({ shotIndex: patch.shotIndex, field: "camera" as const, value: patch.camera }));
+          if (!patches) {
+            retryableCustomRepairValidation = true;
+            rejection.current = { jsonPath: coherence ? "$.fieldRepairs" : "$.cameraRepairs", reasonCode: coherence ? "invalid_coherence_patch" : "invalid_camera_patch", failingPaths: paths,
+              expected: "exact requested field paths once each with bounded executable camera or subject-action values" };
+            onDiagnostic?.({ stage: "director_repair_attempt", result: "failed", ...rejection.current,
+              ...(!coherence ? cameraPatchDiagnostics(repaired, paths) : {}) });
+            candidate = undefined;
+          } else {
+            candidate = structuredClone(output);
+            if (record(candidate) && Array.isArray(candidate.shots)) for (const patch of patches) {
+              candidate.shots[patch.shotIndex][patch.field] = patch.value;
+            }
+          }
+        }
+        if (customRepair && failure.reasonCode === "unsafe_product_action") {
+          const originals = record(output) && Array.isArray(output.shots) ? output.shots : [];
+          const patches = record(repaired) && Object.keys(repaired).length === 1 && Array.isArray(repaired.actionRepairs)
+            ? parseShotFieldRepairs({ shotRepairs: repaired.actionRepairs }, failure.failingPaths ?? [failure.jsonPath], originals.length) : null;
+          candidate = undefined;
+          if (patches) {
+            candidate = structuredClone(output);
+            if (record(candidate) && Array.isArray(candidate.shots)) for (const patch of patches) candidate.shots[patch.shotIndex][patch.field] = patch.value;
+          } else {
+            rejection.current = { jsonPath: "$.actionRepairs", reasonCode: "invalid_action_patch", expected: "exact allowed unsafe action paths once each; bounded local values" };
+            onDiagnostic?.({ stage: "director_repair_attempt", result: "failed", ...rejection.current });
+          }
+        }
+        // Accuracy reviews belong to the original images, not the creative retry.
+        plan = candidate === undefined ? null : parseDirectorOutput(customRepair && record(candidate)
+          ? { ...candidate, referenceReviews } : candidate, input, reject);
+        if (!plan && customRepair && ["custom_shot_coherence", "non_executable_camera", "conflicting_camera_directions"].includes(failure.reasonCode)) retryableCustomRepairValidation = true;
         onDiagnostic?.({ stage: "director_repair_attempt", result: plan ? "success" : "failed", reasonCode: plan ? "repair_accepted" : rejection.current?.reasonCode, jsonPath: failure.jsonPath, matchedTerm: failure.matchedTerm });
       } catch (error) {
         onDiagnostic?.({ stage: "director_repair_attempt", result: "failed", reasonCode: "repair_request_failed", jsonPath: failure.jsonPath, matchedTerm: failure.matchedTerm });
@@ -766,6 +991,7 @@ export async function directVideoWithClient(input: VideoDirectorInput, client: {
         : failureReason === "provider_error" || failureReason.startsWith("incomplete_") ? "unavailable" : "invalid_review";
     throw Object.assign(new DirectorStructuredOutputError("references_not_verified"), { referenceFailure: reason });
   }
+  if (input.presetId === "custom") throw Object.assign(new DirectorStructuredOutputError("custom_director_unavailable"), { retryableUnsafeRepair, retryableCustomRepairValidation });
   const fallback = fallbackDirectorPlan(input, referenceReviews ?? []);
   compileDirectorPlan(fallback, input);
   return fallback;

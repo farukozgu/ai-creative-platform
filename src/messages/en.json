@@ -1292,6 +1292,8 @@
       },
       "references": {
         "heading": "Product references",
+        "declaredText": "Text in the image (optional)",
+        "declaredTextError": "Use up to 80 characters without line breaks or control characters.",
         "classicCinematic": "Cinematic 5s multi-shot uses only the primary product image for its classic cinematic edit. Additional references are not sent in this mode; they remain available in other presets.",
         "description": "Optional, up to 3 photos. You can also upload your own detail of the same product.",
         "conditional": "Only if present on your product; another detail is also welcome.",

@@ -2,7 +2,7 @@ import "server-only";
 import { getVideoStudioOpenAIPolicy } from "@/lib/openai/beta-policy";
 import { getPromptEnhancementModel } from "@/lib/generation/prompts/prompt-enhancer-config";
 import { compileDirectorPlan, directVideoWithClient, fallbackDirectorPlan, type VideoDirectorInput } from "./core";
-import { createOpenAIVideoPlan } from "./openai-director";
+import { createOpenAIVideoPlan, createOpenAICameraRepairs, createOpenAIActionRepairs } from "./openai-director";
 import { directorCacheKey, DirectorPlanCache, openDirectorPlan, sealDirectorPlan } from "./receipt";
 import { logVideoDiagnostic } from "@/lib/video-generation/diagnostics";
 
@@ -23,7 +23,7 @@ export function readVerifiedDirectorPlan(ownerId: string, sourceSha256: string, 
 export async function prepareVideoDirectorPlan(ownerId: string, source: Buffer, sourceSha256: string, input: VideoDirectorInput,
   existingReceipt?: string, allowAI = true, diagnostics?: { correlationId: string; fallbackReason?: string }) {
   const startedAt = Date.now();
-  const log = (stage: string, result: "success" | "failed" | "skipped" | "cache_hit" | "fallback", fields: Record<string, string | number | null | undefined> = {}) => {
+  const log = (stage: string, result: "success" | "failed" | "skipped" | "cache_hit" | "fallback", fields: Record<string, string | number | boolean | readonly number[] | null | undefined> = {}) => {
     if (diagnostics) logVideoDiagnostic(diagnostics.correlationId, stage, result, { model: getPromptEnhancementModel(), durationMs: Date.now() - startedAt, ...fields });
   };
   log("director_start", "success");
@@ -48,9 +48,18 @@ export async function prepareVideoDirectorPlan(ownerId: string, source: Buffer, 
   const plan = !fallbackReason ? await cache.getOrCreate(key, () =>
     directVideoWithClient(input, {
       createPlan: value => createOpenAIVideoPlan(value, source, diagnostics?.correlationId),
-      repairPlan: (value, failure) => createOpenAIVideoPlan(value, source, diagnostics?.correlationId, failure),
+      repairPlan: (value, failure, reviews) => value.presetId === "custom" && failure.reasonCode === "unsafe_product_action"
+        ? createOpenAIActionRepairs(value, source, failure, diagnostics?.correlationId)
+        : value.presetId === "custom" && ["non_executable_camera", "custom_shot_coherence", "conflicting_camera_directions"].includes(failure.reasonCode)
+        ? createOpenAICameraRepairs(value, source, failure, diagnostics?.correlationId)
+        : createOpenAIVideoPlan(value, source, diagnostics?.correlationId, failure, reviews),
     }, event => {
-      log(event.stage, event.result, { reasonCode: event.reasonCode ?? null, jsonPath: event.jsonPath ?? null, expected: event.expected ?? null, matchedTerm: event.matchedTerm ?? null });
+      log(event.stage, event.result, { reasonCode: event.reasonCode ?? null, jsonPath: event.jsonPath ?? null, expected: event.expected ?? null, failingPaths: event.failingPaths ? JSON.stringify(event.failingPaths) : undefined, matchedTerm: event.matchedTerm ?? null,
+        requestedPathCount: event.requestedPathCount, returnedRepairCount: event.returnedRepairCount,
+        returnedShotIndexes: event.returnedShotIndexes,
+        duplicatePath: event.duplicatePath, missingPath: event.missingPath,
+        extraPath: event.extraPath, valueTooLong: event.valueTooLong,
+        executableValidation: event.executableValidation });
       if (event.result === "failed" && event.stage !== "director_repair_attempt") cache.recordFailure(key, event);
     })) : fallbackDirectorPlan(input);
   compileDirectorPlan(plan, input);

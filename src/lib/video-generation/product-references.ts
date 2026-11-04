@@ -3,6 +3,21 @@ import { videoDirectorPresets, type VideoPresetId } from "../video-director/pres
 export const referenceViews = ["front", "back", "side", "detail", "unknown"] as const;
 export type ReferenceView = typeof referenceViews[number];
 export type ReferenceReview = { index: number; status: "matched" | "conflict" | "uncertain"; reason: string; details: string[]; view?: ReferenceView };
+export const supportsReferenceDeclaredText = (purpose: string) => /\b(?:logo|text|label|detail)\b/i.test(purpose);
+export function parseReferenceDeclaredText(value: unknown): string | null {
+  if (typeof value !== "string" || /[\p{Cc}\p{Zl}\p{Zp}]/u.test(value)) return null;
+  const text = value.trim();
+  return text.length <= 80 ? text : null;
+}
+/** User text is quoted identity data, never Director evidence or creative direction. */
+export function referenceTextPreservation(reviews: ReferenceReview[], references: readonly { purpose: string; declaredText?: string }[] = []) {
+  return references.flatMap((reference, index) => {
+    if (!supportsReferenceDeclaredText(reference.purpose) || !reviews.some(review => review.index === index && review.status === "matched")) return [];
+    const text = parseReferenceDeclaredText(reference.declaredText);
+    if (text === null || !text) return [];
+    return [`Preserve the exact visible text ${JSON.stringify(text)}; keep spelling, character order, case, placement and proportions unchanged.`];
+  }).join(" ");
+}
 export const backViewTerms = /\b(?:back|rear|backside|back-facing)\b/i;
 /** Orientation is established by the image review, never the upload-slot label. */
 export function referenceClaimDetails(review: ReferenceReview) {

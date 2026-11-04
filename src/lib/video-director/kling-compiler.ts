@@ -42,7 +42,7 @@ function compact(value: string) {
 /** Mandatory action, chosen evidence, light, rhythm and fidelity reserve space first.
  * No unrelated profile atoms fill the remaining budget; no substring truncation.
  */
-export function compileKlingShot(shot: VideoDirectorShot, limit: number, marked: boolean, preserveMarks = false, fallbackPreservation?: string, physicalStaging: boolean | "craft" | "lighting" | "perspective" | "surface" | "floating" = false) {
+export function compileKlingShot(shot: VideoDirectorShot, limit: number, marked: boolean, preserveMarks = false, fallbackPreservation?: string, physicalStaging: boolean | "craft" | "lighting" | "perspective" | "surface" | "floating" = false, declaredTextPreservation = "") {
   const render = (short: boolean) => {
     const wording = (value: string) => short ? compact(value) : value;
     const focus = lower(wording(shot.focus)).replace(/^source-visible /, "visible ");
@@ -57,8 +57,14 @@ export function compileKlingShot(shot: VideoDirectorShot, limit: number, marked:
       : marked
       ? "Keep source geometry, color, material, texture, pattern, parts and markings exact; preserve marked details in place. Known surfaces only."
       : "Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.");
-    return [action, sentence(wording(compositionDirection(shot.composition))), sentence(wording(lightDirection(shot.lighting))),
-      wording(subjectAction(shot.motion)), `Allow ${/^(?:a|an|the)\b/i.test(shot.pace) ? "" : "a "}${lower(wording(clean(shot.pace)))}.`, fidelity].filter(Boolean).join(" ");
+    const creative = short && declaredTextPreservation
+      ? [sentence(wording(shot.camera)), sentence(wording(shot.composition)), sentence(wording(shot.lighting)),
+        wording(subjectAction(shot.motion)), sentence(wording(shot.pace)),
+        ...(!/^(?:Source-visible product form|Source-visible product silhouette)$/.test(shot.focus) ? [sentence(wording(shot.focus))] : [])]
+      : [action, sentence(wording(compositionDirection(shot.composition))), sentence(wording(lightDirection(shot.lighting))),
+        wording(subjectAction(shot.motion)), `Allow ${/^(?:a|an|the)\b/i.test(shot.pace) ? "" : "a "}${lower(wording(clean(shot.pace)))}.`];
+    // Literal text bypasses wording/compaction; budget overflow fails, never truncates.
+    return [...creative, fidelity, ...(declaredTextPreservation ? [`Text data: ${declaredTextPreservation}`] : [])].filter(Boolean).join(" ");
   };
   for (const short of [false, true]) {
     const prompt = render(short);

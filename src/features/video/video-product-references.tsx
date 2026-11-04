@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { createVideoSourceUploadAction, prepareVideoSourceAction } from "@/app/[locale]/dashboard/video/generation-actions";
 import { loadVideoSourceLibrary } from "@/app/[locale]/dashboard/video/actions";
-import { suggestProductReferences } from "@/lib/video-generation/product-references";
+import { parseReferenceDeclaredText, suggestProductReferences } from "@/lib/video-generation/product-references";
+import { VideoReferenceTextInput } from "./video-reference-text-input";
 import type { VideoPresetProduct } from "@/lib/video-director/preset-recommendations";
 import type { VideoPresetId } from "@/lib/video-director/presets";
 import type { VideoGenerationDraft, VideoPreparationSource } from "@/lib/video-generation/types";
@@ -30,7 +31,10 @@ export function VideoProductReferences({ product, presetId, aspectRatio, disable
   const suggestions = suggestProductReferences(product, presetId);
   const update = (index: number, ref: Reference | null) => {
     const next = refs.map((old, i) => index === i ? ref : old); setRefs(next);
-    onChange(next.filter((r): r is Reference => r !== null).map(({ source, sha256, purpose, aspectRatio }) => ({ source, sha256, purpose, aspectRatio })));
+    onChange(next.filter((r): r is Reference => r !== null).map(({ source, sha256, purpose, aspectRatio, declaredText }) => {
+      const text = parseReferenceDeclaredText(declaredText);
+      return { source, sha256, purpose, aspectRatio, ...(text ? { declaredText: text } : {}) };
+    }));
   };
   async function prepare(index: number, origin: VideoPreparationSource) {
     const result = await prepareVideoSourceAction(origin, aspectRatio);
@@ -62,6 +66,8 @@ export function VideoProductReferences({ product, presetId, aspectRatio, disable
       {refs[index] ? <div className={styles.referencePreview}><img src={refs[index]!.previewUrl} width={72} height={72} alt={t("preview")} /><span>{t("added")}</span></div>
         : <button type="button" className={styles.referenceDropzone} disabled={busy || disabled} onClick={() => inputRefs.current[index]?.click()}
           aria-label={t("uploadFor", { type: t("suggestions." + suggestion) })}><span aria-hidden="true">↑</span><strong>{t("upload")}</strong><small>{t("fileHint")}</small></button>}
+      {refs[index] ? <VideoReferenceTextInput purpose={refs[index]!.purpose} value={refs[index]!.declaredText ?? ""}
+        disabled={busy || disabled} onChange={declaredText => update(index, { ...refs[index]!, declaredText })} /> : null}
       <input ref={node => { inputRefs.current[index] = node; }} className={styles.referenceFileInput} type="file" accept="image/jpeg,image/png"
         aria-label={t("uploadFor", { type: t("suggestions." + suggestion) })} onChange={handleFile(index)} tabIndex={-1} />
       <div className={styles.referenceActions}>

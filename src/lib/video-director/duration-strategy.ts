@@ -39,6 +39,13 @@ const luxury: readonly Beat[] = [
   beat("material-study", "Locked close framing", "Isolated evidenced detail; quiet margins", "Feathered side light defines existing relief", "Deliberate detail pause"),
   beat("final-hero", "Locked long-lens hero frame", "Complete silhouette; asymmetric campaign space", "Sculpted contour light preserves source colors", "Confident lingering hold"),
 ];
+// Five seconds need travel within each beat, rather than three static holds.
+const luxuryFiveSecondMulti: readonly Beat[] = [
+  beat("hero-reveal", "Push in toward the source-facing silhouette", "Frame full silhouette, then its medium-scale outline", "Sculpted side light shapes the contour", "Brisk moving reveal"),
+  beat("lighting-reveal", "Glide laterally within the source view", "Frame a medium contour crop from side margin to center", "A narrow highlight traces the visible contour", "Brisk contour passage"),
+  beat("material-study", "Short lateral macro camera glide within the visible face", "Frame one verified surface detail at resolvable scale", "Feathered side light defines existing relief", "Brief tactile travel"),
+  beat("final-hero", "Pull back within the source view to full hero framing", "Frame medium form, then full form with campaign space", "Sculpted contour light preserves source colors", "Flowing retreat; brief hold"),
+];
 const sequences: Record<DirectedPreset, readonly Beat[]> = {
   "cinematic-hero": cinematic, "macro-detail-reveal": macro, "luxury-fashion-film": luxury,
 };
@@ -50,6 +57,7 @@ const timing: Record<DirectedPreset, Record<CreativeDuration, readonly number[]>
 
 function multiDirection(preset: DirectedPreset, seconds: CreativeDuration): readonly Beat[] {
   const shots = sequences[preset];
+  if (preset === "luxury-fashion-film" && seconds === 5) return luxuryFiveSecondMulti;
   if (seconds === 5) return shots;
   return shots.map((shot, index) => {
     const pace = seconds === 10
@@ -77,6 +85,7 @@ export function durationStrategy(id: string, mode: "single" | "multi", duration:
         : "Patient discovery, breathing space and extended campaign resolution: ")
       + (preset === "cinematic-hero" ? "Overview, surface, reframed visible angle, evidenced construction, hero"
       : preset === "macro-detail-reveal" ? "Detail first, adjacent texture, context reset, recognizable hero"
+        : seconds === 5 ? "Moving silhouette reveal, lateral contour passage, evidenced detail travel, pull-back hero resolution"
         : "Silhouette, editorial contour, isolated detail, campaign hero"),
     transitions: "Direct cuts between entries only; match visible outline or detail position. No in-shot cuts or invented angles.",
   };

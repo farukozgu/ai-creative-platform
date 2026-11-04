@@ -20,7 +20,7 @@ export type VideoPreparationSource =
 
 export type VideoGenerationDraft = {
   creativeMode?: "preset" | "custom";
-  productReferences?: { source: VideoSourceReference; sha256: string; purpose: string; aspectRatio?: VideoGenerationAspectRatio }[];
+  productReferences?: { source: VideoSourceReference; sha256: string; purpose: string; declaredText?: string; aspectRatio?: VideoGenerationAspectRatio }[];
   shotMode?: "single" | "multi";
   director?: import("../video-director/core").VideoDirectorSelection;
   method?: import("./preservation").VideoGenerationMethod;

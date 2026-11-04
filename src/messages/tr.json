@@ -1292,6 +1292,8 @@
       },
       "references": {
         "heading": "Ürün referansları",
+        "declaredText": "Görseldeki yazı (isteğe bağlı)",
+        "declaredTextError": "En fazla 80 karakter kullanın; satır sonu veya kontrol karakteri eklemeyin.",
         "classicCinematic": "Cinematic 5 sn çoklu çekim, klasik sinematik kurgu için yalnız ana ürün görselini kullanır. Ek referanslar bu modda gönderilmez; diğer presetlerde kullanılabilir.",
         "description": "İsteğe bağlı, en fazla 3 fotoğraf. Öneriler dışında aynı ürüne ait kendi detayınızı da yükleyebilirsiniz.",
         "conditional": "Yalnız ürününüzde varsa; bu alan farklı bir detayı da kabul eder.",

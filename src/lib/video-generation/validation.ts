@@ -2,6 +2,7 @@ import { videoEndpointCapabilities, type VideoEndpointCapability } from "@/lib/v
 import type { VideoGenerationDraft } from "@/lib/video-generation/types";
 import { parseCriticalProductRegion } from "./preservation";
 import { isVideoPresetId } from "../video-director/presets";
+import { parseReferenceDeclaredText, supportsReferenceDeclaredText } from "./product-references";
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const qualities = new Set(["standard", "pro"]);
@@ -56,6 +57,7 @@ export function validateVideoGenerationDraft(value: unknown): VideoDraftValidati
   if (prompt.length > 2500) return { ok: false, field: "prompt", message: "The prompt must be 2,500 characters or fewer." };
   if (input.productReferences !== undefined && (!Array.isArray(input.productReferences) || input.productReferences.length > 3
     || input.productReferences.some(ref => !ref || typeof ref !== "object" || typeof ref.purpose !== "string" || ref.purpose.length > 60
+      || ref.declaredText !== undefined && (!supportsReferenceDeclaredText(ref.purpose) || parseReferenceDeclaredText(ref.declaredText) === null)
       || ref.aspectRatio !== undefined && !aspectRatios.has(ref.aspectRatio)
       || typeof ref.sha256 !== "string" || !/^[a-f0-9]{64}$/.test(ref.sha256) || ref.source?.kind !== "uploaded-image" || !uuidPattern.test(ref.source.sourceAssetId))
     || new Set(input.productReferences.map(ref => ref.source.sourceAssetId)).size !== input.productReferences.length))
@@ -65,7 +67,12 @@ export function validateVideoGenerationDraft(value: unknown): VideoDraftValidati
   const candidate = source as Record<string, unknown>;
   const id = candidate.kind === "generated-image" ? candidate.generationId : candidate.sourceAssetId;
   if ((candidate.kind !== "generated-image" && candidate.kind !== "uploaded-image") || typeof id !== "string" || !uuidPattern.test(id)) return { ok: false, field: "source", message: "Select a valid private source image." };
-  return { ok: true, value: { ...input, prompt, criticalRegion, method: input.method ?? "kling", analysisConsent: consent ?? null } as VideoGenerationDraft };
+  return { ok: true, value: { ...input, prompt, criticalRegion, method: input.method ?? "kling", analysisConsent: consent ?? null,
+    ...(input.productReferences !== undefined ? { productReferences: input.productReferences.map(ref => {
+      const { declaredText, ...reference } = ref;
+      const text = parseReferenceDeclaredText(declaredText);
+      return { ...reference, ...(text ? { declaredText: text } : {}) };
+    }) } : {}) } as VideoGenerationDraft };
 }
 
 export function validateDraftAgainstCapability(draft: VideoGenerationDraft, capability: VideoEndpointCapability) {

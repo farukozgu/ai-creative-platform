@@ -223,7 +223,7 @@ export function categoryLuxuryDirection(category: string, mode: "single" | "mult
   };
   const detailPattern = new RegExp(surface.patterns.map(pattern => pattern.source).join("|"), "i");
   return { shots: source.shots.map((beat, index) => ({ ...beat,
-    ...(category !== "apparel" && index === 0 ? { composition: framing[category] } : {}) })),
+    ...(category !== "apparel" && index === 0 && !(mode === "multi" && duration === 5) ? { composition: framing[category] } : {}) })),
     durations: [...source.durations], patterns: [detailPattern, detailPattern, detailPattern], allowWideFallback: true };
 }
 

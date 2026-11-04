@@ -30,7 +30,7 @@ function normalized(value: string) {
 
 /** Deterministic, evidence-bound interpretation for explicit requests; vague text stays preset-led. */
 export function interpretCreativeIntent(text: string, evidence: ProductEvidence[], shotMode: "single" | "multi" = "multi",
-  selectedCamera: VideoGenerationDraft["cameraMovement"] = "auto"): CreativeIntentContract {
+  selectedCamera: VideoGenerationDraft["cameraMovement"] = "auto", explicitDetailsOnly = false): CreativeIntentContract {
   const request = normalized(text);
   let camera: CreativeIntentContract["camera"] = "auto";
   if (/\b(?:static|locked|fixed camera|no camera movement)\b|kamerayi? sabit|hareket etme|sabit tut/i.test(request)) camera = "static";
@@ -50,7 +50,7 @@ export function interpretCreativeIntent(text: string, evidence: ProductEvidence[
       if (match) { focusEvidenceId = match.id; break; }
     }
   }
-  if (focusEvidenceId === null && /\b(?:detail|macro|close.up|feature)\b|detay|makro|yakindan/i.test(request)) {
+  if (!explicitDetailsOnly && focusEvidenceId === null && /\b(?:detail|macro|close.up|feature)\b|detay|makro|yakindan/i.test(request)) {
     focusEvidenceId = evidence.find(item => detailTerms.some(([, term]) => term.test(normalized(item.detail))))?.id ?? null;
   }
   const detailToHero = /\b(?:start|begin|first)\b.{0,70}\b(?:close|detail|macro)\b.{0,100}\b(?:then|finish|end|finally)\b.{0,50}\b(?:wide|full|hero|pull back)\b|once detay.{0,70}(?:sonra|ardindan).{0,60}(?:tam urun|genel plan|hero)/i.test(request);

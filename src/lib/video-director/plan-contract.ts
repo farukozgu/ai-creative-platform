@@ -2,6 +2,7 @@ import { durationStrategy } from "./duration-strategy";
 import { qualityPresetDirection } from "./preset-quality-directions";
 import type { VideoGenerationDraft } from "../video-generation/types";
 import type { VideoShotMode } from "./presets";
+import { numberedCreativeBeats } from "./custom-brief";
 
 export const DIRECTOR_TEXT_LIMIT = 240;
 export const DIRECTOR_CONTRACT_VERSION = "director-contract-reference-views-v4";
@@ -24,15 +25,17 @@ export class DirectorStructuredOutputError extends Error {
 }
 
 /** Server limits keep room for canonical evidence and Kling fidelity prose. */
-export function directorShotContract(shotMode: VideoShotMode, durationSeconds: VideoGenerationDraft["durationSeconds"], presetId?: string) {
+export function directorShotContract(shotMode: VideoShotMode, durationSeconds: VideoGenerationDraft["durationSeconds"], presetId?: string, userRequest = "") {
   if (![5, 10].includes(durationSeconds)) throw new Error("unsupported_director_duration");
   const directed = presetId ? durationStrategy(presetId, shotMode, durationSeconds) ?? qualityPresetDirection(presetId, shotMode, durationSeconds) : null;
   const multi = shotMode === "multi";
+  const customTen = presetId === "custom" && multi && durationSeconds === 10;
+  const requestedCount = customTen ? numberedCreativeBeats(userRequest).length : 0;
   return {
-    minShots: multi ? 2 : 1,
-    maxShots: multi ? directed ? 5 : durationSeconds === 5 ? 2 : 3 : 1,
-    minDuration: multi ? directed ? 1 : 2 : durationSeconds,
-    maxDuration: multi ? durationSeconds - (directed ? 1 : 2) : durationSeconds,
+    minShots: requestedCount || (multi ? 2 : 1),
+    maxShots: requestedCount || (multi ? customTen || directed ? 5 : durationSeconds === 5 ? 2 : 3 : 1),
+    minDuration: multi ? customTen || directed ? 1 : 2 : durationSeconds,
+    maxDuration: multi ? durationSeconds - (customTen || directed ? 1 : 2) : durationSeconds,
     fieldLimits: multi ? { camera: 60, composition: 55, motion: 45, lighting: 50, pace: 28, focus: 100 }
       : { camera: 140, composition: 140, motion: 120, lighting: 120, pace: 80, focus: 120 },
   };

@@ -15,6 +15,7 @@ import { buildFalVideoRequestInput, validateKlingMultiPrompt } from "../src/lib/
 import { videoDraftHash } from "../src/lib/video-generation/request-identity";
 import { validateVideoGenerationDraft } from "../src/lib/video-generation/validation";
 import { creativeRequest, hasUnsupportedProductClaims, interpretCreativeIntent } from "../src/lib/video-director/creative-request";
+import { customCreativeIntent, numberedCreativeBeats } from "../src/lib/video-director/custom-brief";
 import type { VideoGenerationDraft } from "../src/lib/video-generation/types";
 import type { ProductProfile } from "../src/lib/product-understanding/product-profile";
 import type * as runtime from "../src/lib/video-director/runtime";
@@ -488,6 +489,7 @@ test("OpenAI adapter sends bounded source/profile/preset context using existing 
     "@/lib/generation/prompts/prompt-enhancer-config": { getPromptEnhancementModel: () => "gpt-4o-mini" },
     "./core": core, "./presets": { videoDirectorPresets, getVideoDirectorPreset, shotPurposes }, "./product-context": { directorProductContext }, "./preset-library": { safePresetStrategy, cinematicHeroSingleFiveSeconds },
     "./creative-request": { interpretCreativeIntent },
+    "./custom-brief": { customCreativeIntent, numberedCreativeBeats },
     "./plan-contract": planContract, "./kling-compiler": { compileKlingShot },
   });
   const source = await sharp({ create: { width: 32, height: 32, channels: 3, background: "white" } }).png().toBuffer();

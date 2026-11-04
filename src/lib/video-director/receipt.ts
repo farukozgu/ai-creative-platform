@@ -77,7 +77,19 @@ export class DirectorPlanCache {
     if (existing && existing.expiresAt > now) return existing.value;
     for (const [id, entry] of this.entries) if (entry.expiresAt <= now) this.entries.delete(id);
     if (this.entries.size >= 100) this.entries.delete(this.entries.keys().next().value!);
-    const value = Promise.resolve().then(create);
+    const value = Promise.resolve().then(create).catch((error: unknown) => {
+      const entry = this.entries.get(key);
+      // Completed Custom camera rejection and failed unsafe-action repair I/O
+      // allow a later user request. Initial provider failures stay cached.
+      if (entry?.value === value && (entry.failure?.stage === "director_business_validation"
+        && entry.failure.reasonCode === "non_executable_camera" || error && typeof error === "object" && (
+          "retryableUnsafeRepair" in error && error.retryableUnsafeRepair === true
+          || "retryableCustomRepairValidation" in error && error.retryableCustomRepairValidation === true))
+        && error instanceof Error && "reasonCode" in error && error.reasonCode === "custom_director_unavailable") {
+        this.entries.delete(key);
+      }
+      throw error;
+    });
     this.entries.set(key, { expiresAt: now + 60 * 60 * 1000, value });
     // Cache failures conservatively too; an uncertain paid request must not silently retry.
     return value;
