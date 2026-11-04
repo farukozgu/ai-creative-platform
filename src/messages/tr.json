@@ -819,13 +819,13 @@
           "macro-detail-reveal": {
             "signatureTitle": "Macro Details",
             "title": "Macro Detail Reveal",
-            "description": "Yumuşak yan ışıkla görünür detaylara net bir yakın bakış. Çoklu çekimde detaydan ürünün bütününe geçilir; 10 saniyede ikinci doğrulanmış ayrıntı da incelenir.",
+            "description": "10 saniyelik çoklu çekimde tam ürün bağlamından tek doğrulanmış görünür detaya yaklaşılır ve tekrar tam ürün finaline dönülür.",
             "caption": "Doku ve işçilik"
           },
           "minimal-studio": {
             "signatureTitle": "Signature Studio",
             "title": "Minimal Studio",
-            "description": "Yumuşak stüdyo ışığı ve sade, dengeli kadrajlarla sakin ürün sunumu. Çoklu çekimde genel görünümden simetrik finale geçilir; 10 saniyede araya orta ölçekli bir kadraj girer.",
+            "description": "10 saniyelik çoklu çekimde premium stüdyo yaklaşımı, tek görünür detay/ışık çalışması ve temiz kilitli ürün finali.",
             "caption": "Sade ve ürün odaklı"
           },
           "floating-fashion": {
@@ -856,13 +856,13 @@
           "cinematic-hero": {
             "signatureTitle": "Quick Cuts",
             "title": "Sinematik Ürün",
-            "description": "Yönlü ışık ve tempolu kadraj değişimleriyle sinematik reklam estetiği. Çoklu çekimde genel görünüm, görünür yüzey ve ayrıntılar, yanal kamera geçişiyle güçlü bir ürün finaline taşınır.",
+            "description": "10 saniyelik çoklu çekim beş kısa kesmeden oluşur: ürün, tek detay, yanal kadraj değişimi, ışık vurgusu ve güçlü final.",
             "caption": "Güçlü kampanya finali"
           },
           "material-detail": {
             "signatureTitle": "Material Study",
             "title": "Yüzey ve Doku",
-            "description": "Yüzeyi tarayan yumuşak ışıkla dokusal bir ürün sunumu. Çoklu çekimde yakın yüzeyden ürünün bütününe geçilir; 10 saniyede farklı bir doğrulanmış birleşim detayı da gösterilir.",
+            "description": "10 saniyelik çoklu çekimde tek görünür yüzey bölgesinin ışık tepkisi incelenir; materyal tahmini yapılmadan tam ürün finaline dönülür.",
             "caption": "Dokusal yakın bakış"
           },
           "macro-stitching": {
@@ -883,7 +883,7 @@
           "dramatic-backlight": {
             "signatureTitle": "Dark Reveal",
             "title": "Dramatik Kontur",
-            "description": "Kenar ışığıyla belirginleşen silüet ve dramatik boşluklar. Çoklu çekimde genel görünüm simetrik bir ürün finaline bağlanır; 10 saniyede orta kadrajda kontur ışığı incelenir.",
+            "description": "10 saniyelik çoklu çekimde okunabilir karanlık silüet kontrollü biçimde aydınlanır ve net düşük anahtarlı ürün finaline dönüşür.",
             "caption": "Belirgin konturlar"
           },
           "cinematic-dial": {
@@ -894,7 +894,7 @@
           "metallic-light-sweep": {
             "signatureTitle": "Light Sweep",
             "title": "Yüzeyde Işık",
-            "description": "Mevcut yüzey üzerinde ilerleyen dar ışık vurgusuyla keskin bir sunum. Çoklu çekimde ışık incelemesi tam ürün finaline bağlanır; 10 saniyede genel görünümle başlanır.",
+            "description": "10 saniyelik çoklu çekimde ürün ve kamera sabit kalır; tek soldan sağa ışık geçişi temiz ürün finaline bağlanır.",
             "caption": "Gezinen ışık şeridi"
           },
           "hardware-reveal": {
@@ -905,7 +905,7 @@
           "floating-accessory": {
             "signatureTitle": "Floating",
             "title": "Süzülen Aksesuar",
-            "description": "Yumuşak kenar ışığı ve açık boşluklarla hafif, dengeli aksesuar sunumu. Çoklu çekimde kısa yanal kamera geçişi sakin bir tam ürün finaline bağlanır; 10 saniyede genel kadrajla başlanır.",
+            "description": "10 saniyelik çoklu çekimde ürün kaynak yönünü koruyarak hafifçe yükselir ve yumuşakça yerleşir; kamera kilitli, dönüş yoktur.",
             "caption": "Dengeli yükseliş hissi"
           },
           "sneaker-hero": {
@@ -936,11 +936,11 @@
           "window-display": {
             "signatureTitle": "Window Display",
             "title": "Vitrin Estetiği",
-            "description": "Dengeli üst ışık ve zarif boşluklarla vitrin estetiğinde ürün sunumu. Çoklu çekimde genel görünüm simetrik finale bağlanır; 10 saniyede yan ışıklı orta kadraj eklenir.",
+            "description": "10 saniyelik çoklu çekimde minimal vitrin yaklaşımı, kontrollü cam ışık etkileşimi ve ürünü baskın tutan final vitrin karesi kullanılır.",
             "caption": "Kaynak ortamında sunum"
           }
         },
-        "automaticPlanning": "AI çekim planı ek kullanıcı ücreti veya ayrı fiyat onayı olmadan hazırlanır. Gerçek video üretimi için fiyat onayı gerekir.",
+        "automaticPlanning": "Çekim planı seçilen preset ve ürünün doğrulanmış görünür özelliklerine göre otomatik hazırlanır.",
         "planNeedsReferences": "Çekim planı hazırlamak için ek ürün açılarını yeniden yükleyin veya kaldırın.",
         "referencesUnverified": "Ek ürün görselleri doğrulanamadı. Referansları atlayarak video üretilmedi. Aynı ürüne ait net görseller kullanıp planı yeniden hazırlayın veya referansları kaldırın.",
         "referenceReviewInvalid": "AI, referans incelemesini geçerli biçimde tamamlayamadı. Bu, görsellerin yanlış olduğu anlamına gelmez. Video üretimi başlatılmadı.",
@@ -949,8 +949,9 @@
         "planNeedsPreparedSource": "Çekim planından önce ürün görselinin hazırlanmasını bekleyin.",
         "planNeedsReadyDraft": "Çekim planı hazırlamak için önce video ayarlarını tamamlayın.",
         "planLocked": "Bu video için çekim planı kullanılamıyor.",
-        "prepare": "AI planı hazırla",
+        "prepare": "Çekim planı hazırla",
         "planHeading": "AI çekim planı",
+        "signaturePlan": "Signature çekim planı",
         "preparing": "Plan hazırlanıyor…",
         "separateApproval": "Planlama video üretmez. Video üretimi için ayrıca maliyet onayı gerekir.",
         "aiPlan": "AI yaratıcı planı",
@@ -974,7 +975,7 @@
         "styleHeading": "Video stili",
         "planDescription": "Sahneleri hazırlayın ve üretimden önce inceleyin. Planlama video üretimini başlatmaz.",
         "planReady": "Plan hazır · {count} sahne",
-        "prepareAgain": "AI planını yeniden hazırla",
+        "prepareAgain": "Çekim planını yeniden hazırla",
         "intent": "Yaratıcı yorum",
         "purpose": "Görsel amaç",
         "purposes": {

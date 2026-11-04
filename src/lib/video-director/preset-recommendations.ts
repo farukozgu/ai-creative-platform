@@ -18,8 +18,8 @@ export function presetProduct(profile: ProductProfile | null): VideoPresetProduc
   return { category, evidence: context.evidence.map(item => item.detail) };
 }
 
-export function recommendVideoPresets(product: VideoPresetProduct): VideoPresetId[] {
-  return videoPresetIds.map((id, order) => {
+export function recommendVideoPresets(product: VideoPresetProduct, candidateIds: readonly VideoPresetId[] = videoPresetIds): VideoPresetId[] {
+  return candidateIds.map((id, order) => {
     const strategy = videoDirectorPresets[id].strategy;
     const relevant = strategy.categories.length === 0 || strategy.categories.includes(product.category as VideoCategory);
     const matches = product.evidence.some(detail => strategy.detailTerms.some(term => detail.toLowerCase().includes(term)));

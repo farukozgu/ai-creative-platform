@@ -17,10 +17,15 @@ import styles from "./video-studio-workspace.module.css";
 export type VideoProductAnalysisDisplayStatus = "verified" | "not_analyzed" | "unsupported" | "quota_limited" | "budget_unavailable" | "configuration_error" | "provider_failed" | "pending";
 type PreparedPlan = { plan: VideoDirectorPlan; receipt: string; analysisStatus: VideoProductAnalysisDisplayStatus };
 
-const presetImages: Partial<Record<VideoPresetId, string>> = {
-  "luxury-fashion-film": "/workspace-demo/fashion/campaign.webp",
-  "macro-detail-reveal": "/workspace-demo/jewelry/macro.webp",
+const presetImages: Record<(typeof videoStudioPresetIds)[number], string> = {
   "minimal-studio": "/images/presets/cosmetics-studio.webp",
+  "metallic-light-sweep": "/images/presets/watches-editorial-studio.webp",
+  "macro-detail-reveal": "/workspace-demo/jewelry/macro.webp",
+  "floating-accessory": "/images/presets/bags-studio.webp",
+  "cinematic-hero": "/images/presets/footwear-street.webp",
+  "dramatic-backlight": "/workspace-demo/fashion/campaign-hero.webp",
+  "material-detail": "/workspace-demo/cosmetics/texture-macro.webp",
+  "window-display": "/images/presets/jewelry-lifestyle-still-life.webp",
 };
 
 export function VideoDirectorPresetSelector({ presetId, disabled, onChange, product = unknownPresetProduct, analysisStatus = "not_analyzed" }: {
@@ -31,7 +36,7 @@ export function VideoDirectorPresetSelector({ presetId, disabled, onChange, prod
   analysisStatus?: VideoProductAnalysisDisplayStatus;
 }) {
   const t = useTranslations("Dashboard.videoStudio.director");
-  const recommended = recommendVideoPresets(product);
+  const recommended = recommendVideoPresets(product, videoStudioPresetIds);
   const presetTitle = (id: VideoPresetId) => t(`presets.${id}.${videoStudioPresetIds.some(publicId => publicId === id) ? "signatureTitle" : "title"}`);
   const selected = videoDirectorPresets[presetId];
   return <section className={styles.controlSection} aria-labelledby="video-director-heading">
@@ -49,7 +54,7 @@ export function VideoDirectorPresetSelector({ presetId, disabled, onChange, prod
             onChange={() => onChange(id)} />
           <span className={styles.presetCard}>
             <span className={styles.presetImage}>
-              <Image src={presetImages[id] ?? (videoDirectorPresets[id].strategy.categories.includes("apparel") ? presetImages["luxury-fashion-film"]! : presetImages["macro-detail-reveal"]!)} alt="" fill sizes="(max-width: 639px) 45vw, 180px" />
+              <Image src={presetImages[id]} alt="" fill sizes="(max-width: 639px) 45vw, 180px" />
               <span className={styles.presetCheck} aria-hidden="true">{presetId === id ? "✓" : ""}</span>
             </span>
             <span className={styles.presetCopy}>
@@ -83,6 +88,8 @@ export function VideoDirectorPanel({ draft, draftKey, presetId, planDisabled, di
 }) {
   const t = useTranslations("Dashboard.videoStudio.director");
   const referenceT = useTranslations("Dashboard.videoStudio.references");
+  const signaturePlan = draft.creativeMode !== "custom" && draft.durationSeconds === 10 && shotMode === "multi"
+    && videoStudioPresetIds.some(id => id === presetId);
   const [prepared, setPrepared] = useState<PreparedPlan | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(false);
@@ -135,10 +142,10 @@ export function VideoDirectorPanel({ draft, draftKey, presetId, planDisabled, di
 
   return <section className={styles.controlSection} aria-labelledby="video-director-plan-heading" aria-busy={busy}>
     <div className={styles.controlHeading}>
-      <h2 id="video-director-plan-heading"><span className={styles.stepNumber} aria-hidden="true">05</span>{t("planHeading")}</h2>
+      <h2 id="video-director-plan-heading"><span className={styles.stepNumber} aria-hidden="true">04</span>{t(signaturePlan ? "signaturePlan" : "planHeading")}</h2>
       <p>{t("planDescription")}</p>
     </div>
-    {prepared ? <div className={styles.planReady} role="status"><span aria-hidden="true">✓</span>{t("planReady", { count: prepared.plan.shots.length })}</div> : null}
+    {prepared ? <div className={styles.planReady} role="status"><span aria-hidden="true">✓</span>{signaturePlan ? t("signaturePlan") : t("planReady", { count: prepared.plan.shots.length })}</div> : null}
     <p className={styles.fieldDescription}>{t("automaticPlanning")}</p>
     {prepared ? <p className={styles.fieldDescription} role="status" aria-live="polite">{t(`library.analysis.${prepared.analysisStatus}`)}</p> : null}
     {disabledReason ? <p className={styles.fieldDescription} role="status">{t(disabledReason)}</p> : null}
@@ -151,8 +158,8 @@ export function VideoDirectorPanel({ draft, draftKey, presetId, planDisabled, di
     <div aria-live="polite">
       {error ? <p className={styles.errorMessage} role="alert">{t(referencesUnverified ? referenceErrorReason === "invalid_review" ? "referenceReviewInvalid" : referenceErrorReason === "unavailable" ? "referenceReviewUnavailable" : "referencesUnverified" : "error")}</p> : null}
       {prepared ? <article className={styles.directorPlan}>
-        <h3>{t(prepared.plan.origin === "ai" ? "aiPlan" : "fallbackPlan")}</h3>
-        {prepared.plan.origin === "fallback" ? <p>{t("fallbackNotice")}</p> : null}
+        <h3>{t(signaturePlan ? "signaturePlan" : prepared.plan.origin === "ai" ? "aiPlan" : "fallbackPlan")}</h3>
+        {!signaturePlan && prepared.plan.origin === "fallback" ? <p>{t("fallbackNotice")}</p> : null}
         {prepared.plan.origin === "ai" ? <p lang="en"><strong>{t("intent")}: </strong>{prepared.plan.intent}</p> : null}
         <p lang="en">{prepared.plan.summary}</p>
         {prepared.plan.referenceReviews?.map(review => <p key={review.index}>{review.index + 1}: {referenceT(review.status)} — <span lang="en">{review.reason}</span></p>)}

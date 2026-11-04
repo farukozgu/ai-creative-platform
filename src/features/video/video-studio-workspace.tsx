@@ -414,7 +414,7 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
 
   const qualityValues: VideoQuality[] = ["standard", "pro"];
   const aspectRatioValues: VideoAspectRatio[] = ["16:9", "9:16", "1:1"];
-  const durationValues: VideoDuration[] = [5, 10];
+  const durationValues: VideoDuration[] = [10];
   const nextSubmissionStep = generationError || submissionUsed || restoreUnavailable ? null
     : restoringJob ? "checkingPrevious"
       : jobId ? "newSubmissionFirst"
@@ -509,17 +509,6 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
             onChange={nextPresetId => {
               setPresetId(nextPresetId); setDirector(null); setSubmissionQuote(null); setConfirmedReceipt(null);
             }} /> : null}
-          shotModeControls={<fieldset className={styles.controlSection} disabled={busy || preparingQuote || restoringJob || submissionUsed || Boolean(jobId)}>
-            <legend>{t("director.shotMode")}</legend>
-            <div className={styles.compactOptions}>{(["single", "multi"] as const).map(mode => <label key={mode}>
-              <input type="radio" name="video-director-mode" value={mode} required checked={shotMode === mode}
-                onChange={() => {
-                  setDirector(null); setSubmissionQuote(null); setConfirmedReceipt(null); dispatch({ type: "set-shot-mode", mode });
-                }} />
-              <span>{t(`director.${mode}`)}</span>
-            </label>)}</div>
-            <p className={styles.fieldDescription} role="status">{t(shotMode ? `shotSelection.${shotMode}` : "shotSelection.required")}</p>
-          </fieldset>}
           directorControls={shotMode ?
             <VideoDirectorPanel key={directorPanelKey} draft={generationDraft} draftKey={directorDraftKey}
               presetId={activePresetId} shotMode={shotMode}

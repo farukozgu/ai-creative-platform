@@ -22,7 +22,7 @@ export function videoStudioCreativeFields(state: VideoStudioDraft, selection?: V
 }
 
 export const initialVideoStudioDraft: VideoStudioDraft = {
-  shotMode: null,
+  shotMode: "multi",
   creativeMode: "preset",
   criticalRegion: null, analyzeAfterGeneration: false,
   source: null,
@@ -30,7 +30,7 @@ export const initialVideoStudioDraft: VideoStudioDraft = {
   cameraMovement: "auto",
   quality: "standard",
   aspectRatio: "16:9",
-  duration: 5,
+  duration: 10,
   feedback: null,
 };
 

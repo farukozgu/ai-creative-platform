@@ -819,13 +819,13 @@
           "macro-detail-reveal": {
             "signatureTitle": "Macro Details",
             "title": "Macro Detail Reveal",
-            "description": "Soft side light gives visible details a crisp close study. Multi-shot moves from detail to the complete product; at 10 seconds, a second verified feature is also studied.",
+            "description": "The 10-second multi-shot moves from full-product context to one verified visible detail, then returns to a complete product finish.",
             "caption": "Texture & craft"
           },
           "minimal-studio": {
             "signatureTitle": "Signature Studio",
             "title": "Minimal Studio",
-            "description": "Soft studio light and clean, balanced framing create a calm product presentation. Multi-shot moves from an overview to a symmetrical finish, with a medium view added at 10 seconds.",
+            "description": "The 10-second multi-shot uses a premium studio approach, one visible detail/light study, and a clean locked product finish.",
             "caption": "Clean & product-led"
           },
           "floating-fashion": {
@@ -856,13 +856,13 @@
           "cinematic-hero": {
             "signatureTitle": "Quick Cuts",
             "title": "Cinematic Hero",
-            "description": "Directional light and brisk framing changes create a cinematic advertising mood. Multi-shot combines an overview, visible surfaces and details, and a lateral camera glide before a strong product finish.",
+            "description": "The 10-second multi-shot uses five quick cuts: product, one detail, lateral framing shift, light accent, and a strong final hero.",
             "caption": "Confident campaign finish"
           },
           "material-detail": {
             "signatureTitle": "Material Study",
             "title": "Material Detail",
-            "description": "Soft grazing light creates a tactile surface study. Multi-shot moves from a close surface view to the complete product; at 10 seconds, a different verified junction is also shown.",
+            "description": "The 10-second multi-shot studies the light response of one visible surface region, then returns to the full product without inferring material.",
             "caption": "Tactile close study"
           },
           "macro-stitching": {
@@ -883,7 +883,7 @@
           "dramatic-backlight": {
             "signatureTitle": "Dark Reveal",
             "title": "Dramatic Backlight",
-            "description": "Rim light defines the silhouette against dramatic space. Multi-shot links an overview to a symmetrical product finish; at 10 seconds, a medium view studies the contour light.",
+            "description": "The 10-second multi-shot moves from a readable dark silhouette through controlled illumination into a clear low-key product hero.",
             "caption": "Sculpted contours"
           },
           "cinematic-dial": {
@@ -894,7 +894,7 @@
           "metallic-light-sweep": {
             "signatureTitle": "Light Sweep",
             "title": "Metallic Light Sweep",
-            "description": "A narrow highlight moving across the existing surface creates a crisp presentation. Multi-shot links the light study to a full-product finish, adding an opening overview at 10 seconds.",
+            "description": "The 10-second multi-shot keeps product and camera still while one left-to-right light pass resolves into a clean product finish.",
             "caption": "Traveling light band"
           },
           "hardware-reveal": {
@@ -905,7 +905,7 @@
           "floating-accessory": {
             "signatureTitle": "Floating",
             "title": "Floating Accessory",
-            "description": "Soft edge light and open space create a light, balanced accessory presentation. Multi-shot links a short lateral camera glide to a calm full-product finish, adding an opening overview at 10 seconds.",
+            "description": "The 10-second multi-shot keeps the source orientation while the product gently rises and settles; the camera stays locked with no rotation.",
             "caption": "Poised sense of lift"
           },
           "sneaker-hero": {
@@ -936,11 +936,11 @@
           "window-display": {
             "signatureTitle": "Window Display",
             "title": "Window Display",
-            "description": "Balanced overhead light and elegant space create a display-like product presentation. Multi-shot links an overview to a symmetrical finish, adding a side-lit medium view at 10 seconds.",
+            "description": "The 10-second multi-shot uses a minimal storefront approach, controlled glass-light interaction, and a product-dominant display finish.",
             "caption": "Source-setting editorial"
           }
         },
-        "automaticPlanning": "The AI shot plan is prepared without a separate user fee or price approval. Video generation still requires price approval.",
+        "automaticPlanning": "The shot plan is prepared automatically from the selected preset and verified visible product features.",
         "planNeedsReferences": "Reload or remove the additional product views before preparing a shot plan.",
         "referencesUnverified": "The additional product images could not be verified. No video was generated by skipping them. Use clear images of the same product and prepare the plan again, or remove the references.",
         "referenceReviewInvalid": "AI could not complete a valid reference review. This does not mean the images are wrong. Video generation was not started.",
@@ -949,8 +949,9 @@
         "planNeedsPreparedSource": "Wait for the product image to finish preparing before planning shots.",
         "planNeedsReadyDraft": "Complete the video settings before preparing a shot plan.",
         "planLocked": "Shot planning is unavailable for this video.",
-        "prepare": "Prepare AI plan",
+        "prepare": "Prepare shot plan",
         "planHeading": "AI shot plan",
+        "signaturePlan": "Signature shot plan",
         "preparing": "Preparing plan…",
         "separateApproval": "Planning does not generate a video. Video generation requires its own cost approval.",
         "aiPlan": "AI creative plan",
@@ -974,7 +975,7 @@
         "styleHeading": "Video style",
         "planDescription": "Prepare your scenes and review them before generation. Planning does not start video generation.",
         "planReady": "Plan ready · {count} scenes",
-        "prepareAgain": "Rebuild AI plan",
+        "prepareAgain": "Rebuild shot plan",
         "intent": "Creative interpretation",
         "purpose": "Visual purpose",
         "purposes": {

@@ -9,10 +9,10 @@ import { directorFixtureInput, directorProducts } from "./fixtures/video-directo
 import { VideoProductionHarness } from "./fixtures/video-production-harness";
 
 const source = { kind: "library" as const, id: "source", name: "Product", previewUrl: "preview", generationId: "id", projectId: "project", createdAt: "now", aspectRatio: "1:1" };
-test("shot mode starts unselected and blocks readiness in either creative mode until explicitly chosen", () => {
-  assert.equal(initialVideoStudioDraft.shotMode, null);
+test("studio defaults to multi while legacy missing shot choices still block readiness", () => {
+  assert.equal(initialVideoStudioDraft.shotMode, "multi");
   for (const creativeMode of ["preset", "custom"] as const) {
-    const draft = { ...initialVideoStudioDraft, source, creativeMode, prompt: "Yavaş yaklaş" };
+    const draft = { ...initialVideoStudioDraft, source, creativeMode, shotMode: null, prompt: "Yavaş yaklaş" };
     assert.equal(validateVideoStudioDraft(draft), "shot-mode-required");
     assert.equal(isVideoStudioDraftReady(draft), false);
     for (const mode of ["single", "multi"] as const) {
@@ -78,12 +78,12 @@ test("Single remains one continuous shot and rejects internal cut or montage dir
   }
 });
 
-test("shot selection is a required primary control; manual camera selection is absent including Advanced", () => {
+test("signature surface hides shot selection; legacy shot validation and manual-camera lock remain", () => {
   const ui = readFileSync("src/features/video/video-studio-workspace.tsx", "utf8");
   const inspector = readFileSync("src/features/video/video-generation-inspector.tsx", "utf8");
   assert.doesNotMatch(ui, /video-camera|cameraValues|camera\.heading|camera\.options|set-camera/);
-  assert.match(ui, /name="video-director-mode" value=\{mode\} required checked=\{shotMode === mode\}/);
-  assert.match(ui, /shotModeControls=\{<fieldset[\s\S]*?directorControls=\{shotMode \?[\s\S]*?advancedSettings=/);
+  assert.doesNotMatch(ui, /video-director-mode|shotModeControls=|set-shot-mode/);
+  assert.match(ui, /directorControls=\{shotMode \?[\s\S]*?advancedSettings=/);
   assert.match(inspector, /\{presetControls\}[\s\S]*?\{shotModeControls\}[\s\S]*?qualityHeading[\s\S]*?\{advancedSettings/);
   assert.match(ui, /if \(!generationAvailable \|\| !draft.shotMode\) return;/);
   for (const locale of ["tr", "en"]) {

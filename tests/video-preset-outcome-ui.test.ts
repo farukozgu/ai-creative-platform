@@ -27,7 +27,7 @@ for (const locale of ["tr", "en"] as const) {
     for (const id of videoPresetIds) {
       const description = copy[id].description;
       assert.ok(description.length > 40 && description.length <= 260, `${id}: ${description.length}`);
-      assert.match(description, locale === "tr" ? /Çoklu çekimde/ : /Multi-shot/);
+      assert.match(description, locale === "tr" ? /çoklu çekim/i : /multi-shot/i);
       assert.ok(description.split(/[.!?]+/).filter(part => part.trim()).length <= 2, id);
       assert.doesNotMatch(description, /hero-reveal|material-study|final-hero|macro-detail|360|levitat|havalan|dalgalan|rüzgâr/i);
     }
@@ -45,7 +45,7 @@ for (const locale of ["tr", "en"] as const) {
         if (name === "react") return React;
         if (name === "react/jsx-runtime") return jsxRuntime;
         if (name === "next-intl") return { useTranslations: () => (key: string) => key.split(".").reduce((value, part) => value?.[part], messages.Dashboard.videoStudio.director) ?? key };
-        if (name === "next/image") return { default: () => null };
+        if (name === "next/image") return { default: ({ src }: { src: string }) => React.createElement("span", { "data-preview": src }) };
         if (name.endsWith("/button")) return { Button: ({ children }: React.PropsWithChildren) => React.createElement("button", null, children) };
         if (name.endsWith("/badge")) return { Badge: ({ children }: React.PropsWithChildren) => React.createElement("span", null, children) };
         if (name.endsWith("/presets")) return { videoPresetIds, videoDirectorPresets };

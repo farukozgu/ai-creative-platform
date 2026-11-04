@@ -31,8 +31,8 @@ test("Video Studio defaults are provider-neutral and ready for V1 settings", () 
   assert.equal(initialVideoStudioDraft.cameraMovement, "auto");
   assert.equal(initialVideoStudioDraft.quality, "standard");
   assert.equal(initialVideoStudioDraft.aspectRatio, "16:9");
-  assert.equal(initialVideoStudioDraft.duration, 5);
-  assert.equal(initialVideoStudioDraft.shotMode, null);
+  assert.equal(initialVideoStudioDraft.duration, 10);
+  assert.equal(initialVideoStudioDraft.shotMode, "multi");
   assert.equal(validateVideoStudioDraft(initialVideoStudioDraft), "source-required");
 });
 

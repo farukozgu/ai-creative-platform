@@ -19,11 +19,10 @@ test("hidden legacy preset IDs still compile and open existing receipts", () => 
   assert.deepEqual(compileDirectorPlan(restored, input), compileDirectorPlan(plan, input));
 });
 
-test("unaffected preset modes retain pre-Window-Display output including completed golden presets", () => {
+test("all preset modes retain pre-surface-alignment director and Kling output", () => {
   const results = [];
   for (const presetId of videoPresetIds) for (const shotMode of ["single", "multi"] as const)
     for (const durationSeconds of [5, 10] as const) {
-      if (presetId === "window-display" && shotMode === "multi" && durationSeconds === 10) continue;
       assert.ok(isVideoPresetId(presetId));
       const base = directorFixtureInput(directorProducts[0]);
       const input = { ...base, presetId, shotMode, draft: { ...base.draft, shotMode, durationSeconds } };
@@ -39,6 +38,6 @@ test("unaffected preset modes retain pre-Window-Display output including complet
       }
       results.push({ presetId, shotMode, durationSeconds, plan, output });
     }
-  // Baseline captured before Window Display; includes all seven completed golden presets.
-  assert.equal(createHash("sha256").update(JSON.stringify(results)).digest("hex"), "73de170e98bdc57e7a58d2640f48f033fbf671071062e816f0f61166083e8ef2");
+  // Baseline captured before surface alignment; includes all eight golden presets and legacy modes.
+  assert.equal(createHash("sha256").update(JSON.stringify(results)).digest("hex"), "e07709a64c3a5220eb8ec6708442d71c46110981ca393fad4079921d9335d9ad");
 });
