@@ -8,9 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { prepareVideoDirectorAction } from "@/app/[locale]/dashboard/video/director-actions";
 import type { VideoGenerationDraft } from "@/lib/video-generation/types";
 import { shotFields, type VideoDirectorPlan, type VideoDirectorSelection } from "@/lib/video-director/core";
-import { VIDEO_DIRECTOR_VERSION, videoPresetIds, type VideoPresetId, type VideoShotMode } from "@/lib/video-director/presets";
+import { VIDEO_DIRECTOR_VERSION, type VideoPresetId, type VideoShotMode } from "@/lib/video-director/presets";
 import { videoDirectorPresets } from "@/lib/video-director/presets";
-import { videoCategories, type VideoCategory } from "@/lib/video-director/preset-contract";
+import { videoStudioPresetIds } from "./video-preset-catalog";
 import { recommendVideoPresets, unknownPresetProduct, type VideoPresetProduct } from "@/lib/video-director/preset-recommendations";
 import styles from "./video-studio-workspace.module.css";
 
@@ -31,13 +31,8 @@ export function VideoDirectorPresetSelector({ presetId, disabled, onChange, prod
   analysisStatus?: VideoProductAnalysisDisplayStatus;
 }) {
   const t = useTranslations("Dashboard.videoStudio.director");
-  const [filter, setFilter] = useState("recommended");
-  const [page, setPage] = useState(0);
   const recommended = recommendVideoPresets(product);
-  const filtered = filter === "recommended" ? recommended : videoPresetIds.filter(id => filter === "all"
-    || !videoDirectorPresets[id].strategy.categories.length || videoDirectorPresets[id].strategy.categories.includes(filter as VideoCategory));
-  const currentPage = Math.min(page, Math.max(0, Math.ceil(filtered.length / 6) - 1));
-  const visible = filtered.slice(currentPage * 6, currentPage * 6 + 6);
+  const presetTitle = (id: VideoPresetId) => t(`presets.${id}.${videoStudioPresetIds.some(publicId => publicId === id) ? "signatureTitle" : "title"}`);
   const selected = videoDirectorPresets[presetId];
   return <section className={styles.controlSection} aria-labelledby="video-director-heading">
     <div className={styles.controlHeading}>
@@ -46,18 +41,10 @@ export function VideoDirectorPresetSelector({ presetId, disabled, onChange, prod
     </div>
     <fieldset className={styles.directorFields} disabled={disabled}>
       <legend className="sr-only">{t("preset")}</legend>
-      <label className={styles.presetToolbar}>
-        <span>{t("library.filter")}</span>
-        <select value={filter} onChange={event => { setFilter(event.target.value); setPage(0); }}>
-          <option value="recommended">{t("library.recommended")}</option>
-          <option value="all">{t("library.all")}</option>
-          {videoCategories.map(category => <option value={category} key={category}>{t(`library.categories.${category}`)}</option>)}
-        </select>
-      </label>
       <p className={styles.fieldDescription}>{t(product.category === "unknown" ? "library.unknown" : "library.profile", { category: product.category === "unknown" ? "" : t(`library.categories.${product.category}`) })}</p>
       <p className={styles.fieldDescription} role="status" aria-live="polite">{t(`library.analysis.${analysisStatus}`)}</p>
       <div className={styles.presetGrid}>
-        {visible.map(id => <label key={id}>
+        {videoStudioPresetIds.map(id => <label key={id}>
           <input type="radio" name="video-director-preset" value={id} checked={presetId === id}
             onChange={() => onChange(id)} />
           <span className={styles.presetCard}>
@@ -66,19 +53,14 @@ export function VideoDirectorPresetSelector({ presetId, disabled, onChange, prod
               <span className={styles.presetCheck} aria-hidden="true">{presetId === id ? "✓" : ""}</span>
             </span>
             <span className={styles.presetCopy}>
-              <strong>{t(`presets.${id}.title`)}</strong>
+              <strong>{presetTitle(id)}</strong>
               <small>{t(`presets.${id}.description`)}</small>
               {recommended.includes(id) ? <Badge>{t("library.recommendedBadge")}</Badge> : null}
             </span>
           </span>
         </label>)}
       </div>
-      <div className={styles.presetPagination}>
-        <Button variant="ghost" size="sm" disabled={disabled || currentPage === 0} onClick={() => setPage(currentPage - 1)}>{t("library.previous")}</Button>
-        <span role="status">{t("library.count", { start: currentPage * 6 + 1, end: Math.min(filtered.length, (currentPage + 1) * 6), total: filtered.length })}</span>
-        <Button variant="ghost" size="sm" disabled={disabled || (currentPage + 1) * 6 >= filtered.length} onClick={() => setPage(currentPage + 1)}>{t("library.next")}</Button>
-      </div>
-      <p className={styles.fieldDescription}>{t("library.selected", { name: t(`presets.${presetId}.title`) })}</p>
+      <p className={styles.fieldDescription}>{t("library.selected", { name: presetTitle(presetId) })}</p>
       <p className={styles.fieldDescription} aria-live="polite">{t(`presets.${presetId}.description`)}</p>
       <div className={styles.fieldDescription} aria-live="polite">
         <strong>{t("library.safeHeading")}</strong>

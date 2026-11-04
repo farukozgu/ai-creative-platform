@@ -817,11 +817,13 @@
             "caption": "Editorial & cinematic"
           },
           "macro-detail-reveal": {
+            "signatureTitle": "Macro Details",
             "title": "Macro Detail Reveal",
             "description": "Soft side light gives visible details a crisp close study. Multi-shot moves from detail to the complete product; at 10 seconds, a second verified feature is also studied.",
             "caption": "Texture & craft"
           },
           "minimal-studio": {
+            "signatureTitle": "Signature Studio",
             "title": "Minimal Studio",
             "description": "Soft studio light and clean, balanced framing create a calm product presentation. Multi-shot moves from an overview to a symmetrical finish, with a medium view added at 10 seconds.",
             "caption": "Clean & product-led"
@@ -852,11 +854,13 @@
             "caption": "Restrained parallax"
           },
           "cinematic-hero": {
+            "signatureTitle": "Quick Cuts",
             "title": "Cinematic Hero",
             "description": "Directional light and brisk framing changes create a cinematic advertising mood. Multi-shot combines an overview, visible surfaces and details, and a lateral camera glide before a strong product finish.",
             "caption": "Confident campaign finish"
           },
           "material-detail": {
+            "signatureTitle": "Material Study",
             "title": "Material Detail",
             "description": "Soft grazing light creates a tactile surface study. Multi-shot moves from a close surface view to the complete product; at 10 seconds, a different verified junction is also shown.",
             "caption": "Tactile close study"
@@ -877,6 +881,7 @@
             "caption": "Original markings"
           },
           "dramatic-backlight": {
+            "signatureTitle": "Dark Reveal",
             "title": "Dramatic Backlight",
             "description": "Rim light defines the silhouette against dramatic space. Multi-shot links an overview to a symmetrical product finish; at 10 seconds, a medium view studies the contour light.",
             "caption": "Sculpted contours"
@@ -887,6 +892,7 @@
             "caption": "Dial and layout"
           },
           "metallic-light-sweep": {
+            "signatureTitle": "Light Sweep",
             "title": "Metallic Light Sweep",
             "description": "A narrow highlight moving across the existing surface creates a crisp presentation. Multi-shot links the light study to a full-product finish, adding an opening overview at 10 seconds.",
             "caption": "Traveling light band"
@@ -897,6 +903,7 @@
             "caption": "Attachments and edges"
           },
           "floating-accessory": {
+            "signatureTitle": "Floating",
             "title": "Floating Accessory",
             "description": "Soft edge light and open space create a light, balanced accessory presentation. Multi-shot links a short lateral camera glide to a calm full-product finish, adding an opening overview at 10 seconds.",
             "caption": "Poised sense of lift"
@@ -927,6 +934,7 @@
             "caption": "Finished workmanship"
           },
           "window-display": {
+            "signatureTitle": "Window Display",
             "title": "Window Display",
             "description": "Balanced overhead light and elegant space create a display-like product presentation. Multi-shot links an overview to a symmetrical finish, adding a side-lit medium view at 10 seconds.",
             "caption": "Source-setting editorial"
@@ -986,7 +994,7 @@
           "next": "Next",
           "count": "{start}–{end} / {total}",
           "selected": "Selected style: {name}",
-          "unknown": "No verified category. Universal styles are suggested; category filters are for exploration only.",
+          "unknown": "No verified category. Recommendations use universal product styles.",
           "profile": "Suggested from the existing product profile: {category}. You can choose another style.",
           "analysis": {
             "verified": "The image was analyzed; suggestions now use its verified category and visible details.",

@@ -6,6 +6,7 @@ import { videoPresetIds } from "../src/lib/video-director/presets";
 import { directorProducts, directorFixtureInput } from "./fixtures/video-director-fixtures";
 
 for (const profile of [directorProducts[0], directorProducts[2], directorProducts[1]]) for (const durationSeconds of [5, 10] as const) for (const shotMode of ["single", "multi"] as const) {
+  if (durationSeconds === 10 && shotMode === "multi") continue; // Covered by the Macro Details golden suite.
   test(`fixed macro ${profile.vertical}/${durationSeconds}/${shotMode}`, async () => {
     const base = directorFixtureInput(profile);
     const input = { ...base, presetId: "macro-detail-reveal" as const, shotMode, draft: { ...base.draft, shotMode, durationSeconds } };
@@ -37,11 +38,12 @@ test("other 23 presets do not enter the fixed macro path; missing evidence canno
   const profile = { ...directorProducts[0], materials: [], identityCriticalAttributes: [], verticalAttributes: { vertical: "apparel" as const, details: { garmentType: "jacket", primaryColor: null, artworkOrLogoLocations: [], closures: [], pocketStructure: [], hoodOrCollar: null, constructionDetails: [], identitySides: [] } } };
   const input = { ...base, profile, presetId: "macro-detail-reveal" as const };
   const plan = fallbackDirectorPlan(input);
-  assert.deepEqual(plan.shots.map(shot => shot.durationSeconds), [3, 2, 2, 3]);
+  assert.deepEqual(plan.shots.map(shot => shot.durationSeconds), [3, 4, 3]);
   assert.ok(parseDirectorOutput(plan, input));
 });
 
 for (const profile of [directorProducts[0], directorProducts[2], directorProducts[1]]) for (const durationSeconds of [5, 10] as const) for (const shotMode of ["single", "multi"] as const) {
+  if (durationSeconds === 10 && shotMode === "multi") continue; // Covered by the Macro Details golden suite.
   test(`sparse macro wide fallback ${profile.vertical}/${durationSeconds}/${shotMode}`, () => {
     const base = directorFixtureInput(profile);
     const sparse = { ...profile, materials: [], dominantColors: [], productShape: "unknown", identityCriticalAttributes: [],

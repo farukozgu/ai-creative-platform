@@ -6,6 +6,7 @@ import { libraryFixtures } from "./fixtures/video-preset-library-fixtures";
 import { directorFixtureInput, directorProducts } from "./fixtures/video-director-fixtures";
 const categories = ["bags", "headwear", "eyewear", "jewelry", "footwear", "furniture", "food", "packaged-food", "electronics"];
 for (const category of categories) for (const durationSeconds of [5, 10] as const) for (const shotMode of ["single", "multi"] as const) {
+  if (durationSeconds === 10 && shotMode === "multi") continue; // Covered by the Macro Details golden suite.
   test(`macro remaining ${category}/${durationSeconds}/${shotMode}`, async () => {
     const profile = libraryFixtures.find(fixture => fixture.category === category)!.profile!;
     const base = directorFixtureInput(profile);

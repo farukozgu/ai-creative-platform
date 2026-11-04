@@ -257,9 +257,70 @@ export function directorPlanDescriptions(input: VideoDirectorInput, shotCount: n
   }
   return { summary, intent: labels.length ? `Verified focus: ${labels.join(" | ")}` : "Source-visible product form." };
 }
-export function fixedMacroDirectorPlan(input: VideoDirectorInput): VideoDirectorPlan | null {
+export function fixedQuickCutsDirectorPlan(input: VideoDirectorInput): VideoDirectorPlan | null {
+  if (input.presetId !== "cinematic-hero" || input.shotMode !== "multi" || input.draft.durationSeconds !== 10) return null;
+  const context = directorProductContext(input.profile);
+  const featurePatterns: Record<string, RegExp> = {
+    apparel: /\b(?:seam|stitch\w*|panel)\b/i,
+    cosmetics: /\b(?:label|cap)\b/i,
+    watches: /\b(?:dial|marker\w*|indices|setting)\b/i,
+    jewelry: /\b(?:setting\w*)\b/i,
+    footwear: /\b(?:upper|sole|lace\w*|lacing)\b/i,
+    bags: /\b(?:handle|clasp|zip\w*|stitch\w*|panel|hardware)\b/i,
+    headwear: /\b(?:brim|stitch\w*|panel)\b/i,
+    eyewear: /\b(?:frame|rim|hinge)\b/i,
+  };
+  const eligible = context.evidence.filter(item => item.detail.length <= DIRECTOR_SHOT_TEXT_LIMIT
+    && !/\b(?:and|with|plus|or)\b|[,;+/&]/i.test(item.detail));
+  const feature = featurePatterns[context.category];
+  const chosen = (feature ? eligible.find(item => feature.test(item.detail)) : undefined)
+    ?? eligible.find(item => /\b(?:surface|texture|edge|contour|relief)\b/i.test(item.detail));
+  const execution = getVideoDirectorPreset(input.presetId, input.shotMode, input.draft.durationSeconds).execution!;
+  const shots: VideoDirectorShot[] = execution.shots.map((direction, index) => ({ ...direction,
+    durationSeconds: 2, motion: "Product still; retain source orientation",
+    focus: index === 1 ? chosen?.detail ?? "Source-visible surface detail" : "Source-visible product form",
+    evidenceRefs: index === 1 && chosen ? [chosen.id] : [],
+  }));
+  return { version: VIDEO_DIRECTOR_VERSION, presetId: input.presetId, presetVersion: directorPresetVersion(input.presetId),
+    shotMode: input.shotMode, origin: "fallback", ...directorPlanDescriptions(input, shots.length),
+    intentContract: interpretCreativeIntent(input.draft.prompt, context.evidence, input.shotMode, input.draft.cameraMovement), shots };
+}
+export function fixedMacroDirectorPlan(input: VideoDirectorInput, macroStoryboard = true): VideoDirectorPlan | null {
   if (input.presetId !== "macro-detail-reveal") return null;
   const context = directorProductContext(input.profile);
+  if (macroStoryboard && input.shotMode === "multi" && input.draft.durationSeconds === 10) {
+    const featurePatterns: Record<string, RegExp> = {
+      apparel: /\b(?:seam|stitch\w*|panel)\b/i,
+      cosmetics: /\b(?:label|logo|cap)\b/i,
+      watches: /\b(?:dial|marker\w*|indices|setting)\b/i,
+      jewelry: /\b(?:setting\w*)\b/i,
+      footwear: /\b(?:upper|sole|lace\w*|lacing)\b/i,
+      eyewear: /\b(?:frame|rim|hinge)\b/i,
+    };
+    // Select one evidence atom, never a combined list of independent targets.
+    const eligible = context.evidence.filter(item => item.detail.length <= DIRECTOR_SHOT_TEXT_LIMIT
+      && !/\b(?:and|with|plus|or)\b|[,;+/&]/i.test(item.detail));
+    const feature = featurePatterns[context.category];
+    const chosen = (feature ? eligible.find(item => feature.test(item.detail)) : undefined)
+      ?? eligible.find(item => /\b(?:surface|texture|edge|contour|relief)\b/i.test(item.detail));
+    const shots: VideoDirectorShot[] = [
+      { purpose: "hero-reveal", durationSeconds: 3, camera: "Locked medium product framing",
+        composition: "Complete product; clean margins; source-facing view",
+        lighting: "Soft neutral directional studio light", motion: "Product still; retain source orientation",
+        pace: "Brief product orientation", focus: "Source-visible product form", evidenceRefs: [] },
+      { purpose: "macro-detail", durationSeconds: 4, camera: "Locked macro framing",
+        composition: "One region at source-resolvable macro scale",
+        lighting: "Grazing soft light reveals existing relief", motion: "Product still; retain source orientation",
+        pace: "Restrained local inspection", focus: chosen?.detail ?? "Source-visible surface detail", evidenceRefs: chosen ? [chosen.id] : [] },
+      { purpose: "final-hero", durationSeconds: 3, camera: "Slow pull-back to full product framing",
+        composition: "Restore complete recognizable product in frame",
+        lighting: "Resolved soft fill preserves original appearance", motion: "Product still; retain source orientation",
+        pace: "Clear recognition hold", focus: "Source-visible product form", evidenceRefs: [] },
+    ];
+    return { version: VIDEO_DIRECTOR_VERSION, presetId: input.presetId, presetVersion: directorPresetVersion(input.presetId),
+      shotMode: input.shotMode, origin: "fallback", ...directorPlanDescriptions(input, shots.length),
+      intentContract: interpretCreativeIntent(input.draft.prompt, context.evidence, input.shotMode, input.draft.cameraMovement), shots };
+  }
   const template = categoryMacroDirection(context.category, input.shotMode, input.draft.durationSeconds);
   if (!template) return null;
   const assigned: VideoDirectorShot[] = [];
@@ -278,9 +339,32 @@ export function fixedMacroDirectorPlan(input: VideoDirectorInput): VideoDirector
     shotMode: input.shotMode, origin: "fallback", ...directorPlanDescriptions(input, shots.length),
     intentContract: interpretCreativeIntent(input.draft.prompt, context.evidence, input.shotMode, input.draft.cameraMovement), shots };
 }
-export function fixedMaterialDirectorPlan(input: VideoDirectorInput): VideoDirectorPlan | null {
+export function fixedMaterialDirectorPlan(input: VideoDirectorInput, surfaceStoryboard = true): VideoDirectorPlan | null {
   if (input.presetId !== "material-detail") return null;
   const context = directorProductContext(input.profile);
+  if (surfaceStoryboard && input.shotMode === "multi" && input.draft.durationSeconds === 10) {
+    // Surface observations only. Keep one bounded evidence atom, not a feature or a list of regions.
+    const chosen = context.evidence.find(item => item.detail.length <= 80
+      && /\b(?:surface|texture|relief|weave|woven|pattern\w*|grain|smooth\w*|reflect\w*|matte|gloss\w*|edge transition)\b/i.test(item.detail)
+      && !/\b(?:logo\w*|label\w*|clasp|hinge|dial|marker\w*|button\w*|mechanism|hardware|seam|stitch\w*|and|with|plus|or)\b|[,;+/&]/i.test(item.detail));
+    const shots: VideoDirectorShot[] = [
+      { purpose: "hero-reveal", durationSeconds: 3, camera: "Locked medium-close product framing",
+        composition: "Recognizable product section; full form context",
+        lighting: "Soft directional light defines visible surface", motion: "Product and camera still; source-facing",
+        pace: "Brief surface context", focus: "Source-visible product form", evidenceRefs: [] },
+      { purpose: "material-study", durationSeconds: 4, camera: "Very short source-facing lateral macro glide",
+        composition: "One source-resolvable surface region",
+        lighting: "Grazing light angle shifts subtly", motion: "Product stays still",
+        pace: "Restrained surface study", focus: chosen?.detail ?? "Source-visible surface detail", evidenceRefs: chosen ? [chosen.id] : [] },
+      { purpose: "final-hero", durationSeconds: 3, camera: "Locked balanced product framing",
+        composition: "Complete recognizable source-facing product",
+        lighting: "Resolved soft fill preserves surface character", motion: "Product and camera still; source-facing",
+        pace: "Clear commercial hero hold", focus: "Source-visible product form", evidenceRefs: [] },
+    ];
+    return { version: VIDEO_DIRECTOR_VERSION, presetId: input.presetId, presetVersion: directorPresetVersion(input.presetId),
+      shotMode: input.shotMode, origin: "fallback", ...directorPlanDescriptions(input, shots.length),
+      intentContract: interpretCreativeIntent(input.draft.prompt, context.evidence, input.shotMode, input.draft.cameraMovement), shots };
+  }
   const template = categoryMaterialDirection(context.category, input.shotMode, input.draft.durationSeconds);
   if (!template) return null;
   const assigned: VideoDirectorShot[] = [];
@@ -362,9 +446,28 @@ export function fixedPerspectiveDirectorPlan(input: VideoDirectorInput): VideoDi
     shotMode: input.shotMode, origin: "fallback", ...directorPlanDescriptions(input, shots.length),
     intentContract: interpretCreativeIntent(input.draft.prompt, context.evidence, input.shotMode, input.draft.cameraMovement), shots };
 }
-export function fixedFashionMotionDirectorPlan(input: VideoDirectorInput): VideoDirectorPlan | null {
+export function fixedFashionMotionDirectorPlan(input: VideoDirectorInput, floatingStoryboard = true): VideoDirectorPlan | null {
   if (!["floating-fashion", "fabric-motion", "floating-accessory"].includes(input.presetId)) return null;
   const context = directorProductContext(input.profile);
+  if (floatingStoryboard && input.presetId === "floating-accessory" && input.shotMode === "multi" && input.draft.durationSeconds === 10) {
+    const shots: VideoDirectorShot[] = [
+      { purpose: "hero-reveal", durationSeconds: 3, camera: "Locked medium hero framing",
+        composition: "Complete product; clean studio; open margins",
+        lighting: "Broad soft directional studio light", motion: "Gentle suspended upward drift; source-facing",
+        pace: "Calm weightless opening", focus: "Source-visible product form", evidenceRefs: [] },
+      { purpose: "controlled-motion", durationSeconds: 4, camera: "Locked medium-close framing",
+        composition: "Whole source-facing silhouette; open margins",
+        lighting: "Soft edge light traces visible silhouette", motion: "Small rise then soft settle; source-facing",
+        pace: "One controlled float cycle", focus: "Source-visible product form", evidenceRefs: [] },
+      { purpose: "final-hero", durationSeconds: 3, camera: "Locked balanced hero framing",
+        composition: "Complete recognizable product; balanced margins",
+        lighting: "Clean soft hero separation", motion: "Damped float settles to a near-still hold",
+        pace: "Resolved calm finish", focus: "Source-visible product form", evidenceRefs: [] },
+    ];
+    return { version: VIDEO_DIRECTOR_VERSION, presetId: input.presetId, presetVersion: directorPresetVersion(input.presetId),
+      shotMode: input.shotMode, origin: "fallback", ...directorPlanDescriptions(input, shots.length),
+      intentContract: interpretCreativeIntent(input.draft.prompt, context.evidence, input.shotMode, input.draft.cameraMovement), shots };
+  }
   const template = categoryFashionMotionDirection(input.presetId, context.category, input.shotMode, input.draft.durationSeconds);
   if (!template) return null;
   const assigned: VideoDirectorShot[] = [];
@@ -404,9 +507,34 @@ export function fixedProductDetailDirectorPlan(input: VideoDirectorInput): Video
     shotMode: input.shotMode, origin: "fallback", ...directorPlanDescriptions(input, shots.length),
     intentContract: interpretCreativeIntent(input.draft.prompt, context.evidence, input.shotMode, input.draft.cameraMovement), shots };
 }
-export function fixedPresentationDirectorPlan(input: VideoDirectorInput): VideoDirectorPlan | null {
+export function fixedPresentationDirectorPlan(input: VideoDirectorInput, windowStoryboard = true): VideoDirectorPlan | null {
   if (!["culinary-texture", "window-display"].includes(input.presetId)) return null;
   const context = directorProductContext(input.profile);
+  if (windowStoryboard && input.presetId === "window-display" && input.shotMode === "multi" && input.draft.durationSeconds === 10) {
+    const displayFraming = context.category === "apparel" ? "Complete product dominates source-safe display"
+      : ["cosmetics", "watches", "jewelry"].includes(context.category) ? "Complete product dominates small pedestal display"
+      : ["footwear", "bags", "headwear", "eyewear"].includes(context.category) ? "Complete product dominates elevated display platform"
+      : context.category === "furniture" ? "Complete product dominates large showroom display"
+      : ["food", "packaged-food"].includes(context.category) ? "Complete product dominates clean display shelf"
+      : "Complete product dominates simple pedestal display";
+    const shots: VideoDirectorShot[] = [
+      { purpose: "hero-reveal", durationSeconds: 4, camera: "Slow restrained push toward storefront display",
+        composition: "Full product prominent; minimal storefront display",
+        lighting: "Soft display light; faint ambient light bands", motion: "Product still; source-facing orientation",
+        pace: "Measured retail approach", focus: "Source-visible product form", evidenceRefs: [] },
+      { purpose: "lighting-reveal", durationSeconds: 3, camera: "Short controlled source-facing lateral glide",
+        composition: "Recognizable product at display window plane",
+        lighting: "Display key; abstract band shifts on window", motion: "Product still; source-facing orientation",
+        pace: "One restrained window accent", focus: "Source-visible product form", evidenceRefs: [] },
+      { purpose: "final-hero", durationSeconds: 3, camera: "Locked premium display framing",
+        composition: displayFraming,
+        lighting: "Clean controlled retail hero light", motion: "Product still; source-facing orientation",
+        pace: "Confident product hold", focus: "Source-visible product form", evidenceRefs: [] },
+    ];
+    return { version: VIDEO_DIRECTOR_VERSION, presetId: input.presetId, presetVersion: directorPresetVersion(input.presetId),
+      shotMode: input.shotMode, origin: "fallback", ...directorPlanDescriptions(input, shots.length),
+      intentContract: interpretCreativeIntent(input.draft.prompt, context.evidence, input.shotMode, input.draft.cameraMovement), shots };
+  }
   const template = categoryPresentationDirection(input.presetId, context.category, input.shotMode, input.draft.durationSeconds);
   if (!template) return null;
   const assigned: VideoDirectorShot[] = [];
@@ -457,9 +585,30 @@ export function fixedSpotlightDirectorPlan(input: VideoDirectorInput): VideoDire
     intentContract: interpretCreativeIntent(input.draft.prompt, context.evidence, input.shotMode, input.draft.cameraMovement),
     shots: template.shots.map((direction, index) => ({ ...direction, durationSeconds: template.durations[index], focus: "Source-visible product form", evidenceRefs: [] })) };
 }
-export function fixedMinimalDirectorPlan(input: VideoDirectorInput): VideoDirectorPlan | null {
+export function fixedMinimalDirectorPlan(input: VideoDirectorInput, signatureStoryboard = true): VideoDirectorPlan | null {
   if (input.presetId !== "minimal-studio") return null;
   const context = directorProductContext(input.profile);
+  if (signatureStoryboard && input.shotMode === "multi" && input.draft.durationSeconds === 10) {
+    // Primary-image evidence only. Color/material names alone are not a visible region.
+    const detail = context.evidence.find(item => /\b(?:contour|surface|texture|grain|seam|stitch\w*|collar|label|logo|panel|edge|cap|lacing|lace\w*|sole|closure)\b/i.test(item.detail));
+    const shots: VideoDirectorShot[] = [
+      { purpose: "hero-reveal", durationSeconds: 4, camera: "Slow long-lens push-in",
+        composition: "Full product inside frame; clean premium negative space",
+        lighting: "Soft sculpted directional studio light", motion: "Product still; source orientation unchanged",
+        pace: "Restrained establishment", focus: "Source-visible product form", evidenceRefs: [] },
+      { purpose: "lighting-reveal", durationSeconds: 3, camera: "Short lateral camera glide",
+        composition: detail ? "One verified region at source-resolved scale" : "Visible contour and surface with clear margins",
+        lighting: "Controlled highlight travels across visible surface", motion: "Product still; source orientation unchanged",
+        pace: "Measured light reveal", focus: detail?.detail ?? "Source-visible surface detail", evidenceRefs: detail ? [detail.id] : [] },
+      { purpose: "final-hero", durationSeconds: 3, camera: "Locked hero framing",
+        composition: "Complete product; clean advertising frame",
+        lighting: "Resolved soft directional hero light", motion: "Product still; settle into final hold",
+        pace: "Resolved final hold", focus: "Source-visible product form", evidenceRefs: [] },
+    ];
+    return { version: VIDEO_DIRECTOR_VERSION, presetId: input.presetId, presetVersion: directorPresetVersion(input.presetId),
+      shotMode: input.shotMode, origin: "fallback", ...directorPlanDescriptions(input, shots.length),
+      intentContract: interpretCreativeIntent(input.draft.prompt, context.evidence, input.shotMode, input.draft.cameraMovement), shots };
+  }
   const template = categoryMinimalDirection(context.category, input.shotMode, input.draft.durationSeconds);
   if (!template) return null;
   return { version: VIDEO_DIRECTOR_VERSION, presetId: input.presetId, presetVersion: directorPresetVersion(input.presetId),
@@ -467,9 +616,48 @@ export function fixedMinimalDirectorPlan(input: VideoDirectorInput): VideoDirect
     intentContract: interpretCreativeIntent(input.draft.prompt, context.evidence, input.shotMode, input.draft.cameraMovement),
     shots: template.shots.map((direction, index) => ({ ...direction, durationSeconds: template.durations[index], focus: "Source-visible product form", evidenceRefs: [] })) };
 }
-export function fixedLightingDirectorPlan(input: VideoDirectorInput): VideoDirectorPlan | null {
+export function fixedLightingDirectorPlan(input: VideoDirectorInput, lightingStoryboard = true): VideoDirectorPlan | null {
   if (!["glass-reflection", "dramatic-backlight", "metallic-light-sweep"].includes(input.presetId)) return null;
   const context = directorProductContext(input.profile);
+  if (lightingStoryboard && input.presetId === "dramatic-backlight" && input.shotMode === "multi" && input.draft.durationSeconds === 10) {
+    const shots: VideoDirectorShot[] = [
+      { purpose: "hero-reveal", durationSeconds: 3, camera: "Locked medium hero framing",
+        composition: "Dark neutral studio; full silhouette; clean margins",
+        lighting: "Dim neutral rim light; silhouette stays readable", motion: "Product and camera still; source-facing",
+        pace: "Quiet shadow establishment", focus: "Source-visible product form", evidenceRefs: [] },
+      { purpose: "lighting-reveal", durationSeconds: 4, camera: "Locked medium-close source-facing framing",
+        composition: "Dark neutral studio; source-facing medium form",
+        lighting: "Soft rim light grows into a neutral key", motion: "Product and camera still; source-facing",
+        pace: "One gradual reveal", focus: "Source-visible product form", evidenceRefs: [] },
+      { purpose: "final-hero", durationSeconds: 3, camera: "Locked balanced hero framing",
+        composition: "Dark neutral studio; complete source-facing product",
+        lighting: "Stable low-key fill; clear form and separation", motion: "Product and camera still; source-facing",
+        pace: "Confident final hold", focus: "Source-visible product form", evidenceRefs: [] },
+    ];
+    return { version: VIDEO_DIRECTOR_VERSION, presetId: input.presetId, presetVersion: directorPresetVersion(input.presetId),
+      shotMode: input.shotMode, origin: "fallback", ...directorPlanDescriptions(input, shots.length),
+      intentContract: interpretCreativeIntent(input.draft.prompt, context.evidence, input.shotMode, input.draft.cameraMovement), shots };
+  }
+  if (lightingStoryboard && input.presetId === "metallic-light-sweep" && input.shotMode === "multi" && input.draft.durationSeconds === 10) {
+    // A visible contour study is safe in every category; evidence never invents a material or task.
+    const shots: VideoDirectorShot[] = [
+      { purpose: "hero-reveal", durationSeconds: 3, camera: "Locked medium hero framing",
+        composition: "Complete product; clean studio; balanced negative space",
+        lighting: "Restrained soft directional light defines form", motion: "Product and camera stay still",
+        pace: "Quiet setup before sweep", focus: "Source-visible product form", evidenceRefs: [] },
+      { purpose: "lighting-reveal", durationSeconds: 4, camera: "Locked close product framing",
+        composition: "Visible contour and surface; source-facing view",
+        lighting: "One soft highlight travels left-to-right on surface", motion: "Product and camera stay still",
+        pace: "One measured light pass", focus: "Source-visible surface detail", evidenceRefs: [] },
+      { purpose: "final-hero", durationSeconds: 3, camera: "Locked balanced hero framing",
+        composition: "Complete product; clean advertising frame",
+        lighting: "Clean key/fill; stronger separation than opening", motion: "Product and camera still; final hold",
+        pace: "Resolved advertising hold", focus: "Source-visible product form", evidenceRefs: [] },
+    ];
+    return { version: VIDEO_DIRECTOR_VERSION, presetId: input.presetId, presetVersion: directorPresetVersion(input.presetId),
+      shotMode: input.shotMode, origin: "fallback", ...directorPlanDescriptions(input, shots.length),
+      intentContract: interpretCreativeIntent(input.draft.prompt, context.evidence, input.shotMode, input.draft.cameraMovement), shots };
+  }
   const template = categoryLightingDirection(input.presetId, context.category, input.shotMode, input.draft.durationSeconds);
   if (!template) return null;
   return { version: VIDEO_DIRECTOR_VERSION, presetId: input.presetId, presetVersion: directorPresetVersion(input.presetId),
@@ -637,9 +825,61 @@ export function parseDirectorOutput(value: unknown, input: VideoDirectorInput, o
     return null;
   }
   if (shots.reduce((sum, shot) => sum + shot.durationSeconds, 0) !== input.draft.durationSeconds) return reject("$.shots[*].durationSeconds", "total_duration_mismatch", `sum exactly ${input.draft.durationSeconds} seconds`);
+  const signature = input.presetId === "minimal-studio" && input.shotMode === "multi" && input.draft.durationSeconds === 10
+    ? fixedMinimalDirectorPlan(input) : null;
+  const signatureMatches = signature && shots.length === 3 && shots.every((shot, index) => {
+    const expected = signature.shots[index];
+    return shot.durationSeconds === expected.durationSeconds && shot.purpose === expected.purpose
+      && shotFields.every(field => shot[field] === expected[field])
+      && JSON.stringify(shot.evidenceRefs) === JSON.stringify(expected.evidenceRefs);
+  });
+  const lightSweep = input.presetId === "metallic-light-sweep" && input.shotMode === "multi" && input.draft.durationSeconds === 10
+    ? fixedLightingDirectorPlan(input) : null;
+  const lightSweepMatches = lightSweep && shots.length === 3 && shots.every((shot, index) => {
+    const expected = lightSweep.shots[index];
+    return shot.durationSeconds === expected.durationSeconds && shot.purpose === expected.purpose
+      && shotFields.every(field => shot[field] === expected[field]) && shot.evidenceRefs.length === 0;
+  });
+  const macro = input.presetId === "macro-detail-reveal" && input.shotMode === "multi" && input.draft.durationSeconds === 10
+    ? fixedMacroDirectorPlan(input) : null;
+  const macroMatches = macro && shots.length === 3 && shots.every((shot, index) => {
+    const expected = macro.shots[index];
+    return shot.durationSeconds === expected.durationSeconds && shot.purpose === expected.purpose
+      && shotFields.every(field => shot[field] === expected[field])
+      && JSON.stringify(shot.evidenceRefs) === JSON.stringify(expected.evidenceRefs);
+  });
+  const floating = input.presetId === "floating-accessory" && input.shotMode === "multi" && input.draft.durationSeconds === 10
+    ? fixedFashionMotionDirectorPlan(input) : null;
+  const floatingMatches = floating && shots.length === 3 && shots.every((shot, index) => {
+    const expected = floating.shots[index];
+    return shot.durationSeconds === expected.durationSeconds && shot.purpose === expected.purpose
+      && shotFields.every(field => shot[field] === expected[field]) && shot.evidenceRefs.length === 0;
+  });
+  const darkReveal = input.presetId === "dramatic-backlight" && input.shotMode === "multi" && input.draft.durationSeconds === 10
+    ? fixedLightingDirectorPlan(input) : null;
+  const darkRevealMatches = darkReveal && shots.length === 3 && shots.every((shot, index) => {
+    const expected = darkReveal.shots[index];
+    return shot.durationSeconds === expected.durationSeconds && shot.purpose === expected.purpose
+      && shotFields.every(field => shot[field] === expected[field]) && shot.evidenceRefs.length === 0;
+  });
+  const materialStudy = input.presetId === "material-detail" && input.shotMode === "multi" && input.draft.durationSeconds === 10
+    ? fixedMaterialDirectorPlan(input) : null;
+  const materialStudyMatches = materialStudy && shots.length === 3 && shots.every((shot, index) => {
+    const expected = materialStudy.shots[index];
+    return shot.durationSeconds === expected.durationSeconds && shot.purpose === expected.purpose
+      && shotFields.every(field => shot[field] === expected[field])
+      && JSON.stringify(shot.evidenceRefs) === JSON.stringify(expected.evidenceRefs);
+  });
+  const windowDisplay = input.presetId === "window-display" && input.shotMode === "multi" && input.draft.durationSeconds === 10
+    ? fixedPresentationDirectorPlan(input) : null;
+  const windowDisplayMatches = windowDisplay && shots.length === 3 && shots.every((shot, index) => {
+    const expected = windowDisplay.shots[index];
+    return shot.durationSeconds === expected.durationSeconds && shot.purpose === expected.purpose
+      && shotFields.every(field => shot[field] === expected[field]) && shot.evidenceRefs.length === 0;
+  });
   const fixedTemplate = ["culinary-texture", "window-display"].includes(input.presetId) ? categoryPresentationDirection(input.presetId, directorProductContext(input.profile).category, input.shotMode, input.draft.durationSeconds) : ["label-reveal", "sneaker-hero", "upholstery-macro"].includes(input.presetId) ? categoryProductDetailDirection(input.presetId, directorProductContext(input.profile).category, input.shotMode, input.draft.durationSeconds) : ["floating-fashion", "fabric-motion", "floating-accessory"].includes(input.presetId) ? categoryFashionMotionDirection(input.presetId, directorProductContext(input.profile).category, input.shotMode, input.draft.durationSeconds) : ["elegant-orbit", "optical-lines", "cinematic-dial"].includes(input.presetId) ? categoryPerspectiveDirection(input.presetId, directorProductContext(input.profile).category, input.shotMode, input.draft.durationSeconds) : ["glass-reflection", "dramatic-backlight", "metallic-light-sweep"].includes(input.presetId) ? categoryLightingDirection(input.presetId, directorProductContext(input.profile).category, input.shotMode, input.draft.durationSeconds) : ["macro-stitching", "hardware-reveal", "craftsmanship-study"].includes(input.presetId) ? categoryCraftDirection(input.presetId, directorProductContext(input.profile).category, input.shotMode, input.draft.durationSeconds) : input.presetId === "precision-macro" ? categoryPrecisionDirection(directorProductContext(input.profile).category, input.shotMode, input.draft.durationSeconds) : input.presetId === "luxury-fashion-film" ? categoryLuxuryDirection(directorProductContext(input.profile).category, input.shotMode, input.draft.durationSeconds) : input.presetId === "minimal-studio" ? categoryMinimalDirection(directorProductContext(input.profile).category, input.shotMode, input.draft.durationSeconds) : input.presetId === "product-spotlight" ? categorySpotlightDirection(directorProductContext(input.profile).category, input.shotMode, input.draft.durationSeconds) : input.presetId === "material-detail" ? categoryMaterialDirection(directorProductContext(input.profile).category, input.shotMode, input.draft.durationSeconds) : input.presetId === "macro-detail-reveal" ? categoryMacroDirection(directorProductContext(input.profile).category, input.shotMode, input.draft.durationSeconds) : null;
-  const safeFixedShots = fixedTemplate?.allowWideFallback ? (["culinary-texture", "window-display"].includes(input.presetId) ? fixedPresentationDirectorPlan(input) : ["label-reveal", "sneaker-hero", "upholstery-macro"].includes(input.presetId) ? fixedProductDetailDirectorPlan(input) : ["floating-fashion", "fabric-motion", "floating-accessory"].includes(input.presetId) ? fixedFashionMotionDirectorPlan(input) : ["elegant-orbit", "optical-lines", "cinematic-dial"].includes(input.presetId) ? fixedPerspectiveDirectorPlan(input) : ["glass-reflection", "dramatic-backlight", "metallic-light-sweep"].includes(input.presetId) ? fixedLightingDirectorPlan(input) : ["macro-stitching", "hardware-reveal", "craftsmanship-study"].includes(input.presetId) ? fixedCraftDirectorPlan(input) : input.presetId === "precision-macro" ? fixedPrecisionDirectorPlan(input) : input.presetId === "luxury-fashion-film" ? fixedLuxuryDirectorPlan(input) : input.presetId === "minimal-studio" ? fixedMinimalDirectorPlan(input) : input.presetId === "product-spotlight" ? fixedSpotlightDirectorPlan(input) : input.presetId === "material-detail" ? fixedMaterialDirectorPlan(input) : fixedMacroDirectorPlan(input))?.shots : undefined;
-  if (fixedTemplate && (shots.length !== fixedTemplate.shots.length || shots.some((shot, index) => shot.durationSeconds !== fixedTemplate.durations[index]
+  const safeFixedShots = fixedTemplate?.allowWideFallback ? (["culinary-texture", "window-display"].includes(input.presetId) ? fixedPresentationDirectorPlan(input, false) : ["label-reveal", "sneaker-hero", "upholstery-macro"].includes(input.presetId) ? fixedProductDetailDirectorPlan(input) : ["floating-fashion", "fabric-motion", "floating-accessory"].includes(input.presetId) ? fixedFashionMotionDirectorPlan(input, false) : ["elegant-orbit", "optical-lines", "cinematic-dial"].includes(input.presetId) ? fixedPerspectiveDirectorPlan(input) : ["glass-reflection", "dramatic-backlight", "metallic-light-sweep"].includes(input.presetId) ? fixedLightingDirectorPlan(input, false) : ["macro-stitching", "hardware-reveal", "craftsmanship-study"].includes(input.presetId) ? fixedCraftDirectorPlan(input) : input.presetId === "precision-macro" ? fixedPrecisionDirectorPlan(input) : input.presetId === "luxury-fashion-film" ? fixedLuxuryDirectorPlan(input) : input.presetId === "minimal-studio" ? fixedMinimalDirectorPlan(input, false) : input.presetId === "product-spotlight" ? fixedSpotlightDirectorPlan(input) : input.presetId === "material-detail" ? fixedMaterialDirectorPlan(input, false) : fixedMacroDirectorPlan(input, false))?.shots : undefined;
+  if (!signatureMatches && !lightSweepMatches && !macroMatches && !floatingMatches && !darkRevealMatches && !materialStudyMatches && !windowDisplayMatches && fixedTemplate && (shots.length !== fixedTemplate.shots.length || shots.some((shot, index) => shot.durationSeconds !== fixedTemplate.durations[index]
     || (safeFixedShots?.[index].evidenceRefs.length === 0 ? shot.focus !== "Source-visible product form" || shot.evidenceRefs.length > 0
       : (input.presetId === "luxury-fashion-film" ? input.shotMode === "multi" && index === 2 : index === 0 || input.shotMode === "multi" && input.draft.durationSeconds === 10 && index === 1)
       ? !shot.evidenceRefs.length || !fixedTemplate.patterns[index].test(shot.focus)
@@ -694,6 +934,8 @@ function fallbackMark(detail: string) {
 export function fallbackDirectorPlan(input: VideoDirectorInput, referenceReviews: ReferenceReview[] = []): VideoDirectorPlan {
   // Custom direction must never silently become a preset when planning fails.
   if (input.presetId === "custom") throw new DirectorStructuredOutputError("custom_director_unavailable");
+  const quickCuts = fixedQuickCutsDirectorPlan(input);
+  if (quickCuts) return { ...quickCuts, ...(referenceReviews.length ? { referenceReviews } : {}) };
   const fixed = ["culinary-texture", "window-display"].includes(input.presetId) ? fixedPresentationDirectorPlan(input) : ["label-reveal", "sneaker-hero", "upholstery-macro"].includes(input.presetId) ? fixedProductDetailDirectorPlan(input) : ["floating-fashion", "fabric-motion", "floating-accessory"].includes(input.presetId) ? fixedFashionMotionDirectorPlan(input) : ["elegant-orbit", "optical-lines", "cinematic-dial"].includes(input.presetId) ? fixedPerspectiveDirectorPlan(input) : ["glass-reflection", "dramatic-backlight", "metallic-light-sweep"].includes(input.presetId) ? fixedLightingDirectorPlan(input) : ["macro-stitching", "hardware-reveal", "craftsmanship-study"].includes(input.presetId) ? fixedCraftDirectorPlan(input) : input.presetId === "precision-macro" ? fixedPrecisionDirectorPlan(input) : input.presetId === "luxury-fashion-film" ? fixedLuxuryDirectorPlan(input) : input.presetId === "minimal-studio" ? fixedMinimalDirectorPlan(input) : input.presetId === "product-spotlight" ? fixedSpotlightDirectorPlan(input) : input.presetId === "material-detail" ? fixedMaterialDirectorPlan(input) : fixedMacroDirectorPlan(input);
   if (fixed) return { ...fixed, ...(referenceReviews.length ? { referenceReviews } : {}) };
   if (![5, 10].includes(input.draft.durationSeconds)) throw new Error("unsupported_director_duration");
@@ -834,6 +1076,45 @@ export function compileDirectorPlan(plan: VideoDirectorPlan, input: VideoDirecto
   const markList = markNames.length > 1 ? `${markNames.slice(0, -1).join(", ")} and ${markNames.at(-1)}` : markNames[0];
   const fallbackPreservation = markList ? `Keep the ${markList} exactly as in the source; do not enlarge, restyle or reposition them.` : undefined;
   const declaredTextPreservation = referenceTextPreservation(validated.referenceReviews ?? [], input.draft.productReferences);
+  const signature = input.presetId === "minimal-studio" && input.shotMode === "multi" && input.draft.durationSeconds === 10
+    ? fixedMinimalDirectorPlan(input) : null;
+  const signatureStoryboard = signature && validated.shots.length === 3 && validated.shots.every((shot, index) =>
+    shot.durationSeconds === signature.shots[index].durationSeconds && shot.purpose === signature.shots[index].purpose
+    && shotFields.every(field => shot[field] === signature.shots[index][field]));
+  const lightSweep = input.presetId === "metallic-light-sweep" && input.shotMode === "multi" && input.draft.durationSeconds === 10
+    ? fixedLightingDirectorPlan(input) : null;
+  const lightSweepStoryboard = lightSweep && validated.shots.length === 3 && validated.shots.every((shot, index) =>
+    shot.durationSeconds === lightSweep.shots[index].durationSeconds && shot.purpose === lightSweep.shots[index].purpose
+    && shotFields.every(field => shot[field] === lightSweep.shots[index][field]));
+  const macro = input.presetId === "macro-detail-reveal" && input.shotMode === "multi" && input.draft.durationSeconds === 10
+    ? fixedMacroDirectorPlan(input) : null;
+  const macroStoryboard = macro && validated.shots.length === 3 && validated.shots.every((shot, index) =>
+    shot.durationSeconds === macro.shots[index].durationSeconds && shot.purpose === macro.shots[index].purpose
+    && shotFields.every(field => shot[field] === macro.shots[index][field]));
+  const floating = input.presetId === "floating-accessory" && input.shotMode === "multi" && input.draft.durationSeconds === 10
+    ? fixedFashionMotionDirectorPlan(input) : null;
+  const floatingStoryboard = floating && validated.shots.length === 3 && validated.shots.every((shot, index) =>
+    shot.durationSeconds === floating.shots[index].durationSeconds && shot.purpose === floating.shots[index].purpose
+    && shotFields.every(field => shot[field] === floating.shots[index][field]));
+  const quickCuts = fixedQuickCutsDirectorPlan(input);
+  const quickCutsStoryboard = quickCuts && validated.shots.length === 5 && validated.shots.every((shot, index) =>
+    shot.durationSeconds === 2 && shot.purpose === quickCuts.shots[index].purpose
+    && shotFields.every(field => shot[field] === quickCuts.shots[index][field]));
+  const darkReveal = input.presetId === "dramatic-backlight" && input.shotMode === "multi" && input.draft.durationSeconds === 10
+    ? fixedLightingDirectorPlan(input) : null;
+  const darkRevealStoryboard = darkReveal && validated.shots.length === 3 && validated.shots.every((shot, index) =>
+    shot.durationSeconds === darkReveal.shots[index].durationSeconds && shot.purpose === darkReveal.shots[index].purpose
+    && shotFields.every(field => shot[field] === darkReveal.shots[index][field]));
+  const materialStudy = input.presetId === "material-detail" && input.shotMode === "multi" && input.draft.durationSeconds === 10
+    ? fixedMaterialDirectorPlan(input) : null;
+  const surfaceStoryboard = materialStudy && validated.shots.length === 3 && validated.shots.every((shot, index) =>
+    shot.durationSeconds === materialStudy.shots[index].durationSeconds && shot.purpose === materialStudy.shots[index].purpose
+    && shotFields.every(field => shot[field] === materialStudy.shots[index][field]));
+  const windowDisplay = input.presetId === "window-display" && input.shotMode === "multi" && input.draft.durationSeconds === 10
+    ? fixedPresentationDirectorPlan(input) : null;
+  const windowStoryboard = windowDisplay && validated.shots.length === 3 && validated.shots.every((shot, index) =>
+    shot.durationSeconds === windowDisplay.shots[index].durationSeconds && shot.purpose === windowDisplay.shots[index].purpose
+    && shotFields.every(field => shot[field] === windowDisplay.shots[index][field]));
   const prompts = validated.shots.map(shot => {
     const prefix = elementReferences.some(review => review.index === shot.referenceIndex)
       ? referenceShotPrefix(shot.referenceIndex, validated.referenceReviews ?? [], input.draft.productReferences) : "";
@@ -841,6 +1122,72 @@ export function compileDirectorPlan(plan: VideoDirectorPlan, input: VideoDirecto
     const referenceMarks = validated.referenceReviews?.some(review => review.status === "matched"
       && backShot && review.index === shot.referenceIndex
       && review.details.some(detail => /\b(?:text|letter\w*|logo|symbol|label|pattern|print|emblem|embroider\w*)\b/i.test(detail)));
+    if (signatureStoryboard) {
+      // Fixed fields already express the visual task; avoid expanding them into generic prose.
+      const prompt = prefix + [shot.camera, shot.composition, shot.lighting, shot.motion, shot.pace,
+        ...(shot.evidenceRefs.length ? [shot.focus] : []),
+        "Exact source shape/colors/marks/parts; known view only",
+        ...(declaredTextPreservation ? [declaredTextPreservation] : [])].join(". ");
+      if (prompt.length > limit) throw new Error("kling_scene_prompt_too_long");
+      return prompt;
+    }
+    if (lightSweepStoryboard) {
+      const prompt = prefix + [shot.camera, shot.composition, shot.lighting, shot.motion, shot.pace,
+        "Exact source shape/colors/material/marks/parts; source orientation and visible surfaces only",
+        ...(declaredTextPreservation ? [declaredTextPreservation] : [])].join(". ");
+      if (prompt.length > limit) throw new Error("kling_scene_prompt_too_long");
+      return prompt;
+    }
+    if (macroStoryboard) {
+      const prompt = prefix + [shot.camera, shot.composition, shot.lighting, shot.motion, shot.pace,
+        ...(shot.purpose === "macro-detail" ? [shot.focus] : []),
+        "Exact source form/colors/material/marks/parts; known view only",
+        ...(declaredTextPreservation ? [declaredTextPreservation] : [])].join(". ");
+      if (prompt.length > limit) throw new Error("kling_scene_prompt_too_long");
+      return prompt;
+    }
+    if (floatingStoryboard) {
+      // This authorized vertical translation must not inherit the legacy stationary/support prose.
+      const prompt = prefix + [shot.camera, shot.composition, shot.lighting, shot.motion, shot.pace,
+        "Stable source-facing silhouette; no rotation/spin/flip",
+        "Exact colors/material/marks/parts; known view",
+        directorProductContext(input.profile).category === "apparel" ? "Keep source drape; no wind" : "One rigid-body float",
+        ...(declaredTextPreservation ? [declaredTextPreservation] : [])].join(". ");
+      if (prompt.length > limit) throw new Error("kling_scene_prompt_too_long");
+      return prompt;
+    }
+    if (quickCutsStoryboard) {
+      const prompt = prefix + [shot.camera, shot.composition, shot.lighting, shot.motion, shot.pace,
+        ...(shot.purpose === "macro-detail" ? [shot.focus] : []),
+        "Exact source form/colors/material/marks/parts; known view only",
+        ...(declaredTextPreservation ? [declaredTextPreservation] : [])].join(". ");
+      if (prompt.length > limit) throw new Error("kling_scene_prompt_too_long");
+      return prompt;
+    }
+    if (darkRevealStoryboard) {
+      const prompt = prefix + [shot.camera, shot.composition, shot.lighting, shot.motion, shot.pace,
+        "Exact source form/colors/material/marks/parts; known view only",
+        ...(declaredTextPreservation ? [declaredTextPreservation] : [])].join(". ");
+      if (prompt.length > limit) throw new Error("kling_scene_prompt_too_long");
+      return prompt;
+    }
+    if (surfaceStoryboard) {
+      const prompt = prefix + [shot.camera, shot.composition, shot.lighting, shot.motion, shot.pace,
+        ...(shot.purpose === "material-study" ? [shot.focus, "No material inference"] : []),
+        "Exact source form/colors/marks/parts; known view",
+        ...(declaredTextPreservation ? [declaredTextPreservation] : [])].join(". ");
+      if (prompt.length > limit) throw new Error("kling_scene_prompt_too_long");
+      return prompt;
+    }
+    if (windowStoryboard) {
+      // Glazing belongs to the generated display, never an inferred product material or hidden view.
+      const prompt = prefix + [shot.camera, shot.composition, shot.lighting, shot.motion, shot.pace,
+        "One product; abstract glass bands; no mirror/signage",
+        "Exact source form/colors/marks/parts; known view",
+        ...(declaredTextPreservation ? [declaredTextPreservation] : [])].join(". ");
+      if (prompt.length > limit) throw new Error("kling_scene_prompt_too_long");
+      return prompt;
+    }
     return prefix + compileKlingShot(shot, limit - prefix.length, Boolean(input.draft.criticalRegion) && !backShot, !classicCinematic && (!backShot && primaryMarks || Boolean(referenceMarks)), classicCinematic || backShot ? undefined : fallbackPreservation,
       ["floating-fashion", "floating-accessory"].includes(input.presetId) ? "floating"
         : ["culinary-texture", "fabric-motion"].includes(input.presetId) ? "surface"
@@ -870,6 +1217,57 @@ export async function directVideoWithClient(input: VideoDirectorInput, client: {
   try {
     const output = await client.createPlan(input);
     referenceReviews = record(output) ? parseReferenceReviews(output.referenceReviews, input.draft.productReferences?.length ?? 0) : null;
+    if (input.presetId === "window-display" && input.shotMode === "multi" && input.draft.durationSeconds === 10
+      && referenceReviews !== null && referenceReviews.every(review => review.status === "matched")) {
+      const fixed = fallbackDirectorPlan(input, referenceReviews);
+      const validated = parseDirectorOutput(fixed, input);
+      if (validated) return validated;
+    }
+    if (input.presetId === "material-detail" && input.shotMode === "multi" && input.draft.durationSeconds === 10
+      && referenceReviews !== null && referenceReviews.every(review => review.status === "matched")) {
+      const fixed = fallbackDirectorPlan(input, referenceReviews);
+      const validated = parseDirectorOutput(fixed, input);
+      if (validated) return validated;
+    }
+    if (input.presetId === "dramatic-backlight" && input.shotMode === "multi" && input.draft.durationSeconds === 10
+      && referenceReviews !== null && referenceReviews.every(review => review.status === "matched")) {
+      const fixed = fallbackDirectorPlan(input, referenceReviews);
+      const validated = parseDirectorOutput(fixed, input);
+      if (validated) return validated;
+    }
+    if (input.presetId === "cinematic-hero" && input.shotMode === "multi" && input.draft.durationSeconds === 10
+      && referenceReviews !== null && referenceReviews.every(review => review.status === "matched")) {
+      const fixed = fallbackDirectorPlan(input, referenceReviews);
+      const validated = parseDirectorOutput(fixed, input);
+      if (validated) return validated;
+    }
+    if (input.presetId === "floating-accessory" && input.shotMode === "multi" && input.draft.durationSeconds === 10
+      && referenceReviews !== null && referenceReviews.every(review => review.status === "matched")) {
+      const fixed = fallbackDirectorPlan(input, referenceReviews);
+      const validated = parseDirectorOutput(fixed, input);
+      if (validated) return validated;
+    }
+    if (input.presetId === "macro-detail-reveal" && input.shotMode === "multi" && input.draft.durationSeconds === 10
+      && referenceReviews !== null && referenceReviews.every(review => review.status === "matched")) {
+      // Reviews authorize identity evidence, never a second detail or a different storyboard.
+      const fixed = fallbackDirectorPlan(input, referenceReviews);
+      const validated = parseDirectorOutput(fixed, input);
+      if (validated) return validated;
+    }
+    if (input.presetId === "metallic-light-sweep" && input.shotMode === "multi" && input.draft.durationSeconds === 10
+      && referenceReviews !== null && referenceReviews.every(review => review.status === "matched")) {
+      // Reference reviews still gate identity; the provider cannot replace a moving light with a moving camera.
+      const fixed = fallbackDirectorPlan(input, referenceReviews);
+      const validated = parseDirectorOutput(fixed, input);
+      if (validated) return validated;
+    }
+    if (input.presetId === "minimal-studio" && input.shotMode === "multi" && input.draft.durationSeconds === 10
+      && referenceReviews !== null && referenceReviews.every(review => review.status === "matched")) {
+      // Provider reviews still gate references, but cannot redesign this storyboard.
+      const fixed = fallbackDirectorPlan(input, referenceReviews);
+      const validated = parseDirectorOutput(fixed, input);
+      if (validated) return validated;
+    }
     onDiagnostic?.({ stage: "structured_output_parsed", result: "success" });
     const rejection: { current?: DirectorValidationFailure } = {};
     const reject = (failure: DirectorValidationFailure) => {

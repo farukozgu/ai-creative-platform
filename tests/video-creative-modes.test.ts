@@ -151,12 +151,12 @@ test("actual OpenAI request mapping excludes preset grammar from custom and isol
   f.assertIsolated();
 });
 
-test("UI exposes one creative source and invalidates plan/quote/consent on mode switch", () => {
+test("UI locks Custom while preserving generation mapping and legacy translations", () => {
   const ui = readFileSync("src/features/video/video-studio-workspace.tsx", "utf8");
   assert.match(ui, /presetControls=\{draft.creativeMode === "preset" \?/);
-  assert.match(ui, /promptEnabled=\{draft.creativeMode === "custom"\}/);
+  assert.match(ui, /promptEnabled=\{false\}/);
   assert.doesNotMatch(ui, /video-camera|cameraValues|set-camera/);
-  assert.match(ui, /set-creative-mode[\s\S]*?setDirector\(null\); setSubmissionQuote\(null\); setConfirmedReceipt\(null\)/);
+  assert.doesNotMatch(ui, /creativeModeControls=|set-creative-mode|video-creative-mode/);
   assert.match(ui, /const approvedDraft = \{ \.\.\.generationDraft, \.\.\.videoStudioCreativeFields\(draft, currentDirector\) \}/);
   for (const locale of ["tr", "en"]) {
     const copy = JSON.parse(readFileSync(`src/messages/${locale}.json`, "utf8")).Dashboard.videoStudio.creativeMode;

@@ -817,11 +817,13 @@
             "caption": "Editoryal ve sinematik"
           },
           "macro-detail-reveal": {
+            "signatureTitle": "Macro Details",
             "title": "Macro Detail Reveal",
             "description": "Yumuşak yan ışıkla görünür detaylara net bir yakın bakış. Çoklu çekimde detaydan ürünün bütününe geçilir; 10 saniyede ikinci doğrulanmış ayrıntı da incelenir.",
             "caption": "Doku ve işçilik"
           },
           "minimal-studio": {
+            "signatureTitle": "Signature Studio",
             "title": "Minimal Studio",
             "description": "Yumuşak stüdyo ışığı ve sade, dengeli kadrajlarla sakin ürün sunumu. Çoklu çekimde genel görünümden simetrik finale geçilir; 10 saniyede araya orta ölçekli bir kadraj girer.",
             "caption": "Sade ve ürün odaklı"
@@ -852,11 +854,13 @@
             "caption": "Sınırlı yanal hareket"
           },
           "cinematic-hero": {
+            "signatureTitle": "Quick Cuts",
             "title": "Sinematik Ürün",
             "description": "Yönlü ışık ve tempolu kadraj değişimleriyle sinematik reklam estetiği. Çoklu çekimde genel görünüm, görünür yüzey ve ayrıntılar, yanal kamera geçişiyle güçlü bir ürün finaline taşınır.",
             "caption": "Güçlü kampanya finali"
           },
           "material-detail": {
+            "signatureTitle": "Material Study",
             "title": "Yüzey ve Doku",
             "description": "Yüzeyi tarayan yumuşak ışıkla dokusal bir ürün sunumu. Çoklu çekimde yakın yüzeyden ürünün bütününe geçilir; 10 saniyede farklı bir doğrulanmış birleşim detayı da gösterilir.",
             "caption": "Dokusal yakın bakış"
@@ -877,6 +881,7 @@
             "caption": "Özgün marka alanı"
           },
           "dramatic-backlight": {
+            "signatureTitle": "Dark Reveal",
             "title": "Dramatik Kontur",
             "description": "Kenar ışığıyla belirginleşen silüet ve dramatik boşluklar. Çoklu çekimde genel görünüm simetrik bir ürün finaline bağlanır; 10 saniyede orta kadrajda kontur ışığı incelenir.",
             "caption": "Belirgin konturlar"
@@ -887,6 +892,7 @@
             "caption": "Kadran ve düzen"
           },
           "metallic-light-sweep": {
+            "signatureTitle": "Light Sweep",
             "title": "Yüzeyde Işık",
             "description": "Mevcut yüzey üzerinde ilerleyen dar ışık vurgusuyla keskin bir sunum. Çoklu çekimde ışık incelemesi tam ürün finaline bağlanır; 10 saniyede genel görünümle başlanır.",
             "caption": "Gezinen ışık şeridi"
@@ -897,6 +903,7 @@
             "caption": "Bağlantı ve aksam"
           },
           "floating-accessory": {
+            "signatureTitle": "Floating",
             "title": "Süzülen Aksesuar",
             "description": "Yumuşak kenar ışığı ve açık boşluklarla hafif, dengeli aksesuar sunumu. Çoklu çekimde kısa yanal kamera geçişi sakin bir tam ürün finaline bağlanır; 10 saniyede genel kadrajla başlanır.",
             "caption": "Dengeli yükseliş hissi"
@@ -927,6 +934,7 @@
             "caption": "Bitmiş ürün detayları"
           },
           "window-display": {
+            "signatureTitle": "Window Display",
             "title": "Vitrin Estetiği",
             "description": "Dengeli üst ışık ve zarif boşluklarla vitrin estetiğinde ürün sunumu. Çoklu çekimde genel görünüm simetrik finale bağlanır; 10 saniyede yan ışıklı orta kadraj eklenir.",
             "caption": "Kaynak ortamında sunum"
@@ -986,7 +994,7 @@
           "next": "Sonraki",
           "count": "{start}–{end} / {total}",
           "selected": "Seçili stil: {name}",
-          "unknown": "Doğrulanmış kategori yok. Evrensel stiller öneriliyor; kategori filtresi yalnızca keşif içindir.",
+          "unknown": "Doğrulanmış kategori yok. Öneriler genel ürün stillerine dayanır.",
           "profile": "Mevcut ürün profiline göre öneri: {category}. İsterseniz başka bir stil seçebilirsiniz.",
           "analysis": {
             "verified": "Ürün görseli analiz edildi; öneriler doğrulanmış kategori ve görünür detaylara göre güncellendi.",

@@ -9,6 +9,7 @@ import { videoPresetIds } from "../src/lib/video-director/presets";
 const fixtures = libraryFixtures.filter((fixture, index, all) => fixture.category !== "unknown" && all.findIndex(other => other.category === fixture.category) === index);
 const batch = ["floating-fashion", "fabric-motion", "floating-accessory"] as const;
 for (const presetId of batch) for (const { category, profile } of fixtures) for (const durationSeconds of [5, 10] as const) for (const shotMode of ["single", "multi"] as const) {
+  if (presetId === "floating-accessory" && durationSeconds === 10 && shotMode === "multi") continue; // Covered by the Floating golden suite.
   test(`fixed fashion motion ${presetId}/${category}/${durationSeconds}/${shotMode}`, async () => {
     const base = directorFixtureInput(profile!);
     const input = { ...base, presetId, shotMode, draft: { ...base.draft, durationSeconds, shotMode } };

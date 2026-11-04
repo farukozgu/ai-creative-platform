@@ -1,0 +1,112 @@
+{
+  "plan": {
+    "version": "video-director-3.2-reference-views-v2",
+    "presetId": "cinematic-hero",
+    "presetVersion": 1,
+    "shotMode": "multi",
+    "origin": "fallback",
+    "intent": "Preset direction selected from verified product evidence.",
+    "intentContract": {
+      "camera": "auto",
+      "focusRequested": false,
+      "focusEvidenceId": null,
+      "focusPosition": "any",
+      "sequence": "preset",
+      "safeAdjustment": "none"
+    },
+    "summary": "Preset direction adapted to the explicit camera and focus request using only verified product evidence.",
+    "shots": [
+      {
+        "durationSeconds": 2,
+        "purpose": "hero-reveal",
+        "evidenceRefs": [
+          5
+        ],
+        "camera": "Locked medium overview",
+        "lighting": "Directional edge light shapes the contour",
+        "composition": "Complete product; strong diagonal space",
+        "motion": "Keep the product still",
+        "pace": "Measured establishment",
+        "focus": "belted jacket silhouette"
+      },
+      {
+        "durationSeconds": 2,
+        "purpose": "material-study",
+        "evidenceRefs": [
+          2
+        ],
+        "camera": "Short lateral macro camera glide",
+        "lighting": "Grazing light defines existing relief",
+        "composition": "Resolvable surface crop",
+        "motion": "Keep the product still",
+        "pace": "Sustained surface study",
+        "focus": "glossy coated fabric"
+      },
+      {
+        "durationSeconds": 2,
+        "purpose": "controlled-motion",
+        "evidenceRefs": [
+          5
+        ],
+        "camera": "Short lateral camera glide",
+        "lighting": "Narrow side light defines visible edges",
+        "composition": "Offset medium view of the same visible face",
+        "motion": "Keep the product still",
+        "pace": "Deliberate visual reset",
+        "focus": "belted jacket silhouette"
+      },
+      {
+        "durationSeconds": 1,
+        "purpose": "macro-detail",
+        "evidenceRefs": [],
+        "camera": "Locked off-center close framing",
+        "lighting": "Raking light reveals existing relief",
+        "composition": "Wider visible form with offset margins; no unverified detail enlarged",
+        "motion": "Keep the product still",
+        "pace": "Resolved detail pause",
+        "focus": "Source-visible surface detail"
+      },
+      {
+        "durationSeconds": 3,
+        "purpose": "final-hero",
+        "evidenceRefs": [
+          5
+        ],
+        "camera": "Locked symmetrical hero frame",
+        "lighting": "Balanced edge light preserves source colors",
+        "composition": "Full product with clean campaign space",
+        "motion": "Keep the product still",
+        "pace": "Extended hero hold",
+        "focus": "belted jacket silhouette"
+      }
+    ]
+  },
+  "compiled": {
+    "prompt": "Use locked medium overview, framing the belted jacket silhouette. Compose the complete product; strong diagonal space. Directional edge light shapes the contour. Allow a measured establishment. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+    "multiPrompt": [
+      {
+        "prompt": "Use locked medium overview, framing the belted jacket silhouette. Compose the complete product; strong diagonal space. Directional edge light shapes the contour. Allow a measured establishment. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+        "duration": "2"
+      },
+      {
+        "prompt": "Use a short lateral macro camera glide, framing the glossy coated fabric. Compose the resolvable surface crop. Grazing light defines existing relief. Allow a sustained surface study. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+        "duration": "2"
+      },
+      {
+        "prompt": "Glide laterally over a short distance, framing the belted jacket silhouette. Compose the offset medium view of the same visible face. Narrow side light defines visible edges. Allow a deliberate visual reset. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+        "duration": "2"
+      },
+      {
+        "prompt": "Use locked off-center close framing, framing the visible surface detail. Compose the wider visible form with offset margins; no unverified detail enlarged. Raking light reveals existing relief. Allow a resolved detail pause. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+        "duration": "1"
+      },
+      {
+        "prompt": "Use locked symmetrical hero frame, framing the belted jacket silhouette. Compose the full product with clean campaign space. Balanced edge light preserves source colors. Allow a extended hero hold. Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.",
+        "duration": "3"
+      }
+    ],
+    "negativePrompt": "changed logo, changed brand mark, rewritten text, misspelled text, illegible label, morphing letters, altered color, changed hue, changed pattern, changed print, altered material, changed surface texture, redesigned product, altered silhouette, changed proportions, stretched or compressed geometry, extra or missing parts, extra or missing buttons, extra or missing belt, broken seams, warped hardware, melting texture, garment deformation, new hidden surfaces, blur",
+    "cfgScale": 0.5,
+    "version": "product-preservation-v2"
+  }
+}

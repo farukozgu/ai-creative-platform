@@ -501,19 +501,7 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
             onChange={refs => { setReferenceState({ key: referenceKey, refs }); setDirector(null); setSubmissionQuote(null); setConfirmedReceipt(null); }} />
             </div>
           </> : null}
-          creativeModeControls={<fieldset className={styles.controlSection} disabled={busy || preparingQuote || referenceBusy || restoringJob || submissionUsed || Boolean(jobId)}>
-            <legend>{t("creativeMode.heading")}</legend>
-            <div className={styles.compactOptions}>{(["preset", "custom"] as const).map(mode => <label key={mode}>
-              <input type="radio" name="video-creative-mode" value={mode} checked={draft.creativeMode === mode}
-                onChange={() => {
-                  dispatch({ type: "set-creative-mode", mode });
-                  setDirector(null); setSubmissionQuote(null); setConfirmedReceipt(null);
-                }} />
-              <span>{t(`creativeMode.${mode}`)}</span>
-            </label>)}</div>
-            <p className={styles.fieldDescription}>{t(`creativeMode.${draft.creativeMode}Description`)}</p>
-          </fieldset>}
-          promptEnabled={draft.creativeMode === "custom"}
+          promptEnabled={false}
           presetControls={draft.creativeMode === "preset" ? <VideoDirectorPresetSelector presetId={presetId}
             disabled={busy}
             product={preparedFrame?.presetContext}

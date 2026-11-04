@@ -8,6 +8,7 @@ import { videoPresetIds } from "../src/lib/video-director/presets";
 
 const fixtures = libraryFixtures.filter((fixture, index, all) => fixture.category !== "unknown" && all.findIndex(other => other.category === fixture.category) === index);
 for (const { category, profile } of fixtures) for (const durationSeconds of [5, 10] as const) for (const shotMode of ["single", "multi"] as const) {
+  if (durationSeconds === 10 && shotMode === "multi") continue; // Covered by the Material Study golden suite.
   test(`fixed material ${category}/${durationSeconds}/${shotMode}`, async () => {
     const base = directorFixtureInput(profile!);
     const input = { ...base, presetId: "material-detail" as const, shotMode, draft: { ...base.draft, durationSeconds, shotMode } };

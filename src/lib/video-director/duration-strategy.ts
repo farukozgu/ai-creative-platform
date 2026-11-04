@@ -78,6 +78,18 @@ export function durationStrategy(id: string, mode: "single" | "multi", duration:
   if (!durationAwarePresetIds.some(preset => preset === id) || ![5, 10, 15].includes(duration)) return null;
   const preset = id as DirectedPreset, seconds = duration as CreativeDuration;
   const available = seconds !== 15;
+  if (preset === "cinematic-hero" && mode === "multi" && seconds === 10) return {
+    durationSeconds: seconds, mode, available, durations: [2, 2, 2, 2, 2],
+    shots: [
+      beat("hero-reveal", "Locked medium hero framing", "Complete product; graphic negative space", "Clean directional commercial light", "Instant recognition"),
+      beat("macro-detail", "Locked close framing", "One visible region at source-resolvable scale", "Controlled local highlight", "Brief detail punch"),
+      beat("controlled-motion", "Short source-facing lateral camera glide", "Offset medium product view; diagonal negative space", "Soft side light defines the visible form", "Brisk graphic shift"),
+      beat("lighting-reveal", "Locked medium-close framing", "Medium product view; visible contour in context", "One short highlight pass across visible surface", "Brief light accent"),
+      beat("final-hero", "Locked balanced hero framing", "Complete recognizable product; clean advertising frame", "Resolved soft hero light", "Clear recognition finish"),
+    ],
+    grammar: "Recognize, inspect one detail, shift composition, illuminate, resolve. Cuts provide energy.",
+    transitions: "Direct cuts between entries only; each shot has one simple event and no internal cuts.",
+  };
   if (mode === "multi") return {
     durationSeconds: seconds, mode, available, durations: timing[preset][seconds], shots: multiDirection(preset, seconds),
     grammar: (seconds === 5 ? "Fast accents and direct scale changes: "
