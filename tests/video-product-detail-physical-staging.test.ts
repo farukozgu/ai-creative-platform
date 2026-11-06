@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
-import { createHash } from "node:crypto";
 import test from "node:test";
+import { assertPresetOutputFingerprints, presetOutputGroup } from "./fixtures/preset-output-fingerprint";
 import { fallbackDirectorPlan, compileDirectorPlan, parseDirectorOutput } from "../src/lib/video-director/core";
 import { compileKlingShot } from "../src/lib/video-director/kling-compiler";
 import { buildFalVideoRequestInput } from "../src/lib/video-generation/fal-request";
@@ -58,13 +58,16 @@ test("product detail physical fidelity preserves markings and source support wit
   }
 });
 
-test("Presets outside this and subsequently staged groups retain pre-change compiled outputs", () => {
-  const output = [];
+test("historical and approved revised preset cells retain their compiled outputs", () => {
+  const outputs: Record<"frozen" | "revised", unknown[]> = { frozen: [], revised: [] };
   for (const presetId of videoPresetIds.filter(id => !["label-reveal","sneaker-hero","upholstery-macro","culinary-texture","window-display","fabric-motion","floating-fashion","floating-accessory"].includes(id))) for (const { profile } of fixtures) for (const durationSeconds of [5, 10] as const) for (const shotMode of ["single", "multi"] as const) {
     const base = directorFixtureInput(profile!);
     const input = { ...base, presetId, shotMode, draft: { ...base.draft, durationSeconds, shotMode } };
-    output.push(compileDirectorPlan(fallbackDirectorPlan(input), input));
+    outputs[presetOutputGroup(input)].push(compileDirectorPlan(fallbackDirectorPlan(input), input));
   }
-  assert.equal(output.length, 768);
-  assert.equal(createHash("sha256").update(JSON.stringify(output)).digest("hex"), "0729b41fd2343b38d659588f7696eec1105d53ee95d15d5601c0f93369efd2bf");
+  assert.equal(outputs.frozen.length + outputs.revised.length, 768);
+  assertPresetOutputFingerprints(outputs, {
+    frozen: "ec891e8df7897d8ebc1347756633f46783893d20a6ca718433c55bed52fb80b2",
+    revised: "b7a14b01ac0d75643ffff04d6d3204721927de8e08346df82a54e21b18c42021",
+  });
 });

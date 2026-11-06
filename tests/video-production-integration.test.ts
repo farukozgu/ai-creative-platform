@@ -106,13 +106,13 @@ test("source content is signed even for an undirected single shot whose prompts 
   assert.equal(f.posts.length, 0); assert.equal(f.reservations.size, 0);
 });
 
-test("owned references become one @Element1, and changed reference bytes invalidate approval", async () => {
+test("a verified side view supplements the primary element and changed reference bytes invalidate approval", async () => {
   for (const changed of [false, true]) {
     const f = await VideoProductionHarness.create();
     const referenceId = "10000000-0000-4000-8000-000000000003";
     const sha256 = await f.addSource(referenceId);
     const draft = f.draft("pro", 10, "multi");
-    draft.productReferences = [{ source: { kind: "uploaded-image", sourceAssetId: referenceId }, sha256, purpose: "dial" }];
+    draft.productReferences = [{ source: { kind: "uploaded-image", sourceAssetId: referenceId }, sha256, purpose: "side view" }];
     f.signDirector(draft, "ai");
     const quote = await f.api.quoteVideoSubmissionAction(draft); assert.ok(quote.status === "success");
     if (changed) await f.addSource(referenceId, videoTestOwner, "red");
@@ -125,7 +125,7 @@ test("owned references become one @Element1, and changed reference bytes invalid
       assert.equal(elements.length, 1); assert.equal(elements[0].frontal_image_url, input.start_image_url);
       assert.equal(elements[0].reference_image_urls.length, 1);
       assert.ok(elements[0].reference_image_urls[0].includes(referenceId));
-      assert.ok((input.multi_prompt as Array<{ prompt: string }>).every(shot => shot.prompt.startsWith("@Element1: ")));
+      assert.ok((input.multi_prompt as Array<{ prompt: string }>).every(shot => !shot.prompt.includes("Use side view")));
       f.task(result.jobId).status = "COMPLETED";
       assert.equal((await f.api.readVideoGenerationStatusAction(result.jobId)).status, "success");
       assert.equal(f.rows[0].status, "succeeded");

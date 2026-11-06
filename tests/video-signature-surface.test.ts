@@ -8,7 +8,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import ts from "typescript";
 import type { VideoDirectorPanel, VideoDirectorPresetSelector } from "../src/features/video/video-director-panel";
 import type { VideoGenerationInspector } from "../src/features/video/video-generation-inspector";
-import { initialVideoStudioDraft, videoStudioReducer } from "../src/features/video/video-studio-state";
+import { initialVideoStudioDraft, videoStudioCreativeFields, videoStudioReducer } from "../src/features/video/video-studio-state";
 import { videoStudioPresetIds } from "../src/features/video/video-preset-catalog";
 import { fallbackDirectorPlan, type VideoDirectorPlan } from "../src/lib/video-director/core";
 import { directorFixtureInput, directorProducts } from "./fixtures/video-director-fixtures";
@@ -49,18 +49,34 @@ function loadPanel(locale: "tr" | "en", plan: VideoDirectorPlan | null = null) {
   return { ...uiModule.exports, copy: messages.director };
 }
 
-test("signature defaults lock new studio to 10s multi while state reducer retains legacy modes", () => {
+test("studio defaults stay 10s multi with legacy duration and mode choices available", () => {
   assert.equal(initialVideoStudioDraft.duration, 10);
   assert.equal(initialVideoStudioDraft.shotMode, "multi");
   assert.equal(videoStudioReducer(initialVideoStudioDraft, { type: "set-duration", duration: 5 }).duration, 5);
   assert.equal(videoStudioReducer(initialVideoStudioDraft, { type: "set-shot-mode", mode: "single" }).shotMode, "single");
   const workspace = read("src/features/video/video-studio-workspace.tsx");
-  assert.match(workspace, /const durationValues: VideoDuration\[\] = \[10\]/);
-  assert.doesNotMatch(workspace, /video-director-mode|shotModeControls=|set-shot-mode/);
+  assert.match(workspace, /const durationValues: VideoDuration\[\] = \[5, 10\]/);
+  assert.match(workspace, /shotModeControls=\{<fieldset[\s\S]*?video-director-mode[\s\S]*?set-shot-mode/);
   assert.match(read("src/features/video/video-source-selector.tsx"), /className=\{styles.stepNumber\} aria-hidden="true">01/);
 });
 
-test("rendered operator flow has consecutive steps and one active 10s duration", () => {
+test("restored selections use the existing reducer and invalidate prepared plan, quote and consent", () => {
+  const selection = { presetId: "minimal-studio" as const, shotMode: "multi" as const, receipt: "old" };
+  const single = videoStudioReducer(initialVideoStudioDraft, { type: "set-shot-mode", mode: "single" });
+  const shorter = videoStudioReducer(single, { type: "set-duration", duration: 5 });
+  assert.equal(shorter.shotMode, "single"); assert.equal(shorter.duration, 5);
+  assert.equal(videoStudioCreativeFields(shorter, selection).director, undefined);
+  const workspace = read("src/features/video/video-studio-workspace.tsx");
+  assert.match(workspace, /dispatch\(\{ type: "set-shot-mode", mode \}\);\s*setDirector\(null\); setSubmissionQuote\(null\); setConfirmedReceipt\(null\)/);
+  assert.match(workspace, /onDurationChange=\{\(duration\) => \{\s*dispatch\(\{ type: "set-duration", duration \}\);\s*setDirector\(null\); setSubmissionQuote\(null\); setConfirmedReceipt\(null\)/);
+  for (const locale of ["tr", "en"]) {
+    const copy = JSON.parse(read(`src/messages/${locale}.json`)).Dashboard.videoStudio.director;
+    assert.equal(copy.single, locale === "tr" ? "Tek çekim" : "Single shot");
+    assert.equal(copy.multi, locale === "tr" ? "Çoklu çekim" : "Multi-shot");
+  }
+});
+
+test("rendered operator flow has six consecutive steps and both duration choices", () => {
   const uiModule = { exports: {} as { VideoGenerationInspector: typeof VideoGenerationInspector } };
   runInNewContext(compile("src/features/video/video-generation-inspector.tsx"), { module: uiModule, exports: uiModule.exports, require: (name: string): unknown => {
     if (name === "react/jsx-runtime") return jsxRuntime;
@@ -75,18 +91,23 @@ test("rendered operator flow has consecutive steps and one active 10s duration",
     copy: { title: "Studio", description: "", source: {} as Props["copy"]["source"], promptHeading: "", promptDescription: "", promptPlaceholder: "",
       qualityHeading: "Quality", outputHeading: "Output", aspectRatioLabel: "Ratio", durationLabel: "Duration", secondsLabel: String, generate: "Generate", libraryLink: "Library", approvalHeading: "Approval" },
     source: null, prompt: "", quality: "standard", qualityOptions: [{ value: "standard", label: "Standard" }], aspectRatio: "16:9", aspectRatioOptions: [],
-    duration: 10, durationOptions: [{ value: 10, label: "10 seconds" }], feedbackMessage: null, feedbackIsError: false, isReady: false, isSubmitting: false,
+    duration: 10, durationOptions: [{ value: 5, label: "5 seconds" }, { value: 10, label: "10 seconds" }], feedbackMessage: null, feedbackIsError: false, isReady: false, isSubmitting: false,
     showLibraryLink: false, generationAvailable: false, libraryAssets: [], libraryOpen: false, libraryStatus: "idle", incomingSourceStatus: "idle",
     promptEnabled: false, presetControls: React.createElement("span", { className: "stepNumber" }, "02"),
-    directorControls: React.createElement("span", { className: "stepNumber" }, "04"),
+    shotModeControls: React.createElement("fieldset", null, React.createElement("span", { className: "stepNumber" }, "03"),
+      React.createElement("label", null, React.createElement("input", { type: "radio", name: "video-director-mode", value: "single" }), "Single shot"),
+      React.createElement("label", null, React.createElement("input", { type: "radio", name: "video-director-mode", value: "multi", defaultChecked: true }), "Multi-shot")),
+    directorControls: React.createElement("span", { className: "stepNumber" }, "05"),
     onFile: () => {}, onRemoveSource: () => {}, onToggleLibrary: () => {}, onRetryLibrary: () => {}, onSelectLibrary: () => {},
     onPromptChange: () => {}, onQualityChange: () => {}, onAspectRatioChange: () => {}, onDurationChange: () => {}, onGenerate: () => {},
   };
   const html = renderToStaticMarkup(React.createElement(uiModule.exports.VideoGenerationInspector, props));
-  assert.deepEqual([...html.matchAll(/class="stepNumber"[^>]*>(\d+)/g)].map(m => m[1]), ["01", "02", "03", "04", "05"]);
-  assert.equal((html.match(/name="video-duration"/g) ?? []).length, 1);
+  assert.deepEqual([...html.matchAll(/class="stepNumber"[^>]*>(\d+)/g)].map(m => m[1]), ["01", "02", "03", "04", "05", "06"]);
+  assert.equal((html.match(/name="video-duration"/g) ?? []).length, 2);
   assert.match(html, /name="video-duration"[^>]*checked=""[^>]*value="10"/);
-  assert.doesNotMatch(html, /value="5"|video-director-mode|<textarea/);
+  assert.match(html, /name="video-duration"[^>]*value="5"/);
+  assert.match(html, /Single shot/); assert.match(html, /Multi-shot/);
+  assert.doesNotMatch(html, /<textarea/);
 });
 
 for (const locale of ["tr", "en"] as const) {
@@ -112,7 +133,7 @@ for (const locale of ["tr", "en"] as const) {
     for (const id of videoStudioPresetIds) assert.match(copy.presets[id].description, locale === "tr" ? /^10 saniyelik çoklu çekim/ : /^The 10-second multi-shot/);
     const rules = locale === "tr" ? {
       "minimal-studio": [/premium stüdyo/, /tek görünür detay\/ışık/, /kilitli ürün finali/],
-      "metallic-light-sweep": [/ürün ve kamera sabit/, /tek soldan sağa ışık/],
+      "metallic-light-sweep": [/ürün sabit/, /ışık soldan sağa bir kez/, /yavaşça yaklaşır/, /geri çekilip/],
       "macro-detail-reveal": [/tek doğrulanmış görünür detay/, /tekrar tam ürün/],
       "floating-accessory": [/hafifçe yükselir/, /yumuşakça yerleşir/, /kamera kilitli/, /dönüş yoktur/],
       "cinematic-hero": [/beş kısa kesme/, /tek detay/, /yanal kadraj/, /ışık vurgusu/],
@@ -121,7 +142,7 @@ for (const locale of ["tr", "en"] as const) {
       "window-display": [/minimal vitrin yaklaşımı/, /cam ışık etkileşimi/, /ürünü baskın/],
     } : {
       "minimal-studio": [/premium studio approach/, /one visible detail\/light/, /locked product finish/],
-      "metallic-light-sweep": [/product and camera still/, /one left-to-right light pass/],
+      "metallic-light-sweep": [/product fixed/, /one left-to-right light pass/, /eases closer/, /pulls back/],
       "macro-detail-reveal": [/one verified visible detail/, /returns to a complete product/],
       "floating-accessory": [/source orientation/, /gently rises and settles/, /camera stays locked/, /no rotation/],
       "cinematic-hero": [/five quick cuts/, /one detail/, /lateral framing/, /light accent/],
@@ -145,7 +166,7 @@ for (const locale of ["tr", "en"] as const) {
     const plan = fallbackDirectorPlan(input);
     const { VideoDirectorPanel: Panel, copy } = loadPanel(locale, plan);
     const html = renderToStaticMarkup(React.createElement(Panel, { draft: input.draft, draftKey: "offline", presetId: id, shotMode: "multi", planDisabled: false, disabledReason: null, onPrepared: () => {} }));
-    assert.match(html, /class="stepNumber"[^>]*>04/);
+    assert.match(html, /class="stepNumber"[^>]*>05/);
     assert.ok(html.includes(copy.signaturePlan));
     assert.ok(!html.includes(copy.fallbackPlan));
     assert.ok(!html.includes(copy.fallbackNotice));
@@ -154,7 +175,7 @@ for (const locale of ["tr", "en"] as const) {
   });
 
   test(`${locale}: legacy single and hidden presets retain fallback presentation`, () => {
-    for (const [presetId, shotMode, durationSeconds] of [["minimal-studio", "single", 5], ["luxury-fashion-film", "multi", 10]] as const) {
+    for (const presetId of [...videoStudioPresetIds, "luxury-fashion-film"] as const) for (const [shotMode, durationSeconds] of [["single", 5], ["multi", 5], ["single", 10]] as const) {
       const base = directorFixtureInput(directorProducts[0]);
       const input = { ...base, presetId, shotMode, draft: { ...base.draft, durationSeconds, shotMode } };
       const { VideoDirectorPanel: Panel, copy } = loadPanel(locale, fallbackDirectorPlan(input));

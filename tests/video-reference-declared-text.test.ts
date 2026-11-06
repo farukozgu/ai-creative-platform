@@ -8,6 +8,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 import ts from "typescript";
 import { compileDirectorPlan, fallbackDirectorPlan, type VideoDirectorInput } from "../src/lib/video-director/core";
 import { parseReferenceDeclaredText, supportsReferenceDeclaredText, referenceTextPreservation, type ReferenceReview } from "../src/lib/video-generation/product-references";
+import { additionalProductReferenceRoles } from "../src/lib/video-generation/product-reference-policy";
+import { unknownPresetProduct } from "../src/lib/video-director/preset-recommendations";
 import { validateVideoGenerationDraft } from "../src/lib/video-generation/validation";
 import { videoDraftHash } from "../src/lib/video-generation/request-identity";
 import { directorCacheKey, sealDirectorPlan, openDirectorPlan } from "../src/lib/video-director/receipt";
@@ -128,6 +130,8 @@ test("reference UI state emits an exact normalized request and never includes it
     if (name === "react/jsx-runtime") return jsxRuntime;
     if (name === "next-intl") return { useTranslations: () => (key: string) => key };
     if (name.endsWith("product-references")) return { parseReferenceDeclaredText, suggestProductReferences: () => ["logo"] };
+    if (name.endsWith("product-reference-policy")) return { additionalProductReferenceRoles };
+    if (name.endsWith("preset-recommendations")) return { unknownPresetProduct };
     if (name.endsWith("video-reference-text-input")) return { VideoReferenceTextInput: ({ onChange }: { onChange: (text: string) => void }) => {
       editText = onChange; return null;
     } };
@@ -137,7 +141,7 @@ test("reference UI state emits an exact normalized request and never includes it
     throw new Error(`Unexpected UI import: ${name}`);
   } });
   renderToStaticMarkup(React.createElement(exports.VideoProductReferences, {
-    sourceKey: "source", product: { category: "unknown", evidence: [] }, aspectRatio: "1:1", disabled: false,
+    product: unknownPresetProduct, aspectRatio: "1:1", disabled: false,
     onChange: (references: References) => { emitted = references; }, onBusyChange: () => {},
   }));
   assert.ok(editText);
@@ -154,11 +158,11 @@ test("reference UI state emits an exact normalized request and never includes it
 test("Custom exact text survives receipt, quote, approval and idempotent submission without creative reinterpretation", async () => {
   const f = await VideoProductionHarness.create();
   f.env.OPENAI_API_KEY = "offline-only";
-  f.analysisProfile = f.profile;
+  f.analysisProfile = { ...f.profile, confidence: { overall: 0.69 } };
   const draft = { ...f.draft("standard", 5, "multi"), creativeMode: "custom" as const, prompt: "A premium campaign film",
     productReferences: [reference(exact)] };
   draft.productReferences[0].sha256 = await f.addSource(draft.productReferences[0].source.sourceAssetId);
-  const input: VideoDirectorInput = { draft, profile: f.profile, presetId: "custom", shotMode: "multi" };
+  const input: VideoDirectorInput = { draft, profile: f.analysisProfile, presetId: "custom", shotMode: "multi" };
   const withoutText = { ...input, draft: { ...draft, productReferences: draft.productReferences.map(({ declaredText: _text, ...ref }) => {
     void _text; return ref;
   }) } };

@@ -1,12 +1,18 @@
 import "server-only";
 import { getVideoStudioOpenAIPolicy } from "@/lib/openai/beta-policy";
 import { getPromptEnhancementModel } from "@/lib/generation/prompts/prompt-enhancer-config";
-import { compileDirectorPlan, directVideoWithClient, fallbackDirectorPlan, type VideoDirectorInput } from "./core";
-import { createOpenAIVideoPlan, createOpenAICameraRepairs, createOpenAIActionRepairs } from "./openai-director";
+import { compileDirectorPlan, directVideoWithClient, fallbackDirectorPlan, type VideoDirectorInput, type VideoDirectorPlan } from "./core";
+import { createOpenAIReferenceReviews, createOpenAIVideoPlan, createOpenAICameraRepairs, createOpenAIActionRepairs } from "./openai-director";
 import { directorCacheKey, DirectorPlanCache, openDirectorPlan, sealDirectorPlan } from "./receipt";
-import { logVideoDiagnostic } from "@/lib/video-generation/diagnostics";
+import { logVideoDiagnostic, safeOpenAIStatus } from "@/lib/video-generation/diagnostics";
 
 const cache = new DirectorPlanCache();
+const goldenPresetIds = new Set(["minimal-studio", "metallic-light-sweep", "macro-detail-reveal", "floating-accessory",
+  "cinematic-hero", "dramatic-backlight", "material-detail", "window-display"]);
+
+function isGoldenTenSecondMulti(input: VideoDirectorInput) {
+  return goldenPresetIds.has(input.presetId) && input.shotMode === "multi" && input.draft.durationSeconds === 10;
+}
 
 export function isVideoDirectorAIAvailable(ownerId: string) {
   const policy = getVideoStudioOpenAIPolicy(ownerId, getPromptEnhancementModel());
@@ -37,6 +43,43 @@ export async function prepareVideoDirectorPlan(ownerId: string, source: Buffer, 
     return { plan, receipt: sealDirectorPlan(key, plan, secret, Date.now(), input.profile) };
   }
   const existing = openDirectorPlan(existingReceipt, key, input, secret);
+  if (isGoldenTenSecondMulti(input)) {
+    let plan: VideoDirectorPlan;
+    const references = input.draft.productReferences?.length ?? 0;
+    if (!references) {
+      plan = fallbackDirectorPlan(input);
+      log("director_creative_plan", "skipped", { code: "golden_local_plan" });
+    } else if (allowAI && existing?.referenceReviews?.length) {
+      plan = fallbackDirectorPlan(input, existing.referenceReviews);
+      log("director_reference_review", "cache_hit");
+    } else {
+      if (!allowAI || !isVideoDirectorAIAvailable(ownerId)) {
+        const code = diagnostics?.fallbackReason ?? "configuration_error";
+        log("director_reference_review", "failed", { code });
+        throw Object.assign(new Error("references_not_verified"), { referenceFailure: code === "quota_limited" ? "quota" : "unavailable" });
+      }
+      try {
+        const reviews = await createOpenAIReferenceReviews(input, source, diagnostics?.correlationId);
+        if (reviews.length !== references || reviews.some(review => review.status !== "matched")) {
+          const reason = reviews.some(review => review.status === "conflict") ? "conflict"
+            : reviews.some(review => review.status === "uncertain") ? "uncertain" : "invalid_review";
+          throw Object.assign(new Error("references_not_verified"), { referenceFailure: reason });
+        }
+        plan = fallbackDirectorPlan(input, reviews);
+      } catch (error) {
+        if (error && typeof error === "object" && "message" in error && error.message === "references_not_verified") throw error;
+        const diagnostic = safeOpenAIStatus(error);
+        log("director_reference_review", "failed", { category: diagnostic.category, code: diagnostic.code });
+        throw Object.assign(new Error("references_not_verified"), {
+          referenceFailure: diagnostic.category === "local_budget" && diagnostic.code === "quota_limited" ? "quota" : "unavailable",
+        });
+      }
+    }
+    compileDirectorPlan(plan, input);
+    for (const review of plan.referenceReviews ?? []) log("director_reference_review", "success", { index: review.index, status: review.status, view: review.view ?? "unknown" });
+    log("director_result", "success", { code: "golden_local_plan", referenceCount: references });
+    return { plan, receipt: sealDirectorPlan(key, plan, secret, Date.now(), input.profile) };
+  }
   if (allowAI && existing && (existing.origin === "ai" || existing.referenceReviews?.length)) { log("director_result", "cache_hit"); return { plan: existing, receipt: existingReceipt! }; }
   let fallbackReason: string | null = null;
   if (!allowAI) fallbackReason = diagnostics?.fallbackReason ?? "product_analysis_failed";
@@ -54,7 +97,7 @@ export async function prepareVideoDirectorPlan(ownerId: string, source: Buffer, 
         ? createOpenAICameraRepairs(value, source, failure, diagnostics?.correlationId)
         : createOpenAIVideoPlan(value, source, diagnostics?.correlationId, failure, reviews),
     }, event => {
-      log(event.stage, event.result, { reasonCode: event.reasonCode ?? null, jsonPath: event.jsonPath ?? null, expected: event.expected ?? null, failingPaths: event.failingPaths ? JSON.stringify(event.failingPaths) : undefined, matchedTerm: event.matchedTerm ?? null,
+      log(event.stage, event.result, { reasonCode: event.reasonCode ?? null, jsonPath: event.jsonPath ?? null, expected: event.expected ?? null, failingPaths: event.failingPaths ? JSON.stringify(event.failingPaths) : undefined,
         requestedPathCount: event.requestedPathCount, returnedRepairCount: event.returnedRepairCount,
         returnedShotIndexes: event.returnedShotIndexes,
         duplicatePath: event.duplicatePath, missingPath: event.missingPath,

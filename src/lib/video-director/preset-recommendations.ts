@@ -1,9 +1,10 @@
 import type { ProductProfile } from "@/lib/product-understanding/product-profile";
+import { productReferencePolicy, type ProductReferencePolicy } from "../video-generation/product-reference-policy";
 import { directorProductContext } from "./product-context";
 import { normalizeVideoProductSubtype, videoCategories, type VideoCategory } from "./preset-contract";
 import { videoDirectorPresets, videoPresetIds, type VideoPresetId } from "./presets";
 
-export type VideoPresetProduct = { category: VideoCategory | "unknown"; evidence: string[] };
+export type VideoPresetProduct = { category: VideoCategory | "unknown"; evidence: string[]; referencePolicy?: ProductReferencePolicy };
 export const unknownPresetProduct: VideoPresetProduct = { category: "unknown", evidence: [] };
 
 /** Existing profile only; this never runs vision or promotes a user's category filter to a fact. */
@@ -15,7 +16,8 @@ export function presetProduct(profile: ProductProfile | null): VideoPresetProduc
     ? profile?.subcategory?.toLowerCase() ?? "" : "";
   const category = normalizeVideoProductSubtype(type)
     ?? videoCategories.find(category => category === context.category) ?? "unknown";
-  return { category, evidence: context.evidence.map(item => item.detail) };
+  const referencePolicy = productReferencePolicy(profile);
+  return { category, evidence: context.evidence.map(item => item.detail), ...(referencePolicy ? { referencePolicy } : {}) };
 }
 
 export function recommendVideoPresets(product: VideoPresetProduct, candidateIds: readonly VideoPresetId[] = videoPresetIds): VideoPresetId[] {

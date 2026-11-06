@@ -82,12 +82,12 @@ for (const quality of ["standard", "pro"] as const) for (const durationSeconds o
   test(`custom -> Director receipt -> quote -> approval -> idempotent mocked payload: ${quality}/${durationSeconds}/${shotMode}`, async () => {
     const f = await VideoProductionHarness.create();
     f.env.OPENAI_API_KEY = "offline-only";
-    f.analysisProfile = f.profile;
+    f.analysisProfile = { ...f.profile, confidence: { overall: 0.69 } };
     const draft = { ...f.draft(quality, durationSeconds, shotMode), creativeMode: "custom" as const, prompt: request };
     const referenceId = "10000000-0000-4000-8000-000000000003";
     const sha256 = await f.addSource(referenceId);
     draft.productReferences = [{ source: { kind: "uploaded-image", sourceAssetId: referenceId }, sha256, purpose: "logo" }];
-    const input: VideoDirectorInput = { draft, profile: f.profile, presetId: "custom", shotMode };
+    const input: VideoDirectorInput = { draft, profile: f.analysisProfile, presetId: "custom", shotMode };
     f.directorResponse = customResponse(input);
     const prepared = await f.prepareDirector(input);
     assert.equal(prepared.status, "success", JSON.stringify(f.logs));
@@ -141,7 +141,7 @@ test("actual OpenAI request mapping excludes preset grammar from custom and isol
     const context = JSON.parse(built.context);
     assert.equal(context.creativeMode, "custom"); assert.equal(context.userRequest, request);
     assert.equal(context.preset, undefined); assert.equal(context.fixedShots, undefined);
-    assert.match(built.instructions, /userRequest is the only creative brief/);
+    assert.match(built.instructions, /userRequest is the only creative authority/);
     assert.doesNotMatch(built.instructions, /selected preset brief must drive|Preserve preset direction/);
     const withRefs = { ...input, draft: { ...draft, productReferences: [{ source: { kind: "uploaded-image" as const, sourceAssetId: "10000000-0000-4000-8000-000000000003" }, sha256: "b".repeat(64), purpose: "logo" }] } };
     assert.equal(f.directorRequest(withRefs).context, built.context);

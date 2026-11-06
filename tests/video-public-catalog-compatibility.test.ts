@@ -19,10 +19,11 @@ test("hidden legacy preset IDs still compile and open existing receipts", () => 
   assert.deepEqual(compileDirectorPlan(restored, input), compileDirectorPlan(plan, input));
 });
 
-test("all preset modes retain pre-surface-alignment director and Kling output", () => {
+test("unaffected preset modes retain director and Kling output outside Signature and Light Sweep tuning", () => {
   const results = [];
   for (const presetId of videoPresetIds) for (const shotMode of ["single", "multi"] as const)
     for (const durationSeconds of [5, 10] as const) {
+      if ((presetId === "minimal-studio" || presetId === "metallic-light-sweep") && shotMode === "multi" && durationSeconds === 10) continue;
       assert.ok(isVideoPresetId(presetId));
       const base = directorFixtureInput(directorProducts[0]);
       const input = { ...base, presetId, shotMode, draft: { ...base.draft, shotMode, durationSeconds } };
@@ -38,6 +39,6 @@ test("all preset modes retain pre-surface-alignment director and Kling output", 
       }
       results.push({ presetId, shotMode, durationSeconds, plan, output });
     }
-  // Baseline captured before surface alignment; includes all eight golden presets and legacy modes.
-  assert.equal(createHash("sha256").update(JSON.stringify(results)).digest("hex"), "e07709a64c3a5220eb8ec6708442d71c46110981ca393fad4079921d9335d9ad");
+  // Captured from HEAD 23c2a7d, omitting only the two intentionally tuned cells.
+  assert.equal(createHash("sha256").update(JSON.stringify(results)).digest("hex"), "88f678bca9aff96b5bef95ff1b3dc86796aa119f5ccf477b286354aa34126640");
 });

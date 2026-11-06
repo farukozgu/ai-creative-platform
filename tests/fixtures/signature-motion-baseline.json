@@ -1,0 +1,464 @@
+[
+  {
+    "category": "apparel",
+    "sparse": false,
+    "plan": {
+      "version": "video-director-3.2-reference-views-v2",
+      "presetId": "minimal-studio",
+      "presetVersion": 3,
+      "shotMode": "multi",
+      "origin": "fallback",
+      "summary": "minimal-studio · multi · 3 shots · 10s",
+      "intent": "Verified focus: two visible front buttons | black",
+      "intentContract": {
+        "camera": "auto",
+        "focusRequested": false,
+        "focusEvidenceId": null,
+        "focusPosition": "any",
+        "sequence": "preset",
+        "safeAdjustment": "none"
+      },
+      "shots": [
+        {
+          "purpose": "hero-reveal",
+          "durationSeconds": 4,
+          "camera": "Slow long-lens push-in",
+          "composition": "Full product inside frame; clean premium negative space",
+          "lighting": "Soft sculpted directional studio light",
+          "motion": "Product still; source orientation unchanged",
+          "pace": "Restrained establishment",
+          "focus": "Source-visible product form",
+          "evidenceRefs": []
+        },
+        {
+          "purpose": "lighting-reveal",
+          "durationSeconds": 3,
+          "camera": "Short lateral camera glide",
+          "composition": "One verified region at source-resolved scale",
+          "lighting": "Controlled highlight travels across visible surface",
+          "motion": "Product still; source orientation unchanged",
+          "pace": "Measured light reveal",
+          "focus": "wide notched collar",
+          "evidenceRefs": [
+            3
+          ]
+        },
+        {
+          "purpose": "final-hero",
+          "durationSeconds": 3,
+          "camera": "Locked hero framing",
+          "composition": "Complete product; clean advertising frame",
+          "lighting": "Resolved soft directional hero light",
+          "motion": "Product still; settle into final hold",
+          "pace": "Resolved final hold",
+          "focus": "Source-visible product form",
+          "evidenceRefs": []
+        }
+      ]
+    },
+    "compiled": {
+      "prompt": "Slow long-lens push-in. Full product inside frame; clean premium negative space. Soft sculpted directional studio light. Product still; source orientation unchanged. Restrained establishment. Exact source shape/colors/marks/parts; known view only",
+      "multiPrompt": [
+        {
+          "prompt": "Slow long-lens push-in. Full product inside frame; clean premium negative space. Soft sculpted directional studio light. Product still; source orientation unchanged. Restrained establishment. Exact source shape/colors/marks/parts; known view only",
+          "duration": "4"
+        },
+        {
+          "prompt": "Short lateral camera glide. One verified region at source-resolved scale. Controlled highlight travels across visible surface. Product still; source orientation unchanged. Measured light reveal. wide notched collar. Exact source shape/colors/marks/parts; known view only",
+          "duration": "3"
+        },
+        {
+          "prompt": "Locked hero framing. Complete product; clean advertising frame. Resolved soft directional hero light. Product still; settle into final hold. Resolved final hold. Exact source shape/colors/marks/parts; known view only",
+          "duration": "3"
+        }
+      ],
+      "negativePrompt": "changed logo, changed brand mark, rewritten text, misspelled text, illegible label, morphing letters, altered color, changed hue, changed pattern, changed print, altered material, changed surface texture, redesigned product, altered silhouette, changed proportions, stretched or compressed geometry, extra or missing parts, extra or missing buttons, extra or missing belt, broken seams, warped hardware, melting texture, garment deformation, new hidden surfaces, blur",
+      "cfgScale": 0.5,
+      "version": "product-preservation-v2"
+    }
+  },
+  {
+    "category": "apparel",
+    "sparse": true,
+    "plan": {
+      "version": "video-director-3.2-reference-views-v2",
+      "presetId": "minimal-studio",
+      "presetVersion": 3,
+      "shotMode": "multi",
+      "origin": "fallback",
+      "summary": "minimal-studio · multi · 3 shots · 10s",
+      "intent": "Source-visible product form.",
+      "intentContract": {
+        "camera": "auto",
+        "focusRequested": false,
+        "focusEvidenceId": null,
+        "focusPosition": "any",
+        "sequence": "preset",
+        "safeAdjustment": "none"
+      },
+      "shots": [
+        {
+          "purpose": "hero-reveal",
+          "durationSeconds": 4,
+          "camera": "Slow long-lens push-in",
+          "composition": "Full product inside frame; clean premium negative space",
+          "lighting": "Soft sculpted directional studio light",
+          "motion": "Product still; source orientation unchanged",
+          "pace": "Restrained establishment",
+          "focus": "Source-visible product form",
+          "evidenceRefs": []
+        },
+        {
+          "purpose": "lighting-reveal",
+          "durationSeconds": 3,
+          "camera": "Short lateral camera glide",
+          "composition": "Visible contour and surface with clear margins",
+          "lighting": "Controlled highlight travels across visible surface",
+          "motion": "Product still; source orientation unchanged",
+          "pace": "Measured light reveal",
+          "focus": "Source-visible surface detail",
+          "evidenceRefs": []
+        },
+        {
+          "purpose": "final-hero",
+          "durationSeconds": 3,
+          "camera": "Locked hero framing",
+          "composition": "Complete product; clean advertising frame",
+          "lighting": "Resolved soft directional hero light",
+          "motion": "Product still; settle into final hold",
+          "pace": "Resolved final hold",
+          "focus": "Source-visible product form",
+          "evidenceRefs": []
+        }
+      ]
+    },
+    "compiled": {
+      "prompt": "Slow long-lens push-in. Full product inside frame; clean premium negative space. Soft sculpted directional studio light. Product still; source orientation unchanged. Restrained establishment. Exact source shape/colors/marks/parts; known view only",
+      "multiPrompt": [
+        {
+          "prompt": "Slow long-lens push-in. Full product inside frame; clean premium negative space. Soft sculpted directional studio light. Product still; source orientation unchanged. Restrained establishment. Exact source shape/colors/marks/parts; known view only",
+          "duration": "4"
+        },
+        {
+          "prompt": "Short lateral camera glide. Visible contour and surface with clear margins. Controlled highlight travels across visible surface. Product still; source orientation unchanged. Measured light reveal. Exact source shape/colors/marks/parts; known view only",
+          "duration": "3"
+        },
+        {
+          "prompt": "Locked hero framing. Complete product; clean advertising frame. Resolved soft directional hero light. Product still; settle into final hold. Resolved final hold. Exact source shape/colors/marks/parts; known view only",
+          "duration": "3"
+        }
+      ],
+      "negativePrompt": "changed logo, changed brand mark, rewritten text, misspelled text, illegible label, morphing letters, altered color, changed hue, changed pattern, changed print, altered material, changed surface texture, redesigned product, altered silhouette, changed proportions, stretched or compressed geometry, extra or missing parts, extra or missing buttons, extra or missing belt, broken seams, warped hardware, melting texture, garment deformation, new hidden surfaces, blur",
+      "cfgScale": 0.5,
+      "version": "product-preservation-v2"
+    }
+  },
+  {
+    "category": "cosmetics",
+    "sparse": false,
+    "plan": {
+      "version": "video-director-3.2-reference-views-v2",
+      "presetId": "minimal-studio",
+      "presetVersion": 3,
+      "shotMode": "multi",
+      "origin": "fallback",
+      "summary": "minimal-studio · multi · 3 shots · 10s",
+      "intent": "Verified focus: centered front label | amber",
+      "intentContract": {
+        "camera": "auto",
+        "focusRequested": false,
+        "focusEvidenceId": null,
+        "focusPosition": "any",
+        "sequence": "preset",
+        "safeAdjustment": "none"
+      },
+      "shots": [
+        {
+          "purpose": "hero-reveal",
+          "durationSeconds": 4,
+          "camera": "Slow long-lens push-in",
+          "composition": "Full product inside frame; clean premium negative space",
+          "lighting": "Soft sculpted directional studio light",
+          "motion": "Product still; source orientation unchanged",
+          "pace": "Restrained establishment",
+          "focus": "Source-visible product form",
+          "evidenceRefs": []
+        },
+        {
+          "purpose": "lighting-reveal",
+          "durationSeconds": 3,
+          "camera": "Short lateral camera glide",
+          "composition": "One verified region at source-resolved scale",
+          "lighting": "Controlled highlight travels across visible surface",
+          "motion": "Product still; source orientation unchanged",
+          "pace": "Measured light reveal",
+          "focus": "centered front label",
+          "evidenceRefs": [
+            0
+          ]
+        },
+        {
+          "purpose": "final-hero",
+          "durationSeconds": 3,
+          "camera": "Locked hero framing",
+          "composition": "Complete product; clean advertising frame",
+          "lighting": "Resolved soft directional hero light",
+          "motion": "Product still; settle into final hold",
+          "pace": "Resolved final hold",
+          "focus": "Source-visible product form",
+          "evidenceRefs": []
+        }
+      ]
+    },
+    "compiled": {
+      "prompt": "Slow long-lens push-in. Full product inside frame; clean premium negative space. Soft sculpted directional studio light. Product still; source orientation unchanged. Restrained establishment. Exact source shape/colors/marks/parts; known view only",
+      "multiPrompt": [
+        {
+          "prompt": "Slow long-lens push-in. Full product inside frame; clean premium negative space. Soft sculpted directional studio light. Product still; source orientation unchanged. Restrained establishment. Exact source shape/colors/marks/parts; known view only",
+          "duration": "4"
+        },
+        {
+          "prompt": "Short lateral camera glide. One verified region at source-resolved scale. Controlled highlight travels across visible surface. Product still; source orientation unchanged. Measured light reveal. centered front label. Exact source shape/colors/marks/parts; known view only",
+          "duration": "3"
+        },
+        {
+          "prompt": "Locked hero framing. Complete product; clean advertising frame. Resolved soft directional hero light. Product still; settle into final hold. Resolved final hold. Exact source shape/colors/marks/parts; known view only",
+          "duration": "3"
+        }
+      ],
+      "negativePrompt": "changed logo, changed brand mark, rewritten text, misspelled text, illegible label, morphing letters, altered color, changed hue, changed pattern, changed print, altered material, changed surface texture, redesigned product, altered silhouette, changed proportions, stretched or compressed geometry, extra or missing parts, extra or missing buttons, extra or missing belt, broken seams, warped hardware, melting texture, garment deformation, new hidden surfaces, blur",
+      "cfgScale": 0.5,
+      "version": "product-preservation-v2"
+    }
+  },
+  {
+    "category": "cosmetics",
+    "sparse": true,
+    "plan": {
+      "version": "video-director-3.2-reference-views-v2",
+      "presetId": "minimal-studio",
+      "presetVersion": 3,
+      "shotMode": "multi",
+      "origin": "fallback",
+      "summary": "minimal-studio · multi · 3 shots · 10s",
+      "intent": "Source-visible product form.",
+      "intentContract": {
+        "camera": "auto",
+        "focusRequested": false,
+        "focusEvidenceId": null,
+        "focusPosition": "any",
+        "sequence": "preset",
+        "safeAdjustment": "none"
+      },
+      "shots": [
+        {
+          "purpose": "hero-reveal",
+          "durationSeconds": 4,
+          "camera": "Slow long-lens push-in",
+          "composition": "Full product inside frame; clean premium negative space",
+          "lighting": "Soft sculpted directional studio light",
+          "motion": "Product still; source orientation unchanged",
+          "pace": "Restrained establishment",
+          "focus": "Source-visible product form",
+          "evidenceRefs": []
+        },
+        {
+          "purpose": "lighting-reveal",
+          "durationSeconds": 3,
+          "camera": "Short lateral camera glide",
+          "composition": "Visible contour and surface with clear margins",
+          "lighting": "Controlled highlight travels across visible surface",
+          "motion": "Product still; source orientation unchanged",
+          "pace": "Measured light reveal",
+          "focus": "Source-visible surface detail",
+          "evidenceRefs": []
+        },
+        {
+          "purpose": "final-hero",
+          "durationSeconds": 3,
+          "camera": "Locked hero framing",
+          "composition": "Complete product; clean advertising frame",
+          "lighting": "Resolved soft directional hero light",
+          "motion": "Product still; settle into final hold",
+          "pace": "Resolved final hold",
+          "focus": "Source-visible product form",
+          "evidenceRefs": []
+        }
+      ]
+    },
+    "compiled": {
+      "prompt": "Slow long-lens push-in. Full product inside frame; clean premium negative space. Soft sculpted directional studio light. Product still; source orientation unchanged. Restrained establishment. Exact source shape/colors/marks/parts; known view only",
+      "multiPrompt": [
+        {
+          "prompt": "Slow long-lens push-in. Full product inside frame; clean premium negative space. Soft sculpted directional studio light. Product still; source orientation unchanged. Restrained establishment. Exact source shape/colors/marks/parts; known view only",
+          "duration": "4"
+        },
+        {
+          "prompt": "Short lateral camera glide. Visible contour and surface with clear margins. Controlled highlight travels across visible surface. Product still; source orientation unchanged. Measured light reveal. Exact source shape/colors/marks/parts; known view only",
+          "duration": "3"
+        },
+        {
+          "prompt": "Locked hero framing. Complete product; clean advertising frame. Resolved soft directional hero light. Product still; settle into final hold. Resolved final hold. Exact source shape/colors/marks/parts; known view only",
+          "duration": "3"
+        }
+      ],
+      "negativePrompt": "changed logo, changed brand mark, rewritten text, misspelled text, illegible label, morphing letters, altered color, changed hue, changed pattern, changed print, altered material, changed surface texture, redesigned product, altered silhouette, changed proportions, stretched or compressed geometry, extra or missing parts, extra or missing buttons, extra or missing belt, broken seams, warped hardware, melting texture, garment deformation, new hidden surfaces, blur",
+      "cfgScale": 0.5,
+      "version": "product-preservation-v2"
+    }
+  },
+  {
+    "category": "footwear",
+    "sparse": false,
+    "plan": {
+      "version": "video-director-3.2-reference-views-v2",
+      "presetId": "minimal-studio",
+      "presetVersion": 3,
+      "shotMode": "multi",
+      "origin": "fallback",
+      "summary": "minimal-studio · multi · 3 shots · 10s",
+      "intent": "Verified focus: woven upper texture | white",
+      "intentContract": {
+        "camera": "auto",
+        "focusRequested": false,
+        "focusEvidenceId": null,
+        "focusPosition": "any",
+        "sequence": "preset",
+        "safeAdjustment": "none"
+      },
+      "shots": [
+        {
+          "purpose": "hero-reveal",
+          "durationSeconds": 4,
+          "camera": "Slow long-lens push-in",
+          "composition": "Full product inside frame; clean premium negative space",
+          "lighting": "Soft sculpted directional studio light",
+          "motion": "Product still; source orientation unchanged",
+          "pace": "Restrained establishment",
+          "focus": "Source-visible product form",
+          "evidenceRefs": []
+        },
+        {
+          "purpose": "lighting-reveal",
+          "durationSeconds": 3,
+          "camera": "Short lateral camera glide",
+          "composition": "One verified region at source-resolved scale",
+          "lighting": "Controlled highlight travels across visible surface",
+          "motion": "Product still; source orientation unchanged",
+          "pace": "Measured light reveal",
+          "focus": "woven upper texture",
+          "evidenceRefs": [
+            0
+          ]
+        },
+        {
+          "purpose": "final-hero",
+          "durationSeconds": 3,
+          "camera": "Locked hero framing",
+          "composition": "Complete product; clean advertising frame",
+          "lighting": "Resolved soft directional hero light",
+          "motion": "Product still; settle into final hold",
+          "pace": "Resolved final hold",
+          "focus": "Source-visible product form",
+          "evidenceRefs": []
+        }
+      ]
+    },
+    "compiled": {
+      "prompt": "Slow long-lens push-in. Full product inside frame; clean premium negative space. Soft sculpted directional studio light. Product still; source orientation unchanged. Restrained establishment. Exact source shape/colors/marks/parts; known view only",
+      "multiPrompt": [
+        {
+          "prompt": "Slow long-lens push-in. Full product inside frame; clean premium negative space. Soft sculpted directional studio light. Product still; source orientation unchanged. Restrained establishment. Exact source shape/colors/marks/parts; known view only",
+          "duration": "4"
+        },
+        {
+          "prompt": "Short lateral camera glide. One verified region at source-resolved scale. Controlled highlight travels across visible surface. Product still; source orientation unchanged. Measured light reveal. woven upper texture. Exact source shape/colors/marks/parts; known view only",
+          "duration": "3"
+        },
+        {
+          "prompt": "Locked hero framing. Complete product; clean advertising frame. Resolved soft directional hero light. Product still; settle into final hold. Resolved final hold. Exact source shape/colors/marks/parts; known view only",
+          "duration": "3"
+        }
+      ],
+      "negativePrompt": "changed logo, changed brand mark, rewritten text, misspelled text, illegible label, morphing letters, altered color, changed hue, changed pattern, changed print, altered material, changed surface texture, redesigned product, altered silhouette, changed proportions, stretched or compressed geometry, extra or missing parts, extra or missing buttons, extra or missing belt, broken seams, warped hardware, melting texture, garment deformation, new hidden surfaces, blur",
+      "cfgScale": 0.5,
+      "version": "product-preservation-v2"
+    }
+  },
+  {
+    "category": "footwear",
+    "sparse": true,
+    "plan": {
+      "version": "video-director-3.2-reference-views-v2",
+      "presetId": "minimal-studio",
+      "presetVersion": 3,
+      "shotMode": "multi",
+      "origin": "fallback",
+      "summary": "minimal-studio · multi · 3 shots · 10s",
+      "intent": "Source-visible product form.",
+      "intentContract": {
+        "camera": "auto",
+        "focusRequested": false,
+        "focusEvidenceId": null,
+        "focusPosition": "any",
+        "sequence": "preset",
+        "safeAdjustment": "none"
+      },
+      "shots": [
+        {
+          "purpose": "hero-reveal",
+          "durationSeconds": 4,
+          "camera": "Slow long-lens push-in",
+          "composition": "Full product inside frame; clean premium negative space",
+          "lighting": "Soft sculpted directional studio light",
+          "motion": "Product still; source orientation unchanged",
+          "pace": "Restrained establishment",
+          "focus": "Source-visible product form",
+          "evidenceRefs": []
+        },
+        {
+          "purpose": "lighting-reveal",
+          "durationSeconds": 3,
+          "camera": "Short lateral camera glide",
+          "composition": "Visible contour and surface with clear margins",
+          "lighting": "Controlled highlight travels across visible surface",
+          "motion": "Product still; source orientation unchanged",
+          "pace": "Measured light reveal",
+          "focus": "Source-visible surface detail",
+          "evidenceRefs": []
+        },
+        {
+          "purpose": "final-hero",
+          "durationSeconds": 3,
+          "camera": "Locked hero framing",
+          "composition": "Complete product; clean advertising frame",
+          "lighting": "Resolved soft directional hero light",
+          "motion": "Product still; settle into final hold",
+          "pace": "Resolved final hold",
+          "focus": "Source-visible product form",
+          "evidenceRefs": []
+        }
+      ]
+    },
+    "compiled": {
+      "prompt": "Slow long-lens push-in. Full product inside frame; clean premium negative space. Soft sculpted directional studio light. Product still; source orientation unchanged. Restrained establishment. Exact source shape/colors/marks/parts; known view only",
+      "multiPrompt": [
+        {
+          "prompt": "Slow long-lens push-in. Full product inside frame; clean premium negative space. Soft sculpted directional studio light. Product still; source orientation unchanged. Restrained establishment. Exact source shape/colors/marks/parts; known view only",
+          "duration": "4"
+        },
+        {
+          "prompt": "Short lateral camera glide. Visible contour and surface with clear margins. Controlled highlight travels across visible surface. Product still; source orientation unchanged. Measured light reveal. Exact source shape/colors/marks/parts; known view only",
+          "duration": "3"
+        },
+        {
+          "prompt": "Locked hero framing. Complete product; clean advertising frame. Resolved soft directional hero light. Product still; settle into final hold. Resolved final hold. Exact source shape/colors/marks/parts; known view only",
+          "duration": "3"
+        }
+      ],
+      "negativePrompt": "changed logo, changed brand mark, rewritten text, misspelled text, illegible label, morphing letters, altered color, changed hue, changed pattern, changed print, altered material, changed surface texture, redesigned product, altered silhouette, changed proportions, stretched or compressed geometry, extra or missing parts, extra or missing buttons, extra or missing belt, broken seams, warped hardware, melting texture, garment deformation, new hidden surfaces, blur",
+      "cfgScale": 0.5,
+      "version": "product-preservation-v2"
+    }
+  }
+]

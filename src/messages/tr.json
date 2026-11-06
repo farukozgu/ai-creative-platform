@@ -894,7 +894,7 @@
           "metallic-light-sweep": {
             "signatureTitle": "Light Sweep",
             "title": "Yüzeyde Işık",
-            "description": "10 saniyelik çoklu çekimde ürün ve kamera sabit kalır; tek soldan sağa ışık geçişi temiz ürün finaline bağlanır.",
+            "description": "10 saniyelik çoklu çekimde ürün sabit kalır, kamera yavaşça yaklaşır ve ışık soldan sağa bir kez geçer. Kamera geri çekilip son ürün kadrajında sabit kalır.",
             "caption": "Gezinen ışık şeridi"
           },
           "hardware-reveal": {
@@ -944,6 +944,7 @@
         "planNeedsReferences": "Çekim planı hazırlamak için ek ürün açılarını yeniden yükleyin veya kaldırın.",
         "referencesUnverified": "Ek ürün görselleri doğrulanamadı. Referansları atlayarak video üretilmedi. Aynı ürüne ait net görseller kullanıp planı yeniden hazırlayın veya referansları kaldırın.",
         "referenceReviewInvalid": "AI, referans incelemesini geçerli biçimde tamamlayamadı. Bu, görsellerin yanlış olduğu anlamına gelmez. Video üretimi başlatılmadı.",
+        "referenceReviewQuota": "AI analiz kotası şu anda dolu. Ek referanslar doğrulanamadığı için çekim planı hazırlanmadı.",
         "referenceReviewUnavailable": "Referans incelemesi şu anda tamamlanamıyor. Analiz erişimi, kota veya servis yanıtı nedeniyle işlem durdu; video üretilmedi.",
         "planNeedsSource": "Önce bir ürün görseli seçin.",
         "planNeedsPreparedSource": "Çekim planından önce ürün görselinin hazırlanmasını bekleyin.",
@@ -1157,7 +1158,7 @@
       "description": "Ürün görselinizden kampanyaya hazır bir videoya.",
       "generate": "Video Oluştur",
       "source": {
-        "heading": "Ürün görseli",
+        "heading": "Ana ürün görseli",
         "description": "Bir ürün görseli yükleyin veya kütüphanenizden seçin.",
         "upload": "Görsel yükle",
         "replace": "Değiştir",
@@ -1304,7 +1305,34 @@
         "declaredText": "Görseldeki yazı (isteğe bağlı)",
         "declaredTextError": "En fazla 80 karakter kullanın; satır sonu veya kontrol karakteri eklemeyin.",
         "classicCinematic": "Cinematic 5 sn çoklu çekim, klasik sinematik kurgu için yalnız ana ürün görselini kullanır. Ek referanslar bu modda gönderilmez; diğer presetlerde kullanılabilir.",
-        "description": "İsteğe bağlı, en fazla 3 fotoğraf. Öneriler dışında aynı ürüne ait kendi detayınızı da yükleyebilirsiniz.",
+        "description": "Ana görseldeki ürüne ait en fazla 3 ek fotoğraf yükleyebilirsiniz.",
+        "watchDescription": "En fazla 3 ek fotoğraf. Kadran ve diğer referanslar ana görseldeki saate ait olmalıdır.",
+        "role": "Referans rolü",
+        "suggestedRole": "Önerilen görünüm",
+        "roles": {
+          "dial-detail": "Kadran yakın planı",
+          "side-profile": "Yan / profil",
+          "critical-detail": "Kritik detay",
+          "label-branding-detail": "Etiket / marka detayı",
+          "other-product-view": "Diğer ürün görünümü"
+        },
+        "dialRequired": "Saat videolarında kadran doğruluğunu korumak için net bir kadran yakın planı ekleyin.",
+        "policy": {
+          "watch": {
+            "heading": "Gerekli: Kadran yakın planı",
+            "helper": "Kadranın tamamını net gösteren yüksek çözünürlüklü yakın plan. Rakamlar, indeksler, logo, ibreler ve tarih penceresi görünür olmalıdır.",
+            "sideHeading": "Önerilen: Yan / profil",
+            "sideHelper": "Kasa kalınlığı, tepe ve kayış bağlantısı gibi görünür detayları doğrular."
+          },
+          "jewelry": {
+            "heading": "Önerilen: Kritik detay",
+            "helper": "Taş, montür, pençe, bağlantı veya ayırt edici yüzey detayını net gösteren yakın plan eklemek ürün doğruluğunu artırır."
+          },
+          "cosmetics": {
+            "heading": "Önerilen: Etiket / marka detayı",
+            "helper": "Etiket, logo, kabartma, kapak veya kritik ambalaj detayını net gösteren yakın plan eklemek yazı ve marka doğruluğunu artırır."
+          }
+        },
         "conditional": "Yalnız ürününüzde varsa; bu alan farklı bir detayı da kabul eder.",
         "upload": "Fotoğraf yükle",
         "uploadFor": "{type} referansı yükle",
@@ -1319,8 +1347,8 @@
         "preview": "Ek ürün referansı",
         "loading": "Referans hazırlanıyor…",
         "error": "Referans hazırlanamadı. JPEG/PNG, en fazla 10 MB kullanın.",
-        "analysisNotice": "Ek görseller doğrulandığında Kling’e gönderilir; temel çekim planında da kullanılır. İnceleme tamamlanamazsa referanslar atlanarak üretime devam edilmez. Farklı açılar çoklu çekim planına dahil edilebilir.",
-        "matched": "Kling’e gönderilecek",
+        "analysisNotice": "Ek görseller ana ürünle karşılaştırılır. Doğrulanan görseller, gösterdikleri detayları destekler.",
+        "matched": "Aynı ürün doğrulandı",
         "conflict": "Ürün eşleşmedi; gönderilmeyecek",
         "uncertain": "Belirsiz; gönderilmeyecek",
         "suggestions": {

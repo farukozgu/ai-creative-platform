@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
-import { createHash } from "node:crypto";
 import test from "node:test";
+import { assertPresetOutputFingerprints, presetOutputGroup } from "./fixtures/preset-output-fingerprint";
 import { compileDirectorPlan, fallbackDirectorPlan, parseDirectorOutput } from "../src/lib/video-director/core";
 import { getVideoDirectorPreset, videoPresetIds } from "../src/lib/video-director/presets";
 import { buildFalVideoRequestInput } from "../src/lib/video-generation/fal-request";
@@ -63,9 +63,8 @@ test("Director fixed schema and validation agree on the new Luxury moving shots 
   assert.equal(harness.posts.length, 0);
 });
 
-test("23 other presets and non-target Luxury cells retain their pre-change outputs", () => {
-  // Captured before this change across 12 categories; never regenerate in this test.
-  const hash = createHash("sha256");
+test("historical and approved revised preset cells retain their compiled outputs", () => {
+  const outputs: Record<"frozen" | "revised", unknown[]> = { frozen: [], revised: [] };
   let count = 0;
   for (const presetId of videoPresetIds) for (const { profile } of fixtures)
     for (const durationSeconds of [5, 10] as const) for (const shotMode of ["single", "multi"] as const) {
@@ -73,10 +72,13 @@ test("23 other presets and non-target Luxury cells retain their pre-change outpu
       const base = directorFixtureInput(profile!);
       const input = { ...base, presetId, shotMode, draft: { ...base.draft, durationSeconds, shotMode } };
       const plan = fallbackDirectorPlan(input);
-      hash.update(JSON.stringify({ preset: getVideoDirectorPreset(presetId, shotMode, durationSeconds),
-        plan, compiled: compileDirectorPlan(plan, input) }));
+      outputs[presetOutputGroup(input)].push({ preset: getVideoDirectorPreset(presetId, shotMode, durationSeconds),
+        plan, compiled: compileDirectorPlan(plan, input) });
       count++;
     }
   assert.equal(count, 1140);
-  assert.equal(hash.digest("hex"), "146d2ce7feb8327aa0b5a155c9c9d4c39790ad2e1e10967d9e768e538c2a9d04");
+  assertPresetOutputFingerprints(outputs, {
+    frozen: "685c9c7383635eb893d1b46acb76ff71e6d335f882470ef3522c928d1cc4ac6f",
+    revised: "c14a38e32b56f659225866be9299c358cf7599ec8f675cde58facd38135c9ca8",
+  });
 });

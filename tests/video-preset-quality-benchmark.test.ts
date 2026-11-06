@@ -5,6 +5,7 @@ import { runBenchmark, fingerprint } from "../scripts/preset-benchmark/benchmark
 import { runMutationProbes } from "../scripts/preset-benchmark/probes";
 import { planDistance, weights, auditBoundary } from "../scripts/preset-benchmark/analysis";
 import { benchmarkProducts } from "../scripts/preset-benchmark/dataset";
+import { videoStudioPresetIds } from "../src/features/video/video-preset-catalog";
 import { fallbackDirectorPlan } from "../src/lib/video-director/core";
 import { directorFixtureInput, directorProducts } from "./fixtures/video-director-fixtures";
 
@@ -43,10 +44,24 @@ test("scoring does not reward renamed purposes, summaries or synonyms as differe
   b.shots[0].camera = "Slow pan right";
   assert.ok(planDistance(a, b, benchmarkProducts[0]) > 0);
 });
-test("fixed benchmark now measures intent-responsive plans and a lower single-shot detail miss count", () => {
+test("benchmark preserves explicit intent in legacy cells and keeps golden storyboards fixed", () => {
+  for (const row of result.cases) {
+    const golden = row.duration === 10 && row.mode === "multi" && videoStudioPresetIds.some(id => id === row.presetId);
+    if (!golden) {
+      assert.equal(row.weaknesses.includes("intent-not-executed"), false, row.id);
+      continue;
+    }
+    const baseline = result.plans[`${row.counterfactualGroup}/empty`].plan.shots;
+    const shots = result.plans[row.planRef].plan.shots;
+    assert.deepEqual(row.presetId === "macro-detail-reveal" ? shots.map((shot, index) => ({
+      ...shot, focus: baseline[index].focus, evidenceRefs: baseline[index].evidenceRefs,
+    })) : shots, baseline, row.id);
+  }
+});
+
+test("fixed benchmark measures responsive groups and a lower single-shot detail miss count", () => {
   assert.equal(result.totals.responsiveGroups, result.totals.counterfactualGroups);
   assert.equal(result.totals.storedPlans, result.cases.length);
-  assert.equal(result.cases.filter(c => c.weaknesses.includes("intent-not-executed")).length, 0);
   assert.ok(result.cases.filter(c => c.mode === "single" && c.weaknesses.includes("close-frame-focuses-form-or-generic")).length < 2320);
   const emptyIntentCollisions = result.cases.filter(c => c.intentKind === "empty" && c.weaknesses.includes("semantic-strategy-collision"));
   assert.ok(emptyIntentCollisions.length < 84); // Prior 336 cases / four identical fallback intents.

@@ -16,10 +16,13 @@ for (const category of ["apparel", "cosmetics", "watches", "footwear"]) {
     const plan = fallbackDirectorPlan(input);
     assert.deepEqual(plan.shots.map(s => s.durationSeconds), [3, 4, 3]);
     assert.deepEqual(plan.shots.map(s => s.purpose), ["hero-reveal", "lighting-reveal", "final-hero"]);
-    assert.deepEqual(plan.shots.map(s => s.camera), ["Locked medium hero framing", "Locked close product framing", "Locked balanced hero framing"]);
+    assert.deepEqual(plan.shots.map(s => s.camera), [
+      "Slow straight axial push-in", "Slow controlled axial push to close framing", "Very slow controlled axial pull-back into balanced hero framing",
+    ]);
     assert.equal(plan.shots[1].lighting, "One soft highlight travels left-to-right on surface");
+    assert.equal(plan.shots[2].pace, "Stable hero hold for final 1s");
     for (const shot of plan.shots) {
-      assert.match(shot.motion, /Product and camera (?:stay )?still/);
+      assert.equal(shot.motion, "Product fixed and source-facing");
       assert.deepEqual(shot.evidenceRefs, []);
     }
     for (const index of [0, 2]) {
@@ -33,11 +36,27 @@ for (const category of ["apparel", "cosmetics", "watches", "footwear"]) {
     const compiled = compileDirectorPlan(plan, input);
     assert.equal(compiled.multiPrompt!.length, 3);
     assert.deepEqual(compiled.multiPrompt!.map(s => s.duration), ["3", "4", "3"]);
+    const watch = category === "watches" && !sparse;
     for (const [index, scene] of compiled.multiPrompt!.entries()) {
       assert.ok(scene.prompt.length <= 512);
-      for (const field of ["camera", "composition", "lighting", "motion", "pace"] as const) assert.ok(scene.prompt.includes(plan.shots[index][field]), field);
+      for (const field of ["camera", "motion"] as const) assert.ok(scene.prompt.includes(plan.shots[index][field]), field);
+      assert.doesNotMatch(scene.prompt, /orbit|arc\b|rotat|swing|3\/4|hidden side/i);
+      if (watch) {
+        assert.match(scene.prompt, /Preserve the exact dial layout from the source: every numeral, index marker, logo, hand, date window and printed marking stays fixed in shape and position\./);
+        assert.match(scene.prompt, /Do not redraw, replace, invent or morph dial graphics\./);
+        assert.match(scene.prompt, /Keep dial graphics temporally stable across every frame\./);
+        assert.match(scene.prompt, /visible complications.*Do not invent readable text/i);
+      } else {
+        assert.doesNotMatch(scene.prompt, /dial graphics/);
+        for (const field of ["composition", "lighting", "pace"] as const) assert.ok(scene.prompt.includes(plan.shots[index][field]), field);
+      }
     }
-    assert.match(compiled.multiPrompt![1].prompt, /Locked close.*left-to-right.*Product and camera stay still/);
+    const sweep = compiled.multiPrompt![1].prompt;
+    assert.match(sweep, /Slow controlled axial push to close framing/);
+    assert.equal(sweep.match(/left-to-right/g)?.length, 1);
+    assert.match(sweep, /One (?:soft highlight travels left-to-right|left-to-right highlight)/);
+    if (watch) assert.match(sweep, /bezel, case edges and strap junction/);
+    assert.match(compiled.multiPrompt![2].prompt, /pull-back.*Stable hero hold for final 1s/);
     const payload = buildFalVideoRequestInput({ ...input.draft, ...compiled, modelId: "kling-v3-standard-image",
       endpointId: "offline", sourceUrl: "https://invalid.example/source" });
     assert.deepEqual(payload.multi_prompt, compiled.multiPrompt);
@@ -64,6 +83,15 @@ for (const category of ["apparel", "cosmetics", "watches", "footwear"]) {
     }
     const receipt = sealDirectorPlan("fixed", plan, "offline", 1000);
     assert.ok(openDirectorPlan(receipt, "fixed", input, "offline", 1001));
+    const locked = fixedLightingDirectorPlan(input, true, true)!;
+    const lockedReceipt = sealDirectorPlan("locked", locked, "offline", 1000);
+    const restoredLocked = openDirectorPlan(lockedReceipt, "locked", input, "offline", 1001);
+    assert.ok(restoredLocked);
+    assert.deepEqual(compileDirectorPlan(restoredLocked, input).multiPrompt, [
+      { duration: "3", prompt: "Locked medium hero framing. Complete product; clean studio; balanced negative space. Restrained soft directional light defines form. Product and camera stay still. Quiet setup before sweep. Exact source shape/colors/material/marks/parts; source orientation and visible surfaces only" },
+      { duration: "4", prompt: "Locked close product framing. Visible contour and surface; source-facing view. One soft highlight travels left-to-right on surface. Product and camera stay still. One measured light pass. Exact source shape/colors/material/marks/parts; source orientation and visible surfaces only" },
+      { duration: "3", prompt: "Locked balanced hero framing. Complete product; clean advertising frame. Clean key/fill; stronger separation than opening. Product and camera still; final hold. Resolved advertising hold. Exact source shape/colors/material/marks/parts; source orientation and visible surfaces only" },
+    ]);
     if (!sparse) {
       const legacy = fixedLightingDirectorPlan(input, false)!;
       const oldReceipt = sealDirectorPlan("old", legacy, "offline", 1000);
@@ -94,6 +122,19 @@ test("Light Sweep references gate planning and declaredText remains identity-onl
   for (const scene of compileDirectorPlan(plan, maxText).multiPrompt!) {
     assert.ok(scene.prompt.length <= 512);
     assert.ok(scene.prompt.includes("X".repeat(80)));
+  }
+  const quotedText = "X".repeat(42) + '"'.repeat(38);
+  const watchInput = { ...maxText, profile: libraryFixtures.find(f => f.category === "watches")!.profile!,
+    draft: { ...maxText.draft, productReferences: maxText.draft.productReferences.map(r => ({ ...r, declaredText: quotedText })) } };
+  const watchScenes = compileDirectorPlan(fallbackDirectorPlan(watchInput, reviews), watchInput).multiPrompt!;
+  assert.match(watchScenes[0].prompt, /Slow axial push-in/);
+  assert.match(watchScenes[1].prompt, /Slow axial close push-in.*One left-to-right case edge highlight/);
+  assert.match(watchScenes[2].prompt, /Very slow axial pull-back.*Hold final 1s/);
+  for (const scene of watchScenes) {
+    assert.ok(scene.prompt.length <= 512);
+    assert.ok(scene.prompt.includes(JSON.stringify(quotedText)));
+    assert.match(scene.prompt, /Exact source dial each frame: numerals, indices, logo, hands, date window, print and visible complications keep shape\/position/);
+    assert.match(scene.prompt, /No redraw, replacement, morphing or invented text/);
   }
   await assert.rejects(() => directVideoWithClient(input, { createPlan: async () => ({ shots: [] }) }), /references_not_verified/);
   await assert.rejects(() => directVideoWithClient(input, { createPlan: async () => ({ referenceReviews: [{ ...reviews[0], status: "uncertain" }] }) }), /references_not_verified/);

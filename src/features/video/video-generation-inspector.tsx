@@ -161,7 +161,7 @@ export function VideoGenerationInspector({
         {shotModeControls}
 
         <fieldset className={styles.controlSection}>
-          <legend><span className={styles.stepNumber} aria-hidden="true">03</span>{copy.qualityHeading}</legend>
+          <legend><span className={styles.stepNumber} aria-hidden="true">04</span>{copy.qualityHeading}</legend>
           <div className={styles.qualityOptions}>
             {qualityOptions.length === 1 ? <div className={styles.activeOption}>
               <strong>{qualityOptions[0]?.label}</strong>
@@ -231,7 +231,7 @@ export function VideoGenerationInspector({
       </div>
 
       <footer className={styles.inspectorFooter}>
-        <h2><span className={styles.stepNumber} aria-hidden="true">05</span>{copy.approvalHeading}</h2>
+        <h2><span className={styles.stepNumber} aria-hidden="true">06</span>{copy.approvalHeading}</h2>
         {costSummary}
         {approvalControls}
         <Button

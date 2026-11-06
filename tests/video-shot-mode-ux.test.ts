@@ -78,11 +78,11 @@ test("Single remains one continuous shot and rejects internal cut or montage dir
   }
 });
 
-test("signature surface hides shot selection; legacy shot validation and manual-camera lock remain", () => {
+test("surface exposes shot selection while manual-camera lock remains", () => {
   const ui = readFileSync("src/features/video/video-studio-workspace.tsx", "utf8");
   const inspector = readFileSync("src/features/video/video-generation-inspector.tsx", "utf8");
   assert.doesNotMatch(ui, /video-camera|cameraValues|camera\.heading|camera\.options|set-camera/);
-  assert.doesNotMatch(ui, /video-director-mode|shotModeControls=|set-shot-mode/);
+  assert.match(ui, /shotModeControls=\{<fieldset[\s\S]*?video-director-mode[\s\S]*?set-shot-mode/);
   assert.match(ui, /directorControls=\{shotMode \?[\s\S]*?advancedSettings=/);
   assert.match(inspector, /\{presetControls\}[\s\S]*?\{shotModeControls\}[\s\S]*?qualityHeading[\s\S]*?\{advancedSettings/);
   assert.match(ui, /if \(!generationAvailable \|\| !draft.shotMode\) return;/);

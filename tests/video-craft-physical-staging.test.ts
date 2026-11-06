@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
-import { createHash } from "node:crypto";
 import test from "node:test";
+import { assertPresetOutputFingerprints, presetOutputGroup } from "./fixtures/preset-output-fingerprint";
 import { fallbackDirectorPlan, compileDirectorPlan, parseDirectorOutput } from "../src/lib/video-director/core";
 import { compileKlingShot } from "../src/lib/video-director/kling-compiler";
 import { buildFalVideoRequestInput } from "../src/lib/video-generation/fal-request";
@@ -57,13 +57,16 @@ test("craft physical fidelity preserves markings and source support without inve
   }
 });
 
-test("Presets outside this and subsequently staged groups retain pre-change compiled outputs", () => {
-  const output = [];
+test("historical and approved revised preset cells retain their compiled outputs", () => {
+  const outputs: Record<"frozen" | "revised", unknown[]> = { frozen: [], revised: [] };
   for (const presetId of videoPresetIds.filter(id => !["macro-stitching","hardware-reveal","craftsmanship-study","glass-reflection","dramatic-backlight","metallic-light-sweep","elegant-orbit","optical-lines","cinematic-dial","label-reveal","sneaker-hero","upholstery-macro","culinary-texture","window-display","fabric-motion","floating-fashion","floating-accessory"].includes(id))) for (const { profile } of fixtures) for (const durationSeconds of [5, 10] as const) for (const shotMode of ["single", "multi"] as const) {
     const base = directorFixtureInput(profile!);
     const input = { ...base, presetId, shotMode, draft: { ...base.draft, durationSeconds, shotMode } };
-    output.push(compileDirectorPlan(fallbackDirectorPlan(input), input));
+    outputs[presetOutputGroup(input)].push(compileDirectorPlan(fallbackDirectorPlan(input), input));
   }
-  assert.equal(output.length, 336);
-  assert.equal(createHash("sha256").update(JSON.stringify(output)).digest("hex"), "1d3ed6e70f115ee01b26c17fe7cf5999a8c04c98c87217ee85a7184875d360ef");
+  assert.equal(outputs.frozen.length + outputs.revised.length, 336);
+  assertPresetOutputFingerprints(outputs, {
+    frozen: "851f73966ace391b90b4f8900525a7da75a252026ebf3df1c6859da550270446",
+    revised: "8b3ca1f9b6b176a1c4e1b62787a865740141281c6e2f14e01a0aae9918714d6a",
+  });
 });

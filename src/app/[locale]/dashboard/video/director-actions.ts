@@ -1,6 +1,7 @@
 "use server";
 
 import { readProductReferences } from "@/lib/video-generation/reference-context";
+import { hasDialDetailReference } from "@/lib/video-generation/product-reference-policy";
 import { getAuthenticatedUserId } from "@/lib/auth/require-user";
 import { canAccessVideoBeta } from "@/lib/video-generation/beta-policy";
 import { validateVideoGenerationDraft } from "@/lib/video-generation/validation";
@@ -9,7 +10,10 @@ import { isVideoPresetId } from "@/lib/video-director/presets";
 import { prepareVideoDirectorPlan } from "@/lib/video-director/runtime";
 import { presetProduct } from "@/lib/video-director/preset-recommendations";
 import { analyzeOwnedVideoProduct } from "@/lib/video-generation/video-product-analysis";
+import type { VideoProductAnalysisStatus } from "@/lib/video-generation/video-product-analysis-core";
 import { createVideoCorrelationId, logVideoDiagnostic } from "@/lib/video-generation/diagnostics";
+
+type AnalysisStatus = Exclude<VideoProductAnalysisStatus, "supported"> | "verified" | "not_analyzed";
 
 export async function prepareVideoDirectorAction(draft: unknown, presetId: unknown, shotMode: unknown,
   existingReceipt?: string) {
@@ -20,15 +24,17 @@ export async function prepareVideoDirectorAction(draft: unknown, presetId: unkno
   const custom = parsed.ok && parsed.value.creativeMode === "custom";
   if (!parsed.ok || !parsed.value.source || (custom ? presetId !== undefined : !isVideoPresetId(presetId)) || (shotMode !== "single" && shotMode !== "multi")
     || parsed.value.source.kind !== "uploaded-image" || parsed.value.cameraMovement === "orbit") return { status: "invalid" as const };
+  let analyzedProduct: { productContext: ReturnType<typeof presetProduct>; analysisStatus: AnalysisStatus } | undefined;
   try {
     const startedAt = Date.now();
     const context = await readOwnedPreparedVideoSource(ownerId, parsed.value.source, parsed.value.aspectRatio);
     logVideoDiagnostic(correlationId, "video_source_prepare", "success", { durationMs: Date.now() - startedAt });
+    const references = parsed.value.productReferences;
     const referenceImages = await readProductReferences(ownerId, parsed.value);
     logVideoDiagnostic(correlationId, "director_primary_source", "success", {
       sourceAssetId: parsed.value.source.sourceAssetId, hashPrefix: context.sourceSha256.slice(0, 12), referenceCount: referenceImages.length,
     });
-    for (const [index, ref] of (parsed.value.productReferences ?? []).entries()) {
+    for (const [index, ref] of (references ?? []).entries()) {
       logVideoDiagnostic(correlationId, "director_reference_source", "success", {
         index, sourceAssetId: ref.source.kind === "uploaded-image" ? ref.source.sourceAssetId : null,
         hashPrefix: referenceImages[index].sourceSha256.slice(0, 12),
@@ -36,7 +42,7 @@ export async function prepareVideoDirectorAction(draft: unknown, presetId: unkno
       });
     }
     let profile = context.profile;
-    let analysisStatus: "verified" | "not_analyzed" | "unsupported" | "quota_limited" | "budget_unavailable" | "configuration_error" | "provider_failed" | "pending" = profile ? "verified" : "not_analyzed";
+    let analysisStatus: AnalysisStatus = profile ? "verified" : "not_analyzed";
     if (!profile) {
       const analysisStartedAt = Date.now();
       const analysis = await analyzeOwnedVideoProduct({ ownerId, sourceAssetId: parsed.value.source.sourceAssetId,
@@ -48,20 +54,30 @@ export async function prepareVideoDirectorAction(draft: unknown, presetId: unkno
       logVideoDiagnostic(correlationId, "product_analysis_result", "cache_hit", { status: "verified" });
     }
     const productContext = presetProduct(profile);
+    analyzedProduct = { productContext, analysisStatus };
+    const watch = productContext.referencePolicy === "watch";
+    if (watch && !hasDialDetailReference(references, context.sourceSha256)) {
+      return { status: "dial_detail_required" as const, ...analyzedProduct };
+    }
+    // A legacy identity review does not attest to complete dial visibility on a new planning request.
     const result = await prepareVideoDirectorPlan(ownerId, context.prepared, context.sourceSha256,
-      { draft: parsed.value, presetId: custom ? "custom" : presetId as import("@/lib/video-director/presets").VideoPresetId, shotMode, profile, referenceImages }, existingReceipt,
+      { draft: parsed.value, presetId: custom ? "custom" : presetId as import("@/lib/video-director/presets").VideoPresetId, shotMode, profile, referenceImages }, watch ? undefined : existingReceipt,
       analysisStatus === "verified" || analysisStatus === "unsupported", { correlationId,
         fallbackReason: analysisStatus === "quota_limited" || analysisStatus === "configuration_error" || analysisStatus === "provider_failed"
           ? analysisStatus : analysisStatus === "not_analyzed" || analysisStatus === "pending" ? "product_analysis_failed" : undefined });
+    if (watch && !hasDialDetailReference(references, context.sourceSha256, result.plan.referenceReviews ?? [])) {
+      return { status: "dial_detail_required" as const, ...analyzedProduct };
+    }
     logVideoDiagnostic(correlationId, result.plan.origin === "ai" ? "director_result" : "director_fallback",
       result.plan.origin === "ai" ? "success" : "fallback", { analysisStatus });
     return { status: "success" as const, ...result, analysisStatus, productContext };
   } catch (error) {
     if (error && typeof error === "object" && "message" in error && error.message === "references_not_verified") {
-      const reason = "referenceFailure" in error && error.referenceFailure === "invalid_review" ? "invalid_review" as const
+      const reason = "referenceFailure" in error && error.referenceFailure === "quota" ? "quota" as const
+        : "referenceFailure" in error && error.referenceFailure === "invalid_review" ? "invalid_review" as const
         : "referenceFailure" in error && (error.referenceFailure === "conflict" || error.referenceFailure === "uncertain") ? "unverified" as const : "unavailable" as const;
-      return { status: "references_unverified" as const, reason };
+      return { status: "references_unverified" as const, reason, ...analyzedProduct };
     }
-    return { status: "error" as const };
+    return { status: "error" as const, ...analyzedProduct };
   }
 }

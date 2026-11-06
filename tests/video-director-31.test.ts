@@ -1,21 +1,52 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
 import test from "node:test";
-import { compileDirectorPlan, fallbackDirectorPlan, parseDirectorOutput, type VideoDirectorInput } from "../src/lib/video-director/core";
+import { cameraKinds, compileDirectorPlan, fallbackDirectorPlan, parseDirectorOutput, type VideoDirectorInput, type VideoDirectorPlan } from "../src/lib/video-director/core";
 import { compileKlingShot } from "../src/lib/video-director/kling-compiler";
-import { videoPresetIds } from "../src/lib/video-director/presets";
-import { buildFalVideoRequestInput } from "../src/lib/video-generation/fal-request";
+import { VIDEO_DIRECTOR_VERSION, videoPresetIds } from "../src/lib/video-director/presets";
+import { buildFalVideoRequestInput, KLING_MULTI_PROMPT_MAX_CHARS } from "../src/lib/video-generation/fal-request";
 import { directorProducts, directorFixtureInput, authoredDirectorExample } from "./fixtures/video-director-fixtures";
-import { compileDirector30 } from "./fixtures/video-director-30-compiler";
+import { renderDirector30Shots } from "./fixtures/video-director-30-compiler";
 import { directorCacheKey, sealDirectorPlan, openDirectorPlan } from "../src/lib/video-director/receipt";
 import { directorProductContext } from "../src/lib/video-director/product-context";
 
 test("3.1 retains the chosen evidence and actual movement, removes labels and unrelated facts", () => {
-  for (const profile of directorProducts.slice(0, 2)) {
+  // These plans and prompt hashes were captured after validation in b0843c5.
+  const { samples } = JSON.parse(readFileSync("tests/fixtures/director-31-compiler-baseline.json", "utf8")) as {
+    samples: { productId: string; plan: Omit<VideoDirectorPlan, "version"> & { version: string };
+      negativePrompt: string; director30: string[]; director31: string[] }[];
+  };
+  assert.deepEqual(samples.map(sample => sample.productId), ["jacket", "perfume"]);
+  const hash = (prompt: string) => createHash("sha256").update(prompt).digest("hex");
+  for (const sample of samples) {
+    const profile = directorProducts.find(product => product.productId === sample.productId)!;
     const input = directorFixtureInput(profile);
-    const plan = authoredDirectorExample(input);
-    const before = compileDirector30(plan, input), after = compileDirectorPlan(plan, input);
+    const { plan } = sample;
+    assert.equal(plan.version, "video-director-3.1-canonical-descriptions-v2");
+    assert.equal(plan.presetId, input.presetId);
+    assert.equal(plan.shotMode, input.shotMode);
+    assert.deepEqual(plan.shots.map(shot => shot.purpose), ["hero-reveal", "macro-detail", "final-hero"]);
+    let rejection: string | undefined;
+    assert.equal(parseDirectorOutput({ ...plan, version: VIDEO_DIRECTOR_VERSION }, input, failure => {
+      rejection = failure.reasonCode;
+    }), null);
+    assert.equal(rejection, "fixed_macro_template_mismatch");
+
+    const before = renderDirector30Shots(plan.shots, input);
+    const after = plan.shots.map(shot => ({
+      duration: String(shot.durationSeconds),
+      prompt: compileKlingShot(shot, KLING_MULTI_PROMPT_MAX_CHARS, false),
+    }));
+    assert.deepEqual(before.multiPrompt!.map(shot => shot.duration), ["3", "4", "3"]);
+    assert.deepEqual(after.map(shot => shot.duration), before.multiPrompt!.map(shot => shot.duration));
+    assert.deepEqual(before.multiPrompt!.map(shot => hash(shot.prompt)), sample.director30);
+    assert.deepEqual(after.map(shot => hash(shot.prompt)), sample.director31);
+    assert.equal(before.negativePrompt, sample.negativePrompt);
+    const evidence = directorProductContext(profile).evidence;
     for (const [i, shot] of plan.shots.entries()) {
-      const prompt = after.multiPrompt![i].prompt;
+      const prompt = after[i].prompt;
+      assert.deepEqual(shot.evidenceRefs.map(id => evidence[id]?.detail), [shot.focus]);
       assert.ok(prompt.includes(shot.focus));
       assert.ok(prompt.includes(shot.lighting));
       assert.ok(prompt.toLowerCase().includes(shot.composition.toLowerCase()));
@@ -24,8 +55,8 @@ test("3.1 retains the chosen evidence and actual movement, removes labels and un
       assert.ok(prompt.length < before.multiPrompt![i].prompt.length);
       assert.match(prompt, /known surfaces/);
     }
-    assert.match(after.multiPrompt![1].prompt, profile.vertical === "apparel" ? /Glide laterally/ : /locked close view/);
-    assert.doesNotMatch(after.multiPrompt![1].prompt, profile.vertical === "apparel" ? /front belt knot|wide notched collar/ : /amber|clear glass|front label/);
+    assert.match(after[1].prompt, profile.vertical === "apparel" ? /Glide laterally/ : /locked close view/);
+    assert.doesNotMatch(after[1].prompt, profile.vertical === "apparel" ? /front belt knot|wide notched collar/ : /amber|clear glass|front label/);
   }
 });
 
@@ -49,7 +80,12 @@ test("all existing products, presets, tiers, durations and shot structures build
         assert.equal(payload.generate_audio, false);
         assert.equal(payload.enable_safety_checker, true);
         assert.doesNotMatch(compiled.prompt, /Focus:|Visible:/);
-        if (!profile) assert.doesNotMatch(compiled.prompt, /leather|silk|glass|steel|gold|silver|black|buttons|dial|cap|stones/i);
+        if (!profile) for (const prompt of compiled.multiPrompt?.map(shot => shot.prompt) ?? [compiled.prompt]) {
+          const windowDisplay = presetId === "window-display" && shotMode === "multi" && durationSeconds === 10;
+          if (windowDisplay) assert.match(prompt, /One product; abstract glass bands; no mirror\/signage/);
+          const productDirection = windowDisplay ? prompt.replace("abstract glass bands", "") : prompt;
+          assert.doesNotMatch(productDirection, /\b(?:leather|silk|glass|steel|gold|silver|black|buttons|dial|cap|stones)\b/i);
+        }
       }
 });
 
@@ -63,6 +99,15 @@ test("pose filler is removed without erasing explicit subject motion or the sele
   assert.doesNotMatch(prompt, /dolly|pan |glide|tilt/);
 });
 
+test("legacy floating fashion with unknown product uses concise complete prompts within the Kling scene limit", () => {
+  const base = directorFixtureInput(directorProducts[0]);
+  const input = { ...base, presetId: "floating-fashion" as const, profile: null, draft: { ...base.draft, durationSeconds: 5 as const } };
+  const plan = fallbackDirectorPlan(input);
+  const { multiPrompt } = compileDirectorPlan(plan, input);
+  assert.deepEqual(multiPrompt?.map(shot => Number(shot.duration)), plan.shots.map(shot => shot.durationSeconds));
+  assert.ok(multiPrompt?.every(shot => shot.prompt.length <= 512 && shot.prompt.includes("known sides")));
+});
+
 test("controlled short wording fits a tighter budget without dropping decisions or subject action", () => {
   const shot = { ...authoredDirectorExample(directorFixtureInput(directorProducts[0])).shots[1],
     composition: "Close crop of a source-visible detail already present in the source", motion: "A gentle in-plane sway retains the front view" };
@@ -73,7 +118,7 @@ test("controlled short wording fits a tighter budget without dropping decisions 
     assert.match(prompt, /Glide laterally/);
     assert.match(prompt, /two visible front buttons/);
     assert.match(prompt, /in-plane sway/);
-    assert.match(prompt, /marked logo\/label/);
+    assert.match(prompt, /parts and markings exact; preserve marked details in place\. Known surfaces only\./);
     assert.match(prompt, /Soft side light/);
   }
   assert.throws(() => compileKlingShot(shot, 40, true), /too_long/);
@@ -98,7 +143,7 @@ test("free fallback maps explicit Turkish and English movement, focus and shot o
 
   const lateral = fallbackDirectorPlan(directorFixtureInput(jacket, "Ürün üzerinde yanal kay.") );
   assert.equal(lateral.intentContract.camera, "lateral");
-  assert.ok(lateral.shots.every(shot => /lateral camera glide/i.test(shot.camera)));
+  assert.ok(lateral.shots.every(shot => cameraKinds(shot.camera).join() === "lateral"));
 
   const sequence = directorFixtureInput(jacket, "Start close on front belt knot; gently push in, then pull back to the complete product.");
   const ordered = fallbackDirectorPlan(sequence);

@@ -66,20 +66,19 @@ test("a logo detail reference adds available evidence without replacing Cinemati
   assert.equal(openDirectorPlan(sealDirectorPlan(key, logoTarget, "test", 1000, input.profile), key, input, "test", 2000), null);
   const compiled = compileDirectorPlan(plan, input);
   assert.equal(compiled.multiPrompt!.length, 5);
-  assert.ok(compiled.multiPrompt!.every(s => s.prompt.startsWith("@Element1") && s.prompt.length <= 512));
-  assert.equal(compiled.negativePrompt, compileDirectorPlan(fixture.plan, original).negativePrompt);
-  const originalCompiled = compileDirectorPlan(fixture.plan, original);
-  assert.ok(compiled.multiPrompt!.every((s, index) => {
-    const originalPrompt = originalCompiled.multiPrompt![index].prompt;
-    const creative = originalPrompt.slice(0, originalPrompt.indexOf("Keep source geometry"));
-    return s.prompt === "@Element1: " + creative + "Exact form/color/material/pattern/parts/text/logos/art & layout/ratios; no guesses. Known faces only.";
-  }));
+  assert.ok(compiled.multiPrompt!.every(s => !s.prompt.includes("@Element1") && s.prompt.length <= 512));
+  assert.deepEqual(compiled, compileDirectorPlan(fixture.plan, original));
+  assert.deepEqual(plan.referenceReviews?.map(review => [review.status, review.view, review.details]), [
+    ["matched", "detail", ["ivory embroidered text"]],
+  ]);
   const harness = await VideoProductionHarness.create();
-  const request = harness.directorRequest(input);
-  assert.match(request.instructions, /preservation only; no focus, zoom or extra shots/);
+  assert.deepEqual(harness.directorRequest(input), harness.directorRequest(original));
+  const request = harness.directorRequest(input, true);
+  assert.match(request.instructions, /Never plan shots, focus, zoom, camera movement or repetitions/);
   const context = JSON.parse(request.context);
-  assert.deepEqual(context.allowedEvidence, JSON.parse(harness.directorRequest(original).context).allowedEvidence);
-  assert.ok(context.referenceImages[0].existingProfile.evidence.some((item: { detail: string }) => item.detail === "ivory embroidered text"));
+  assert.deepEqual(context.referenceImages, [{ index: 0, imagePosition: 2, purpose: "logo" }]);
+  assert.equal(context.allowedEvidence, undefined);
+  assert.deepEqual(Array.from(request.schema.required), ["referenceReviews"]);
   assert.equal("identityPreservation" in context, false);
   assert.equal("identity" in request.schema.properties, false);
   assert.doesNotMatch(request.instructions, /Inventory visible identity|marksVisible|exactText/);

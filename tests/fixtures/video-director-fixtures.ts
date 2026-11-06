@@ -47,6 +47,14 @@ export function directorFixtureInput(profile: ProductProfile, prompt = ""): Vide
   } };
 }
 
+/** Encode effective shots as strict provider output, excluding server-owned fields. */
+export function providerFixtureShots(input: VideoDirectorInput) {
+  return fallbackDirectorPlan(input).shots.map(({ durationSeconds, purpose, camera, focus, evidenceRefs, composition, lighting, motion, pace }) => ({
+    durationSeconds, purpose, camera, composition, lighting, motion, pace,
+    focus: evidenceRefs.length ? `verified-evidence:${evidenceRefs[0]}` : focus,
+  }));
+}
+
 /** Authored acceptance examples, NOT a claim of a live OpenAI response. */
 export function authoredDirectorExample(input: VideoDirectorInput): VideoDirectorPlan {
   const jacket = input.profile?.vertical === "apparel";

@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { parseReferenceReviews } from "../src/lib/video-generation/product-references";
+import { assertGoldenPhysicalPrompt, assertSourceMarksPreserved, isGoldenTenSecondMulti } from "./fixtures/video-fidelity-expectations";
+import * as referencePolicy from "../src/lib/video-generation/product-reference-policy";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { runInNewContext } from "node:vm";
@@ -21,7 +23,7 @@ import type { ProductProfile } from "../src/lib/product-understanding/product-pr
 import type * as runtime from "../src/lib/video-director/runtime";
 import type * as adapter from "../src/lib/video-director/openai-director";
 import type * as actions from "../src/app/[locale]/dashboard/video/director-actions";
-import { directorProducts, directorFixtureInput, authoredDirectorExample } from "./fixtures/video-director-fixtures";
+import { directorProducts, directorFixtureInput, authoredDirectorExample, providerFixtureShots } from "./fixtures/video-director-fixtures";
 import { summarizeVideoPayload } from "../src/lib/video-generation/payload-summary";
 import * as planContract from "../src/lib/video-director/plan-contract";
 import { compileKlingShot } from "../src/lib/video-director/kling-compiler";
@@ -75,20 +77,31 @@ test("leather jacket matrix has distinct role-based scenes, preservation and val
       assert.equal(prompts.reduce((sum, shot) => sum + Number(shot.duration), 0), durationSeconds);
       if (shotMode === "multi") {
         const execution = getVideoDirectorPreset(presetId, shotMode, durationSeconds).execution;
-        assert.deepEqual(prompts.map(shot => shot.duration), execution ? execution.durations.map(String)
-          : durationSeconds === 5 ? ["2", "3"] : ["3", "4", "3"]);
+        const durations = durationSeconds === 10 && presetId === "minimal-studio" ? ["4", "3", "3"]
+          : durationSeconds === 10 && presetId === "macro-detail-reveal" ? ["3", "4", "3"]
+          : execution?.durations.map(String) ?? ["2", "3"];
+        assert.deepEqual(prompts.map(shot => shot.duration), durations);
         assert.equal(new Set(prompts.map(shot => shot.prompt)).size, prompts.length);
-        const detail = plan.shots.find(shot => ["macro-detail", "material-study"].includes(shot.purpose))!;
-        assert.match(detail.composition, /close|detail|crop|feature/i);
-        assert.ok(directorProductContext(jacket).evidence.some(item => item.detail === detail.focus));
+        const detailShots = plan.shots.filter(shot => shot.evidenceRefs.length);
+        if (presetId === "minimal-studio" && durationSeconds === 5) {
+          assert.deepEqual(detailShots, []);
+          assert.deepEqual(plan.shots.map(shot => shot.focus), ["Source-visible product form", "Source-visible product form"]);
+        } else {
+          assert.equal(detailShots.length, 1);
+          const [detail] = detailShots;
+          assert.equal(detail.purpose, presetId === "minimal-studio" ? "lighting-reveal"
+            : presetId === "macro-detail-reveal" ? "macro-detail" : "material-study");
+          assert.match(detail.composition, /close|detail|crop|feature|verified region|macro scale/i);
+          assert.deepEqual(detail.evidenceRefs.map(id => directorProductContext(jacket).evidence[id].detail), [detail.focus]);
+          assert.doesNotMatch(detail.camera, /complete product/i);
+        }
         assert.match(plan.shots.at(-1)!.composition, /return|full|complete/i);
-        assert.doesNotMatch(detail.camera, /complete product/i);
       }
       for (const shot of prompts) {
         assert.ok(shot.prompt.length <= (shotMode === "multi" ? 512 : 2500));
         assert.doesNotMatch(shot.prompt, /Focus:|Visible:/);
         assert.doesNotMatch(shot.prompt, /hidden interior serial label/);
-        assert.match(shot.prompt, /exactly as in the source; do not enlarge, restyle or reposition them/);
+        assertSourceMarksPreserved(shot.prompt);
         if (shotMode === "multi") assert.doesNotMatch(shot.prompt, /single continuous|no scene cuts/i);
       }
       const payload = buildFalVideoRequestInput({ modelId: `kling-v3-${quality}-image`, endpointId: "fixture", mode: "image",
@@ -105,12 +118,12 @@ test("leather jacket matrix has distinct role-based scenes, preservation and val
 test("camera preference resolves conflicts per shot while retaining compatible AI framing and macro", () => {
   const shot = (durationSeconds: number, camera: string, composition: string) => ({ durationSeconds, camera, composition,
     lighting: "Stable light", motion: "Product remains still", pace: "Quiet hold", focus: "Source-visible product form", evidenceRefs: [] });
-  const raw = { intent: "A controlled jacket film", intentContract: interpretCreativeIntent(draft.prompt, directorProductContext(jacket).evidence), summary: "A controlled jacket film", shots: [shot(3, "Slow long-lens push-in", "Full jacket"),
-    shot(4, "Locked macro camera", "Close view of visible zipper"), shot(3, "Locked camera", "Hero view")] };
+  const raw = { intent: "A controlled jacket film", intentContract: interpretCreativeIntent(draft.prompt, directorProductContext(jacket).evidence), summary: "A controlled jacket film", shots: [shot(2, "Slow long-lens push-in", "Full jacket"),
+    shot(2, "Locked macro camera", "Close view of visible zipper"), shot(1, "Locked camera", "Hero view")] };
   const roles = ["hero-reveal", "macro-detail", "final-hero"];
   const directed = { ...raw, shots: raw.shots.map((shot, index) => ({ ...shot, purpose: roles[index] })) };
-  const select = (cameraMovement: VideoGenerationDraft["cameraMovement"]) => ({ ...input, shotMode: "multi" as const, profile: jacket,
-    draft: { ...draft, durationSeconds: 10 as const, cameraMovement } });
+  const select = (cameraMovement: VideoGenerationDraft["cameraMovement"]) => ({ ...input, presetId: "cinematic-hero" as const, shotMode: "multi" as const, profile: jacket,
+    draft: { ...draft, durationSeconds: 5 as const, cameraMovement } });
   const forCamera = (cameraMovement: VideoGenerationDraft["cameraMovement"], plan = directed) => ({ ...plan,
     intentContract: interpretCreativeIntent(draft.prompt, directorProductContext(jacket).evidence, "multi", cameraMovement) });
   const automatic = core.parseDirectorOutput(directed, select("auto"))!;
@@ -134,12 +147,12 @@ test("camera preference resolves conflicts per shot while retaining compatible A
 });
 
 test("director budget reserves complete rules and creative direction before optional evidence", () => {
-  const selected: core.VideoDirectorInput = { ...input, profile: { ...jacket, dominantColors: Array(10).fill("a".repeat(100)),
+  const selected: core.VideoDirectorInput = { ...input, presetId: "cinematic-hero", draft: { ...draft, durationSeconds: 10 }, profile: { ...jacket, dominantColors: Array(10).fill("a".repeat(100)),
     identityCriticalAttributes: [{ attribute: "embossed chest logo", rationale: "branding", regions: [] },
       ...Array.from({ length: 30 }, (_, index) => ({ attribute: `silver zipper detail ${index} ${"x".repeat(80)}`, rationale: "hardware", regions: [] }))] } };
   const value = "steady ".repeat(14).trim();
   const base = core.fallbackDirectorPlan(selected);
-  const plan = { ...base, shots: [{ ...base.shots[0], durationSeconds: 5, camera: value, lighting: value,
+  const plan = { ...base, shots: [{ ...base.shots[0], camera: value, lighting: value,
     composition: value, motion: value, pace: value }] };
   const parsed = core.parseDirectorOutput(plan, selected)!;
   const compiled = core.compileDirectorPlan({ ...plan, shots: parsed.shots }, selected).prompt;
@@ -154,7 +167,7 @@ test("partial historical profile details do not prevent a safe fallback", () => 
     verticalAttributes: { vertical: "apparel" as const, details: {} as Extract<ProductProfile["verticalAttributes"], { vertical: "apparel" }>["details"] } };
   const selected: core.VideoDirectorInput = { ...input, profile: incomplete };
   const plan = core.fallbackDirectorPlan(selected);
-  assert.match(core.compileDirectorPlan(plan, selected).prompt, /Keep the logos exactly as in the source/);
+  assert.match(core.compileDirectorPlan(plan, selected).prompt, /Exact geometry\/color\/material\/pattern\/parts\/text\/logos\/layout; known sides/);
 });
 
 test("plan validation rejects malformed duration, fields, unsafe directions and stale version", () => {
@@ -187,10 +200,13 @@ test("three versioned video presets compile for every supported tier, duration a
       assert.equal(payload.generate_audio, false); assert.equal(payload.enable_safety_checker, true);
       assert.equal(payload.duration, String(durationSeconds));
       assert.equal("prompt" in payload, shotMode === "single"); assert.equal("multi_prompt" in payload, shotMode === "multi");
-      for (const shot of compiled.multiPrompt ?? [{ prompt: compiled.prompt, duration: String(durationSeconds) }]) {
+      for (const [index, shot] of (compiled.multiPrompt ?? [{ prompt: compiled.prompt, duration: String(durationSeconds) }]).entries()) {
         assert.ok(shot.prompt.length <= (shotMode === "multi" ? 512 : 2500));
-        for (const feature of ["markings exact", "geometry", "material", "pattern", "color"])
-          assert.ok(shot.prompt.includes(feature));
+        if (isGoldenTenSecondMulti(selected)) assertGoldenPhysicalPrompt(selected, plan.shots[index], shot.prompt);
+        else {
+          assertSourceMarksPreserved(shot.prompt);
+          assert.match(shot.prompt, /known (?:sides|surfaces)/i);
+        }
       }
     }
 });
@@ -229,12 +245,11 @@ test("refusal, timeout, malformed output and unsafe directions use a safe fallba
 
 test("verified product evidence and valid OpenAI plan stay AI through business, integrity and Kling compilation", async () => {
   const base = directorProducts.find(product => product.productId === "shoe")!;
-  const selected = { ...input, profile: {
+  const selected = { ...input, presetId: "macro-detail-reveal" as const, draft: { ...draft, prompt: "Keep woven upper texture sharp." }, profile: {
     ...base,
   } as ProductProfile };
   const safePlan = core.fallbackDirectorPlan(selected);
-  const response = { ...safePlan, origin: "ai" as const,
-    shots: safePlan.shots.map((shot, index) => index === 0 ? { ...shot, focus: "woven upper texture", evidenceRefs: [0] } : shot) };
+  const response = { summary: safePlan.summary, intent: safePlan.intent, intentContract: safePlan.intentContract, shots: providerFixtureShots(selected) };
   const events: Array<{ stage: string; result: string; reasonCode?: string; jsonPath?: string; expected?: string }> = [];
   const plan = await core.directVideoWithClient(selected, { createPlan: async () => response }, event => events.push(event));
   assert.equal(plan.origin, "ai");
@@ -392,7 +407,10 @@ test("product evidence remains bounded while every shot preserves critical ident
     const compiled = core.compileDirectorPlan(core.fallbackDirectorPlan(selected), selected);
     for (const shot of compiled.multiPrompt!) {
       assert.ok(shot.prompt.length <= 2500);
-      assert.match(shot.prompt, presetId === "cinematic-hero" && draft.durationSeconds === 5 ? /preserve marked details in place/ : /Keep the embroidered marks exactly as in the source/); assert.match(shot.prompt, /locked|static|fixed/i);
+      if (presetId === "cinematic-hero" && draft.durationSeconds === 5) assert.match(shot.prompt, /preserve marked details in place/);
+      else assertSourceMarksPreserved(shot.prompt);
+      assert.match(shot.prompt, /locked|static|fixed/i);
+      assert.doesNotMatch(shot.prompt, /untrusted hint/);
     }
   }
 });
@@ -480,9 +498,13 @@ test("OpenAI adapter sends bounded source/profile/preset context using existing 
   let captured: Record<string, unknown> | null = null;
   const api = loadIsolated<typeof adapter>("src/lib/video-director/openai-director.ts", {
     "../video-generation/product-references": { parseReferenceReviews },
+    "../video-generation/product-reference-policy": referencePolicy,
     "@/lib/openai/client": { getOpenAIVideoStudioAnalysisClient: () => ({ responses: { create: async (body: Record<string, unknown>) => {
-      captured = body; const { intentContract: _intentContract, summary: _summary, intent: _intent, ...wire } = core.fallbackDirectorPlan(input);
-      void _intentContract; void _summary; void _intent; return { status: "completed", output_text: JSON.stringify(wire) };
+      captured = body;
+      const context = JSON.parse((body.input as Array<{ content: Array<{ text: string }> }>)[0].content[0].text);
+      const wire = context.primaryImage.role === "primary-product" ? { referenceReviews: Object.fromEntries([0, 1, 2].map(index => [`r${index}`,
+        { status: "matched", view: "front", reason: "Same visible product", details: [] }])) } : { shots: providerFixtureShots(input) };
+      return { status: "completed", output_text: JSON.stringify(wire) };
     } } }) },
     "@/lib/openai/structured-response": { structuredResponseText: (format: unknown) => ({ format }) },
     "@/lib/openai/response-telemetry": { attachOpenAIResponseTelemetry: (value: unknown) => value },
@@ -531,7 +553,8 @@ test("OpenAI adapter sends bounded source/profile/preset context using existing 
   const maximum = directorFixtureInput({ ...directorProducts[0], identityCriticalAttributes: Array.from({ length: 80 }, (_, i) => ({
     attribute: `visible construction feature ${i} ${"e".repeat(60)}`, rationale: "visible", regions: [],
   })) }, "y".repeat(2500));
-  const maximumRequest = api.buildDirectorRequest(maximum);
+  const maximumRequest = api.buildDirectorRequest({ ...maximum, presetId: "cinematic-hero", shotMode: "single",
+    draft: { ...maximum.draft, shotMode: "single" } });
   assert.ok(maximumRequest);
   assert.ok(!maximumRequest.schema.required.includes("evidenceRefs"));
   assert.ok(!("evidenceRefs" in maximumRequest.schema.properties.shots.items.properties));
@@ -556,6 +579,7 @@ test("Director action rejects unauthenticated access and forged source ownership
   let userId: string | null = null, ownershipChecks = 0, planCalls = 0, sourceAllowed = false, runtimeArgs: unknown[] = [];
   const api = loadIsolated<typeof actions>("src/app/[locale]/dashboard/video/director-actions.ts", {
     "@/lib/video-generation/reference-context": { readProductReferences: async () => [] },
+    "@/lib/video-generation/product-reference-policy": referencePolicy,
     "@/lib/auth/require-user": { getAuthenticatedUserId: async () => userId },
     "@/lib/video-generation/beta-policy": { canAccessVideoBeta: () => true },
     "@/lib/video-generation/validation": { validateVideoGenerationDraft },
@@ -623,11 +647,15 @@ test("existing evidence drives distinct films for apparel, packaging, watches, j
   assert.equal(signatures.size, directorProducts.length);
 });
 
-test("authored AI acceptance examples preserve each directing decision in the real Kling payload and final preview", async () => {
+test("fixed provider acceptance examples preserve each directing decision in the real Kling payload and final preview", async () => {
   for (const profile of directorProducts.slice(0, 2)) {
     const selected = directorFixtureInput(profile, profile.vertical === "apparel"
       ? "Cekete yavaş yaklaş, detayları göster." : "Dramatic highlights, then finish on the label.");
-    const plan = await core.directVideoWithClient(selected, { createPlan: async () => authoredDirectorExample(selected) });
+    const expected = core.fallbackDirectorPlan(selected);
+    const plan = await core.directVideoWithClient(selected, { createPlan: async () => ({
+      summary: expected.summary, intent: expected.intent, intentContract: expected.intentContract, shots: providerFixtureShots(selected),
+    }) });
+    assert.deepEqual(plan.shots, expected.shots);
     assert.equal(plan.origin, "ai");
     const compiled = core.compileDirectorPlan(plan, selected);
     const payload = buildFalVideoRequestInput({ ...selected.draft, modelId: "kling-v3-standard-image", endpointId: "fixture",
@@ -640,7 +668,8 @@ test("authored AI acceptance examples preserve each directing decision in the re
     assert.deepEqual(preview.shots.map(shot => shot.prompt), (payload.multi_prompt as core.KlingMultiPrompt).map(shot => shot.prompt));
     for (const [index, shot] of plan.shots.entries()) {
       const prompt = compiled.multiPrompt![index].prompt;
-      for (const field of ["focus", "composition", "lighting", "pace"] as const)
+      assert.ok(prompt.toLowerCase().includes(shot.focus.toLowerCase().replace(/^source-visible /, "visible ")), `${profile.productId}/focus`);
+      for (const field of ["composition", "lighting", "pace"] as const)
         assert.ok(prompt.toLowerCase().includes(shot[field].toLowerCase()), `${profile.productId}/${field}`);
       assert.ok(prompt.length <= 512);
       assert.doesNotMatch(prompt, /product (?:stays|remains) stationary|no scene changes|single continuous/i);
@@ -697,7 +726,7 @@ test("scene budgets reserve creative decisions and reject overlong directions in
 });
 
 test("single-shot allows verifiable subject motion and lighting while forbidding an internal montage", () => {
-  const selected = { ...directorFixtureInput(directorProducts[0]), shotMode: "single" as const };
+  const selected = { ...directorFixtureInput(directorProducts[0]), presetId: "cinematic-hero" as const, shotMode: "single" as const };
   const base = authoredDirectorExample(selected);
   const plan = { ...base, shots: [{ ...base.shots[0], durationSeconds: 10,
     motion: "A gentle in-plane sway retains the front view", lighting: "A soft highlight travels along the visible form" }] };

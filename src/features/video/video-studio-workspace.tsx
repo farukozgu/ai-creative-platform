@@ -12,6 +12,8 @@ import type { VideoDirectorSelection } from "@/lib/video-director/core";
 import type { VideoPresetId } from "@/lib/video-director/presets";
 import type { summarizeVideoPayload } from "@/lib/video-generation/payload-summary";
 import { mapRegionToFrame } from "@/lib/video-generation/preservation";
+import { hasDialDetailReference } from "@/lib/video-generation/product-reference-policy";
+import type { VideoPresetProduct } from "@/lib/video-director/preset-recommendations";
 
 import { loadVideoSourceLibrary, resolveIncomingVideoSource } from "@/app/[locale]/dashboard/video/actions";
 import { VideoCanvas } from "@/features/video/video-canvas";
@@ -155,7 +157,7 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
     key: string; aspectRatio: VideoAspectRatio; status: "preparing" | "error" | "ready";
     frame?: Extract<Awaited<ReturnType<typeof prepareVideoSourceAction>>, { status: "success" }>;
   } | null>(null);
-  const [productAnalysisState, setProductAnalysisState] = useState<{ sourceAssetId: string; status: VideoProductAnalysisDisplayStatus } | null>(null);
+  const [productAnalysisState, setProductAnalysisState] = useState<{ sha256: string; status: VideoProductAnalysisDisplayStatus; product: VideoPresetProduct } | null>(null);
 
   useEffect(() => {
     const source = draft.source;
@@ -188,14 +190,17 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
   }, [draft.source, draft.aspectRatio, generationAvailable]);
   const currentPreparation = prepared?.key === draft.source?.id && prepared?.aspectRatio === draft.aspectRatio ? prepared : null;
   const preparedFrame = currentPreparation?.status === "ready" ? currentPreparation.frame : null;
+  const analyzedProduct = preparedFrame && productAnalysisState?.sha256 === preparedFrame.sourceSha256 ? productAnalysisState : null;
+  const presetProduct = analyzedProduct?.product ?? preparedFrame?.presetContext;
+  const referencePolicy = presetProduct?.referencePolicy;
   const productAnalysisStatus: VideoProductAnalysisDisplayStatus = preparedFrame
-    ? productAnalysisState?.sourceAssetId === preparedFrame.source.sourceAssetId ? productAnalysisState.status
+    ? analyzedProduct ? analyzedProduct.status
       : preparedFrame.presetContext.category === "unknown" ? "not_analyzed" : "verified"
     : "not_analyzed";
   const preparationFailed = currentPreparation?.status === "error";
   const previewSource = draft.source && preparedFrame ? { ...draft.source, previewUrl: preparedFrame.previewUrl } : null;
   const referenceKey = JSON.stringify([draft.source?.id]);
-  const classicCinematic = draft.creativeMode === "preset" && presetId === "cinematic-hero" && shotMode === "multi" && draft.duration === 5;
+  const classicCinematic = draft.creativeMode === "preset" && presetId === "cinematic-hero" && shotMode === "multi" && draft.duration === 5 && !referencePolicy;
   const generationDraft: VideoGenerationDraft = { productReferences: !classicCinematic && referenceState.key === referenceKey ? referenceState.refs : [], clientSubmissionId: submissionId, criticalRegion: draft.criticalRegion,
     analysisConsent: draft.analyzeAfterGeneration && currentQuote?.analysis.maximumEstimatedCostUsd != null
       && currentQuote.analysis.model && currentQuote.analysis.pricingVersion
@@ -203,6 +208,8 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
         pricingVersion: currentQuote.analysis.pricingVersion, locale: locale === "en" ? "en" : "tr" } : null,
     mode: "image", shotMode: shotMode ?? undefined, source: preparedFrame?.source ?? null, quality: draft.quality,
     aspectRatio: draft.aspectRatio, durationSeconds: draft.duration, ...videoStudioCreativeFields(draft) };
+  const dialDetailRequired = referencePolicy === "watch" && Boolean(preparedFrame
+    && !hasDialDetailReference(generationDraft.productReferences, preparedFrame.sourceSha256));
   const activePresetId = draft.creativeMode === "preset" ? presetId : undefined;
   const directorDraftKey = JSON.stringify({ ...generationDraft, clientSubmissionId: "", presetId: activePresetId });
   const directorPanelKey = JSON.stringify({ ...generationDraft, clientSubmissionId: "", shotMode: undefined, presetId: activePresetId });
@@ -414,7 +421,7 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
 
   const qualityValues: VideoQuality[] = ["standard", "pro"];
   const aspectRatioValues: VideoAspectRatio[] = ["16:9", "9:16", "1:1"];
-  const durationValues: VideoDuration[] = [10];
+  const durationValues: VideoDuration[] = [5, 10];
   const nextSubmissionStep = generationError || submissionUsed || restoreUnavailable ? null
     : restoringJob ? "checkingPrevious"
       : jobId ? "newSubmissionFirst"
@@ -495,8 +502,8 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
           referenceControls={draft.source ? <>
             {classicCinematic ? <p role="status">{t("references.classicCinematic")}</p> : null}
             <div hidden={classicCinematic}>
-            <VideoProductReferences key={referenceKey} sourceKey={referenceKey}
-            product={prepared?.frame?.presetContext ?? { category: "unknown", evidence: [] }} presetId={activePresetId} aspectRatio={draft.aspectRatio} disabled={classicCinematic || busy || preparingQuote || !preparedFrame}
+            <VideoProductReferences key={referenceKey}
+            product={presetProduct} presetId={activePresetId} aspectRatio={draft.aspectRatio} disabled={classicCinematic || busy || preparingQuote || !preparedFrame}
             onBusyChange={handleReferenceBusy}
             onChange={refs => { setReferenceState({ key: referenceKey, refs }); setDirector(null); setSubmissionQuote(null); setConfirmedReceipt(null); }} />
             </div>
@@ -504,22 +511,32 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
           promptEnabled={false}
           presetControls={draft.creativeMode === "preset" ? <VideoDirectorPresetSelector presetId={presetId}
             disabled={busy}
-            product={preparedFrame?.presetContext}
+            product={presetProduct}
             analysisStatus={productAnalysisStatus}
             onChange={nextPresetId => {
               setPresetId(nextPresetId); setDirector(null); setSubmissionQuote(null); setConfirmedReceipt(null);
             }} /> : null}
+          shotModeControls={<fieldset className={styles.controlSection} disabled={busy || preparingQuote || referenceBusy || restoringJob || submissionUsed || Boolean(jobId)}>
+            <legend><span className={styles.stepNumber} aria-hidden="true">03</span>{t("director.shotMode")}</legend>
+            <div className={styles.compactOptions}>{(["single", "multi"] as const).map(mode => <label key={mode}>
+              <input type="radio" name="video-director-mode" value={mode} checked={shotMode === mode}
+                onChange={() => {
+                  dispatch({ type: "set-shot-mode", mode });
+                  setDirector(null); setSubmissionQuote(null); setConfirmedReceipt(null);
+                }} />
+              <span>{t(`director.${mode}`)}</span>
+            </label>)}</div>
+          </fieldset>}
           directorControls={shotMode ?
             <VideoDirectorPanel key={directorPanelKey} draft={generationDraft} draftKey={directorDraftKey}
               presetId={activePresetId} shotMode={shotMode}
-              planDisabled={Boolean(directorPlanDisabledReason)} disabledReason={directorPlanDisabledReason}
+              planDisabled={Boolean(directorPlanDisabledReason)} disabledReason={directorPlanDisabledReason} dialDetailRequired={dialDetailRequired}
               onPrepared={(selection, productContext, analysisStatus) => {
                 setDirector(selection ? { key: directorDraftKey, selection } : null);
                 setSubmissionQuote(null);
                 setConfirmedReceipt(null);
                 if (preparedFrame && productContext && analysisStatus) {
-                  setPrepared(current => current?.frame ? { ...current, frame: { ...current.frame, presetContext: productContext } } : current);
-                  setProductAnalysisState({ sourceAssetId: preparedFrame.source.sourceAssetId, status: analysisStatus });
+                  setProductAnalysisState({ sha256: preparedFrame.sourceSha256, status: analysisStatus, product: productContext });
                 }
               }} /> : null}
           advancedSettings={<details className={styles.advancedSettings}>
@@ -594,7 +611,10 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
           onPromptChange={setPrompt}
           onQualityChange={(quality) => dispatch({ type: "set-quality", quality })}
           onAspectRatioChange={(aspectRatio) => dispatch({ type: "set-aspect-ratio", aspectRatio })}
-          onDurationChange={(duration) => dispatch({ type: "set-duration", duration })}
+          onDurationChange={(duration) => {
+            dispatch({ type: "set-duration", duration });
+            setDirector(null); setSubmissionQuote(null); setConfirmedReceipt(null);
+          }}
           onGenerate={handleGenerate}
         />
       </div>

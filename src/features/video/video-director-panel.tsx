@@ -77,11 +77,12 @@ export function VideoDirectorPresetSelector({ presetId, disabled, onChange, prod
   </section>;
 }
 
-export function VideoDirectorPanel({ draft, draftKey, presetId, planDisabled, disabledReason, onPrepared, shotMode }: {
+export function VideoDirectorPanel({ draft, draftKey, presetId, planDisabled, disabledReason, dialDetailRequired = false, onPrepared, shotMode }: {
   draft: VideoGenerationDraft;
   draftKey: string;
   presetId?: VideoPresetId;
   planDisabled: boolean;
+  dialDetailRequired?: boolean;
   disabledReason: "planLocked" | "planNeedsReferences" | "planNeedsSource" | "planNeedsPreparedSource" | "planNeedsReadyDraft" | null;
   onPrepared(selection: VideoDirectorSelection | null, productContext?: VideoPresetProduct, analysisStatus?: VideoProductAnalysisDisplayStatus): void;
   shotMode: VideoShotMode;
@@ -93,8 +94,9 @@ export function VideoDirectorPanel({ draft, draftKey, presetId, planDisabled, di
   const [prepared, setPrepared] = useState<PreparedPlan | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(false);
+  const [dialDetailRejected, setDialDetailRejected] = useState(false);
   const [referencesUnverified, setReferencesUnverified] = useState(false);
-  const [referenceErrorReason, setReferenceErrorReason] = useState<"invalid_review" | "unavailable" | "unverified">("unverified");
+  const [referenceErrorReason, setReferenceErrorReason] = useState<"invalid_review" | "unavailable" | "unverified" | "quota">("unverified");
   const inFlight = useRef(false);
   const active = useRef(true);
   const selectionVersion = useRef(0);
@@ -106,18 +108,18 @@ export function VideoDirectorPanel({ draft, draftKey, presetId, planDisabled, di
     if (previousShotMode.current === shotMode) return;
     previousShotMode.current = shotMode;
     selectionVersion.current++;
-    setPrepared(null); setError(false);
+    setPrepared(null); setError(false); setDialDetailRejected(false);
   }, [shotMode]);
   useEffect(() => {
     if (previousPresetId.current === presetId) return;
     previousPresetId.current = presetId;
     selectionVersion.current++;
-    setPrepared(null); setError(false);
+    setPrepared(null); setError(false); setDialDetailRejected(false);
   }, [presetId]);
 
   async function prepare() {
-    if (inFlight.current || planDisabled) return;
-    inFlight.current = true; setBusy(true); setError(false); setReferencesUnverified(false);
+    if (inFlight.current || planDisabled || dialDetailRequired) return;
+    inFlight.current = true; setBusy(true); setError(false); setReferencesUnverified(false); setDialDetailRejected(false);
     setPrepared(null); onPrepared(null);
     const version = selectionVersion.current;
     let existingReceipt: string | undefined;
@@ -129,6 +131,10 @@ export function VideoDirectorPanel({ draft, draftKey, presetId, planDisabled, di
     try {
       const result = await prepareVideoDirectorAction(draft, presetId, shotMode, existingReceipt);
       if (!active.current || version !== selectionVersion.current) return;
+      if (result.status !== "success" && "productContext" in result && result.productContext) {
+        onPrepared(null, result.productContext, result.analysisStatus);
+      }
+      if (result.status === "dial_detail_required") { setDialDetailRejected(true); return; }
       if (result.status === "references_unverified") { setReferenceErrorReason(result.reason); setReferencesUnverified(true); setError(true); return; }
       if (result.status !== "success" || result.plan.presetId !== (presetId ?? "custom") || result.plan.shotMode !== shotMode) {
         setError(true); return;
@@ -142,21 +148,22 @@ export function VideoDirectorPanel({ draft, draftKey, presetId, planDisabled, di
 
   return <section className={styles.controlSection} aria-labelledby="video-director-plan-heading" aria-busy={busy}>
     <div className={styles.controlHeading}>
-      <h2 id="video-director-plan-heading"><span className={styles.stepNumber} aria-hidden="true">04</span>{t(signaturePlan ? "signaturePlan" : "planHeading")}</h2>
+      <h2 id="video-director-plan-heading"><span className={styles.stepNumber} aria-hidden="true">05</span>{t(signaturePlan ? "signaturePlan" : "planHeading")}</h2>
       <p>{t("planDescription")}</p>
     </div>
     {prepared ? <div className={styles.planReady} role="status"><span aria-hidden="true">✓</span>{signaturePlan ? t("signaturePlan") : t("planReady", { count: prepared.plan.shots.length })}</div> : null}
     <p className={styles.fieldDescription}>{t("automaticPlanning")}</p>
     {prepared ? <p className={styles.fieldDescription} role="status" aria-live="polite">{t(`library.analysis.${prepared.analysisStatus}`)}</p> : null}
     {disabledReason ? <p className={styles.fieldDescription} role="status">{t(disabledReason)}</p> : null}
+    {dialDetailRequired || dialDetailRejected ? <p id="video-director-dial-required" className={styles.fieldDescription} role={dialDetailRejected ? "alert" : "status"}>{referenceT("dialRequired")}</p> : null}
     <div className={styles.planActions}>
-      <Button variant="primary" disabled={planDisabled || busy} onClick={() => void prepare()}>
+      <Button variant="primary" disabled={planDisabled || busy || dialDetailRequired} aria-describedby={dialDetailRequired || dialDetailRejected ? "video-director-dial-required" : undefined} onClick={() => void prepare()}>
         {busy ? <span className={styles.generateSpinner} aria-hidden="true" /> : null}
         {t(busy ? "preparing" : prepared ? "prepareAgain" : "prepare")}
       </Button>
     </div>
     <div aria-live="polite">
-      {error ? <p className={styles.errorMessage} role="alert">{t(referencesUnverified ? referenceErrorReason === "invalid_review" ? "referenceReviewInvalid" : referenceErrorReason === "unavailable" ? "referenceReviewUnavailable" : "referencesUnverified" : "error")}</p> : null}
+      {error ? <p className={styles.errorMessage} role="alert">{t(referencesUnverified ? referenceErrorReason === "invalid_review" ? "referenceReviewInvalid" : referenceErrorReason === "quota" ? "referenceReviewQuota" : referenceErrorReason === "unavailable" ? "referenceReviewUnavailable" : "referencesUnverified" : "error")}</p> : null}
       {prepared ? <article className={styles.directorPlan}>
         <h3>{t(signaturePlan ? "signaturePlan" : prepared.plan.origin === "ai" ? "aiPlan" : "fallbackPlan")}</h3>
         {!signaturePlan && prepared.plan.origin === "fallback" ? <p>{t("fallbackNotice")}</p> : null}

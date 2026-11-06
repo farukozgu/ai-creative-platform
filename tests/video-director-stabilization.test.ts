@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { klingElementReferences, parseReferenceReviews } from "../src/lib/video-generation/product-references";
+import * as referencePolicy from "../src/lib/video-generation/product-reference-policy";
+import { safeOpenAIErrorCode } from "../src/lib/video-generation/diagnostics";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { runInNewContext } from "node:vm";
@@ -22,7 +24,7 @@ import { buildFalVideoRequestInput } from "../src/lib/video-generation/fal-reque
 import type { ProductProfile } from "../src/lib/product-understanding/product-profile";
 import type * as adapter from "../src/lib/video-director/openai-director";
 import type * as runtime from "../src/lib/video-director/runtime";
-import { directorProducts, directorFixtureInput } from "./fixtures/video-director-fixtures";
+import { directorProducts, directorFixtureInput, providerFixtureShots } from "./fixtures/video-director-fixtures";
 import { frontBackInput, frontBackResponse } from "./fixtures/video-front-back-fixture";
 import { customFourShotBrief, customFourShotFixture } from "./fixtures/video-custom-brief-fixture";
 import { customCreativeIntent, numberedCreativeBeats, executableCustomCamera, normalizeCustomCamera } from "../src/lib/video-director/custom-brief";
@@ -59,37 +61,21 @@ function selected(profile: ProductProfile, presetId: core.VideoDirectorInput["pr
 const scenarios = [
   { input: selected(watch, "cinematic-dial", "multi", 10),
     summary: "A cinematic wristwatch study on a black background.",
-    intent: "Reveal the automatic watch face and stainless-steel watchband with sculpted light.", detail: /blue dial/ },
+    intent: "Reveal the automatic watch face and stainless-steel watchband with sculpted light." },
   { input: selected(directorProducts[5], "product-spotlight", "multi", 10),
     summary: "A graphic footwear campaign with a clean white background.",
-    intent: "Study the white trainer silhouette and woven upper, then settle into a hero view.", detail: /woven upper/ },
+    intent: "Study the white trainer silhouette and woven upper, then settle into a hero view." },
   { input: selected(directorProducts[3], "macro-detail-reveal", "single", 5),
     summary: "Ring light shapes a cinematic product study.",
-    intent: "Hold on the silver ring and its oval stone setting.", detail: /stone setting/ },
+    intent: "Hold on the silver ring and its oval stone setting." },
   { input: selected(eyewear, "optical-lines", "multi", 10),
     summary: "A graphic sunglasses campaign on a white backdrop.",
-    intent: "Use silk-smooth camera motion to study the black eyewear silhouette.", detail: /frame rim/ },
+    intent: "Use silk-smooth camera motion to study the black eyewear silhouette." },
 ];
 
-/** Independent authored provider responses: no fallback plan supplies the shots. */
-function responseFor(scenario: typeof scenarios[number]) {
-  const { input } = scenario;
-  const evidence = directorProductContext(input.profile).evidence;
-  const detail = evidence.find(item => scenario.detail.test(item.detail))!;
-  assert.ok(detail);
-  const count = input.shotMode === "single" ? 1 : 3;
-  return { summary: scenario.summary, intent: scenario.intent,
-    intentContract: creative.interpretCreativeIntent(input.draft.prompt, evidence, input.shotMode, input.draft.cameraMovement),
-    shots: Array.from({ length: count }, (_, index) => ({
-      durationSeconds: count === 1 ? 5 : [3, 4, 3][index],
-      purpose: (["hero-reveal", "macro-detail", "final-hero"] as const)[index],
-      focus: `verified-evidence:${detail.id}`,
-      camera: ["Slow dolly-in", "Locked close framing", "Slow pull-back"][index],
-      composition: ["Full product in negative space", "Close source-facing detail", "Complete product with clear margins"][index],
-      lighting: ["Soft rim light", "Light traces the visible relief", "Soft side light"][index],
-      motion: "Product stays still", pace: ["Measured opening", "Patient detail hold", "Calm final hold"][index],
-    })),
-  };
+function responseFor({ input, summary, intent }: typeof scenarios[number]) {
+  return { summary, intent, intentContract: core.presetCreativeIntent(input, directorProductContext(input.profile).evidence),
+    shots: providerFixtureShots(input) };
 }
 
 function wireResponse<T extends { intentContract: unknown; summary: unknown; intent: unknown; referenceReviews?: { index: number }[] }>(plan: T) {
@@ -169,11 +155,12 @@ function mockAdapter(output: () => { status: string; output_text?: string; outpu
   diagnostics?: Array<Record<string, unknown>>, requests?: Array<Record<string, unknown>>, sdkClient?: OpenAI) {
   return isolated<typeof adapter>("src/lib/video-director/openai-director.ts", {
     "../video-generation/product-references": { parseReferenceReviews },
+    "../video-generation/product-reference-policy": referencePolicy,
     "@/lib/openai/client": { getOpenAIVideoStudioAnalysisClient: (_model: string, purpose: string) => sdkClient ?? ({ responses: { create: async (request: Record<string, unknown>) => { requests?.push({ ...request, purpose }); return output(); } } }) },
     "@/lib/openai/structured-response": { structuredResponseText: (format: unknown) => ({ format }) },
     "@/lib/openai/response-telemetry": { attachOpenAIResponseTelemetry: (plan: unknown) => plan },
     "@/lib/generation/prompts/prompt-enhancer-config": { getPromptEnhancementModel: () => "gpt-4o-mini" },
-    "@/lib/video-generation/diagnostics": { logVideoDiagnostic: (_id: string, stage: string, result: string, fields: Record<string, unknown>) => diagnostics?.push({ stage, result, ...fields }), safeOpenAIStatus: () => ({}) },
+    "@/lib/video-generation/diagnostics": { logVideoDiagnostic: (_id: string, stage: string, result: string, fields: Record<string, unknown>) => diagnostics?.push({ stage, result, ...fields }), safeOpenAIErrorCode, safeOpenAIStatus: () => ({}) },
     "./core": core, "./plan-contract": contract, "./kling-compiler": compiler, "./presets": presets,
     "./product-context": { directorProductContext }, "./preset-library": { safePresetStrategy }, "./creative-request": creative,
     "./preset-quality-directions": qualityDirections,
@@ -284,10 +271,10 @@ test("invalid plans reject at the correct business rule and exact field", async 
     { value: { ...good, shots: good.shots.map((s, i) => i ? s : { ...s, focus: "invented surface grain" }) }, path: "$.shots[0].focus", code: "focus_not_evidence_bound" },
     { value: { ...good, shots: good.shots.map((s, i) => i ? s : { ...s, evidenceRefs: [999] }) }, path: "$.shots[0].evidenceRefs", code: "invalid_evidence_reference" },
     { value: { ...good, shots: good.shots.map((s, i) => i ? s : { ...s, camera: "Pan left and pull back" }) }, path: "$.shots[0].camera", code: "conflicting_camera_directions" },
-    { value: { ...good, shots: good.shots.map(s => ({ ...s, durationSeconds: 3 })) }, path: "$.shots[*].durationSeconds", code: "total_duration_mismatch" },
+    { value: { ...good, shots: good.shots.map(s => ({ ...s, durationSeconds: 4 })) }, path: "$.shots[*].durationSeconds", code: "total_duration_mismatch" },
     { value: { ...good, shots: good.shots.map((s, i) => i ? s : { ...s, durationSeconds: 2.5 }) }, path: "$.shots[0]", code: "invalid_shot_fields" },
-    { value: { ...good, shots: good.shots.map(s => ({ ...s, purpose: "hero-reveal" })) }, path: "$.shots[*].purpose", code: "repeated_shot_purpose" },
-    { value: { ...good, shots: good.shots.map(s => ({ ...s, camera: "Slow dolly-in" })) }, path: "$.shots[*].camera", code: "repeated_push_in" },
+    { value: { ...good, shots: good.shots.map(s => ({ ...s, purpose: "hero-reveal" })) }, path: "$.shots", code: "fixed_macro_template_mismatch" },
+    { value: { ...good, shots: good.shots.map(s => ({ ...s, camera: "Slow dolly-in" })) }, path: "$.shots", code: "fixed_macro_template_mismatch" },
     { value: { ...good, intentContract: { ...good.intentContract, camera: "pan-right" } }, path: "$.intentContract", code: "intent_contract_mismatch" },
     { value: { ...good, shots: good.shots.map((s, i) => i ? s : { ...s, motion: "Rotate into the rear view" }) }, path: "$.shots[0].motion", code: "unsafe_product_action" },
     { value: { ...good, shots: good.shots.map((s, i) => i ? s : { ...s, composition: "Cut to a macro view" }) }, path: "$.shots[0].composition", code: "internal_scene_cut" },
@@ -310,9 +297,11 @@ test("canonical focus is idempotent and summary/intent are never joined into a n
   assert.ok(plan, "silver and strap in separate creative fields are not a silver-strap claim");
   assert.deepEqual(core.parseDirectorOutput(plan, scenario.input), plan);
   const generic = { ...good, shots: good.shots.map(shot => ({ ...shot, focus: contract.DIRECTOR_GENERIC_FOCUS_VALUES[0] })) };
-  assert.ok(core.parseDirectorOutput(generic, scenario.input));
-  const hold = { ...good, shots: good.shots.map((shot, i) => i ? shot : { ...shot, camera: "Slow dolly-in, then a locked final hold" }) };
-  assert.ok(core.parseDirectorOutput(hold, scenario.input), "a terminal hold is not a conflicting camera trajectory");
+  assert.equal(core.parseDirectorOutput(generic, scenario.input), null, "generic focus cannot replace the required fixed detail slot");
+  const input = selected(watch, "cinematic-hero", "single", 10);
+  const flexible = responseFor({ ...scenario, input });
+  const hold = { ...flexible, shots: [{ ...flexible.shots[0], camera: "Slow dolly-in, then a locked final hold" }] };
+  assert.ok(core.parseDirectorOutput(hold, input), "a terminal hold is not a conflicting camera trajectory");
 });
 
 test("reference-review schema agrees with matched/uncertain business rules", () => {
@@ -342,7 +331,13 @@ test("provider review slots bind two images to exactly two server-owned ordered 
   const input = { ...scenario.input, draft: { ...scenario.input.draft, productReferences: refs }, referenceImages: refs.map(ref => ({ prepared: pixels, sourceSha256: ref.sha256, purpose: ref.purpose })) };
   const wire = wireResponse(responseFor(scenario));
   let slots: Record<string, unknown> = { r0: { status: "matched", view: "front", reason: "Same product", details: [] }, r1: { status: "matched", view: "back", reason: "Same product rear", details: ["rear panel outline"] } };
-  const api = mockAdapter(() => ({ status: "completed", output_text: JSON.stringify({ ...wire, referenceReviews: slots, shots: wire.shots.map(shot => ({ ...shot, referenceIndex: null })) }) }));
+  const requests: Array<Record<string, unknown>> = [];
+  const api = mockAdapter(() => {
+    const { format } = requests.at(-1)!.text as { format: { schema: Schema } };
+    const response = format.schema.required?.includes("referenceReviews") ? { referenceReviews: slots } : wire;
+    if (response === wire) assertSchema(response, format.schema);
+    return { status: "completed", output_text: JSON.stringify(response) };
+  }, undefined, requests);
   const schema = api.buildDirectorRequest(input, undefined, true).schema;
   assert.deepEqual([...schema.properties.referenceReviews!.required], ["r0", "r1"]);
   const plan = await api.createOpenAIVideoPlan(input, pixels);
@@ -434,22 +429,103 @@ test("selected camera, requested evidence and sequence use the same schema and r
   const scenario = scenarios[0];
   const input = { ...scenario.input, draft: { ...scenario.input.draft, cameraMovement: "static" as const,
     prompt: "Pan right and keep the blue dial sharp." } };
-  const candidate = responseFor({ ...scenario, input });
-  candidate.shots = candidate.shots.map(shot => ({ ...shot, camera: "Locked camera", focus: `verified-evidence:${candidate.intentContract.focusEvidenceId}` }));
   const api = mockAdapter(() => ({ status: "completed", output_text: "{}" }));
+  const fallback = core.fallbackDirectorPlan(input);
+  const { summary, intent, intentContract } = fallback;
+  const candidate = { summary, intent, intentContract, shots: fallback.shots.map(({ evidenceRefs, ...shot }) => ({
+    ...shot, focus: evidenceRefs.length ? `verified-evidence:${evidenceRefs[0]}` : shot.focus,
+  })) };
   assertSchema(wireResponse(candidate), api.buildDirectorRequest(input).schema as Schema);
   const plan = core.parseDirectorOutput(candidate, input);
   assert.ok(plan);
   assert.equal(plan.intentContract.camera, "static");
   assert.ok(plan.shots.every(shot => /locked/i.test(shot.camera)));
+  const detail = directorProductContext(input.profile).evidence.find(item => item.detail === "blue dial")!;
+  assert.equal(plan.intentContract.focusEvidenceId, detail.id);
+  assert.ok(plan.shots.some(shot => shot.focus === detail.detail && shot.evidenceRefs.includes(detail.id)));
   const wrongFocus = { ...candidate, shots: candidate.shots.map(shot => ({ ...shot, focus: contract.DIRECTOR_GENERIC_FOCUS_VALUES[0] })) };
   const failures: core.DirectorValidationFailure[] = [];
   assert.equal(core.parseDirectorOutput(wrongFocus, input, failure => failures.push(failure)), null);
-  assert.equal(failures[0].reasonCode, "requested_focus_not_preserved");
+  assert.equal(failures[0].reasonCode, "fixed_macro_template_mismatch");
   const sequence = selected(watch, "cinematic-dial", "single", 5);
   sequence.draft.prompt = "Start close on the blue dial then finish wide.";
+  const pullBack = core.fallbackDirectorPlan(sequence);
+  assert.deepEqual(core.cameraKinds(pullBack.shots[0].camera), ["dolly-out"]);
+  assert.equal(pullBack.shots[0].focus, "blue dial");
+  assert.doesNotThrow(() => core.compileDirectorPlan(pullBack, sequence));
   sequence.draft.cameraMovement = "static";
-  assert.ok(core.compileDirectorPlan(core.fallbackDirectorPlan(sequence), sequence));
+  const locked = core.fallbackDirectorPlan(sequence);
+  assert.deepEqual(core.cameraKinds(locked.shots[0].camera), ["static"]);
+  assert.equal(locked.shots[0].focus, "blue dial");
+  assert.doesNotThrow(() => core.compileDirectorPlan(locked, sequence));
+});
+
+test("legacy fixed slots share exact schema and runtime values across supported shot modes", () => {
+  const api = mockAdapter(() => ({ status: "completed", output_text: "{}" }));
+  for (const [presetId, mode, duration] of [
+    ["luxury-fashion-film", "single", 5],
+    ["material-detail", "single", 5],
+    ["macro-detail-reveal", "multi", 5],
+    ["macro-stitching", "single", 10],
+  ] as const) {
+    const input = selected(directorProducts[0], presetId, mode, duration);
+    for (const explicit of [false, true]) {
+      input.draft.cameraMovement = explicit ? "pan-right" : "auto";
+      input.draft.prompt = explicit ? "Keep the front belt knot sharp" : "";
+      const fallback = core.fallbackDirectorPlan(input);
+      const request = api.buildDirectorRequest(input);
+      const schema = request.schema as Schema;
+      const { summary, intent, intentContract } = fallback;
+      const candidate = { summary, intent, intentContract, shots: fallback.shots.map(({ evidenceRefs, ...shot }) => ({
+        ...shot, focus: evidenceRefs.length ? `verified-evidence:${evidenceRefs[0]}` : shot.focus,
+      })) };
+      assertSchema(wireResponse(candidate), schema);
+      assert.deepEqual(core.parseDirectorOutput(candidate, input)?.shots, fallback.shots, presetId);
+      if (explicit) {
+        assert.ok(candidate.shots.every(shot => core.cameraKinds(shot.camera).join() === "pan-right"));
+        const belt = directorProductContext(input.profile).evidence.find(item => item.detail === "front belt knot")!;
+        assert.ok(candidate.shots.some(shot => shot.focus === `verified-evidence:${belt.id}`));
+      }
+
+      const otherEvidence = directorProductContext(input.profile).evidence.find(item =>
+        `verified-evidence:${item.id}` !== candidate.shots[0].focus)!;
+      for (const change of [
+        { lighting: "Soft diffuse studio light" },
+        { durationSeconds: duration - 1 },
+        { focus: `verified-evidence:${otherEvidence.id}` },
+        { camera: "Pan left within the existing visible product view" },
+        { camera: "Orbit 360 degrees into the rear view" },
+      ]) {
+        const modified = { ...candidate, shots: candidate.shots.map((shot, index) => index ? shot : { ...shot, ...change }) };
+        assert.throws(() => assertSchema(wireResponse(modified), schema));
+        assert.equal(core.parseDirectorOutput(modified, input), null);
+        assert.equal(core.parseDirectorOutput({ ...fallback, shots: modified.shots }, input), null);
+      }
+      const key = receipts.directorCacheKey("owner", "hash", "offline", input);
+      const signed = receipts.sealDirectorPlan(key, fallback, "offline-secret", 1000);
+      assert.deepEqual(receipts.openDirectorPlan(signed, key, input, "offline-secret", 2000), fallback);
+    }
+  }
+});
+
+test("historical signed fixed plans retain previously allowed verified focus", () => {
+  const input = scenarios[0].input;
+  const fallback = core.fallbackDirectorPlan(input);
+  const detailIndex = fallback.shots.findIndex(shot => shot.evidenceRefs.length);
+  assert.ok(detailIndex >= 0);
+  const alternate = directorProductContext(input.profile).evidence.find(item =>
+    /dial|marker|indices/i.test(item.detail) && !fallback.shots[detailIndex].evidenceRefs.includes(item.id))!;
+  assert.ok(alternate);
+  const shots = fallback.shots.map((shot, index) => index === detailIndex
+    ? { ...shot, focus: alternate.detail, evidenceRefs: [alternate.id] } : shot);
+  const historical = { ...fallback, origin: "ai" as const, shots };
+  const { summary, intent, intentContract } = historical;
+  assert.equal(core.parseDirectorOutput({ summary, intent, intentContract, shots }, input), null);
+  const key = receipts.directorCacheKey("owner", "hash", "offline", input);
+  const signed = receipts.sealDirectorPlan(key, historical, "offline-secret", 1000);
+  const opened = receipts.openDirectorPlan(signed, key, input, "offline-secret", 2000);
+  assert.deepEqual(opened, historical);
+  assert.doesNotThrow(() => core.compileDirectorPlan(opened!, input));
 });
 
 test("server field bounds preserve the same primary budget with accuracy references", () => {
@@ -458,7 +534,7 @@ test("server field bounds preserve the same primary budget with accuracy referen
   assert.equal(evidenceDetail.length, 100);
   const profile = { ...watch, identityCriticalAttributes: [{ attribute: evidenceDetail, rationale: "visible", regions: [] }] };
   for (const marked of [false, true]) for (const references of [false, true]) for (const cameraMovement of ["auto", "static", "pan-right"] as const) {
-    const input = selected(profile, "cinematic-dial", "multi", 10);
+    const input = selected(profile, "cinematic-hero", "multi", 5);
     input.draft.cameraMovement = cameraMovement;
     if (marked) input.draft.criticalRegion = { x: 0.1, y: 0.1, width: 0.2, height: 0.2, declaredText: "" };
     if (references) input.draft.productReferences = [{ source: { kind: "uploaded-image", sourceAssetId: "10000000-0000-4000-8000-000000000001" }, sha256: "a".repeat(64), purpose: "detail" }];
@@ -470,7 +546,7 @@ test("server field bounds preserve the same primary budget with accuracy referen
     const candidate = { summary: "A source-facing cinematic study", intent: "Resolve the existing form with measured light",
       intentContract: creative.interpretCreativeIntent("", directorProductContext(profile).evidence, "multi", cameraMovement),
       ...(references ? { referenceReviews: [{ index: 0, status: "matched", view: "unknown", reason: "Consistent visible identity", details: [] }] } : {}),
-      shots: ["hero-reveal", "macro-detail", "final-hero"].map((purpose, index) => ({ ...fields, ...(references ? { referenceIndex: null } : {}), purpose, durationSeconds: [3, 4, 3][index],
+      shots: ["hero-reveal", "macro-detail", "final-hero"].map((purpose, index) => ({ ...fields, ...(references ? { referenceIndex: null } : {}), purpose, durationSeconds: [2, 2, 1][index],
         focus: `verified-evidence:${id}`, composition: String(fields.composition).slice(1) + String(index) })),
     };
     const { referenceReviews: _reviews, ...primaryWire } = wireResponse(candidate);
@@ -495,13 +571,18 @@ test("provider, parsing and compiler failures retain their actual stage", async 
     assert.ok(events.some(event => event.stage === stage && event.reasonCode === reason));
     assert.ok(!events.some(event => event.stage === "director_business_validation"));
   }
-  const candidate = responseFor(scenario);
+  const input = selected(watch, "cinematic-hero", "multi", 5);
+  const candidate = responseFor({ ...scenario, input });
+  candidate.shots[0].camera = "Locked framing. ".repeat(6).trim();
   candidate.shots[0].composition = "Clear space ".repeat(8);
   candidate.shots[0].lighting = "Soft light ".repeat(9);
   candidate.shots[0].motion = "Product stays still. ".repeat(4);
   candidate.shots[0].pace = "Measured pace. ".repeat(6);
+  const parsed = core.parseDirectorOutput(candidate, input);
+  assert.ok(parsed);
+  assert.throws(() => core.compileDirectorPlan(parsed, input), /kling_scene_prompt_too_long/);
   const events: core.DirectorPlanningDiagnostic[] = [];
-  const plan = await core.directVideoWithClient(scenario.input, { createPlan: async () => candidate }, event => events.push(event));
+  const plan = await core.directVideoWithClient(input, { createPlan: async () => candidate }, event => events.push(event));
   assert.equal(plan.origin, "fallback");
   assert.ok(events.some(event => event.stage === "plan_integrity_validation" && event.reasonCode === "kling_scene_prompt_too_long"));
 });
@@ -690,7 +771,7 @@ test("cached fallback never repeats its single charged repair", async () => {
 });
 
 test("one evidence repair uses the same guarded SDK and reserves quota for both attempts", async () => {
-  const input = scenarios[0].input;
+  const input = selected(watch, "cinematic-hero", "single", 10);
   const owner = "10000000-0000-4000-8000-000000000001";
   const env = { VIDEO_STUDIO_ENABLED: "true", VIDEO_STUDIO_ACCESS_MODE: "authenticated" };
   const image = await sharp({ create: { width: 16, height: 16, channels: 3, background: "white" } }).png().toBuffer();
@@ -700,12 +781,16 @@ test("one evidence repair uses the same guarded SDK and reserves quota for both 
     const guarded = createOpenAIBetaFetch({ env, authenticate: async () => owner,
       policyForUser: () => getVideoStudioOpenAIPolicy(owner, "gpt-4o-mini", env), analysisMaxOutputTokens: 4000,
       reserve: async () => { reservations++; return true; }, send: async (_url, init) => {
-        requests.push(JSON.parse(String(init?.body)));
+        const request = JSON.parse(String(init?.body));
+        requests.push(request);
         calls++;
-        const candidate = responseFor(scenarios[0]);
+        const candidate = responseFor({ ...scenarios[0], input });
+        // Free creative fields pass the schema but still have to pass evidence validation.
         if (calls === 1 || !accepted) candidate.shots[0].motion = "Light traces the seam";
+        const wire = wireResponse(candidate);
+        assertSchema(wire, request.text.format.schema);
         return Response.json({ object: "response", status: "completed", output: [{ type: "message", status: "completed",
-          content: [{ type: "output_text", text: JSON.stringify(wireResponse(candidate)) }] }] });
+          content: [{ type: "output_text", text: JSON.stringify(wire) }] }] });
       } });
     const sdk = new OpenAI({ apiKey: "test-only", maxRetries: 0, fetch: guarded });
     const api = mockAdapter(() => { throw new Error("unused"); }, undefined, undefined, sdk);
@@ -1452,8 +1537,8 @@ test("CM-1.5 SDK-wrapped local budget guard explains status/code-null errors wit
   await assert.rejects(() => core.directVideoWithClient(input, { createPlan: async () => original,
     repairPlan: (value, failure) => api.createOpenAIActionRepairs(value, pixels, failure, "offline") }), /custom_director_unavailable/);
   assert.equal(sends, 0);
-  assert.equal(logs.find(log => log.category === "local_guard")?.errorClass, "OpenAIBudgetError");
-  assert.equal(logs.find(log => log.category === "local_guard")?.code, "budget_unavailable");
+  assert.equal(logs.find(log => log.category === "local_budget")?.errorClass, "OpenAIBudgetError");
+  assert.equal(logs.find(log => log.category === "local_budget")?.code, "budget_unavailable");
   assert.doesNotMatch(JSON.stringify(logs), /private diagnostic context/);
 });
 

@@ -12,6 +12,7 @@ import { videoDraftHash } from "../src/lib/video-generation/request-identity";
 import { shouldRestoreApprovedVideoJob } from "../src/lib/video-generation/progress-phase";
 import { summarizeVideoPayload } from "../src/lib/video-generation/payload-summary";
 import { validateKlingMultiPrompt } from "../src/lib/video-generation/fal-request";
+import { directorSelectionId } from "../src/lib/video-director/core";
 import type { VideoGenerationDraft } from "../src/lib/video-generation/types";
 import type * as actions from "../src/app/[locale]/dashboard/video/generation-actions";
 import type { VideoBetaBudget } from "../src/lib/video-generation/beta-runtime";
@@ -58,7 +59,7 @@ function fixture() {
     "@/lib/video-fidelity/pricing": { quoteVideoFidelity: () => null },
     "@/lib/video-fidelity/reviews": { videoFidelitySchemaReady: async () => false },
     "@/lib/video-director/runtime": { readVerifiedDirectorPlan: (_owner: string, _source: string, input: { shotMode: string }) => planValid ? ({ version: "fixture", shotMode: input.shotMode, shots: [{ camera: "locked" }, { camera: "detail" }] }) : null },
-    "@/lib/video-director/core": { compileDirectorPlan: (_plan: unknown, input: { shotMode: string; draft: VideoGenerationDraft }) => ({ prompt: "safe", negativePrompt: "safe", cfgScale: 0.5, ...(input.shotMode === "multi" ? { multiPrompt: [{ prompt: "hero", duration: input.draft.durationSeconds === 10 ? "4" : "2" }, { prompt: detailPrompt, duration: input.draft.durationSeconds === 10 ? "6" : "3" }] } : {}) }) },
+    "@/lib/video-director/core": { directorSelectionId, compileDirectorPlan: (_plan: unknown, input: { shotMode: string; draft: VideoGenerationDraft }) => ({ prompt: "safe", negativePrompt: "safe", cfgScale: 0.5, ...(input.shotMode === "multi" ? { multiPrompt: [{ prompt: "hero", duration: input.draft.durationSeconds === 10 ? "4" : "2" }, { prompt: detailPrompt, duration: input.draft.durationSeconds === 10 ? "6" : "3" }] } : {}) }) },
   };
   const exports = {};
   const source = readFileSync("src/app/[locale]/dashboard/video/generation-actions.ts", "utf8");

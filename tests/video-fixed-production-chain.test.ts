@@ -46,7 +46,8 @@ test("24 presets × 12 categories × 5/10s × Single/Multi reach the actual Klin
     const expected = core.fallbackDirectorPlan(input);
     const request = api.buildDirectorRequest(input);
     const context = JSON.parse(request.context);
-    if (presetId !== "cinematic-hero") {
+    const quickCuts = presetId === "cinematic-hero" && shotMode === "multi" && durationSeconds === 10;
+    if (presetId !== "cinematic-hero" || quickCuts) {
       assert.ok(context.fixedShots, key);
       assert.equal(context.fixedShots.length, expected.shots.length, key);
       for (const [index, shot] of expected.shots.entries()) for (const field of ["purpose", "camera", "composition", "lighting", "motion", "pace", "durationSeconds"] as const) assert.equal(context.fixedShots[index][field], shot[field], `${key}/${field}`);

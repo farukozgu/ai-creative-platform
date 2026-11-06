@@ -61,8 +61,10 @@ export class VideoProductionHarness {
   private client = createClient("https://video-test.invalid", "fake-service-key", { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: (url, init) => this.http(url, init) } });
   readonly profile = structuredClone(directorProducts[2]);
   directorResponse?: unknown;
+  referenceReviewsResponse?: unknown;
   directorInputs: core.VideoDirectorInput[] = [];
-  analysisProfile?: import("../../src/lib/product-understanding/product-profile").ProductProfile;
+  referenceReviewInputs: core.VideoDirectorInput[] = [];
+  analysisProfile?: import("../../src/lib/product-understanding/product-profile").ProductProfile | null;
   analysisSourceIds: string[] = [];
   readonly env: Record<string, string> = { NODE_ENV: "development", FAL_KEY: "fake-fal-key", SUPABASE_SECRET_KEY: secret,
     VIDEO_STUDIO_ENABLED: "true", VIDEO_STUDIO_ACCESS_MODE: "allowlist", VIDEO_STUDIO_USER_IDS: videoTestOwner,
@@ -92,22 +94,11 @@ export class VideoProductionHarness {
   signDirector(draft: VideoGenerationDraft, origin: "ai" | "fallback") {
     const core = this.load<typeof import("../../src/lib/video-director/core")>("src/lib/video-director/core.ts");
     const receipt = this.load<typeof receipts>("src/lib/video-director/receipt.ts");
-    const context = this.load<typeof import("../../src/lib/video-director/product-context")>("src/lib/video-director/product-context.ts");
-    const intent = this.load<typeof import("../../src/lib/video-director/creative-request")>("src/lib/video-director/creative-request.ts");
     const input: core.VideoDirectorInput = { draft, profile: this.profile, presetId: "cinematic-dial", shotMode: draft.shotMode! };
-    const evidence = context.directorProductContext(input.profile).evidence;
-    const focus = evidence.find(item => /dial/.test(item.detail))!;
-    const durations = input.shotMode === "single" ? [draft.durationSeconds] : draft.durationSeconds === 5 ? [2, 3] : [3, 4, 3];
-    const reviews = draft.productReferences?.map((_, index) => ({ index, status: "matched" as const, reason: "Consistent visible identity", details: [] }));
-    const plan = origin === "fallback" ? core.fallbackDirectorPlan(input) : core.parseDirectorOutput({
-      summary: "A source-facing campaign with sculpted light", intent: "Study the visible watch face, then settle into a hero view",
-      intentContract: intent.interpretCreativeIntent(draft.prompt, evidence, input.shotMode, draft.cameraMovement),
-      ...(reviews?.length ? { referenceReviews: reviews } : {}),
-      shots: durations.map((durationSeconds, index) => ({ durationSeconds, purpose: ["hero-reveal", "macro-detail", "final-hero"][index],
-        focus: `verified-evidence:${focus.id}`, camera: ["Slow dolly-in", "Locked close framing", "Slow pull-back"][index],
-        composition: ["Full visible product", "Close view of the existing detail", "Complete product with clear margins"][index],
-        lighting: "Soft side light", motion: "Product stays still", pace: "Measured final hold" })),
-    }, input);
+    const reviews = draft.productReferences?.map((ref, index) => ({ index, status: "matched" as const,
+      view: ref.purpose === "side view" ? "side" as const : "detail" as const, reason: "Consistent visible identity", details: [] }));
+    const fixed = core.fallbackDirectorPlan(input, reviews);
+    const plan = origin === "fallback" ? fixed : core.parseDirectorOutput(fixed, input);
     assert.ok(plan);
     const source = this.objects.get(`video-source-images/${videoTestOwner}/${videoTestSource}/prepared-v1.png`)!;
     const key = receipt.directorCacheKey(videoTestOwner, fingerprint(source.bytes), "gpt-4o-mini", input);
@@ -120,12 +111,15 @@ export class VideoProductionHarness {
   signedQuote(draft: VideoGenerationDraft, cost: number, hash: string, now: number) {
     return this.load<typeof quotes>("src/lib/video-generation/quote-receipt.ts").sealVideoQuote(videoTestOwner, draft, cost, secret, now, hash);
   }
-  prepareDirector(input: core.VideoDirectorInput) {
+  prepareDirector(input: core.VideoDirectorInput, existingReceipt?: string) {
     return this.load<typeof import("../../src/app/[locale]/dashboard/video/director-actions")>("src/app/[locale]/dashboard/video/director-actions.ts")
-      .prepareVideoDirectorAction(input.draft, input.presetId === "custom" ? undefined : input.presetId, input.shotMode);
+      .prepareVideoDirectorAction(input.draft, input.presetId === "custom" ? undefined : input.presetId, input.shotMode, existingReceipt);
   }
   directorRequest(input: core.VideoDirectorInput, referenceOnly = false) {
     return this.load<typeof import("../../src/lib/video-director/openai-director")>("src/lib/video-director/openai-director.ts").buildDirectorRequest(input, undefined, referenceOnly);
+  }
+  attachReferenceReviews(plan: core.VideoDirectorPlan, input: core.VideoDirectorInput, reviews: import("../../src/lib/video-generation/product-references").ReferenceReview[]) {
+    return this.load<typeof import("../../src/lib/video-director/openai-director")>("src/lib/video-director/openai-director.ts").attachReviewedReferencesToPlan(plan, input, reviews);
   }
   snapshotHash(draft: VideoGenerationDraft, snapshot: VideoPreservationSnapshot) {
     return this.load<typeof import("../../src/lib/video-generation/payload-summary")>("src/lib/video-generation/payload-summary.ts").summarizeVideoPayload(draft, snapshot).snapshotHash;
@@ -171,12 +165,18 @@ export class VideoProductionHarness {
         if (name === "@/lib/supabase/admin") return { getSupabaseAdminClient: () => this.client };
         if (name === "@/lib/video-fidelity/availability") return { getVideoFidelityAnalysisAvailability: () => ({ enabled: false }) };
         if (name === "@/lib/video-fidelity/reviews") return { videoFidelitySchemaReady: async () => false };
-        if (name === "./openai-director" || name === "@/lib/video-director/openai-director") return { createOpenAIVideoPlan: (input: core.VideoDirectorInput) => {
-          if (!this.directorResponse) throw new Error("OpenAI calls forbidden in this fixture");
-          this.directorInputs.push(input); return this.directorResponse;
-        } };
-        if (name === "@/lib/video-generation/video-product-analysis" && this.analysisProfile) return { analyzeOwnedVideoProduct: async (input: { sourceAssetId: string }) => {
-          this.analysisSourceIds.push(input.sourceAssetId); return { status: "supported", profile: this.analysisProfile };
+        if (name === "./openai-director" || name === "@/lib/video-director/openai-director") return {
+          createOpenAIVideoPlan: (input: core.VideoDirectorInput) => {
+            if (!this.directorResponse) throw new Error("OpenAI calls forbidden in this fixture");
+            this.directorInputs.push(input); return this.directorResponse;
+          },
+          createOpenAIReferenceReviews: (input: core.VideoDirectorInput) => {
+            this.referenceReviewInputs.push(input);
+            return this.referenceReviewsResponse as import("../../src/lib/video-generation/product-references").ReferenceReview[];
+          },
+        };
+        if (name === "@/lib/video-generation/video-product-analysis" && this.analysisProfile !== undefined) return { analyzeOwnedVideoProduct: async (input: { sourceAssetId: string }) => {
+          this.analysisSourceIds.push(input.sourceAssetId); return { status: this.analysisProfile ? "supported" : "unsupported", profile: this.analysisProfile };
         } };
         if (name.startsWith("@/")) return this.load(`${name.replace("@/", "src/")}.ts`);
         if (name.startsWith(".")) return this.load(`${resolve(dirname(filename), name)}.ts`);

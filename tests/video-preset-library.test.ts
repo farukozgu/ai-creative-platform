@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { assertSourceMarksPreserved, isGoldenTenSecondMulti } from "./fixtures/video-fidelity-expectations";
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { VIDEO_DIRECTOR_VERSION, videoDirectorPresets, videoPresetIds, legacyVideoPresetIds } from "../src/lib/video-director/presets";
@@ -8,7 +9,7 @@ import { videoDraftHash } from "../src/lib/video-generation/request-identity";
 import { videoCategories, riskAlternatives } from "../src/lib/video-director/preset-contract";
 import { presetProduct, recommendVideoPresets } from "../src/lib/video-director/preset-recommendations";
 import { directorProductContext } from "../src/lib/video-director/product-context";
-import { compileDirectorPlan, fallbackDirectorPlan, parseDirectorOutput, type VideoDirectorInput } from "../src/lib/video-director/core";
+import { cameraKinds, compileDirectorPlan, fallbackDirectorPlan, parseDirectorOutput, type VideoDirectorInput } from "../src/lib/video-director/core";
 import { cinematicHeroSingleFiveSeconds, cinematicHeroSingleNegativeTerms } from "../src/lib/video-director/preset-library";
 import { productVideoNegativePrompt } from "../src/lib/video-generation/preservation";
 import { buildFalVideoRequestInput } from "../src/lib/video-generation/fal-request";
@@ -68,7 +69,9 @@ test("cinematic-hero single 5s validates steady framing and stationary product t
       const expected = productVideoNegativePrompt.replace("object rotation, ", "");
       assert.equal(result.negativePrompt, shotMode === "multi" ? expected.replace("scene cuts, ", "") : expected);
       if (presetId === "cinematic-hero") {
-        assert.equal(otherPlan.shots[0].camera, shotMode === "single" ? "Short lateral camera glide" : "Locked medium overview");
+        const opening = shotMode === "single" ? "Short lateral camera glide"
+          : durationSeconds === 5 ? "Locked medium overview" : "Locked medium hero framing";
+        assert.equal(otherPlan.shots[0].camera, opening);
       }
     }
 });
@@ -86,7 +89,7 @@ test("24 distinct executable strategies retain the three legacy IDs and cover ev
     assert.equal(new Set(p.shots.map(shot => shot.purpose)).size, 3);
     assert.equal(new Set(p.shots.map(shot => shot.camera + shot.composition)).size, 3);
     for (const risk of p.strategy.risks) assert.ok(riskAlternatives[risk].condition && riskAlternatives[risk].alternative);
-    if (legacyVideoPresetIds.some(legacy => legacy === id)) assert.equal(p.version, id === "macro-detail-reveal" ? 4 : 3);
+    if (legacyVideoPresetIds.some(legacy => legacy === id)) assert.equal(p.version, id === "macro-detail-reveal" ? 5 : 3);
   }
 });
 
@@ -130,7 +133,7 @@ test("all presets compile every product, tier, duration and shot mode to the exa
         assert.equal(preview.shots.reduce((sum, shot) => sum + shot.duration, 0), durationSeconds);
         for (const shot of preview.shots) {
           assert.ok(shot.prompt.length <= (shotMode === "multi" ? 512 : 2500), presetId);
-          assert.match(shot.prompt, /marked logo\/label/);
+          assertSourceMarksPreserved(shot.prompt);
           assert.doesNotMatch(shot.prompt, /360|exploded|manufacturing|workshop|spray|open the|new person|untrusted/i);
         }
         for (const shot of plan.shots) for (const id of shot.evidenceRefs) assert.equal(shot.focus, presetProduct(profile).evidence[id]);
@@ -146,7 +149,9 @@ test("documented extra categories and denim/tee inputs use only their own eviden
     assert.ok(compiled.multiPrompt?.length);
     for (const shot of plan.shots) if (shot.evidenceRefs.length) assert.ok(presetProduct(fixture.profile).evidence.includes(shot.focus));
     assert.equal(plan.origin, "fallback"); // Preserve the free fallback's explicit provenance.
-    assert.match(plan.intent, /Explicit camera, evidence-backed focus/);
+    const evidence = directorProductContext(fixture.profile).evidence;
+    const requested = evidence.find(item => item.id === plan.intentContract.focusEvidenceId);
+    if (requested) assert.ok(plan.shots.some(shot => shot.focus === requested.detail && shot.evidenceRefs.includes(requested.id)), fixture.name);
   }
 });
 
@@ -163,7 +168,16 @@ test("library strategies respect explicit camera choices and retire pre-library 
   const base = directorFixtureInput(directorProducts[0]);
   for (const presetId of videoPresetIds) for (const cameraMovement of ["static", "dolly-in", "dolly-out", "pan-left", "pan-right"] as const) {
     const input = { ...base, presetId, draft: { ...base.draft, cameraMovement } };
-    assert.ok(compileDirectorPlan(fallbackDirectorPlan(input), input).multiPrompt);
+    const plan = fallbackDirectorPlan(input);
+    const compiled = compileDirectorPlan(plan, input);
+    if (isGoldenTenSecondMulti(input)) {
+      // Light Sweep has a historical locked variant for explicit legacy selections.
+      const fixed = { ...base, presetId, draft: { ...base.draft,
+        cameraMovement: presetId === "metallic-light-sweep" ? "static" as const : "auto" as const } };
+      assert.deepEqual(compiled, compileDirectorPlan(fallbackDirectorPlan(fixed), fixed));
+    } else {
+      assert.ok(plan.shots.every(shot => cameraKinds(shot.camera).join() === cameraMovement), presetId);
+    }
   }
   const key = directorCacheKey("owner", "hash", "fixture", base), secret = "offline-secret";
   const plan = fallbackDirectorPlan(base);

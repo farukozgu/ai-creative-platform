@@ -1,0 +1,149 @@
+{
+  "sourceCommit": "b0843c5",
+  "samples": [
+    {
+      "productId": "jacket",
+      "plan": {
+        "version": "video-director-3.1-canonical-descriptions-v2",
+        "presetId": "luxury-fashion-film",
+        "presetVersion": 3,
+        "shotMode": "multi",
+        "origin": "ai",
+        "intent": "Approach slowly, study visible construction, then resolve the full silhouette.",
+        "intentContract": {
+          "camera": "auto",
+          "focusRequested": false,
+          "focusEvidenceId": null,
+          "focusPosition": "any",
+          "sequence": "preset",
+          "safeAdjustment": "none"
+        },
+        "summary": "A deliberate front-facing campaign reveal with a tailored detail and a complete hero finish.",
+        "shots": [
+          {
+            "durationSeconds": 3,
+            "purpose": "hero-reveal",
+            "evidenceRefs": [
+              5
+            ],
+            "camera": "Slow dolly-in from the front",
+            "lighting": "Soft side light traces the existing surface",
+            "composition": "Full silhouette with negative space",
+            "motion": "Hold the source-facing pose in the light",
+            "pace": "Measured opening",
+            "focus": "belted jacket silhouette"
+          },
+          {
+            "durationSeconds": 4,
+            "purpose": "macro-detail",
+            "evidenceRefs": [
+              0
+            ],
+            "camera": "Short lateral camera glide",
+            "lighting": "Soft side light traces the existing surface",
+            "composition": "Close crop on the evidenced front detail",
+            "motion": "Hold the source-facing pose in the light",
+            "pace": "Patient detail hold",
+            "focus": "two visible front buttons"
+          },
+          {
+            "durationSeconds": 3,
+            "purpose": "final-hero",
+            "evidenceRefs": [
+              4
+            ],
+            "camera": "Locked medium hero framing",
+            "lighting": "Soft side light traces the existing surface",
+            "composition": "Full silhouette, knot at the visual center",
+            "motion": "Hold the source-facing pose in the light",
+            "pace": "Confident final hold",
+            "focus": "front belt knot"
+          }
+        ]
+      },
+      "negativePrompt": "changed logo, changed brand mark, rewritten text, misspelled text, illegible label, morphing letters, altered color, changed hue, changed pattern, changed print, altered material, changed surface texture, redesigned product, altered silhouette, changed proportions, stretched or compressed geometry, extra or missing parts, extra or missing buttons, extra or missing belt, broken seams, warped hardware, melting texture, garment deformation, new hidden surfaces, blur",
+      "director30": [
+        "04691310157dc440909e48f1981be82e938d2ea8f854732cdce692c039c09976",
+        "f13b47ce26a37228382adff9a04922e9107756c9903b5b55513cc1d9e060e0eb",
+        "55ee914825ffeeacc4f3d38b81dc68743d38ba0c75d1129643b5cb069efd11b1"
+      ],
+      "director31": [
+        "2ce42d9f1acf197d763c7d0e579235d3927998100e85be5c5d6f6ffe821e361e",
+        "35a01c9db8f5609119a811a5d640c7d31ce4e92c5a7676f217236efb1ce6a1de",
+        "1cd875e8dce40fc24f2e0ebbbf33a7dd8dde9b61e84b8f7f8c8257c2ca9e30de"
+      ]
+    },
+    {
+      "productId": "perfume",
+      "plan": {
+        "version": "video-director-3.1-canonical-descriptions-v2",
+        "presetId": "luxury-fashion-film",
+        "presetVersion": 3,
+        "shotMode": "multi",
+        "origin": "ai",
+        "intent": "Use dramatic highlights to reveal bottle geometry, then finish on the front label.",
+        "intentContract": {
+          "camera": "auto",
+          "focusRequested": false,
+          "focusEvidenceId": null,
+          "focusPosition": "any",
+          "sequence": "preset",
+          "safeAdjustment": "none"
+        },
+        "summary": "A sculpted packaging study with a close light reveal and a clean branded finish.",
+        "shots": [
+          {
+            "durationSeconds": 3,
+            "purpose": "hero-reveal",
+            "evidenceRefs": [
+              2
+            ],
+            "camera": "Slow vertical camera tilt within the front view",
+            "lighting": "A narrow soft highlight travels across the front",
+            "composition": "Centered geometry with breathing room",
+            "motion": "Hold the source-facing pose in the light",
+            "pace": "Measured opening",
+            "focus": "rectangular bottle geometry"
+          },
+          {
+            "durationSeconds": 4,
+            "purpose": "macro-detail",
+            "evidenceRefs": [
+              5
+            ],
+            "camera": "Locked close framing",
+            "lighting": "A narrow soft highlight travels across the front",
+            "composition": "Tight source-facing detail with clean margins",
+            "motion": "Hold the source-facing pose in the light",
+            "pace": "Patient detail hold",
+            "focus": "flat black cap"
+          },
+          {
+            "durationSeconds": 3,
+            "purpose": "final-hero",
+            "evidenceRefs": [
+              0
+            ],
+            "camera": "Slow pull-back to medium hero framing",
+            "lighting": "A narrow soft highlight travels across the front",
+            "composition": "Full bottle, front label facing camera",
+            "motion": "Hold the source-facing pose in the light",
+            "pace": "Confident final hold",
+            "focus": "centered front label"
+          }
+        ]
+      },
+      "negativePrompt": "changed logo, changed brand mark, rewritten text, misspelled text, illegible label, morphing letters, altered color, changed hue, changed pattern, changed print, altered material, changed surface texture, redesigned product, altered silhouette, changed proportions, stretched or compressed geometry, extra or missing parts, extra or missing buttons, extra or missing belt, broken seams, warped hardware, melting texture, garment deformation, new hidden surfaces, blur",
+      "director30": [
+        "a5c27dcf35738e874da026710cfef4d17aca9fad6a6dde4d1f14206408afe181",
+        "316cbb7dbb66964c8718dc95cae2db0845fbf9e1aef16067dfe922f295ebdad8",
+        "5755d6e84759a3c11315772f1d7f741ceb1b604e32f813b334b86058103f72c7"
+      ],
+      "director31": [
+        "fa7c5f2e1932d7443a4e9ec57d27fa06b789a04210c82d8252c245deb22bdf05",
+        "259cc9037ab9f285b0f91ab6cb3794f8427f90f77a21e7534fed5ef5e4b3d86e",
+        "1b3d10e503db38240c0ca628c87d7102a9da2bd132bc27b778d36142d3862424"
+      ]
+    }
+  ]
+}

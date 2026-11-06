@@ -43,8 +43,12 @@ function compact(value: string) {
  * No unrelated profile atoms fill the remaining budget; no substring truncation.
  */
 export function compileKlingShot(shot: VideoDirectorShot, limit: number, marked: boolean, preserveMarks = false, fallbackPreservation?: string, physicalStaging: boolean | "craft" | "lighting" | "perspective" | "surface" | "floating" = false, declaredTextPreservation = "") {
-  const render = (short: boolean) => {
-    const wording = (value: string) => short ? compact(value) : value;
+  const render = (short: boolean, lastResort = false) => {
+    const wording = (value: string) => {
+      if (!short) return value;
+      const concise = compact(value);
+      return lastResort ? concise.replace("Wider view of the visible product form; no unverified detail is enlarged", "Wider visible product form; no unverified enlargement") : concise;
+    };
     const focus = lower(wording(shot.focus)).replace(/^source-visible /, "visible ");
     const subject = /^(?:a|an|the)\b/.test(focus) ? focus : `the ${focus}`;
     const action = /^Locked close framing$/i.test(clean(shot.camera))
@@ -57,10 +61,11 @@ export function compileKlingShot(shot: VideoDirectorShot, limit: number, marked:
       : marked
       ? "Keep source geometry, color, material, texture, pattern, parts and markings exact; preserve marked details in place. Known surfaces only."
       : "Keep source geometry, color, material, texture, pattern, parts and markings exact; show only known surfaces.");
-    const creative = short && declaredTextPreservation
+    const repeatedSurfaceFocus = lastResort && !shot.evidenceRefs.length && shot.focus === "Source-visible surface detail" && /\bsurface detail\b/i.test(shot.motion);
+    const creative = lastResort || short && declaredTextPreservation
       ? [sentence(wording(shot.camera)), sentence(wording(shot.composition)), sentence(wording(shot.lighting)),
         wording(subjectAction(shot.motion)), sentence(wording(shot.pace)),
-        ...(!/^(?:Source-visible product form|Source-visible product silhouette)$/.test(shot.focus) ? [sentence(wording(shot.focus))] : [])]
+        ...(!repeatedSurfaceFocus && !/^(?:Source-visible product form|Source-visible product silhouette)$/.test(shot.focus) ? [sentence(wording(shot.focus))] : [])]
       : [action, sentence(wording(compositionDirection(shot.composition))), sentence(wording(lightDirection(shot.lighting))),
         wording(subjectAction(shot.motion)), `Allow ${/^(?:a|an|the)\b/i.test(shot.pace) ? "" : "a "}${lower(wording(clean(shot.pace)))}.`];
     // Literal text bypasses wording/compaction; budget overflow fails, never truncates.
@@ -70,5 +75,8 @@ export function compileKlingShot(shot: VideoDirectorShot, limit: number, marked:
     const prompt = render(short);
     if (prompt.length <= limit) return prompt;
   }
+  // Preserve every creative field when only the connective phrasing exceeds the limit.
+  const direct = render(true, true);
+  if (direct.length <= limit) return direct;
   throw new Error("kling_scene_prompt_too_long");
 }

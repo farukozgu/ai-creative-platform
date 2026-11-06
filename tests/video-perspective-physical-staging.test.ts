@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
-import { createHash } from "node:crypto";
 import test from "node:test";
+import { assertPresetOutputFingerprints, presetOutputGroup } from "./fixtures/preset-output-fingerprint";
 import { fallbackDirectorPlan, compileDirectorPlan, parseDirectorOutput } from "../src/lib/video-director/core";
 import { compileKlingShot } from "../src/lib/video-director/kling-compiler";
 import { buildFalVideoRequestInput } from "../src/lib/video-generation/fal-request";
@@ -57,13 +57,16 @@ test("perspective physical fidelity preserves markings and source support withou
   }
 });
 
-test("Presets outside this and subsequently staged groups retain pre-change compiled outputs", () => {
-  const output = [];
+test("historical and approved revised preset cells retain their compiled outputs", () => {
+  const outputs: Record<"frozen" | "revised", unknown[]> = { frozen: [], revised: [] };
   for (const presetId of videoPresetIds.filter(id => !["elegant-orbit","optical-lines","cinematic-dial","label-reveal","sneaker-hero","upholstery-macro","culinary-texture","window-display","fabric-motion","floating-fashion","floating-accessory"].includes(id))) for (const { profile } of fixtures) for (const durationSeconds of [5, 10] as const) for (const shotMode of ["single", "multi"] as const) {
     const base = directorFixtureInput(profile!);
     const input = { ...base, presetId, shotMode, draft: { ...base.draft, durationSeconds, shotMode } };
-    output.push(compileDirectorPlan(fallbackDirectorPlan(input), input));
+    outputs[presetOutputGroup(input)].push(compileDirectorPlan(fallbackDirectorPlan(input), input));
   }
-  assert.equal(output.length, 624);
-  assert.equal(createHash("sha256").update(JSON.stringify(output)).digest("hex"), "ba2a957c0dd7d35464a9b306528d22534da04ff9990354b85304f89605e7eae4");
+  assert.equal(outputs.frozen.length + outputs.revised.length, 624);
+  assertPresetOutputFingerprints(outputs, {
+    frozen: "0158b0a50c12626d5e8cff64ab83ab8aee4e482b3a74b15b348f110d92b5301a",
+    revised: "b7a14b01ac0d75643ffff04d6d3204721927de8e08346df82a54e21b18c42021",
+  });
 });

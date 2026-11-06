@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import baseline from "./fixtures/signature-motion-baseline.json";
+import type { VideoDirectorPlan } from "../src/lib/video-director/core";
 import { compileDirectorPlan, directVideoWithClient, fallbackDirectorPlan, fixedMinimalDirectorPlan, parseDirectorOutput } from "../src/lib/video-director/core";
 import { directorProductContext } from "../src/lib/video-director/product-context";
 import { sealDirectorPlan, openDirectorPlan } from "../src/lib/video-director/receipt";
@@ -28,7 +30,7 @@ for (const category of ["apparel", "cosmetics", "footwear"]) {
     harness.assertIsolated();
     assert.deepEqual(plan.shots.map(s => s.durationSeconds), [4, 3, 3]);
     assert.deepEqual(plan.shots.map(s => s.purpose), ["hero-reveal", "lighting-reveal", "final-hero"]);
-    assert.deepEqual(plan.shots.map(s => s.camera), ["Slow long-lens push-in", "Short lateral camera glide", "Locked hero framing"]);
+    assert.deepEqual(plan.shots.map(s => s.camera), ["Straight axial long-lens push-in", "Short lateral camera glide", "Locked static hero framing"]);
     for (const i of [0, 2]) {
       assert.equal(plan.shots[i].focus, "Source-visible product form");
       assert.deepEqual(plan.shots[i].evidenceRefs, []);
@@ -37,19 +39,39 @@ for (const category of ["apparel", "cosmetics", "footwear"]) {
     const detail = plan.shots[1];
     if (sparse) { assert.deepEqual(detail.evidenceRefs, []); assert.equal(detail.focus, "Source-visible surface detail"); }
     else { assert.equal(detail.evidenceRefs.length, 1); assert.equal(detail.focus, directorProductContext(profile).evidence[detail.evidenceRefs[0]].detail); }
+    const previous = baseline.find(row => row.category === category && row.sparse === sparse)!;
+    assert.deepEqual(plan.shots[1], previous.plan.shots[1]);
+    assert.equal(plan.shots[0].composition, previous.plan.shots[0].composition);
+    assert.equal(plan.shots[0].lighting, previous.plan.shots[0].lighting);
+    assert.equal(plan.shots[2].composition, previous.plan.shots[2].composition);
+    assert.equal(plan.shots[2].lighting, previous.plan.shots[2].lighting);
+    assert.equal(plan.shots[2].motion, "Product and camera remain completely still and source-facing for the entire shot");
+    assert.equal(plan.shots[2].pace, "Stable three-second premium hero hold");
+    assert.doesNotMatch(plan.shots[2].motion, /settle|push|pull|drift|reorient/i);
+    const oldReceipt = sealDirectorPlan("pre-tuning", previous.plan as VideoDirectorPlan, "offline", 1000);
+    const oldPlan = openDirectorPlan(oldReceipt, "pre-tuning", input, "offline", 1001);
+    assert.ok(oldPlan);
+    assert.deepEqual(compileDirectorPlan(oldPlan, input), previous.compiled);
     const failures: unknown[] = [];
     assert.ok(parseDirectorOutput(plan, input, failure => failures.push(failure)), JSON.stringify(failures));
     const compiled = compileDirectorPlan(plan, input);
     assert.equal(compiled.multiPrompt!.length, 3);
     assert.deepEqual(compiled.multiPrompt!.map(s => s.duration), ["4", "3", "3"]);
+    assert.deepEqual(compiled.multiPrompt![1], previous.compiled.multiPrompt![1]);
+    assert.equal(compiled.negativePrompt, previous.compiled.negativePrompt);
+    assert.match(compiled.multiPrompt![0].prompt, /No arc, lateral drift, perspective swing or reorientation/);
+    assert.match(compiled.multiPrompt![0].prompt, /no product rotation\/yaw\/pitch\/roll/);
+    assert.match(compiled.multiPrompt![2].prompt, /hold full frame for all 3 seconds/);
+    assert.match(compiled.multiPrompt![2].prompt, /No rotation\/yaw\/pitch\/roll, perspective change, translation, zoom\/dolly\/lateral movement/);
+    assert.doesNotMatch(compiled.multiPrompt![2].prompt, /settle|push-in|pull-back|reorient|drift/i);
     const payload = buildFalVideoRequestInput({ ...input.draft, ...compiled, modelId: "kling-v3-standard-image",
       endpointId: "offline", sourceUrl: "https://invalid.example/source" });
     assert.deepEqual(payload.multi_prompt, compiled.multiPrompt);
     for (const [index, scene] of compiled.multiPrompt!.entries()) {
       assert.ok(scene.prompt.length <= 512);
-      assert.match(scene.prompt, /still/);
+      assert.match(scene.prompt, index === 0 ? /perfectly fixed and source-facing/ : /still/);
       assert.doesNotMatch(scene.prompt, /orbit|360|turntable|manufactur|people|hidden side/i);
-      for (const field of ["camera", "composition", "lighting", "motion", "pace"] as const) {
+      for (const field of ["camera", "composition", "lighting", "pace"] as const) {
         assert.ok(scene.prompt.includes(plan.shots[index][field]), field);
       }
     }
@@ -78,6 +100,10 @@ test("Signature references gate planning and declaredText remains identity-only"
       sha256: "b".repeat(64), purpose: "logo", declaredText: "İSTANBUL" }] } };
   const reviews = [{ index: 0, status: "matched" as const, view: "detail" as const, reason: "Same product", details: [] }];
   const plan = fallbackDirectorPlan(input, reviews);
+  const previous = baseline.find(row => row.category === "apparel" && !row.sparse)!;
+  const oldPlan = { ...previous.plan, referenceReviews: reviews } as VideoDirectorPlan;
+  assert.deepEqual(plan.shots[1], oldPlan.shots[1]);
+  assert.deepEqual(compileDirectorPlan(plan, input).multiPrompt![1], compileDirectorPlan(oldPlan, input).multiPrompt![1]);
   const noText = { ...input, draft: { ...input.draft, productReferences: input.draft.productReferences.map(r => ({ ...r, declaredText: undefined })) } };
   assert.deepEqual(plan.shots, fallbackDirectorPlan(noText, reviews).shots);
   const planned = await directVideoWithClient(input, { createPlan: async () => ({ referenceReviews: reviews, shots: [] }) });
@@ -91,6 +117,7 @@ test("Signature references gate planning and declaredText remains identity-only"
     assert.ok(scene.prompt.length <= 512);
     assert.ok(scene.prompt.includes("X".repeat(80)));
   }
+  assert.deepEqual(compileDirectorPlan(plan, maxText).multiPrompt![1], compileDirectorPlan(oldPlan, maxText).multiPrompt![1]);
   await assert.rejects(() => directVideoWithClient(input, { createPlan: async () => ({ shots: [] }) }), /references_not_verified/);
   await assert.rejects(() => directVideoWithClient(input, { createPlan: async () => ({ referenceReviews: [{ ...reviews[0], status: "uncertain" }] }) }), /references_not_verified/);
 });

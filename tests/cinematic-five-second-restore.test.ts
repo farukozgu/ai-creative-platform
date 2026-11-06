@@ -65,7 +65,7 @@ test("Cinematic 5s multi uses execution again; references do not select a differ
   assert.deepEqual(durationStrategy("cinematic-hero", "multi", 5)!.durations, [1, 1, 1, 1, 1]);
   assert.ok(getVideoDirectorPreset("cinematic-hero", "multi", 5).execution);
   assert.equal(directorShotContract("multi", 5, "cinematic-hero").maxShots, 5);
-  assert.deepEqual(durationStrategy("cinematic-hero", "multi", 10)!.durations, [2, 2, 2, 1, 3]);
+  assert.deepEqual(durationStrategy("cinematic-hero", "multi", 10)!.durations, [2, 2, 2, 2, 2]);
   assert.deepEqual(durationStrategy("cinematic-hero", "single", 5)!.durations, [5]);
   assert.deepEqual(durationStrategy("macro-detail-reveal", "multi", 5)!.durations, [1, 1, 1, 2]);
   assert.deepEqual(durationStrategy("luxury-fashion-film", "multi", 5)!.durations, [1, 1, 1, 2]);

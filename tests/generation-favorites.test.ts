@@ -2,6 +2,10 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import test from "node:test";
+import { isValidElement, type ButtonHTMLAttributes, type MouseEvent } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { Button } from "../src/components/ui/button";
+import { FavoriteButton } from "../src/components/ui/favorite-button";
 import {
   filterFavoriteGenerations,
   isMissingFavoriteColumnError,
@@ -111,8 +115,18 @@ test("TR and EN favorite copy exists", () => {
 });
 
 test("favorite controls are real pressed buttons and stop parent selection", () => {
-  const button = read("src/components/ui/favorite-button.tsx");
-  assert.match(button, /<button/);
-  assert.match(button, /aria-pressed=\{active\}/);
-  assert.match(button, /event\.stopPropagation\(\)/);
+  const calls: string[] = [];
+  const favorite = FavoriteButton({ active: true, label: "Remove favorite", onClick: () => calls.push("favorite") });
+  assert.ok(isValidElement<ButtonHTMLAttributes<HTMLButtonElement>>(favorite));
+  assert.equal(favorite.type, Button);
+  const markup = renderToStaticMarkup(favorite);
+  assert.match(markup, /^<button\b[^>]*type="button"/);
+  assert.match(markup, /^<button\b[^>]*aria-label="Remove favorite"/);
+  assert.match(markup, /^<button\b[^>]*aria-pressed="true"/);
+  assert.ok(favorite.props.onClick);
+  favorite.props.onClick({
+    preventDefault: () => { calls.push("prevent default"); },
+    stopPropagation: () => { calls.push("stop propagation"); },
+  } as MouseEvent<HTMLButtonElement>);
+  assert.deepEqual(calls, ["prevent default", "stop propagation", "favorite"]);
 });

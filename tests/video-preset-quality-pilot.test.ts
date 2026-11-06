@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { compileDirectorPlan, fallbackDirectorPlan, parseDirectorOutput, type VideoDirectorInput } from "../src/lib/video-director/core";
+import { cameraKinds, compileDirectorPlan, fallbackDirectorPlan, parseDirectorOutput, type VideoDirectorInput } from "../src/lib/video-director/core";
 import { qualityFallbackDirection, qualityPresetDirection, qualityPresetVersions, type QualityPresetId } from "../src/lib/video-director/preset-quality-directions";
 import { buildFalVideoRequestInput } from "../src/lib/video-generation/fal-request";
 import { directorCacheKey, openDirectorPlan, sealDirectorPlan } from "../src/lib/video-director/receipt";
@@ -35,7 +35,9 @@ test("surface, feature and spotlight fallback choose different evidence and visu
   const spotlight = fallbackDirectorPlan(selected("product-spotlight", "multi", 5));
   assert.match(surface.shots[0].focus, /grain|texture/);
   assert.match(macro.shots[0].focus, /handle|stitch|clasp/);
-  assert.match(spotlight.shots[0].focus, /silhouette/);
+  assert.equal(spotlight.shots[0].focus, "Source-visible product form");
+  assert.deepEqual(spotlight.shots[0].evidenceRefs, []);
+  assert.equal(spotlight.shots[0].lighting, "Sculpted side light reveals the existing outline");
   assert.deepEqual(surface.shots.map(shot => shot.durationSeconds), [1, 2, 2]);
   assert.deepEqual(macro.shots.map(shot => shot.durationSeconds), [2, 1, 2]);
   assert.deepEqual(spotlight.shots.map(shot => shot.purpose), ["lighting-reveal", "controlled-motion", "final-hero"]);
@@ -74,7 +76,7 @@ test("pilot product, camera, duration and tier matrix satisfies real compiler bu
           assert.equal(payload.enable_safety_checker, true);
           for (const shot of payload.multi_prompt ?? [{ prompt: payload.prompt!, duration: String(durationSeconds) }]) {
             assert.ok(shot.prompt.length <= (shotMode === "multi" ? 512 : 2500));
-            assert.match(shot.prompt, /known surfaces/);
+            assert.match(shot.prompt, /known (?:surfaces|sides|view)|visible surfaces only/);
           }
         }
       }
@@ -83,13 +85,51 @@ test("pilot product, camera, duration and tier matrix satisfies real compiler bu
 test("repeated verified detail is rejected without overriding an explicit evidence focus request", () => {
   const input = selected("macro-detail-reveal", "multi", 10);
   const plan = fallbackDirectorPlan(input);
-  assert.equal(plan.shots.length, 4);
-  const repeated = { ...plan, shots: plan.shots.map((shot, i) => i === 1 ? { ...shot, focus: plan.shots[0].focus, evidenceRefs: plan.shots[0].evidenceRefs } : shot) };
+  assert.deepEqual(plan.shots.map(shot => shot.durationSeconds), [3, 4, 3]);
+  const detail = plan.shots[1];
+  assert.equal(detail.focus, "visible edge stitching");
+  const repeated = { ...plan, shots: plan.shots.map((shot, i) => i === 0 ? { ...shot, focus: detail.focus, evidenceRefs: detail.evidenceRefs } : shot) };
   let reason = "";
   assert.equal(parseDirectorOutput(repeated, input, failure => { reason = failure.reasonCode; }), null);
-  assert.equal(reason, "repeated_detail_focus");
+  assert.equal(reason, "fixed_macro_template_mismatch");
   const explicit = { ...input, draft: { ...input.draft, prompt: "Show the arched front handle" } };
-  assert.doesNotThrow(() => compileDirectorPlan(fallbackDirectorPlan(explicit), explicit));
+  const requested = fallbackDirectorPlan(explicit);
+  assert.equal(requested.shots[1].focus, "arched front handle");
+  assert.deepEqual(requested.shots.map((shot, index) => ({
+    ...shot, focus: plan.shots[index].focus, evidenceRefs: plan.shots[index].evidenceRefs,
+  })), plan.shots);
+  assert.match(compileDirectorPlan(requested, explicit).multiPrompt![1].prompt, /arched front handle/);
+
+  const unsupported = { ...explicit, draft: { ...explicit.draft, prompt: "Show the diamond handle" } };
+  const safe = fallbackDirectorPlan(unsupported);
+  assert.equal(safe.shots[1].focus, "Source-visible surface detail");
+  assert.deepEqual(safe.shots[1].evidenceRefs, []);
+  assert.doesNotMatch(compileDirectorPlan(safe, unsupported).multiPrompt![1].prompt, /diamond|handle/i);
+});
+
+test("5s single luxury and material fallback preserve a valid camera without changing their lighting or evidence", () => {
+  const base = selected("material-detail", "single", 5);
+  for (const presetId of ["luxury-fashion-film", "material-detail"] as const) {
+    const input = { ...base, presetId };
+    const auto = fallbackDirectorPlan(input).shots[0];
+    const explicit = { ...input, draft: { ...input.draft, cameraMovement: "pan-right" as const } };
+    const plan = fallbackDirectorPlan(explicit);
+    const [shot] = plan.shots;
+    assert.deepEqual(cameraKinds(shot.camera), ["pan-right"]);
+    for (const field of ["durationSeconds", "purpose", "lighting", "focus", "evidenceRefs"] as const) {
+      assert.deepEqual(shot[field], auto[field]);
+    }
+    assert.match(compileDirectorPlan(plan, explicit).prompt, /pan right/i);
+    assert.deepEqual(fallbackDirectorPlan(input).shots, [auto]);
+
+    const unsafe = { ...input, draft: { ...input.draft, cameraMovement: "orbit" as const } };
+    assert.equal(parseDirectorOutput(fallbackDirectorPlan(unsafe), unsafe), null);
+    const hidden = { ...input, draft: { ...input.draft, prompt: "Orbit around the product and show the back" } };
+    const adjusted = fallbackDirectorPlan(hidden);
+    assert.equal(adjusted.intentContract.safeAdjustment, "unseen-side-to-source-facing-camera");
+    assert.match(compileDirectorPlan(adjusted, hidden).prompt, /pan right/i);
+    assert.doesNotMatch(adjusted.shots[0].camera, /orbit|rear|360/i);
+  }
 });
 
 test("explicit static or push-in keeps the new single takes coherent without promising a widening frame", () => {
@@ -103,13 +143,19 @@ test("explicit static or push-in keeps the new single takes coherent without pro
   }
 });
 
-test("verified alternate image remains an available context shot in all three pilots and both tiers", () => {
+test("verified alternate image attaches to the existing context shot in all three pilots and both tiers", async () => {
+  const harness = await VideoProductionHarness.create();
   for (const presetId of ids) {
     const input = { ...frontBackInput("b".repeat(64)), presetId };
-    const plan = parseDirectorOutput(frontBackResponse(input), input)!;
-    assert.ok(plan);
+    const { referenceReviews } = frontBackResponse(input);
+    const primary = fallbackDirectorPlan(input, referenceReviews);
+    const plan: typeof primary = JSON.parse(JSON.stringify(harness.attachReferenceReviews(primary, input, referenceReviews)));
+    assert.deepEqual(plan.shots.map(shot => shot.referenceIndex), [undefined, 0, undefined]);
+    assert.deepEqual(plan.shots, primary.shots.map((shot, index) => index === 1 ? { ...shot, referenceIndex: 0 } : shot));
+    assert.deepEqual(parseDirectorOutput(plan, input)?.shots, plan.shots);
     const compiled = compileDirectorPlan(plan, input);
-    assert.match(compiled.multiPrompt![2].prompt, /@Element1: Use back view from reference image 1/);
+    assert.match(compiled.multiPrompt![1].prompt, /^@Element1: Use back view from reference image 1/);
+    assert.doesNotMatch(compiled.multiPrompt![0].prompt + compiled.multiPrompt![2].prompt, /@Element1/);
     for (const quality of ["standard", "pro"] as const) {
       const payload = buildFalVideoRequestInput({ ...input.draft, ...compiled, modelId: `kling-v3-${quality}-image`, endpointId: "fixture", sourceUrl: "https://invalid.example/primary", elementImageUrls: ["https://invalid.example/back"] });
       assert.equal(payload.elements![0].reference_image_urls.length, 1);

@@ -659,6 +659,12 @@
 .referenceCardHeading { display: flex; min-width: 0; align-items: flex-start; gap: 0.625rem; }
 .referenceCardHeading h3 { margin: 0; color: var(--dashboard-foreground); font-size: var(--text-small); font-weight: 600; line-height: 1.4; }
 .referenceCardHeading p { margin: 0.25rem 0 0; color: var(--dashboard-muted); font-size: var(--text-caption); line-height: 1.4; }
+.referenceGuidance { display: grid; gap: 0.5rem; color: var(--dashboard-muted); font-size: var(--text-small); }
+.referenceGuidance p { margin: 0; }
+.referenceGuidance strong { color: var(--dashboard-foreground); }
+.referenceRole { display: grid; min-width: 0; gap: 0.25rem; font-size: var(--text-caption); }
+.referenceRole select { width: 100%; min-width: 0; border: 1px solid var(--dashboard-border); border-radius: var(--radius-sm); background: var(--dashboard-surface); color: var(--dashboard-foreground); padding: 0.5rem; font: inherit; }
+.referenceRole select:focus-visible { outline: 2px solid var(--dashboard-focus); outline-offset: 2px; }
 .referenceIcon { display: grid; width: 1.875rem; height: 1.875rem; flex: none; place-items: center; border: 1px solid var(--dashboard-border); border-radius: var(--radius-sm); color: var(--dashboard-accent); }
 .referenceDropzone { display: grid; min-height: 6.25rem; align-content: center; justify-items: center; gap: 0.25rem; border: 1px dashed var(--dashboard-border-strong); border-radius: var(--radius-sm); background: var(--dashboard-surface); color: var(--dashboard-foreground); cursor: pointer; font: inherit; }
 .referenceDropzone > span { color: var(--dashboard-accent); font-size: var(--text-heading-3); line-height: 1; }
