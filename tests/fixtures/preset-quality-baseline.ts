@@ -1,10 +1,10 @@
 import { readFileSync } from "node:fs";
-import { compileDirectorPlan, fallbackDirectorPlan, parseDirectorOutput, type VideoDirectorInput } from "../../src/lib/video-director/core";
+import { compileDirectorPlan, parseDirectorOutput, type VideoDirectorInput } from "../../src/lib/video-director/core";
 import { directorCacheKey } from "../../src/lib/video-director/receipt";
 import { getVideoDirectorPreset, videoPresetIds } from "../../src/lib/video-director/presets";
 import { buildFalVideoRequestInput } from "../../src/lib/video-generation/fal-request";
 import type { ProductProfile } from "../../src/lib/product-understanding/product-profile";
-import { canonicalPresetOutputJson, presetOutputFingerprint } from "./preset-output-fingerprint";
+import { canonicalPresetOutputJson, historicalPresetOutputPlan, presetOutputFingerprint } from "./preset-output-fingerprint";
 import { directorProducts, directorFixtureInput } from "./video-director-fixtures";
 import { frontBackInput, frontBackResponse } from "./video-front-back-fixture";
 import { VideoProductionHarness } from "./video-production-harness";
@@ -45,7 +45,7 @@ export async function protectedPresetFingerprints() {
         for (const durationSeconds of [5, 10] as const) for (const cameraMovement of ["auto", "static"] as const) {
           const base = directorFixtureInput(directorProducts[0]);
           const input: VideoDirectorInput = { ...base, profile, presetId, shotMode, draft: { ...base.draft, quality, shotMode, durationSeconds, cameraMovement } };
-          const plan = fallbackDirectorPlan(input);
+          const plan = historicalPresetOutputPlan(input);
           const compiled = compileDirectorPlan(plan, input);
           const payload = buildFalVideoRequestInput({ ...input.draft, ...compiled, modelId: `kling-v3-${quality}-image`, endpointId: "fixture", sourceUrl: "https://invalid.example/source" });
           presets.push(getVideoDirectorPreset(presetId, shotMode, durationSeconds));

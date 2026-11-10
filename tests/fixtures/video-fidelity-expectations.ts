@@ -20,9 +20,9 @@ export function assertGoldenPhysicalPrompt(input: VideoDirectorInput, shot: Vide
   const category = directorProductContext(input.profile).category;
   if (input.presetId === "metallic-light-sweep" && category === "watches") {
     assert.ok(prompt.includes(shot.motion));
-    assert.match(prompt, /Freeze visible complications\. Do not invent readable text\./);
-    if (shot.purpose === "lighting-reveal") assert.match(prompt, /One left-to-right highlight on bezel, case edges and strap junction/);
-    if (shot.purpose === "final-hero") assert.match(prompt, /Stable hero hold for final 1s/);
+    assert.match(prompt, /visible complications keep shape\/position.*No redraw, replacement, morphing or invented text/);
+    if (shot.purpose === "lighting-reveal") assert.match(prompt, /One soft highlight travels left-to-right/);
+    if (shot.purpose === "final-hero") assert.match(prompt, /Stable full-product hold for all 3s/);
     return;
   }
   for (const field of ["composition", "lighting", "pace"] as const) {

@@ -18,7 +18,7 @@ test("physical staging reaches each Kling shot without changing the three fixed 
     const input = { ...base, presetId, shotMode, draft: { ...base.draft, shotMode, durationSeconds } };
     const plan = fallbackDirectorPlan(input);
     const original = JSON.stringify(plan);
-    for (const origin of ["ai", "fallback"] as const) {
+    for (const origin of plan.editorialStoryboard ? ["fallback"] as const : ["ai", "fallback"] as const) {
       const candidate = { ...plan, origin };
       assert.ok(parseDirectorOutput(candidate, input));
       const compiled = compileDirectorPlan(candidate, input);

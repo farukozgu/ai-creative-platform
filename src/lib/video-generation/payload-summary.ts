@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import type { VideoGenerationDraft, VideoPreservationSnapshot } from "./types";
 import { buildFalVideoRequestInput } from "./fal-request";
-import { klingElementReferences } from "./product-references";
+import { directorElementReferences } from "./product-references";
 
 const hash = (value: string) => createHash("sha256").update(value).digest("hex");
 
@@ -14,7 +14,7 @@ export function summarizeVideoPayload(draft: VideoGenerationDraft, snapshot: Vid
   // Compile through the exact provider payload builder, with a placeholder URL
   // that is neither persisted nor included in the signed or displayed summary.
   const input = buildFalVideoRequestInput({ modelId: `kling-v3-${draft.quality}-image`, endpointId: "", mode: draft.mode,
-    elementImageUrls: klingElementReferences(plan?.referenceReviews ?? [], draft.productReferences).map((_, i) => `https://invalid.example/private-reference-${i}`),
+    elementImageUrls: directorElementReferences(plan, draft.productReferences).map((_, i) => `https://invalid.example/private-reference-${i}`),
     prompt: snapshot.compiledPrompt, multiPrompt: requestedMulti, negativePrompt: snapshot.negativePrompt, cfgScale: snapshot.cfgScale,
     durationSeconds: draft.durationSeconds, aspectRatio: draft.aspectRatio, sourceUrl: "https://invalid.example/private-source" });
   const multi = Array.isArray(input.multi_prompt) ? input.multi_prompt : undefined;

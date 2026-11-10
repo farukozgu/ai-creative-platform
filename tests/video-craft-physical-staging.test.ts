@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { assertPresetOutputFingerprints, presetOutputGroup } from "./fixtures/preset-output-fingerprint";
+import { assertPresetOutputFingerprints, historicalPresetOutputPlan, presetOutputGroup } from "./fixtures/preset-output-fingerprint";
 import { fallbackDirectorPlan, compileDirectorPlan, parseDirectorOutput } from "../src/lib/video-director/core";
 import { compileKlingShot } from "../src/lib/video-director/kling-compiler";
 import { buildFalVideoRequestInput } from "../src/lib/video-generation/fal-request";
@@ -62,7 +62,7 @@ test("historical and approved revised preset cells retain their compiled outputs
   for (const presetId of videoPresetIds.filter(id => !["macro-stitching","hardware-reveal","craftsmanship-study","glass-reflection","dramatic-backlight","metallic-light-sweep","elegant-orbit","optical-lines","cinematic-dial","label-reveal","sneaker-hero","upholstery-macro","culinary-texture","window-display","fabric-motion","floating-fashion","floating-accessory"].includes(id))) for (const { profile } of fixtures) for (const durationSeconds of [5, 10] as const) for (const shotMode of ["single", "multi"] as const) {
     const base = directorFixtureInput(profile!);
     const input = { ...base, presetId, shotMode, draft: { ...base.draft, durationSeconds, shotMode } };
-    outputs[presetOutputGroup(input)].push(compileDirectorPlan(fallbackDirectorPlan(input), input));
+    outputs[presetOutputGroup(input)].push(compileDirectorPlan(historicalPresetOutputPlan(input), input));
   }
   assert.equal(outputs.frozen.length + outputs.revised.length, 336);
   assertPresetOutputFingerprints(outputs, {

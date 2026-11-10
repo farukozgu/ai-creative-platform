@@ -14,7 +14,8 @@ import { presetFocusEvidence } from "./preset-recommendations";
 import { DIRECTOR_GENERIC_FOCUS_VALUES, DIRECTOR_SHOT_TEXT_LIMIT, DIRECTOR_TEXT_LIMIT, DirectorStructuredOutputError, directorShotContract, selectedCameras, shotFields } from "./plan-contract";
 export { DIRECTOR_GENERIC_FOCUS_VALUES, shotFields } from "./plan-contract";
 
-import { backViewTerms, klingElementReferences, parseReferenceReviews, referenceClaimDetails, referenceShotPrefix, referenceTextPreservation, type ReferenceReview } from "../video-generation/product-references";
+import { backViewTerms, directorElementReferences, elementShotPrefix, klingElementReferences, parseReferenceReviews, referenceClaimDetails, referenceTextPreservation, type ReferenceReview } from "../video-generation/product-references";
+import { isEditorialSideRole, productReferencePolicy, usesEditorialStoryboard } from "../video-generation/product-reference-policy";
 
 export type VideoDirectorSelection = ({ presetId: VideoPresetId; creativeMode?: "preset" } | { creativeMode: "custom"; presetId?: never }) & { shotMode: VideoShotMode; receipt: string };
 export type VideoDirectionId = VideoPresetId | "custom";
@@ -33,6 +34,7 @@ export type VideoDirectorPlan = {
   presetId: VideoDirectionId;
   presetVersion: number;
   shotMode: VideoShotMode;
+  editorialStoryboard?: true;
   referenceReviews?: ReferenceReview[];
   origin: "ai" | "fallback";
   intent: string;
@@ -703,6 +705,51 @@ function fixedFallbackPlan(input: VideoDirectorInput) {
   return fixed ? applyFixedPlanIntent(fixed, input) : null;
 }
 
+function editorialStoryboard(input: VideoDirectorInput, reviews: ReferenceReview[]): VideoDirectorPlan | null {
+  if (!usesEditorialStoryboard(input)) return null;
+  const signature = input.presetId === "minimal-studio";
+  const base = signature ? fixedMinimalDirectorPlan(input)! : fixedLightingDirectorPlan(input)!;
+  const refs = input.draft.productReferences ?? [];
+  const assetIdentity = (source: NonNullable<VideoGenerationDraft["source"]>) =>
+    source.kind === "uploaded-image" ? "uploaded-image:" + source.sourceAssetId : "generated-image:" + source.generationId;
+  const primary = input.draft.source && assetIdentity(input.draft.source);
+  const candidates = signature || productReferencePolicy(input.profile) === "watch"
+    ? reviews.filter(review => review.status === "matched" && review.view === "side" && review.wholeSideVisible === true
+      && refs[review.index] && isEditorialSideRole(refs[review.index].purpose) && assetIdentity(refs[review.index].source) !== primary)
+    : [];
+  const alternate = candidates.sort((a, b) => {
+    const left = refs[a.index], right = refs[b.index];
+    return Number(right.purpose === "side-profile") - Number(left.purpose === "side-profile")
+      || left.sha256.localeCompare(right.sha256)
+      || assetIdentity(left.source).localeCompare(assetIdentity(right.source));
+  })[0];
+  const [opening, inspection, hero] = base.shots;
+  const criticalDetails = signature && !alternate ? reviews.flatMap(review => review.status === "matched" && review.view === "detail"
+    && refs[review.index]?.purpose === "critical-detail" ? review.details : []) : [];
+  const detail = criticalDetails.length ? directorProductContext(input.profile).evidence.find(item => item.detail.length <= DIRECTOR_SHOT_TEXT_LIMIT
+    && criticalDetails.some(value => value.toLowerCase() === item.detail.toLowerCase()) && !unsupportedProductClaim(item.detail, input.profile)) : undefined;
+  const middle: VideoDirectorShot = {
+    ...inspection,
+    camera: signature ? "Locked offset medium framing" : "Locked offset close framing",
+    composition: alternate ? (signature ? "Verified side silhouette with open margins" : "Visible contour on the verified side")
+      : signature ? (detail || inspection.evidenceRefs.length ? "One verified region with offset margins" : "Visible contour in offset negative space")
+        : "Visible contour and surface in an offset primary-view crop",
+    lighting: signature ? "Steady directional key defines the contour" : "One soft highlight travels left-to-right across the visible surface",
+    motion: alternate ? "Product fixed in the verified orientation" : "Product fixed and source-facing",
+    pace: signature ? "Measured editorial inspection" : "One measured highlight pass",
+    ...(alternate ? { referenceIndex: alternate.index, focus: "Source-visible surface detail", evidenceRefs: [] }
+      : detail ? { focus: detail.detail, evidenceRefs: [detail.id] } : {}),
+  };
+  const shots = signature ? [opening, middle, { ...hero, composition: "Complete product centered in a balanced advertising frame",
+    lighting: "Clean key and soft fill separate the product" }]
+    : [
+      { ...opening, camera: "Locked full product framing", motion: "Product fixed and source-facing" },
+      middle,
+      { ...hero, camera: "Locked balanced hero framing", motion: "Product and camera still; source-facing", pace: "Stable full-product hold for all 3s" },
+    ];
+  return { ...applyFixedPlanIntent(base, input), editorialStoryboard: true, shots, ...(reviews.length ? { referenceReviews: reviews } : {}) };
+}
+
 export function fixedLegacyDirectorPlan(input: VideoDirectorInput) {
   return hasGoldenStoryboard(input) ? null : fixedFallbackPlan(input);
 }
@@ -780,6 +827,9 @@ export function parseDirectorOutput(value: unknown, input: VideoDirectorInput, o
   if (![5, 10].includes(input.draft.durationSeconds)) return reject("$.durationSeconds", "unsupported_duration", "5 or 10 seconds");
   const custom = input.presetId === "custom";
   const goldenStoryboard = hasGoldenStoryboard(input);
+  if (record(value) && value.editorialStoryboard !== undefined && (value.editorialStoryboard !== true || !usesEditorialStoryboard(input))) {
+    return reject("$.editorialStoryboard", "invalid_editorial_storyboard", "Signature Studio or Light Sweep 10s Multi");
+  }
   const beats = custom && input.shotMode === "multi" ? numberedCreativeBeats(input.draft.prompt) : [];
   const contractBounds = directorShotContract(input.shotMode, input.draft.durationSeconds, input.presetId, input.draft.prompt);
   if (input.draft.cameraMovement === "orbit" || !record(value) || !text(value.summary, DIRECTOR_TEXT_LIMIT) || !text(value.intent, DIRECTOR_TEXT_LIMIT) || !Array.isArray(value.shots)
@@ -946,6 +996,13 @@ export function parseDirectorOutput(value: unknown, input: VideoDirectorInput, o
     return null;
   }
   if (shots.reduce((sum, shot) => sum + shot.durationSeconds, 0) !== input.draft.durationSeconds) return reject("$.shots[*].durationSeconds", "total_duration_mismatch", `sum exactly ${input.draft.durationSeconds} seconds`);
+  const editorial = value.editorialStoryboard === true ? editorialStoryboard(input, referenceReviews) : null;
+  if (editorial && (value.origin !== "fallback" || shots.length !== editorial.shots.length || !editorial.shots.every((expected, index) => {
+    const shot = shots[index];
+    return shot.referenceIndex === expected.referenceIndex && shot.durationSeconds === expected.durationSeconds
+      && shot.purpose === expected.purpose && shotFields.every(field => shot[field] === expected[field])
+      && JSON.stringify(shot.evidenceRefs) === JSON.stringify(expected.evidenceRefs);
+  }))) return reject("$.shots", "editorial_storyboard_mismatch", "exact local storyboard and verified middle-shot binding");
   const signature = input.presetId === "minimal-studio" && input.shotMode === "multi" && input.draft.durationSeconds === 10
     ? fixedMinimalDirectorPlan(input) : null;
   const signatureMatches = signature && [signature, fixedMinimalDirectorPlan(input, true, false)!].some(candidate => shots.length === 3 && shots.every((shot, index) => {
@@ -1011,7 +1068,7 @@ export function parseDirectorOutput(value: unknown, input: VideoDirectorInput, o
     return reject("$.shots", "fixed_macro_template_mismatch", "the effective legacy preset shots in order");
   }
   // The historical matcher remains available for persisted plans and golden compatibility.
-  if (!effectiveMatches && !signatureMatches && !lightSweepMatches && !macroMatches && !floatingMatches && !darkRevealMatches && !materialStudyMatches && !windowDisplayMatches && fixedTemplate && (shots.length !== fixedTemplate.shots.length || shots.some((shot, index) => shot.durationSeconds !== fixedTemplate.durations[index]
+  if (!editorial && !effectiveMatches && !signatureMatches && !lightSweepMatches && !macroMatches && !floatingMatches && !darkRevealMatches && !materialStudyMatches && !windowDisplayMatches && fixedTemplate && (shots.length !== fixedTemplate.shots.length || shots.some((shot, index) => shot.durationSeconds !== fixedTemplate.durations[index]
     || (safeFixedShots?.[index].evidenceRefs.length === 0 ? shot.focus !== "Source-visible product form" || shot.evidenceRefs.length > 0
       : (input.presetId === "luxury-fashion-film" ? input.shotMode === "multi" && index === 2 : index === 0 || input.shotMode === "multi" && input.draft.durationSeconds === 10 && index === 1)
       ? !shot.evidenceRefs.length || !fixedTemplate.patterns[index].test(shot.focus)
@@ -1035,7 +1092,7 @@ export function parseDirectorOutput(value: unknown, input: VideoDirectorInput, o
       }
     }
   }
-  const fixedGolden = signatureMatches || lightSweepMatches || macroMatches || floatingMatches || darkRevealMatches || materialStudyMatches || windowDisplayMatches
+  const fixedGolden = editorial || signatureMatches || lightSweepMatches || macroMatches || floatingMatches || darkRevealMatches || materialStudyMatches || windowDisplayMatches
     || goldenStoryboard && fixedQuickCutsDirectorPlan(input)?.shots.every((expected, index, fixed) => fixed.length === shots.length
       && expected.durationSeconds === shots[index].durationSeconds && expected.purpose === shots[index].purpose
       && shotFields.every(field => expected[field] === shots[index][field]));
@@ -1062,7 +1119,8 @@ export function parseDirectorOutput(value: unknown, input: VideoDirectorInput, o
       || contract.focusPosition === "last" && shots.at(-1)!.focus !== target) return reject("$.shots[*].focus", "requested_focus_not_preserved", "requested verified evidence at requested position");
   }
   return { version: VIDEO_DIRECTOR_VERSION, presetId: input.presetId, presetVersion: directorPresetVersion(input.presetId),
-    shotMode: input.shotMode, ...(referenceReviews?.length ? { referenceReviews } : {}), origin: "ai", intent: value.intent.trim(), intentContract: expectedIntent, summary: value.summary.trim(), shots };
+    shotMode: input.shotMode, ...(editorial ? { editorialStoryboard: true as const } : {}),
+    ...(referenceReviews?.length ? { referenceReviews } : {}), origin: editorial ? "fallback" : "ai", intent: value.intent.trim(), intentContract: expectedIntent, summary: value.summary.trim(), shots };
 }
 
 function fallbackMark(detail: string) {
@@ -1072,6 +1130,8 @@ function fallbackMark(detail: string) {
 export function fallbackDirectorPlan(input: VideoDirectorInput, referenceReviews: ReferenceReview[] = []): VideoDirectorPlan {
   // Custom direction must never silently become a preset when planning fails.
   if (input.presetId === "custom") throw new DirectorStructuredOutputError("custom_director_unavailable");
+  const editorial = editorialStoryboard(input, referenceReviews);
+  if (editorial) return editorial;
   const quickCuts = fixedQuickCutsDirectorPlan(input);
   if (quickCuts) return { ...applyFixedPlanIntent(quickCuts, input), ...(referenceReviews.length ? { referenceReviews } : {}) };
   const fixed = fixedFallbackPlan(input);
@@ -1203,7 +1263,7 @@ export function compileDirectorPlan(plan: VideoDirectorPlan, input: VideoDirecto
   if (!validated) throw new Error("invalid_director_plan");
   const multi = plan.shotMode === "multi";
   const limit = multi ? KLING_MULTI_PROMPT_MAX_CHARS : 2500;
-  const elementReferences = klingElementReferences(validated.referenceReviews ?? [], input.draft.productReferences);
+  const elementReferences = directorElementReferences(validated, input.draft.productReferences);
   const classicCinematic = input.presetId === "cinematic-hero" && input.shotMode === "multi" && input.draft.durationSeconds === 5;
   const branding = input.profile?.visibleBranding;
   const verifiedDetails = new Set(directorProductContext(input.profile).evidence.map(item => item.detail));
@@ -1220,6 +1280,8 @@ export function compileDirectorPlan(plan: VideoDirectorPlan, input: VideoDirecto
   const markList = markNames.length > 1 ? `${markNames.slice(0, -1).join(", ")} and ${markNames.at(-1)}` : markNames[0];
   const fallbackPreservation = markList ? `Keep the ${markList} exactly as in the source; do not enlarge, restyle or reposition them.` : undefined;
   const declaredTextPreservation = referenceTextPreservation(validated.referenceReviews ?? [], input.draft.productReferences);
+  const editorialText = validated.editorialStoryboard
+    ? referenceTextPreservation(validated.referenceReviews ?? [], input.draft.productReferences, true) : "";
   const signature = input.presetId === "minimal-studio" && input.shotMode === "multi" && input.draft.durationSeconds === 10
     ? fixedMinimalDirectorPlan(input) : null;
   const signatureStoryboard = signature && [signature, fixedMinimalDirectorPlan(input, true, false)!].some(candidate => validated.shots.length === 3 && validated.shots.every((shot, index) =>
@@ -1262,12 +1324,13 @@ export function compileDirectorPlan(plan: VideoDirectorPlan, input: VideoDirecto
     && shotFields.every(field => shot[field] === windowDisplay.shots[index][field]));
   const prompts = validated.shots.map(shot => {
     const prefix = elementReferences.some(review => review.index === shot.referenceIndex)
-      ? referenceShotPrefix(shot.referenceIndex, validated.referenceReviews ?? [], input.draft.productReferences) : "";
+      ? elementShotPrefix(shot.referenceIndex, elementReferences) : "";
     const backShot = validated.referenceReviews?.some(review => review.index === shot.referenceIndex && review.view === "back");
     const referenceMarks = validated.referenceReviews?.some(review => review.status === "matched"
       && backShot && review.index === shot.referenceIndex
       && review.details.some(detail => /\b(?:text|letter\w*|logo|symbol|label|pattern|print|emblem|embroider\w*)\b/i.test(detail)));
-    if (signatureStoryboard && (shot.camera === "Straight axial long-lens push-in" || shot.camera === "Locked static hero framing")) {
+    const editorialSignature = validated.editorialStoryboard && input.presetId === "minimal-studio";
+    if ((signatureStoryboard || editorialSignature) && (shot.camera === "Straight axial long-lens push-in" || shot.camera === "Locked static hero framing")) {
       const establish = shot.purpose === "hero-reveal";
       const discipline = establish
         ? "No arc, lateral drift, perspective swing or reorientation; no product rotation/yaw/pitch/roll"
@@ -1276,9 +1339,42 @@ export function compileDirectorPlan(plan: VideoDirectorPlan, input: VideoDirecto
       const compactMotion = establish ? "Product fixed and source-facing"
         : "Product/camera still, source-facing; full frame all 3s";
       for (const compact of [false, true]) {
+        const text = compact && editorialSignature ? editorialText : declaredTextPreservation;
         const prompt = prefix + [shot.camera, shot.composition, shot.lighting, compact ? compactMotion : fullMotion, compact && !establish ? "Stable premium hero hold" : shot.pace,
-          discipline, "Exact form/colors/marks/parts", ...(declaredTextPreservation ? [declaredTextPreservation] : [])].join(". ");
+          discipline, "Exact form/colors/marks/parts", ...(text ? [text] : [])].join(". ");
         if (prompt.length <= limit) return prompt;
+      }
+      if (editorialSignature) {
+        const framing = establish ? "Full product with open margins" : "Balanced full product hero";
+        const guard = establish ? "Product fixed, source-facing. Straight camera path only; no arc, drift, perspective swing or product rotation"
+          : "Product and camera still, source-facing, all 3s. No turn, zoom, translation or perspective change";
+        const prompt = [shot.camera, framing, shot.lighting, guard, "Exact form/colors/marks/parts", editorialText].filter(Boolean).join(". ");
+        if (prompt.length <= limit) return prompt;
+      }
+      throw new Error("kling_scene_prompt_too_long");
+    }
+    if (validated.editorialStoryboard) {
+      const side = shot.referenceIndex !== undefined;
+      const direction = [shot.camera, shot.composition, shot.lighting, shot.motion, shot.pace,
+        ...(shot.evidenceRefs.length ? [shot.focus] : [])].join(". ");
+      const preservation = side
+        ? "Exact visible side geometry, colors, material, marks and parts. Keep the pictured profile fixed."
+        : "Exact source form/colors/material/marks/parts; known view only";
+      const watch = !editorialSignature && !side && productReferencePolicy(input.profile) === "watch";
+      const compactDial = "Exact source dial each frame: numerals, indices, logo, hands, date window, print and visible complications keep shape/position. No redraw, replacement, morphing or invented text.";
+      const text = side ? "" : declaredTextPreservation;
+      const prompt = prefix + [direction, preservation, watch ? compactDial : "", text].filter(Boolean).join(". ");
+      if (prompt.length <= limit) return prompt;
+      if (watch) {
+        const sweep = shot.purpose === "lighting-reveal";
+        const finish = shot.purpose === "final-hero";
+        const compactDirection = sweep ? "Locked offset crop. One soft highlight travels left-to-right"
+          : finish ? "Locked full hero all 3s; steady fill" : "Locked full product; soft key";
+        const compact = [compactDirection, "Fixed source pose. Exact form/colors/material/marks/parts", compactDial, editorialText].filter(Boolean).join(". ");
+        if (compact.length <= limit) return compact;
+      } else if (!side && editorialText) {
+        const compact = [direction, preservation, editorialText].join(". ");
+        if (compact.length <= limit) return compact;
       }
       throw new Error("kling_scene_prompt_too_long");
     }

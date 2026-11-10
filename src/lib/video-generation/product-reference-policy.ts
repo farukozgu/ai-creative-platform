@@ -8,10 +8,24 @@ export type ProductReferencePolicy = "watch" | "jewelry" | "cosmetics";
 export const isAdditionalProductReferenceRole = (purpose: string): purpose is AdditionalProductReferenceRole =>
   additionalProductReferenceRoles.some(role => role === purpose);
 
+export function usesEditorialStoryboard(input: { presetId: string; shotMode: string; draft: { durationSeconds: number } }) {
+  return input.shotMode === "multi" && input.draft.durationSeconds === 10
+    && (input.presetId === "minimal-studio" || input.presetId === "metallic-light-sweep");
+}
+
+export const isEditorialSideRole = (purpose: string) => purpose === "side-profile" || purpose === "other-product-view";
+
 /** Scope new role reviews before they can supply an alternate shot view. Legacy reviews pass through. */
-export function scopeProductReferenceReview(review: ReferenceReview & { dialDetailVisible?: unknown }, purpose: string): ReferenceReview {
-  if (!isAdditionalProductReferenceRole(purpose) || purpose === "other-product-view") return review;
-  const { dialDetailVisible, ...identity } = review;
+export function scopeProductReferenceReview(review: ReferenceReview & { dialDetailVisible?: unknown }, purpose: string, editorial = false): ReferenceReview {
+  const { wholeSideVisible, ...legacy } = review;
+  if (editorial && isEditorialSideRole(purpose) && review.status === "matched" && review.view === "side" && wholeSideVisible === true) {
+    return { ...legacy, wholeSideVisible: true };
+  }
+  if (editorial && purpose === "other-product-view" && review.status === "matched" && review.view === "side") {
+    return { ...legacy, view: "detail" };
+  }
+  if (!isAdditionalProductReferenceRole(purpose) || purpose === "other-product-view") return legacy;
+  const { dialDetailVisible, ...identity } = legacy;
   if (identity.status !== "matched") return identity;
   if (purpose === "dial-detail" && (dialDetailVisible !== true || identity.view !== "detail")) {
     return { ...identity, view: "unknown", details: [] };

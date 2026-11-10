@@ -1,7 +1,16 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import type { VideoDirectorInput } from "../../src/lib/video-director/core";
+import { fallbackDirectorPlan, fixedLightingDirectorPlan, fixedMinimalDirectorPlan, presetCreativeIntent, type VideoDirectorInput } from "../../src/lib/video-director/core";
+import { directorProductContext } from "../../src/lib/video-director/product-context";
+import { usesEditorialStoryboard } from "../../src/lib/video-generation/product-reference-policy";
 import { isGoldenTenSecondMulti } from "./video-fidelity-expectations";
+
+/** Replay pre-C1 snapshots through their historical storyboard and live compiler. */
+export function historicalPresetOutputPlan(input: VideoDirectorInput) {
+  if (!usesEditorialStoryboard(input)) return fallbackDirectorPlan(input);
+  const plan = input.presetId === "minimal-studio" ? fixedMinimalDirectorPlan(input)! : fixedLightingDirectorPlan(input)!;
+  return { ...plan, intentContract: presetCreativeIntent(input, directorProductContext(input.profile).evidence) };
+}
 
 export function canonicalPresetOutputJson(value: unknown) {
   return JSON.stringify(value, (_key, item: unknown) => {

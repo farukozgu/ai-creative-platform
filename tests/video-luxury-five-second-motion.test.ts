@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { assertPresetOutputFingerprints, presetOutputGroup } from "./fixtures/preset-output-fingerprint";
+import { assertPresetOutputFingerprints, historicalPresetOutputPlan, presetOutputGroup } from "./fixtures/preset-output-fingerprint";
 import { compileDirectorPlan, fallbackDirectorPlan, parseDirectorOutput } from "../src/lib/video-director/core";
 import { getVideoDirectorPreset, videoPresetIds } from "../src/lib/video-director/presets";
 import { buildFalVideoRequestInput } from "../src/lib/video-generation/fal-request";
@@ -71,7 +71,7 @@ test("historical and approved revised preset cells retain their compiled outputs
       if (presetId === "luxury-fashion-film" && durationSeconds === 5 && shotMode === "multi") continue;
       const base = directorFixtureInput(profile!);
       const input = { ...base, presetId, shotMode, draft: { ...base.draft, durationSeconds, shotMode } };
-      const plan = fallbackDirectorPlan(input);
+      const plan = historicalPresetOutputPlan(input);
       outputs[presetOutputGroup(input)].push({ preset: getVideoDirectorPreset(presetId, shotMode, durationSeconds),
         plan, compiled: compileDirectorPlan(plan, input) });
       count++;

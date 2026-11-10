@@ -100,8 +100,9 @@ test("all 23 fixed presets use the real OpenAI adapter with isolated logo review
     const plain = await core.directVideoWithClient(input, { createPlan: value => api.createOpenAIVideoPlan(value, pixels) });
     const refs = { ...input, draft: { ...input.draft, productReferences: [{ source: { kind: "uploaded-image" as const, sourceAssetId: "10000000-0000-4000-8000-000000000002" }, sha256: "b".repeat(64), purpose: "logo" }] }, referenceImages: [{ prepared: pixels, sourceSha256: "b".repeat(64), purpose: "logo" }] };
     const reviewed = await core.directVideoWithClient(refs, { createPlan: value => api.createOpenAIVideoPlan(value, pixels) });
-    assert.equal(plain.origin, "ai", presetId);
-    assert.equal(reviewed.origin, "ai", presetId);
+    const origin = expected.editorialStoryboard ? "fallback" : "ai";
+    assert.equal(plain.origin, origin, presetId);
+    assert.equal(reviewed.origin, origin, presetId);
     assert.equal(JSON.stringify(captured[0]), JSON.stringify(captured[1]), presetId);
     assert.equal(captured.length, 3, presetId);
     assert.deepEqual(reviewed.shots, plain.shots, presetId);
@@ -111,7 +112,7 @@ test("all 23 fixed presets use the real OpenAI adapter with isolated logo review
         referenceImages: [{ ...refs.referenceImages[0], purpose }] };
       const requestOffset: number = captured.length;
       const supported = await core.directVideoWithClient(supplemented, { createPlan: value => api.createOpenAIVideoPlan(value, pixels) });
-      assert.equal(supported.origin, "ai", `${presetId}/${purpose}`);
+      assert.equal(supported.origin, origin, `${presetId}/${purpose}`);
       assert.equal(JSON.stringify(captured[requestOffset]), JSON.stringify(captured[0]), `${presetId}/${purpose}/primary request`);
       assert.deepEqual(supported.shots.map(({ referenceIndex: _index, ...shot }) => { void _index; return shot; }), plain.shots, `${presetId}/${purpose}/creative direction`);
       const compiled = core.compileDirectorPlan(supported, supplemented);
@@ -119,4 +120,27 @@ test("all 23 fixed presets use the real OpenAI adapter with isolated logo review
         elementImageUrls: klingElementReferences(supported.referenceReviews ?? [], supplemented.draft.productReferences).map(() => "https://invalid.example/angle") }), presetId);
     }
   }
+});
+
+test("C1 reference-only adapter scopes a whole side and leaves a cropped profile as detail", async () => {
+  const pixels = await sharp({ create: { width: 24, height: 24, channels: 3, background: "white" } }).png().toBuffer();
+  const base = directorFixtureInput(directorProducts[2]);
+  const sha256 = "b".repeat(64);
+  const purpose = "side-profile";
+  const input: core.VideoDirectorInput = { ...base, presetId: "metallic-light-sweep",
+    draft: { ...base.draft, productReferences: [{ source: { kind: "uploaded-image", sourceAssetId: "10000000-0000-4000-8000-000000000002" }, purpose, sha256 }] },
+    referenceImages: [{ prepared: pixels, purpose, sourceSha256: sha256 }] };
+  let wholeSideVisible = true;
+  const api = offlineAdapter(() => ({ referenceReviews: { r0: { status: "matched", view: "side", wholeSideVisible, reason: "Offline same-product review", details: [] } } }));
+  const [whole] = await api.createOpenAIReferenceReviews(input, pixels);
+  assert.equal(whole.view, "side");
+  assert.equal(whole.wholeSideVisible, true);
+  wholeSideVisible = false;
+  const [crop] = await api.createOpenAIReferenceReviews(input, pixels);
+  assert.equal(crop.view, "detail");
+  assert.equal(crop.wholeSideVisible, undefined);
+  wholeSideVisible = true;
+  const [legacy] = await api.createOpenAIReferenceReviews({ ...input, draft: { ...input.draft, durationSeconds: 5 } }, pixels);
+  assert.equal(legacy.view, "detail");
+  assert.equal(legacy.wholeSideVisible, undefined);
 });

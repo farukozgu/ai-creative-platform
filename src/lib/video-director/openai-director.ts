@@ -4,7 +4,7 @@ import { getOpenAIVideoStudioAnalysisClient } from "@/lib/openai/client";
 import { structuredResponseText } from "@/lib/openai/structured-response";
 import { attachOpenAIResponseTelemetry } from "@/lib/openai/response-telemetry";
 import { getPromptEnhancementModel } from "@/lib/generation/prompts/prompt-enhancer-config";
-import { fixedQuickCutsDirectorPlan, fixedLegacyDirectorPlan, presetCreativeIntent, compileDirectorPlan, directorPlanDescriptions, fallbackDirectorPlan, fixedPresentationDirectorPlan, fixedFashionMotionDirectorPlan, fixedLightingDirectorPlan, fixedMinimalDirectorPlan, fixedMaterialDirectorPlan, fixedMacroDirectorPlan, parseDirectorOutput, type VideoDirectorInput, type VideoDirectorPlan, type DirectorValidationFailure } from "./core";
+import { fixedQuickCutsDirectorPlan, fixedLegacyDirectorPlan, presetCreativeIntent, compileDirectorPlan, directorPlanDescriptions, fallbackDirectorPlan, fixedPresentationDirectorPlan, fixedFashionMotionDirectorPlan, fixedLightingDirectorPlan, fixedMaterialDirectorPlan, fixedMacroDirectorPlan, parseDirectorOutput, type VideoDirectorInput, type VideoDirectorPlan, type DirectorValidationFailure } from "./core";
 import { DIRECTOR_GENERIC_FOCUS_VALUES, DirectorStructuredOutputError, directorShotContract, selectedCameras, shotFields } from "./plan-contract";
 import { compileKlingShot } from "./kling-compiler";
 import { shotPurposes, videoDirectorPresets, getVideoDirectorPreset } from "./presets";
@@ -13,7 +13,7 @@ import { safePresetStrategy, cinematicHeroSingleFiveSeconds } from "./preset-lib
 import { customCreativeIntent, numberedCreativeBeats } from "./custom-brief";
 import { logVideoDiagnostic, safeOpenAIErrorCode, safeOpenAIStatus } from "@/lib/video-generation/diagnostics";
 import { parseReferenceReviews, type ReferenceReview } from "../video-generation/product-references";
-import { isAdditionalProductReferenceRole, scopeProductReferenceReview } from "../video-generation/product-reference-policy";
+import { isAdditionalProductReferenceRole, isEditorialSideRole, scopeProductReferenceReview, usesEditorialStoryboard } from "../video-generation/product-reference-policy";
 
 const referenceInstructions = [
   "Reference orientation is verified from pixels, never from purpose/slot labels. Return view=front/back/side/detail/unknown for each review; unmatched views must be unknown. Match the same physical product conservatively using consistent visible identity. Different sides may legitimately have different visible features. A matched back view verifies only its pictured surface, not interiors or intermediate turn angles.",
@@ -214,6 +214,7 @@ export function buildDirectorRequest(input: VideoDirectorInput, repair?: Directo
   const beats = custom && multi ? numberedCreativeBeats(input.draft.prompt) : [];
   // Identical planning contract with or without accuracy references.
   const refs = referenceOnly ? input.draft.productReferences ?? [] : [];
+  const editorial = usesEditorialStoryboard(input);
   const modeInstructions = input.presetId === "custom"
     ? instructions.split("\n").filter(line => !["The selected preset brief", "Use the structured preset strategy", "Understand the category", "Every shot needs", "Allow controlled product", "Single-shot:"].some(prefix => line.startsWith(prefix)))
       .join("\n").replace("Empty text means direct from product and preset.", "")
@@ -223,6 +224,9 @@ export function buildDirectorRequest(input: VideoDirectorInput, repair?: Directo
     : instructions;
   const roleInstructions = Object.entries(scopedReferenceInstructions)
     .filter(([role]) => refs.some(ref => ref.purpose === role)).map(([, instruction]) => instruction);
+  if (editorial && refs.some(ref => isEditorialSideRole(ref.purpose))) {
+    roleInstructions.push("For side-profile and other-product-view, set wholeSideVisible=true only for a matched, complete usable side view of the same product that differs from the primary view. Set false for any crop, obscured or uncertain profile, duplicate view, or other orientation. Never infer missing geometry.");
+  }
   const creativeInstructions = referenceOnly ? [referenceInstructions, ...roleInstructions].join("\n") : multi && !custom
     ? `${modeInstructions}\nMulti-shot: each dedicated detail/mark/surface/region appears once, including explicit focus requests. New camera/light/purpose wording is not a new task. Whole-product context may naturally show it. ${input.presetId === "custom" ? "Preserve user direction" : "Preserve preset direction"}; use another verified detail.`
     : modeInstructions;
@@ -261,12 +265,14 @@ export function buildDirectorRequest(input: VideoDirectorInput, repair?: Directo
       ...(refs.length ? { referenceReviews: { type: "object", additionalProperties: false,
         required: refs.map((_, index) => "r" + index),
         properties: Object.fromEntries(refs.map((ref, index) => ["r" + index, {
-          type: "object", additionalProperties: false, required: ["status", "view", "reason", "details", ...(ref.purpose === "dial-detail" ? ["dialDetailVisible"] : [])], properties: {
+          type: "object", additionalProperties: false, required: ["status", "view", "reason", "details", ...(ref.purpose === "dial-detail" ? ["dialDetailVisible"] : []),
+            ...(editorial && isEditorialSideRole(ref.purpose) ? ["wholeSideVisible"] : [])], properties: {
             status: { type: "string", enum: ["matched", "conflict", "uncertain"] },
             view: { type: "string", enum: ["front", "back", "side", "detail", "unknown"] },
             reason: { type: "string", minLength: 1, maxLength: 120 },
             details: { type: "array", maxItems: 2, items: { type: "string", minLength: 1, maxLength: 70 } },
             ...(ref.purpose === "dial-detail" ? { dialDetailVisible: { type: "boolean" } } : {}),
+            ...(editorial && isEditorialSideRole(ref.purpose) ? { wholeSideVisible: { type: "boolean" } } : {}),
           },
         }])),
       } } : {}),
@@ -290,12 +296,10 @@ export function buildDirectorRequest(input: VideoDirectorInput, repair?: Directo
   let fixedMacro = legacyFixed ? {
     shots: legacyFixed.shots, durations: legacyFixed.shots.map(shot => shot.durationSeconds),
   } : null;
-  const signature = !referenceOnly && input.presetId === "minimal-studio" && input.shotMode === "multi" && input.draft.durationSeconds === 10
-    ? fixedMinimalDirectorPlan(input) : null;
-  if (signature) fixedMacro = { shots: signature.shots, durations: [4, 3, 3] };
-  const lightSweep = !referenceOnly && input.presetId === "metallic-light-sweep" && input.shotMode === "multi" && input.draft.durationSeconds === 10
-    ? fixedLightingDirectorPlan(input) : null;
-  if (lightSweep) fixedMacro = { shots: lightSweep.shots, durations: [3, 4, 3] };
+  if (!referenceOnly && editorial) {
+    const { shots } = fallbackDirectorPlan(input);
+    fixedMacro = { shots, durations: shots.map(shot => shot.durationSeconds) };
+  }
   const macro = !referenceOnly && input.presetId === "macro-detail-reveal" && input.shotMode === "multi" && input.draft.durationSeconds === 10
     ? fixedMacroDirectorPlan(input) : null;
   if (macro) fixedMacro = { shots: macro.shots, durations: [3, 4, 3] };
@@ -512,7 +516,7 @@ async function requestVideoDirector(input: VideoDirectorInput, source: Buffer, c
     const shots = !referenceOnly && "shots" in plan && Array.isArray(plan.shots) ? plan.shots : [];
     const reviewedReferences = referenceOnly ? parseReferenceReviews(referenceReviews, references.length) : null;
     const result = { ...(!referenceOnly ? plan : {}), shots,
-      referenceReviews: reviewedReferences?.map(review => scopeProductReferenceReview(review, references[review.index].purpose)),
+      referenceReviews: reviewedReferences?.map(review => scopeProductReferenceReview(review, references[review.index].purpose, usesEditorialStoryboard(input))),
       ...directorPlanDescriptions(input, shots.length), intentContract };
     if (correlationId) logVideoDiagnostic(correlationId, "structured_output_parsed", "success", {
       model, schemaFieldsPresent: schema.required.filter(key => Object.hasOwn(plan, key)).join(","),

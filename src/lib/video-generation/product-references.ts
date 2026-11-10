@@ -1,8 +1,9 @@
 import type { VideoPresetProduct } from "../video-director/preset-recommendations";
 import { videoDirectorPresets, type VideoPresetId } from "../video-director/presets";
+import type { VideoDirectorPlan } from "../video-director/core";
 export const referenceViews = ["front", "back", "side", "detail", "unknown"] as const;
 export type ReferenceView = typeof referenceViews[number];
-export type ReferenceReview = { index: number; status: "matched" | "conflict" | "uncertain"; reason: string; details: string[]; view?: ReferenceView };
+export type ReferenceReview = { index: number; status: "matched" | "conflict" | "uncertain"; reason: string; details: string[]; view?: ReferenceView; wholeSideVisible?: boolean };
 export const supportsReferenceDeclaredText = (purpose: string) => /\b(?:logo|text|label|detail)\b/i.test(purpose);
 export function parseReferenceDeclaredText(value: unknown): string | null {
   if (typeof value !== "string" || /[\p{Cc}\p{Zl}\p{Zp}]/u.test(value)) return null;
@@ -10,11 +11,12 @@ export function parseReferenceDeclaredText(value: unknown): string | null {
   return text.length <= 80 ? text : null;
 }
 /** User text is quoted identity data, never Director evidence or creative direction. */
-export function referenceTextPreservation(reviews: ReferenceReview[], references: readonly { purpose: string; declaredText?: string }[] = []) {
+export function referenceTextPreservation(reviews: ReferenceReview[], references: readonly { purpose: string; declaredText?: string }[] = [], compact = false) {
   return references.flatMap((reference, index) => {
     if (!supportsReferenceDeclaredText(reference.purpose) || !reviews.some(review => review.index === index && review.status === "matched")) return [];
     const text = parseReferenceDeclaredText(reference.declaredText);
     if (text === null || !text) return [];
+    if (compact) return [`Keep ${JSON.stringify(text)} exact in shape, size and position.`];
     return [`Preserve the exact visible text ${JSON.stringify(text)}; keep spelling, character order, case, placement and proportions unchanged.`];
   }).join(" ");
 }
@@ -29,8 +31,17 @@ export function klingElementReferences(reviews: ReferenceReview[], references: r
   return reviews.filter(review => review.status === "matched" && ["front", "back", "side"].includes(review.view ?? "")
     && !/\b(?:logo|label|text|symbol|mark|brand|emblem)\b/i.test(references[review.index]?.purpose ?? ""));
 }
+export function directorElementReferences(plan: VideoDirectorPlan | undefined, references: readonly { purpose: string }[] = []) {
+  const matched = klingElementReferences(plan?.referenceReviews ?? [], references);
+  if (!plan?.editorialStoryboard) return matched;
+  return matched.filter(review => review.index === plan.shots[1]?.referenceIndex);
+}
+
 export function referenceShotPrefix(referenceIndex: number | undefined, reviews: ReferenceReview[], references: readonly { purpose: string }[] = []) {
-  const matched = klingElementReferences(reviews, references);
+  return elementShotPrefix(referenceIndex, klingElementReferences(reviews, references));
+}
+
+export function elementShotPrefix(referenceIndex: number | undefined, matched: ReferenceReview[]) {
   const position = matched.findIndex(review => review.index === referenceIndex);
   const view = matched[position]?.view;
   return position >= 0 && view && view !== "unknown" && view !== "detail"
@@ -61,6 +72,7 @@ export function parseReferenceReviews(value: unknown, count: number, onReject?: 
       || item.details.length > 2 || item.details.some((d: unknown) => typeof d !== "string" || !d.trim() || d.length > 70)) return reject(`$.referenceReviews[${index}]`, "ordered index, valid status, reason <=120 chars, at most two details <=70 chars");
     if (item.status !== "matched" && item.details.length) return reject(`$.referenceReviews[${index}].details`, "unverified references cannot add evidence");
     if (item.view !== undefined && !referenceViews.includes(item.view)) return reject(`$.referenceReviews[${index}].view`, "supported reference view");
+    if (item.wholeSideVisible !== undefined && typeof item.wholeSideVisible !== "boolean") return reject(`$.referenceReviews[${index}].wholeSideVisible`, "boolean");
     if (item.status !== "matched" && item.view !== undefined && item.view !== "unknown") return reject(`$.referenceReviews[${index}].view`, "unverified reference view must be unknown");
     if (item.details.some((d: string) => /\b(?:leather|silk|cotton|gold|diamond|steel|interior|hidden|genuine|brand|underside)\b/i.test(d)
       || backViewTerms.test(d) && item.view !== "back")) return reject(`$.referenceReviews[${index}].details`, "no unverified materials, brands or hidden surfaces; rear details require a back view");

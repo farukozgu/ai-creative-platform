@@ -46,10 +46,11 @@ export async function prepareVideoDirectorPlan(ownerId: string, source: Buffer, 
   if (isGoldenTenSecondMulti(input)) {
     let plan: VideoDirectorPlan;
     const references = input.draft.productReferences?.length ?? 0;
+    const editorialReview = input.presetId === "minimal-studio" || input.presetId === "metallic-light-sweep";
     if (!references) {
       plan = fallbackDirectorPlan(input);
       log("director_creative_plan", "skipped", { code: "golden_local_plan" });
-    } else if (allowAI && existing?.referenceReviews?.length) {
+    } else if (allowAI && existing?.referenceReviews?.length && (!editorialReview || existing.editorialStoryboard)) {
       plan = fallbackDirectorPlan(input, existing.referenceReviews);
       log("director_reference_review", "cache_hit");
     } else {
