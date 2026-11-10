@@ -3,13 +3,14 @@ import test from "node:test";
 import { readFileSync } from "node:fs";
 import { runBenchmark, fingerprint } from "../scripts/preset-benchmark/benchmark";
 import { runMutationProbes } from "../scripts/preset-benchmark/probes";
-import { planDistance, weights, auditBoundary } from "../scripts/preset-benchmark/analysis";
+import { assessPlan, planDistance, strategyRepresentation, weights, auditBoundary } from "../scripts/preset-benchmark/analysis";
 import { benchmarkProducts } from "../scripts/preset-benchmark/dataset";
 import { videoStudioPresetIds } from "../src/features/video/video-preset-catalog";
-import { fallbackDirectorPlan } from "../src/lib/video-director/core";
+import { fallbackDirectorPlan, type VideoDirectorPlan } from "../src/lib/video-director/core";
 import { directorFixtureInput, directorProducts } from "./fixtures/video-director-fixtures";
 
 const result = runBenchmark();
+const distance = (a: VideoDirectorPlan, b: VideoDirectorPlan) => planDistance(strategyRepresentation(a), strategyRepresentation(b));
 test("benchmark covers all 24 presets with two appropriate products, four intents and the full model/time/shot matrix", () => {
   assert.equal(result.summaries.length, 24);
   assert.equal(result.products.length, 20);
@@ -34,15 +35,37 @@ test("all observed prompts resolve through real receipts, preview and provider c
     assert.ok(p.characters.every(n => n <= (c.mode === "multi" ? 512 : 2500)));
   }
 });
-test("scoring does not reward renamed purposes, summaries or synonyms as different directing", () => {
+test("identical execution still collides despite renamed purposes, synonyms and preservation boilerplate", () => {
   const a = fallbackDirectorPlan(directorFixtureInput(directorProducts[0]));
   const b = structuredClone(a);
   b.summary = "A totally different marketing name";
   b.shots[0].pace = "Magnificent cinematic premium rhythm";
   b.shots[0].purpose = "lighting-reveal";
-  assert.equal(planDistance(a, b, benchmarkProducts[0]), 0);
-  b.shots[0].camera = "Slow pan right";
-  assert.ok(planDistance(a, b, benchmarkProducts[0]) > 0);
+  a.shots[0].pace = "Quiet restrained rhythm";
+  a.shots[0].camera = "Slow dolly-in";
+  b.shots[0].camera = "Slow push-in. No orbit or pull-back.";
+  b.shots[0].lighting += ". Preserve original material and colors.";
+  b.shots[0].motion += ". Do not float, rise or sway.";
+  assert.equal(distance(a, b), 0);
+});
+
+test("trajectory, lighting event, subject action and ordered rhythm distinguish execution", () => {
+  const base = fallbackDirectorPlan(directorFixtureInput(directorProducts[0]));
+  const shot = { ...base.shots[0], durationSeconds: 4, camera: "Dolly-in then pull-back", lighting: "Steady soft edge light",
+    motion: "Keep the product still", pace: "Move 3s; hold 1s" };
+  const hero = { ...base.shots[0], durationSeconds: 6, camera: "Locked symmetrical hero framing" };
+  const a = { ...base, shots: [shot, hero] };
+  for (const [axis, change] of [
+    ["trajectory order", { camera: "Pull-back then dolly-in" }],
+    ["optical versus physical movement", { camera: "Zoom in then pull-back" }],
+    ["lighting event", { lighting: "Soft edge highlight travels left-to-right" }],
+    ["subject action", { motion: "Float upward, then settle" }],
+    ["within-shot timing", { pace: "Move 1s; hold 3s" }],
+  ] as const) {
+    assert.ok(distance(a, { ...a, shots: [{ ...shot, ...change }, hero] }) > 0, axis);
+  }
+  assert.ok(distance(a, { ...a, shots: [hero, shot] }) > 0, "shot order");
+  assert.ok(distance(a, { ...a, shots: [{ ...shot, durationSeconds: 5 }, { ...hero, durationSeconds: 5 }] }) > 0, "shot allocation");
 });
 test("benchmark preserves explicit intent in legacy cells and keeps golden storyboards fixed", () => {
   for (const row of result.cases) {
@@ -64,9 +87,28 @@ test("fixed benchmark measures responsive groups and a lower single-shot detail 
   assert.equal(result.totals.storedPlans, result.cases.length);
   assert.ok(result.cases.filter(c => c.mode === "single" && c.weaknesses.includes("close-frame-focuses-form-or-generic")).length < 2320);
   const emptyIntentCollisions = result.cases.filter(c => c.intentKind === "empty" && c.weaknesses.includes("semantic-strategy-collision"));
-  assert.ok(emptyIntentCollisions.length < 84); // Prior 336 cases / four identical fallback intents.
+  assert.ok(emptyIntentCollisions.length < 84, `empty-prompt collisions: ${emptyIntentCollisions.length}`); // Historical baseline: 336 rows across four equivalent intent variants.
   assert.equal(result.totals.hardFailures, 0);
   assert.ok(result.summaries.some(s => s.score >= 80));
+});
+test("empty prompts distinguish the eight signature presets independently of legacy peers", () => {
+  const publicComparisons = result.cases.filter(c => c.intentKind === "empty" && c.nearestActivePeer);
+  assert.deepEqual([...new Set(publicComparisons.map(c => c.presetId))].sort(), [...videoStudioPresetIds].sort());
+  assert.deepEqual(publicComparisons.filter(c => c.nearestActivePeer?.distance === 0).map(c => c.id), []);
+});
+
+test("an unmet brief is explained only when a fixed storyboard actually survives", () => {
+  const base = directorFixtureInput(directorProducts[0]);
+  const intent = { kind: "short", text: "Kamerayı sabit tut.", camera: "static" } as const;
+  const input = { ...base, presetId: "cinematic-hero" as const, draft: { ...base.draft, prompt: intent.text } };
+  const plan = fallbackDirectorPlan(input);
+  const retained = assessPlan(plan, input, benchmarkProducts[0], intent, []);
+  assert.equal(retained.executed, false);
+  assert.ok(retained.weaknesses.includes("fixed-storyboard-retained"));
+  assert.ok(!retained.failures.includes("unjustified-intent-loss"));
+
+  const changed = { ...plan, shots: [{ ...plan.shots[0], lighting: "Soft overhead light" }, ...plan.shots.slice(1)] };
+  assert.ok(assessPlan(changed, input, benchmarkProducts[0], intent, []).failures.includes("unjustified-intent-loss"));
 });
 test("mandatory failure detectors catch all calibrated corruptions without adding them to real scenario totals", () => {
   const probes = runMutationProbes();

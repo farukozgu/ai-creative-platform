@@ -1,86 +1,177 @@
 {
   "luxury-fashion-film": {
     "cases": 128,
-    "fingerprint": "78f2cd62a8ca3ae48cef8161009f16672e8e78f09b0b2b1557995643a2b8efac"
+    "preset": "59b55468943caa72cc5c0fe199e7429eea2937bf035325c63a147d4f73be6f81",
+    "plan": "f44a36024156dd8c46431b3034e536884be9e4b859ddfd22d250cb30f6d2202e",
+    "compiled": "71bec722338c0f204de2e642446c913d42c87226f11ae9fdfcfc9e1d4664b70f",
+    "klingRequest": "61e7af1815a1bc15829f4d38a24f59e002f180b595d529e34df9d31793d647e8",
+    "cacheKey": "73729f972ff2e7a1284c222eeb6ec67a8e35529e839246f1614238c766e6d207"
   },
   "minimal-studio": {
     "cases": 128,
-    "fingerprint": "6355726c69bee840637671e424f6353603484787f86a6d85ebc834738c1c5e09"
+    "preset": "2cecfbdb88a1450b149b8f641539c99f23153a13c19d41a6b07ee27f91218672",
+    "plan": "446ba48604988bff8c14404273318ed6c49cc4585161dd6dd6372ec4f8bfd9b2",
+    "compiled": "0168964313bbd4ca2d3e65404b4bac3b72b22589b7d04ce2ce78a38a33b0738c",
+    "klingRequest": "f7e3f1c449bd83eb0b8c855a812cb13bc42743993d91ea03f3009c2486706750",
+    "cacheKey": "9c4af1de3d9beb0fe10deb7155c364dc9d4edcbd0e61d2d2dab3947be7a569e8"
   },
   "floating-fashion": {
     "cases": 128,
-    "fingerprint": "d944b3408a679dc72922accc2725106ac3da827d509a3bd3be363b4461970669"
+    "preset": "2993f11dc5653fc7cb1debdc405a583ba81dda6c22d6743bef2a8a87b95c944f",
+    "plan": "78d3c85b8ec5d34d90c089cbf24e83c56b1a4a5ad27e76aba38002d5c5bb2e0d",
+    "compiled": "e26d5dc94bc31053efdb40ac572dfde2295829dfbc5cde721bcb8ef6d8584bc0",
+    "klingRequest": "e08f8bd111cccb670866a971eeaa5fb3576357e5e04caf9fcc4b224fe7976d17",
+    "cacheKey": "a09f13357993032b457c6fd0d981e72e831f03573c4aa26cb3e206ef85a078ce"
   },
   "precision-macro": {
     "cases": 128,
-    "fingerprint": "55a65ea2db0e99a02aa4dbc32962b7ac394a5c0bdaaa7177eb21f21be7585be3"
+    "preset": "375cce269798d70132327ac78e66c1ed405e92a1d4021f5ba774f0c535bc2973",
+    "plan": "9eef7617650b3c8aa1a872656b847c0d46a08e16eec657b37bd065623ad121dd",
+    "compiled": "041e79429ccb9222ecd4ed7e65eadddc32e67cbde496b46607ded8b78dc55923",
+    "klingRequest": "51e2a243e924e3e66e622f8c5dbc60ef4c072d7c2a4d569a4761d9a0ff668bdb",
+    "cacheKey": "095c5c4b265eeb9378f1be980bb2165807b1dbeb828de3435f68ee3f875bf41e"
   },
   "glass-reflection": {
     "cases": 128,
-    "fingerprint": "1d3c1aee71f2ed58257bfe7c119113bfce1290a56c70121fd9a63c5a3fb5cab0"
+    "preset": "67d3dacba917ef56c9dc5d0f7d4d7b6afa80bc55049a13250bfe5f104849e4c8",
+    "plan": "667201f1ad586286d3d13819264af7f28b77f29af0dd082b00d2161d2160b729",
+    "compiled": "ebdf2624307263a4a2a8e468c0cdb84dbc8a7c312a7db340f31626676bbaae3b",
+    "klingRequest": "4858e285b29562a718684404febebc3a95c868aefa94df30ff7607f52bdfdc72",
+    "cacheKey": "f7907bb58a864938bf85be18020c27ecc799e63cd3b1f672a3db20ffe8188290"
   },
   "elegant-orbit": {
     "cases": 128,
-    "fingerprint": "3d227a97b6aa38caba0d0c7e4ce9f759ee1b92d4cdc5ee579bad1685d92fa1aa"
+    "preset": "0878a5b644e28059883e1428992ea8f3f300bb141f67f0a2211db05bf2c59bf0",
+    "plan": "5b35dbd2ca9b24cbc85081d069435a6238376627fad72f03377051525c49509d",
+    "compiled": "20b28d88db52666500f86e73725db1b3c34d28306c9c4c07b8570d0cd4de577f",
+    "klingRequest": "94f2495198c0d5e233365643cd64d18244e96bcbc6016c812f6d0e5859f3143b",
+    "cacheKey": "6c5ee4dfc9e1eeedc2265ae4041ac7c822cc70fbf4b63ce38538a2713d393c35"
   },
   "cinematic-hero": {
-    "cases": 129,
-    "fingerprint": "cc2eef0543db1b02d5adee6b30e990d2cabce14b394e8c0155c17d4ec6af65cf"
+    "cases": 128,
+    "preset": "d6a917af9338e4efe749fa45ac74d42788ecc0f685e7eafd908c06bcb87b16e5",
+    "plan": "1379ab7b5300fa77359d711af2e40ade344407954ec91754b0ac721ba0cc41f6",
+    "compiled": "630d8621b43efcf3fce576ecc19f7c5fdbebdd5529033c8a109a4dfdbed9e950",
+    "klingRequest": "ab85811fb0870f8c1a727ac6ee98d5da03a907deb59046568e50b1a9b4b111bc",
+    "cacheKey": "25d1e94b562287a394a6b8392286b30cad8e5cd4e1720976cdc12c1c9aebf83f",
+    "directorRequest": "af9fa979ef454fb0b4f0a0f18a4acfdc4a57faabc77ac532850c914f59e87cc8",
+    "frontBack": {
+      "plan": "e56ce3c42ba0b26baa624b48fc5e579be96e45191bf9bc6d455b2feb7ed28ec5",
+      "compiled": "7e1e39c221e2de2880bf88825f0c0761248ba288b360cf6d230e15a796160bf0",
+      "directorRequest": "0a4e864956a053974c4c463677faf9752e530b1b239bd2ca14a2923d761f175c",
+      "cacheKey": "c9346bd3eba63541dbdac1dcfc55e0bc164d635822fb5cccb8595a1f1e3b5c0f"
+    }
   },
   "macro-stitching": {
     "cases": 128,
-    "fingerprint": "80ea244211d3b60831e30769e2e4777ba11c9b60ae9bd20e79dcb57f6e668af4"
+    "preset": "3702f0e3a0e822f1fe954a5288a1d1c3a6f1c7ffbc8f5389d40892ab8355ba90",
+    "plan": "f57b4b1b8f902f8efcfb0de0f34605da7da1f0a5f1ee07c73b0064f319bfbd24",
+    "compiled": "11de839ef46505468cad4bc5e97a742574f5814e8c787fbc8844e396a06a7935",
+    "klingRequest": "60019d2e06e93da355263fdf7d05d7922556c3f8d9515e94e26c5ef901fd6afc",
+    "cacheKey": "36ddb0075ca250f802170777a3276fa49da6c7bcaafd1614d9d7a9bc30ee1c8e"
   },
   "fabric-motion": {
     "cases": 128,
-    "fingerprint": "e607c009cee8dd5a553a108e1c2c4cc3b9a675d44c215064bcf29c511e8941b7"
+    "preset": "7f9d534a2e495e62cbd056fb974f3a5d0bf2f6a0e694ddd759d0fa81ba93fcc0",
+    "plan": "0faf3848e125119178d53a11d8cb4429eab2d725c3f4699abd0b3dc5f55146c3",
+    "compiled": "be894c7b59f1d8fbe65a3e14f7059d04b48d1e4aa9da94f0d9b866e27b036762",
+    "klingRequest": "71fe3b01a6aa9bdded05c9c6ed8b428cc1a6d6254711972bafe4d17d6d85d1bd",
+    "cacheKey": "9dd2421a5aa3757169a59f7038ad6724d143a79f87192f659ad6edb0451a58d2"
   },
   "label-reveal": {
     "cases": 128,
-    "fingerprint": "b2f82167cbd3ea284267c3aabb71d43f526e8dee0fb1acf418b7775e722a1333"
+    "preset": "c25c266b6830d0a75373625c3db04cb9e485a97c615f3d672552e844e3541bc3",
+    "plan": "7997e44822e8d5005a0e6a69cb0c05f8030f5290779769fe07e48d27bd8a3839",
+    "compiled": "3ae2aa2d49c9cdd3fafc8d005442fbdb8bf6746a549a032faa6c249814fb580b",
+    "klingRequest": "d460bf80e980029931ab07a5b3b94bb1fe130d3cfb0ea37475d9b3d15887f063",
+    "cacheKey": "0d45231b42a919726c57f59fc9bfb8b1a7702bc48a37bb6a76b6eac456b293be"
   },
   "dramatic-backlight": {
     "cases": 128,
-    "fingerprint": "80661fbc7ffe6b0c572b7c4ba7149eba7c938ce6448029f12f5326de20413d97"
+    "preset": "6e333e974ba93c7103c95422219ea90f3650dbaccdd1d0ccd9898c998c476f00",
+    "plan": "1c6ae9c90d7df041d4c238e0b3ff7d43f63acafdd5358b57fa719924b62e81bb",
+    "compiled": "4a2623e2df7bec2cd619db9dcb72a99bae5b8b0d85cfe17f64069fa847cc3643",
+    "klingRequest": "7bd6127577a85299a96ed3a24f0722945db4214ff0ba3c37d5e4e61a065ae72b",
+    "cacheKey": "30ec540dd7620449c04a3a6b30dd1414090de791f431436238c6266b9898cb63"
   },
   "cinematic-dial": {
     "cases": 128,
-    "fingerprint": "fc1d9648b6c907637af3e299c6c5a324ff02624a2b51c3dfa86809cd885fa7ce"
+    "preset": "90c6f03b79bc96c545f52fe0e1e69b1b50330c946f7a906697d68137be22927c",
+    "plan": "3c7d752151d86d1a1425b0e57b7bc95bc04f53ed4d2456fd574a2957388e2cbf",
+    "compiled": "9c33b76b253f8e59d00b0291737a08606ba32a67c176216565561c99b6188966",
+    "klingRequest": "502ebed742354931a57c61ba5bc0edb849c349d2805f5cd32afd94ced0fc8ffd",
+    "cacheKey": "ef13ab24e7ccc100b3b3a3165937e609c9ed5464f4b2b60930882ce9711feb60"
   },
   "metallic-light-sweep": {
     "cases": 128,
-    "fingerprint": "cea5dd17534f64d1083864929a682a5f3e869c4fe07059bc32b354c4acad0692"
+    "preset": "f46f1da0cbd44004d06d2c3427ca841fe6a298c9b53123a3fae1de96f580b1e2",
+    "plan": "60c219c262e019af7e1368c264647300235bf1319d1e2b1e7e71d4bfa9662c45",
+    "compiled": "a6c63cde8cb9cf12780c91a961e332ac5e4004eccabff42b29ecb355c23c7b41",
+    "klingRequest": "f521236d1efab607c356e7e644ef1aeeb2a90a4b979f928e9a4bc78c4e3bae65",
+    "cacheKey": "30308effada684dfe45eb33f236d8f1bf04fb8948f6103f7fa7341800e6083b8"
   },
   "hardware-reveal": {
     "cases": 128,
-    "fingerprint": "45cb2b9d09b09189ccf58b0079c525576d807c34e44ac70e46f2465bba4d90b9"
+    "preset": "348cb944b1536deb1ffb88c85903bd1adc9e56e507ae5a4d8ea9ead7a8a741d1",
+    "plan": "c81196f7135994ab95928dfdbb608431f0aa9d3ae0abfd1b21996a4dcf455f35",
+    "compiled": "74410225151a33d068006b7663b2e2c3f2a6230a999604301bf5a7e0dfbb579a",
+    "klingRequest": "7f725e406d5a61e8a8185d312907fd4d2252f8f07a4ba2cdf23e10873818c9de",
+    "cacheKey": "df72cf88579d4489daa70a46bdd8f33f087326dc5d4293782af3a360d9fedfb4"
   },
   "floating-accessory": {
     "cases": 128,
-    "fingerprint": "6fa52d04a8fcd5ff8863efa4da863b154572de38156bccac9e1293791ffaca6e"
+    "preset": "125103c0c017a1f5467be4ee5f886121a225a48f43c02cb581a414ab18d5cb08",
+    "plan": "bfa4e1abcd1cca36c64761f686ff751c059568ad5f7845e5f6b4808d6123a542",
+    "compiled": "7ab5e2e3114fbd6875f76476990c68d0feb45fcb54f03201fd50bbdacdb7ef9c",
+    "klingRequest": "c617db8d2b53ef54ecc75abe02f96eabc3eb76f824e5beb90e2a8e2d2120aa49",
+    "cacheKey": "e4a77fd05048aafd751c5b4e356ef7e772fe6cc65686bed9f07161016cabf4a0"
   },
   "sneaker-hero": {
     "cases": 128,
-    "fingerprint": "679e137fd0c819907443ac0ffed4f93c7fbdf19aa0069d490e038f19c686d0b8"
+    "preset": "a02ffeb2248b62258f7c7f22d3e5d6d1554e2a423362f32a765e5927ce446f0f",
+    "plan": "678b617939a0aff50491733f109b1e3e421eaba0a361ad0a147e77131640566c",
+    "compiled": "5243d868d93451123c24b1a5fa9e820c8b6e861a463da6d8d5963da813fc4e89",
+    "klingRequest": "8c7b6c1437dd3fced996af63e5b9e22b88899f1b439d9871b46e03640cb78457",
+    "cacheKey": "21dc049ac9463ea665b1659b1e23d38da381c940d88ddfc5ce2bd693bfd20e58"
   },
   "upholstery-macro": {
     "cases": 128,
-    "fingerprint": "75bcba80edec44db5920ad2057f4dbc8b040e5b6ceb859af96c1faee84b578f2"
+    "preset": "42dc231786536162429fc95277bd3fb15a26a778a285da8c13c827aaa0cb8339",
+    "plan": "1ea5bf890fc04c5ff94f2d069de780a7c18c947f40c2a946f5643700e4712513",
+    "compiled": "e244fa0f1438119b8395fd2a58a32e2f5f700a2cdeee02bad3adf6c8d2cfb0d5",
+    "klingRequest": "adfe2dbf78ca5642bed80eda4b827107cded05a1214e9587e87e187b3965090f",
+    "cacheKey": "cda6a94e1a03174120ca4a83ae6981ee0d20c76a3f7789a00a3c86fb25e0cf21"
   },
   "culinary-texture": {
     "cases": 128,
-    "fingerprint": "d9c7b4964525a0a1fa2c7ce563824693f8800bb3517b33d1027fd24da7805651"
+    "preset": "a0f3d8e99d0f5619dfa61cf6bdf5c4bc638f19ad7a891298d0c03c3627e2d461",
+    "plan": "a41cc55a1cf3a08be6cc63ea4e0af4b1d83a4860f7d2cb63a9e3de48a8721efc",
+    "compiled": "358821be6243df77d9eaedac84c3b091dcddb82abd95f7bcf4825a389371c4c3",
+    "klingRequest": "5226582d895f487eddad38b854571c15bc8ded83135ef08b5ba647b4567c9dc6",
+    "cacheKey": "97723e9686996427598a0861836ff05917be663368f7d88937fe7fc6c743d57c"
   },
   "optical-lines": {
     "cases": 128,
-    "fingerprint": "57ae226b252487082b22a8f2a3f2e794dc78ae55a5de96869189f77abbb88942"
+    "preset": "71d000e1d53720f128cb7df194a50606a3f819c50bab8ae348399ff0e2f3d9c8",
+    "plan": "5d8251a06ea5b087f6fcafed0088784291065067f431b3cb7aceec320fefb5e2",
+    "compiled": "7c6351f2ec4d194549296897ecdbde5196ccd4d4331f547c667e01ce4cd6d121",
+    "klingRequest": "a7eb7f456b2a40ae5e314f5f027c53543395815d12d739a9a80c87300fc3cd33",
+    "cacheKey": "4ccb180631998a8fe3b4f66fcaddb7729a0bc31d89f557a820d9a3e73be68e4f"
   },
   "craftsmanship-study": {
     "cases": 128,
-    "fingerprint": "71fb5bf99121f5941dd0e0ca30c702ff81987b4ef7238fe1de29da36015f8e71"
+    "preset": "41f19590d9271d06e78033fd3f43e43eabaa6fe69a27694d927a433a6705706d",
+    "plan": "f0a755b9ca65783e8fdf82161c1f9f744fcdda6e7ee97ce54761ff6f41f0933d",
+    "compiled": "f7acd2894e55ceeac34690b9c65c2142c070f7d014f0436090262a335426a48c",
+    "klingRequest": "7dec672c38baae199937de04b4f46ac42e0e1babfbf60ed9c46c13b0a1892fcb",
+    "cacheKey": "bc4551b872b95db5a2f2f43c178fe05399bc8193d4f2f739779825319fa08412"
   },
   "window-display": {
     "cases": 128,
-    "fingerprint": "108d2842f04c5e1df0ca47c1ea59aec34c7a3d3381350ed39a3044644122b631"
+    "preset": "9586bd303949173160b12aa0285756d51a44fc91cda0beeec40f902cc4982e36",
+    "plan": "e532a7590a5b8c4055532af66a7c03f3d714c828131d03f1a29b3215385a3c7d",
+    "compiled": "09ba5461031611d3aaf53a936ca3d46e48b7b8aa4ed2311cde49cbf542ada8c0",
+    "klingRequest": "1f8132737579eda8921b9b8b00d81a086d3527d26e48f84273ff7e4ee3d5f20e",
+    "cacheKey": "14b3e18f9819d81ac4d0cee350f4d3fb052e9874c604b388286d3abbff0f7b2f"
   }
 }

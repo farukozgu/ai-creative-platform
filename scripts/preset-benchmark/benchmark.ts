@@ -1,6 +1,8 @@
 import { createHash } from "node:crypto";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
+import { isDeepStrictEqual } from "node:util";
+import { videoStudioPresetIds } from "../../src/features/video/video-preset-catalog";
 import { compileDirectorPlan, fallbackDirectorPlan, type VideoDirectorInput } from "../../src/lib/video-director/core";
 import { videoDirectorPresets, videoPresetIds, type VideoPresetId } from "../../src/lib/video-director/presets";
 import { presetProduct } from "../../src/lib/video-director/preset-recommendations";
@@ -11,7 +13,7 @@ import { buildFalVideoRequestInput } from "../../src/lib/video-generation/fal-re
 import { summarizeVideoPayload } from "../../src/lib/video-generation/payload-summary";
 import { directorFixtureInput, directorProducts } from "../../tests/fixtures/video-director-fixtures";
 import { benchmarkProducts, intentContracts, type IntentKind } from "./dataset";
-import { assessPlan, auditBoundary, planDistance, weights, type Failure, type Parts } from "./analysis";
+import { assessPlan, auditBoundary, planDistance, strategyRepresentation, weights, type Failure, type Parts } from "./analysis";
 
 export const fingerprint = (value: unknown) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
 export function sourceFingerprint() {
@@ -23,12 +25,14 @@ export function sourceFingerprint() {
   return fingerprint(files.sort().map(file => [file, createHash("sha256").update(readFileSync(file)).digest("hex")]));
 }
 const owner = "10000000-0000-4000-8000-000000000001", secret = "offline-benchmark-only-never-a-real-key", now = 1000;
+const activePresets = new Set<VideoPresetId>(videoStudioPresetIds);
 type StoredPlan = { productId: string; presetId: VideoPresetId; quality: string; duration: number; mode: string;
   plan: ReturnType<typeof fallbackDirectorPlan>; compiled: ReturnType<typeof compileDirectorPlan>; payload: ReturnType<typeof buildFalVideoRequestInput>;
   preview: ReturnType<typeof summarizeVideoPayload>["preview"]; characters: number[] };
 export type CaseResult = { id: string; productId: string; presetId: VideoPresetId; quality: string; duration: number; mode: string;
   intentKind: IntentKind; request: string; suitable: boolean; counterfactualGroup: string; planRef: string; planHash: string; parts: Parts; score: number; failures: Failure[]; weaknesses: string[];
   strengths: string[]; executed: boolean; explained: boolean; categoryMatch: boolean; nearestPeer: { presetId: VideoPresetId; distance: number } | null;
+  nearestActivePeer: CaseResult["nearestPeer"];
   boundary: { signedPlan: boolean; exactPreview: boolean; signedQuote: boolean; rejectsChangedRequest: boolean; rejectsChangedPayload: boolean } };
 export type PresetSummary = { presetId: VideoPresetId; count: number; products: number; score: number; parts: Parts; hardFailures: number;
   technicalFailures: number; intentionExecutionRate: number; classification: string; weaknesses: Record<string, number>; strengths: string[]; exampleRefs: string[] };
@@ -40,6 +44,7 @@ export function runBenchmark() {
   const ui = readFileSync("src/features/video/video-director-panel.tsx", "utf8");
   const tr = JSON.parse(readFileSync("src/messages/tr.json", "utf8")).Dashboard.videoStudio.director;
   const plans: Record<string, StoredPlan> = {}, cases: CaseResult[] = [];
+  const strategies: Record<string, ReturnType<typeof strategyRepresentation>> = {};
   for (const product of benchmarkProducts) for (const presetId of videoPresetIds) {
     const preset = videoDirectorPresets[presetId];
     const suitable = !preset.strategy.categories.length || product.category !== "unknown" && preset.strategy.categories.includes(product.category);
@@ -58,7 +63,8 @@ export function runBenchmark() {
         const key = directorCacheKey(owner, fingerprint(product.profile), "offline-no-model", input);
         const receipt = sealDirectorPlan(key, plan, secret, now);
         const opened = openDirectorPlan(receipt, key, input, secret, now + 1);
-        const signedPlan = Boolean(opened && fingerprint(opened) === fingerprint(plan));
+        // The authenticated plan is rebuilt by the parser, which can reorder object keys.
+        const signedPlan = isDeepStrictEqual(opened, plan);
         const compiled = compileDirectorPlan(opened ?? plan, input);
         const snapshot = { version: compiled.version, method: "kling" as const, draftHash: videoDraftHash(input.draft), sourceSha256: fingerprint(product.profile),
           geometry: { originalWidth: 100, originalHeight: 100, contentRect: { x: 0, y: 0, width: 1, height: 1 } }, criticalRegion: input.draft.criticalRegion ?? null,
@@ -78,6 +84,7 @@ export function runBenchmark() {
         const counterfactualGroup = `${product.id}/${presetId}/${quality}/${durationSeconds}/${shotMode}`;
         const planRef = `${counterfactualGroup}/${intent.kind}`;
         plans[planRef] = { productId: product.id, presetId, quality, duration: durationSeconds, mode: shotMode, plan, compiled, payload, preview: previewData.preview, characters: prompts.map(p => p.length) };
+        strategies[planRef] = strategyRepresentation(plan);
         assessment.parts.prompt = assessment.failures.some(f => f === "payload-limit" || f === "signed-preview-payload-mismatch") ? 0 : 4;
         if (prompts.some(p => /Compose the (?:source-resolved|close crop)|Allow a (?:a|an)|framing the source-visible/i.test(p))) {
           assessment.parts.prompt = Math.min(assessment.parts.prompt, 3); assessment.weaknesses.push("mechanical-or-meta-language");
@@ -85,7 +92,7 @@ export function runBenchmark() {
         cases.push({ id: planRef, productId: product.id, presetId, quality, duration: durationSeconds, mode: shotMode,
           intentKind: intent.kind, request: intent.text, suitable, counterfactualGroup, planRef, planHash: fingerprint(plan), parts: assessment.parts, score: 0, failures: assessment.failures,
           weaknesses: assessment.weaknesses, strengths: assessment.strengths, executed: assessment.executed, explained: assessment.explained,
-          categoryMatch: presetProduct(product.profile).category === product.category, nearestPeer: null, boundary });
+          categoryMatch: presetProduct(product.profile).category === product.category, nearestPeer: null, nearestActivePeer: null, boundary });
       }
   }
   const counterfactual = new Map<string, Set<string>>();
@@ -94,12 +101,12 @@ export function runBenchmark() {
     if (c.intentKind !== "empty" && counterfactual.get(c.counterfactualGroup)!.size === 1) {
       c.parts.intent = Math.min(5, c.parts.intent); c.weaknesses.push("request-does-not-influence-fallback");
     }
-    const product = benchmarkProducts.find(p => p.id === c.productId)!;
     const peers = videoPresetIds.filter(id => id !== c.presetId).flatMap(id => {
-      const p = plans[`${c.productId}/${id}/${c.quality}/${c.duration}/${c.mode}/${c.intentKind}`];
-      return p ? [{ presetId: id, distance: planDistance(plans[c.planRef].plan, p.plan, product) }] : [];
+      const peer = strategies[`${c.productId}/${id}/${c.quality}/${c.duration}/${c.mode}/${c.intentKind}`];
+      return peer ? [{ presetId: id, distance: planDistance(strategies[c.planRef], peer) }] : [];
     }).sort((a, b) => a.distance - b.distance || a.presetId.localeCompare(b.presetId));
     c.nearestPeer = peers[0] ?? null;
+    if (activePresets.has(c.presetId)) c.nearestActivePeer = peers.find(peer => activePresets.has(peer.presetId)) ?? null;
     c.parts.difference = c.nearestPeer ? Math.round(20 * Math.min(1, c.nearestPeer.distance / 0.5)) : 0;
     if (c.nearestPeer?.distance === 0) c.weaknesses.push("semantic-strategy-collision");
     c.score = Object.values(c.parts).reduce((sum, n) => sum + n, 0);

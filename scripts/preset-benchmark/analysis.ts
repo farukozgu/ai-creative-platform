@@ -1,4 +1,6 @@
-import type { VideoDirectorInput, VideoDirectorPlan, VideoDirectorShot } from "../../src/lib/video-director/core";
+import { isDeepStrictEqual } from "node:util";
+import { videoStudioPresetIds } from "../../src/features/video/video-preset-catalog";
+import { fallbackDirectorPlan, type VideoDirectorInput, type VideoDirectorPlan, type VideoDirectorShot } from "../../src/lib/video-director/core";
 import { directorProductContext } from "../../src/lib/video-director/product-context";
 import { hasUnsupportedProductClaims } from "../../src/lib/video-director/creative-request";
 import { directorShotContract } from "../../src/lib/video-director/plan-contract";
@@ -27,35 +29,83 @@ function scale(s: string) {
   if (/full|wide|complete|silhouette|overview/i.test(s)) return "full";
   return "medium";
 }
+function creativeText(text: string) {
+  return text.toLowerCase().split(/[;.!?](?=\s|$)/)
+    .filter(clause => !/^\s*(?:no\b|never\b|do not\b|without\b|(?:keep|preserve|retain)\s+(?:the\s+)?(?:source|original|exact|known)\b)/.test(clause))
+    .map(clause => clause.replace(/\s+(?:without|no|never|do not)\s+.*$/, ""))
+    .join(" ");
+}
+
+function trajectory(s: string) {
+  // Preserve the order of positive movements and distinguish optical zoom from translation.
+  return [...s.matchAll(/\b(zoom[ -]in|zoom[ -]out|push(?:[ -]in)?|dolly[ -]in|approach|advance|pull[ -]back|dolly[ -]out|retreat|pan (?:left|right)|tilt (?:up|down)|arc|orbit|glide|slide|parallax)\b/g)]
+    .map(([move]) => {
+      if (/^(?:push|dolly[ -]in|approach|advance)/.test(move)) return "push-in";
+      if (/^(?:pull|dolly[ -]out|retreat)/.test(move)) return "pull-back";
+      if (/^(?:glide|slide|parallax)$/.test(move)) return "glide";
+      return move.replace(/[ -]/g, "-");
+    });
+}
+
 function layout(s: string) {
-  return /asymmetr|off.center|diagonal/i.test(s) ? "asymmetric" : /negative space|margins|breathing|space above/i.test(s) ? "space" : /symmetr|center|balanced/i.test(s) ? "centered" : "neutral";
+  if (/asymmetr|off.center|diagonal/.test(s)) return "asymmetric";
+  if (/symmetr/.test(s)) return "symmetric";
+  if (/centered|balanced (?:full|hero|product) framing/.test(s)) return "centered";
+  if (/vertical (?:space|margins)|space above/.test(s)) return "vertical-space";
+  if (/horizontal (?:space|margins|breathing)|side margins/.test(s)) return "side-space";
+  if (/forward (?:graphic space|breathing)/.test(s)) return "forward-space";
+  return /negative space|margins|breathing/.test(s) ? "space" : "neutral";
 }
-function light(s: string) {
-  if (/travels|crosses|sweep|moving|light pass/i.test(s)) return "traveling";
-  if (/rim|backlight/i.test(s)) return "rim";
-  if (/graz|raking/i.test(s)) return "grazing";
-  if (/narrow|focused|spot/i.test(s)) return "focused";
-  if (/side|directional|edge|contour/i.test(s)) return "directional";
-  return "diffuse";
+
+function lighting(s: string) {
+  const event = /travel|crosses|crossing|sweep|moving|(?:light|highlight) pass|light band traces/.test(s) ? "travel"
+    : /\b(?:grows|builds|brightens)\b/.test(s) ? "rise"
+    : /\b(?:fades|dims)\b/.test(s) ? "fade"
+    : /\bpulses?\b/.test(s) ? "pulse"
+    : /\bshifts\b/.test(s) ? "shift" : "steady";
+  const placement = /overhead|top.down/.test(s) ? "overhead" : /top.side/.test(s) ? "top-side"
+    : /rim|backlight/.test(s) ? "rim" : /\bfill\b/.test(s) ? "fill" : "unspecified";
+  const quality = /graz|raking/.test(s) ? "grazing" : /side|directional|edge|contour/.test(s) ? "directional" : "diffuse";
+  const spread = /\b(?:narrow|focused|spot)\b/.test(s) ? "narrow" : /\b(?:broad|wide)\b/.test(s) ? "broad" : "unspecified";
+  const direction = event === "travel" ? s.match(/\b(?:left.to.right|right.to.left)\b/)?.[0].replace(/[ -]/g, "-") : undefined;
+  return { event, placement, quality, spread, direction };
 }
-export function shotDecisions(shot: VideoDirectorShot, product: BenchmarkProduct) {
-  return { camera: cameraMoves(shot.camera), lens: /long.lens/i.test(shot.camera) ? "long-lens" : /macro/i.test(shot.camera) ? "macro" : "unspecified",
-    scale: scale(shot.camera + " " + shot.composition), layout: layout(shot.composition),
-    lighting: light(shot.lighting), focus: product.featureTargets.includes(shot.focus) ? "feature" : shot.evidenceRefs.length ? "evidenced-form" : "generic",
-    purpose: shot.purpose };
+
+function visualDecisions(shot: VideoDirectorShot) {
+  const camera = creativeText(shot.camera);
+  const frame = camera + " " + creativeText(shot.composition);
+  const motion = creativeText(shot.motion);
+  return {
+    camera: { axes: cameraMoves(camera), trajectory: trajectory(camera), axial: /\baxial\b/.test(camera) },
+    lens: /long.lens/.test(camera) ? "long-lens" : /macro/.test(camera) ? "macro" : "unspecified",
+    lighting: lighting(creativeText(shot.lighting)),
+    layout: layout(frame),
+    scale: scale(frame),
+    focus: normalized(shot.focus),
+    motion: {
+      floating: /\b(?:float\w*|suspend\w*|rise|rises|upward drift)\b/.test(motion),
+      settling: /\bsettl\w*\b/.test(motion),
+      fabric: /\b(?:rippl\w*|flutter\w*|sway\w*)\b/.test(motion),
+      focusPull: /\b(?:rack focus|focus (?:pulls|shifts|settles))\b/.test(motion),
+    },
+  };
 }
-export function visualSignature(shot: VideoDirectorShot, product: BenchmarkProduct) {
-  const { camera, lens, scale, layout, lighting } = shotDecisions(shot, product);
-  return JSON.stringify({ camera, lens, scale, layout, lighting, focus: normalized(shot.focus) });
+
+export function strategyRepresentation(plan: VideoDirectorPlan) {
+  return plan.shots.map(shot => ({
+    ...visualDecisions(shot),
+    rhythm: { seconds: shot.durationSeconds,
+      timedPhases: [...creativeText(shot.pace).matchAll(/\b(\d+(?:\.\d+)?)\s*(?:s\b|seconds?\b)/g)].map(match => Number(match[1])) },
+  }));
 }
-export function planDistance(a: VideoDirectorPlan, b: VideoDirectorPlan, product: BenchmarkProduct) {
-  const axes = ["camera", "lens", "lighting", "layout", "scale", "focus"] as const;
-  const costs = [0.2, 0.1, 0.25, 0.15, 0.2, 0.1];
-  const distance = axes.reduce((sum, axis, i) => {
-    const av = a.shots.map(s => shotDecisions(s, product)[axis]), bv = b.shots.map(s => shotDecisions(s, product)[axis]);
-    return sum + (JSON.stringify(av) === JSON.stringify(bv) ? 0 : costs[i]);
-  }, 0);
-  return Math.round(distance * 1000) / 1000;
+
+const strategyWeights = { camera: 20, lens: 5, lighting: 20, layout: 10, scale: 15, focus: 10, motion: 10, rhythm: 10 } as const;
+const strategyAxes = Object.keys(strategyWeights) as (keyof typeof strategyWeights)[];
+
+export function planDistance(a: ReturnType<typeof strategyRepresentation>, b: ReturnType<typeof strategyRepresentation>) {
+  const distance = strategyAxes.reduce((sum, axis) => sum + (isDeepStrictEqual(a.map(s => s[axis]), b.map(s => s[axis]))
+    ? 0 : strategyWeights[axis]), 0);
+  return distance / 100;
 }
 
 export function assessPlan(plan: VideoDirectorPlan, input: VideoDirectorInput, product: BenchmarkProduct, intent: IntentContract, notices: string[]) {
@@ -68,7 +118,9 @@ export function assessPlan(plan: VideoDirectorPlan, input: VideoDirectorInput, p
   if (unseen) failures.push("unseen-surface");
   if ((unseen || /exploded|manufactur|workshop|spray from|new hands/i.test(directions)) && notices.length === 0) failures.push("unexplained-risk");
   if (plan.shotMode !== input.shotMode || input.shotMode === "single" && plan.shots.length !== 1 || /\b(?:cut to|montage|jump cut|crossfade)\b/i.test(directions)) failures.push("shot-mode-conflict");
-  if (input.shotMode === "multi" && plan.shots.some((s, i) => i > 0 && visualSignature(s, product) === visualSignature(plan.shots[i - 1], product))) failures.push("repeated-scene");
+  // A different duration or purpose label alone does not make a duplicate shot distinct.
+  const visualSignatures = plan.shots.map(shot => JSON.stringify(visualDecisions(shot)));
+  if (input.shotMode === "multi" && visualSignatures.some((signature, i) => i > 0 && signature === visualSignatures[i - 1])) failures.push("repeated-scene");
   const contract = directorShotContract(input.shotMode, input.draft.durationSeconds, input.presetId);
   const overload = input.draft.durationSeconds === 5 && (plan.shots.length > contract.maxShots
     || plan.shots.some(s => !Number.isFinite(s.durationSeconds) || s.durationSeconds < contract.minDuration || cameraMoves(s.camera).filter(m => m !== "static").length > 1));
@@ -82,10 +134,15 @@ export function assessPlan(plan: VideoDirectorPlan, input: VideoDirectorInput, p
   const detailSatisfied = !intent.detail || plan.shots.some(s => s.focus === intent.detail);
   const orderSatisfied = intent.camera !== "in-out" || scale(plan.shots[0].camera + " " + plan.shots[0].composition) === "close"
     && scale(plan.shots.at(-1)!.composition) === "full";
-  const explained = plan.origin === "fallback" && /not been interpreted/i.test(plan.intent) && notices.length > 0;
   const executed = cameraSatisfied && detailSatisfied && orderSatisfied;
+  // Public 10s multi keeps the server-owned storyboard, so a matching fallback can leave the brief unapplied.
+  const fixedStoryboard = !executed && intent.kind !== "empty" && plan.origin === "fallback"
+    && input.shotMode === "multi" && input.draft.durationSeconds === 10
+    && videoStudioPresetIds.some(id => id === input.presetId)
+    && isDeepStrictEqual(plan.shots, fallbackDirectorPlan(input).shots);
+  const explained = fixedStoryboard || plan.origin === "fallback" && /not been interpreted/i.test(plan.intent) && notices.length > 0;
   if (!executed && intent.kind !== "empty") {
-    weaknesses.push("intent-not-executed");
+    weaknesses.push(fixedStoryboard ? "fixed-storyboard-retained" : "intent-not-executed");
     if (!explained) failures.push("unjustified-intent-loss");
   }
   const detailShots = plan.shots.filter(s => scale(s.camera + " " + s.composition) === "close");
@@ -99,7 +156,7 @@ export function assessPlan(plan: VideoDirectorPlan, input: VideoDirectorInput, p
   const allText = plan.shots.map(s => JSON.stringify(s));
   if (new Set(allText).size > 1) strengths.push("distinct-structured-directions");
   if (grounded) strengths.push("focus-grounded-to-fixture-or-generic");
-  const visualCount = new Set(plan.shots.map(s => visualSignature(s, product))).size;
+  const visualCount = new Set(visualSignatures).size;
   const oneTrajectory = moves.every(m => m.length === 1);
   if (!oneTrajectory) weaknesses.push("ambiguous-or-multiple-camera-trajectories");
   const productScore = (grounded && evidence.length ? 7 : grounded ? 3 : 0)
@@ -111,7 +168,6 @@ export function assessPlan(plan: VideoDirectorPlan, input: VideoDirectorInput, p
   const intentScore = intent.kind === "empty" ? 15 : (cameraSatisfied ? 8 : 0) + (detailSatisfied ? 4 : 0) + (orderSatisfied && (!intent.safeAdjustment || !unseen && notices.length > 0) ? 3 : 0);
   return { failures: [...new Set(failures)], weaknesses, strengths, executed, explained,
     parts: { product: productScore, cinema: cinemaScore, difference: 0, intent: intentScore, identity: grounded && !unseen ? 12 : 0, prompt: 0 } as Parts,
-    decisions: plan.shots.map(s => shotDecisions(s, product)),
   };
 }
 

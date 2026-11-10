@@ -3,13 +3,16 @@ import { createHash } from "node:crypto";
 import type { VideoDirectorInput } from "../../src/lib/video-director/core";
 import { isGoldenTenSecondMulti } from "./video-fidelity-expectations";
 
-export function presetOutputFingerprint(value: unknown) {
-  const json = JSON.stringify(value, (_key, item: unknown) => {
+export function canonicalPresetOutputJson(value: unknown) {
+  return JSON.stringify(value, (_key, item: unknown) => {
     if (!item || typeof item !== "object" || Array.isArray(item)) return item;
     const object = item as Record<string, unknown>;
     return Object.fromEntries(Object.keys(object).sort().map(key => [key, object[key]]));
   });
-  return createHash("sha256").update(json).digest("hex");
+}
+
+export function presetOutputFingerprint(value: unknown) {
+  return createHash("sha256").update(canonicalPresetOutputJson(value)).digest("hex");
 }
 
 export function presetOutputGroup(input: VideoDirectorInput) {

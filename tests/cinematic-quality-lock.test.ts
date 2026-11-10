@@ -6,7 +6,8 @@ import test from "node:test";
 import { compileDirectorPlan, fallbackDirectorPlan, parseDirectorOutput, type VideoDirectorInput, type VideoDirectorPlan } from "../src/lib/video-director/core";
 import type { ProductProfile } from "../src/lib/product-understanding/product-profile";
 import { directorCacheKey, openDirectorPlan, sealDirectorPlan } from "../src/lib/video-director/receipt";
-import { protectedPresetFingerprints } from "./fixtures/preset-quality-baseline";
+import { fixtureDirectorCacheKey, protectedPresetFingerprints } from "./fixtures/preset-quality-baseline";
+import { frontBackInput } from "./fixtures/video-front-back-fixture";
 import { VideoProductionHarness } from "./fixtures/video-production-harness";
 import { mapProductAnalysisModelOutput } from "../src/lib/product-understanding/product-analysis-model-output";
 
@@ -29,9 +30,26 @@ test("successful knitwear Cinematic plan recompiles to every persisted prompt ha
   assert.equal(openDirectorPlan(sealDirectorPlan(key, obsolete, "test-only-secret", 1000, fixture.profile), key, input, "test-only-secret", 2000), null);
 });
 
-test("Cinematic and all 20 other untouched presets retain their pre-change output and cache fingerprints", async () => {
+test("Cinematic and 20 protected presets retain their plan, provider request and cache contracts", async () => {
   const expected = JSON.parse(readFileSync("tests/fixtures/protected-preset-fingerprints.json", "utf8"));
   assert.deepEqual(await protectedPresetFingerprints(), expected);
+
+  const input = frontBackInput("b".repeat(64));
+  const cacheKey = (value: VideoDirectorInput) => directorCacheKey("owner", "source", "gpt-4o-mini", value);
+  const key = cacheKey(input);
+  const reordered = <T extends object>(value: T) => Object.fromEntries(Object.entries(value).reverse()) as T;
+  const reorderedInput = { ...reordered(input), draft: reordered(input.draft) };
+  assert.equal(cacheKey(reorderedInput), key, "top-level input and draft field order");
+  assert.equal(fixtureDirectorCacheKey({
+    ...reorderedInput,
+    profile: reordered(input.profile!),
+    draft: { ...reorderedInput.draft, productReferences: input.draft.productReferences!.map(reordered) },
+  }), fixtureDirectorCacheKey(input), "nested fixture field order");
+
+  assert.notEqual(cacheKey({ ...input, presetId: "minimal-studio" }), key, "preset");
+  assert.notEqual(cacheKey({ ...input, draft: { ...input.draft, durationSeconds: 10 } }), key, "duration");
+  assert.notEqual(cacheKey({ ...input, shotMode: "single", draft: { ...input.draft, shotMode: "single" } }), key, "shot mode");
+  assert.notEqual(cacheKey({ ...input, draft: { ...input.draft, cameraMovement: "static" } }), key, "camera direction");
 });
 
 test("a logo detail reference adds available evidence without replacing Cinematic's five creative beats", async () => {
