@@ -1316,12 +1316,16 @@
           "label-branding-detail": "Etiket / marka detayı",
           "other-product-view": "Diğer ürün görünümü"
         },
-        "dialRequired": "Saat videolarında kadran doğruluğunu korumak için net bir kadran yakın planı ekleyin.",
+        "required": "Gerekli",
+        "optional": "İsteğe bağlı",
+        "dialPlanRequired": "Çekim planını hazırlamak için önce Kadran yakın planı ekleyin.",
+        "dialRequired": "Kadran yakın planı gerekli. Kadranın tamamını net gösteren bir görsel yükleyin.",
+        "dialRejected": "Eklediğiniz görsel kadran yakın planı olarak doğrulanamadı. Kadranın tamamını net gösteren başka bir görsel yükleyin.",
         "policy": {
           "watch": {
             "heading": "Gerekli: Kadran yakın planı",
             "helper": "Kadranın tamamını net gösteren yüksek çözünürlüklü yakın plan. Rakamlar, indeksler, logo, ibreler ve tarih penceresi görünür olmalıdır.",
-            "sideHeading": "Önerilen: Yan / profil",
+            "sideHeading": "İsteğe bağlı: Yan / profil",
             "sideHelper": "Kasa kalınlığı, tepe ve kayış bağlantısı gibi görünür detayları doğrular."
           },
           "jewelry": {

@@ -12,6 +12,20 @@ import {
 } from "@/lib/assets/product-asset-constraints";
 import type { VideoGenerationDraft } from "@/lib/video-generation/types";
 import type { VideoDirectorSelection } from "@/lib/video-director/core";
+import { hasDialDetailReference, type ProductReferencePolicy } from "@/lib/video-generation/product-reference-policy";
+
+export type WatchDialDetailIssue = "missing" | "rejected";
+
+export function watchDialDetailIssue(
+  policy: ProductReferencePolicy | undefined,
+  sourceSha256: string | undefined,
+  references: VideoGenerationDraft["productReferences"],
+  rejectedHashes: readonly string[] = [],
+): WatchDialDetailIssue | null {
+  if (policy !== "watch" || !sourceSha256) return null;
+  if (!hasDialDetailReference(references, sourceSha256)) return "missing";
+  return hasDialDetailReference(references?.filter(ref => !rejectedHashes.includes(ref.sha256)), sourceSha256) ? null : "rejected";
+}
 
 /** Use the same exclusive creative fields for planning, quoting and submission. */
 export function videoStudioCreativeFields(state: VideoStudioDraft, selection?: VideoDirectorSelection | null): Pick<VideoGenerationDraft, "creativeMode" | "prompt" | "cameraMovement" | "director"> {

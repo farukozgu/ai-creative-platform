@@ -12,6 +12,7 @@ import { VIDEO_DIRECTOR_VERSION, type VideoPresetId, type VideoShotMode } from "
 import { videoDirectorPresets } from "@/lib/video-director/presets";
 import { videoStudioPresetIds } from "./video-preset-catalog";
 import { recommendVideoPresets, unknownPresetProduct, type VideoPresetProduct } from "@/lib/video-director/preset-recommendations";
+import type { WatchDialDetailIssue } from "./video-studio-state";
 import styles from "./video-studio-workspace.module.css";
 
 export type VideoProductAnalysisDisplayStatus = "verified" | "not_analyzed" | "unsupported" | "quota_limited" | "budget_unavailable" | "configuration_error" | "provider_failed" | "pending";
@@ -77,12 +78,13 @@ export function VideoDirectorPresetSelector({ presetId, disabled, onChange, prod
   </section>;
 }
 
-export function VideoDirectorPanel({ draft, draftKey, presetId, planDisabled, disabledReason, dialDetailRequired = false, onPrepared, shotMode }: {
+export function VideoDirectorPanel({ draft, draftKey, presetId, planDisabled, disabledReason, dialDetailIssue, onDialDetailRejected, onPrepared, shotMode }: {
   draft: VideoGenerationDraft;
   draftKey: string;
   presetId?: VideoPresetId;
   planDisabled: boolean;
-  dialDetailRequired?: boolean;
+  dialDetailIssue?: WatchDialDetailIssue | null;
+  onDialDetailRejected?(): void;
   disabledReason: "planLocked" | "planNeedsReferences" | "planNeedsSource" | "planNeedsPreparedSource" | "planNeedsReadyDraft" | null;
   onPrepared(selection: VideoDirectorSelection | null, productContext?: VideoPresetProduct, analysisStatus?: VideoProductAnalysisDisplayStatus): void;
   shotMode: VideoShotMode;
@@ -94,7 +96,6 @@ export function VideoDirectorPanel({ draft, draftKey, presetId, planDisabled, di
   const [prepared, setPrepared] = useState<PreparedPlan | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(false);
-  const [dialDetailRejected, setDialDetailRejected] = useState(false);
   const [referencesUnverified, setReferencesUnverified] = useState(false);
   const [referenceErrorReason, setReferenceErrorReason] = useState<"invalid_review" | "unavailable" | "unverified" | "quota">("unverified");
   const inFlight = useRef(false);
@@ -108,18 +109,18 @@ export function VideoDirectorPanel({ draft, draftKey, presetId, planDisabled, di
     if (previousShotMode.current === shotMode) return;
     previousShotMode.current = shotMode;
     selectionVersion.current++;
-    setPrepared(null); setError(false); setDialDetailRejected(false);
+    setPrepared(null); setError(false);
   }, [shotMode]);
   useEffect(() => {
     if (previousPresetId.current === presetId) return;
     previousPresetId.current = presetId;
     selectionVersion.current++;
-    setPrepared(null); setError(false); setDialDetailRejected(false);
+    setPrepared(null); setError(false);
   }, [presetId]);
 
   async function prepare() {
-    if (inFlight.current || planDisabled || dialDetailRequired) return;
-    inFlight.current = true; setBusy(true); setError(false); setReferencesUnverified(false); setDialDetailRejected(false);
+    if (inFlight.current || planDisabled || dialDetailIssue) return;
+    inFlight.current = true; setBusy(true); setError(false); setReferencesUnverified(false);
     setPrepared(null); onPrepared(null);
     const version = selectionVersion.current;
     let existingReceipt: string | undefined;
@@ -134,7 +135,7 @@ export function VideoDirectorPanel({ draft, draftKey, presetId, planDisabled, di
       if (result.status !== "success" && "productContext" in result && result.productContext) {
         onPrepared(null, result.productContext, result.analysisStatus);
       }
-      if (result.status === "dial_detail_required") { setDialDetailRejected(true); return; }
+      if (result.status === "dial_detail_required") { onDialDetailRejected?.(); return; }
       if (result.status === "references_unverified") { setReferenceErrorReason(result.reason); setReferencesUnverified(true); setError(true); return; }
       if (result.status !== "success" || result.plan.presetId !== (presetId ?? "custom") || result.plan.shotMode !== shotMode) {
         setError(true); return;
@@ -155,9 +156,11 @@ export function VideoDirectorPanel({ draft, draftKey, presetId, planDisabled, di
     <p className={styles.fieldDescription}>{t("automaticPlanning")}</p>
     {prepared ? <p className={styles.fieldDescription} role="status" aria-live="polite">{t(`library.analysis.${prepared.analysisStatus}`)}</p> : null}
     {disabledReason ? <p className={styles.fieldDescription} role="status">{t(disabledReason)}</p> : null}
-    {dialDetailRequired || dialDetailRejected ? <p id="video-director-dial-required" className={styles.fieldDescription} role={dialDetailRejected ? "alert" : "status"}>{referenceT("dialRequired")}</p> : null}
+    {dialDetailIssue ? <p id="video-director-dial-required" className={styles.referenceWarning} role={dialDetailIssue === "rejected" ? "alert" : "status"}>
+      {referenceT(dialDetailIssue === "rejected" ? "dialRejected" : "dialPlanRequired")}
+    </p> : null}
     <div className={styles.planActions}>
-      <Button variant="primary" disabled={planDisabled || busy || dialDetailRequired} aria-describedby={dialDetailRequired || dialDetailRejected ? "video-director-dial-required" : undefined} onClick={() => void prepare()}>
+      <Button variant="primary" disabled={planDisabled || busy || Boolean(dialDetailIssue)} aria-describedby={dialDetailIssue ? "video-director-dial-required" : undefined} onClick={() => void prepare()}>
         {busy ? <span className={styles.generateSpinner} aria-hidden="true" /> : null}
         {t(busy ? "preparing" : prepared ? "prepareAgain" : "prepare")}
       </Button>
@@ -193,7 +196,7 @@ export function VideoDirectorPanel({ draft, draftKey, presetId, planDisabled, di
           </ol>
         </details>
         <p>{t("review")}</p>
-      </article> : <div className={styles.planEmpty}><span aria-hidden="true">01 → 02 → 03</span><p>{t("planRequired")}</p></div>}
+      </article> : !dialDetailIssue ? <div className={styles.planEmpty}><span aria-hidden="true">01 → 02 → 03</span><p>{t("planRequired")}</p></div> : null}
     </div>
   </section>;
 }

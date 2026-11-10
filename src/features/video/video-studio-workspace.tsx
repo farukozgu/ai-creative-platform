@@ -28,6 +28,7 @@ import {
   validateVideoStudioDraft,
   videoStudioReducer,
   videoStudioCreativeFields,
+  watchDialDetailIssue,
 } from "@/features/video/video-studio-state";
 import type {
   VideoAspectRatio,
@@ -71,6 +72,7 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
   const shotMode = draft.shotMode;
   const [presetId, setPresetId] = useState<VideoPresetId>("minimal-studio");
   const [referenceState, setReferenceState] = useState<{ key: string; refs: NonNullable<VideoGenerationDraft["productReferences"]> }>({ key: "", refs: [] });
+  const [rejectedDialDetails, setRejectedDialDetails] = useState<{ sourceSha256: string; hashes: string[] } | null>(null);
   const [referenceBusy, setReferenceBusy] = useState(false);
   const [director, setDirector] = useState<{ key: string; selection: VideoDirectorSelection } | null>(null);
   const [submissionQuote, setSubmissionQuote] = useState<{ key: string; cost: number; receipt: string; expiresAt: number; preview: ReturnType<typeof summarizeVideoPayload>["preview"] } | null>(null);
@@ -208,8 +210,9 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
         pricingVersion: currentQuote.analysis.pricingVersion, locale: locale === "en" ? "en" : "tr" } : null,
     mode: "image", shotMode: shotMode ?? undefined, source: preparedFrame?.source ?? null, quality: draft.quality,
     aspectRatio: draft.aspectRatio, durationSeconds: draft.duration, ...videoStudioCreativeFields(draft) };
-  const dialDetailRequired = referencePolicy === "watch" && Boolean(preparedFrame
-    && !hasDialDetailReference(generationDraft.productReferences, preparedFrame.sourceSha256));
+  const sourceSha256 = preparedFrame?.sourceSha256;
+  const dialDetailIssue = watchDialDetailIssue(referencePolicy, sourceSha256, generationDraft.productReferences,
+    rejectedDialDetails?.sourceSha256 === sourceSha256 ? rejectedDialDetails?.hashes : undefined);
   const activePresetId = draft.creativeMode === "preset" ? presetId : undefined;
   const directorDraftKey = JSON.stringify({ ...generationDraft, clientSubmissionId: "", presetId: activePresetId });
   const directorPanelKey = JSON.stringify({ ...generationDraft, clientSubmissionId: "", shotMode: undefined, presetId: activePresetId });
@@ -504,6 +507,7 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
             <div hidden={classicCinematic}>
             <VideoProductReferences key={referenceKey}
             product={presetProduct} presetId={activePresetId} aspectRatio={draft.aspectRatio} disabled={classicCinematic || busy || preparingQuote || !preparedFrame}
+            dialDetailIssue={dialDetailIssue}
             onBusyChange={handleReferenceBusy}
             onChange={refs => { setReferenceState({ key: referenceKey, refs }); setDirector(null); setSubmissionQuote(null); setConfirmedReceipt(null); }} />
             </div>
@@ -530,7 +534,15 @@ export function VideoStudioWorkspace({ incomingGenerationId = null, generationAv
           directorControls={shotMode ?
             <VideoDirectorPanel key={directorPanelKey} draft={generationDraft} draftKey={directorDraftKey}
               presetId={activePresetId} shotMode={shotMode}
-              planDisabled={Boolean(directorPlanDisabledReason)} disabledReason={directorPlanDisabledReason} dialDetailRequired={dialDetailRequired}
+              planDisabled={Boolean(directorPlanDisabledReason)} disabledReason={directorPlanDisabledReason} dialDetailIssue={dialDetailIssue}
+              onDialDetailRejected={() => {
+                if (!sourceSha256) return;
+                const hashes = generationDraft.productReferences?.filter(ref => hasDialDetailReference([ref], sourceSha256)).map(ref => ref.sha256);
+                if (!hashes?.length) return;
+                setRejectedDialDetails(previous => ({
+                  sourceSha256, hashes: [...new Set([...(previous?.sourceSha256 === sourceSha256 ? previous.hashes : []), ...hashes])],
+                }));
+              }}
               onPrepared={(selection, productContext, analysisStatus) => {
                 setDirector(selection ? { key: directorDraftKey, selection } : null);
                 setSubmissionQuote(null);

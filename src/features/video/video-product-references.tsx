@@ -13,10 +13,12 @@ import { unknownPresetProduct, type VideoPresetProduct } from "@/lib/video-direc
 import type { VideoPresetId } from "@/lib/video-director/presets";
 import type { VideoGenerationDraft, VideoPreparationSource } from "@/lib/video-generation/types";
 import type { VideoLibraryAsset } from "./video-studio-types";
+import type { WatchDialDetailIssue } from "./video-studio-state";
 import styles from "./video-studio-workspace.module.css";
 type Reference = NonNullable<VideoGenerationDraft["productReferences"]>[number] & { previewUrl: string };
-export function VideoProductReferences({ product = unknownPresetProduct, presetId, aspectRatio, disabled, onChange, onBusyChange }: {
+export function VideoProductReferences({ product = unknownPresetProduct, presetId, aspectRatio, disabled, dialDetailIssue, onChange, onBusyChange }: {
   product?: VideoPresetProduct; presetId?: VideoPresetId; aspectRatio: "9:16" | "16:9" | "1:1";
+  dialDetailIssue?: WatchDialDetailIssue | null;
   disabled: boolean; onChange: (refs: NonNullable<VideoGenerationDraft["productReferences"]>) => void;
   onBusyChange: (busy: boolean) => void;
 }) {
@@ -70,14 +72,19 @@ export function VideoProductReferences({ product = unknownPresetProduct, presetI
       <p><strong>{t(`policy.${policy}.heading`)}</strong> {t(`policy.${policy}.helper`)}</p>
       {policy === "watch" ? <p><strong>{t("policy.watch.sideHeading")}</strong> {t("policy.watch.sideHelper")}</p> : null}
     </div> : null}
+    {policy === "watch" && dialDetailIssue ? <p className={styles.referenceWarning}>
+      {t(dialDetailIssue === "rejected" ? "dialRejected" : "dialRequired")}
+    </p> : null}
     <div className={styles.referenceGrid}>
-    {suggestions.map(({ label }, index) => {
+    {suggestions.map(({ label, purpose }, index) => {
       const reference = refs[index];
       const activeRole = additionalProductReferenceRoles.find(role => role === reference?.purpose);
-      const title = activeRole ? t(`roles.${activeRole}`) : label;
-      return <article key={index} className={styles.referenceCard} aria-label={title} aria-busy={busy}>
+      const title = activeRole ? t(`roles.${activeRole}`) : reference && policy === "watch" ? t("suggestedRole") : label;
+      const required = policy === "watch" && (reference?.purpose ?? purpose) === "dial-detail";
+      return <article key={index} className={styles.referenceCard} aria-label={title} aria-busy={busy} data-required={required || undefined}>
       <div className={styles.referenceCardHeading}><span className={styles.referenceIcon} aria-hidden="true">✦</span>
-        <div><h3>{title}</h3>{!activeRole && preferredRoles[index] === undefined ? <p>{t("conditional")}</p> : null}</div></div>
+        <div><h3>{title}</h3>{policy === "watch" ? <p>{t(required ? "required" : "optional")}</p>
+          : !activeRole && preferredRoles[index] === undefined ? <p>{t("conditional")}</p> : null}</div></div>
       {reference ? <div className={styles.referencePreview}><img src={reference.previewUrl} width={72} height={72} alt={t("preview")} /><span>{t("added")}</span></div>
         : <button type="button" className={styles.referenceDropzone} disabled={busy || disabled} onClick={() => inputRefs.current[index]?.click()}
           aria-label={t("uploadFor", { type: label })}><span aria-hidden="true">↑</span><strong>{t("upload")}</strong><small>{t("fileHint")}</small></button>}
@@ -88,7 +95,9 @@ export function VideoProductReferences({ product = unknownPresetProduct, presetI
             update(index, { ...reference, purpose, declaredText: supportsReferenceDeclaredText(purpose) ? reference.declaredText : undefined });
           }}>
             {!activeRole ? <option value={reference.purpose}>{t("suggestedRole")}</option> : null}
-            {additionalProductReferenceRoles.map(role => <option key={role} value={role}>{t(`roles.${role}`)}</option>)}
+            {additionalProductReferenceRoles.map(role => <option key={role} value={role}>
+              {policy === "watch" && role === "dial-detail" ? t("policy.watch.heading") : t(`roles.${role}`)}
+            </option>)}
           </select>
         </label>
         <VideoReferenceTextInput key={reference.purpose} purpose={reference.purpose} value={reference.declaredText ?? ""}

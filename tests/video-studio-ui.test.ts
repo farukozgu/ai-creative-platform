@@ -80,7 +80,7 @@ test("Director selections stay available before source preparation and invalidat
   const workspace = read("src/features/video/video-studio-workspace.tsx");
   assert.match(panel, /fieldset className=\{styles\.directorFields\} disabled=\{disabled\}/);
   assert.match(panel, /onChange=\{\(\) => onChange\(id\)\}/);
-  assert.match(panel, /disabled=\{planDisabled \|\| busy \|\| dialDetailRequired\}/);
+  assert.match(panel, /disabled=\{planDisabled \|\| busy \|\| Boolean\(dialDetailIssue\)\}/);
   assert.match(workspace, /setPresetId\(nextPresetId\); setDirector\(null\); setSubmissionQuote\(null\); setConfirmedReceipt\(null\)/);
   assert.match(workspace, /presetControls=\{draft.creativeMode === "preset" \? <VideoDirectorPresetSelector presetId=\{presetId\}\s+disabled=\{busy\}/);
   assert.match(workspace, /shotModeControls=\{<fieldset[\s\S]*?video-director-mode[\s\S]*?set-shot-mode/);

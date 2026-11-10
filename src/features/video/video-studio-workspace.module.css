@@ -659,6 +659,9 @@
 .referenceCardHeading { display: flex; min-width: 0; align-items: flex-start; gap: 0.625rem; }
 .referenceCardHeading h3 { margin: 0; color: var(--dashboard-foreground); font-size: var(--text-small); font-weight: 600; line-height: 1.4; }
 .referenceCardHeading p { margin: 0.25rem 0 0; color: var(--dashboard-muted); font-size: var(--text-caption); line-height: 1.4; }
+.referenceCard[data-required="true"] { border-color: var(--warning); }
+.referenceCard[data-required="true"] .referenceCardHeading p { color: var(--warning); font-weight: 600; }
+.referenceWarning { margin: 0; border: 1px solid var(--warning); border-radius: var(--radius-sm); padding: 0.75rem; color: var(--warning); font-size: var(--text-small); line-height: 1.5; }
 .referenceGuidance { display: grid; gap: 0.5rem; color: var(--dashboard-muted); font-size: var(--text-small); }
 .referenceGuidance p { margin: 0; }
 .referenceGuidance strong { color: var(--dashboard-foreground); }

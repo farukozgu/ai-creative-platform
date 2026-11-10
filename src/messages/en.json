@@ -1310,18 +1310,22 @@
         "role": "Reference role",
         "suggestedRole": "Suggested view",
         "roles": {
-          "dial-detail": "Dial detail",
+          "dial-detail": "Dial close-up",
           "side-profile": "Side / profile",
           "critical-detail": "Critical detail",
           "label-branding-detail": "Label / branding detail",
           "other-product-view": "Other product view"
         },
-        "dialRequired": "Add a clear dial close-up to preserve watch-face accuracy in the video.",
+        "required": "Required",
+        "optional": "Optional",
+        "dialPlanRequired": "Add a dial close-up before preparing the shot plan.",
+        "dialRequired": "A dial close-up is required. Upload a clear photo showing the entire dial.",
+        "dialRejected": "We couldn’t verify the uploaded photo as a dial close-up. Upload another clear photo showing the entire dial.",
         "policy": {
           "watch": {
-            "heading": "Required: Dial detail",
+            "heading": "Required: Dial close-up",
             "helper": "A high-resolution close view showing the complete dial, including numerals, indices, logo, hands and date window.",
-            "sideHeading": "Recommended: Side / profile",
+            "sideHeading": "Optional: Side / profile",
             "sideHelper": "Verifies visible details such as case thickness, crown and strap attachment."
           },
           "jewelry": {
