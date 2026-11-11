@@ -1,6 +1,7 @@
 import type { ProductProfile } from "@/lib/product-understanding/product-profile";
 import { normalizeVideoProductSubtype } from "../video-director/preset-contract";
 import type { ReferenceReview } from "./product-references";
+import { isCreativeSafeD1Side } from "../video-director/five-second-multi";
 
 export const additionalProductReferenceRoles = ["dial-detail", "side-profile", "critical-detail", "label-branding-detail", "other-product-view"] as const;
 export type AdditionalProductReferenceRole = typeof additionalProductReferenceRoles[number];
@@ -34,6 +35,20 @@ export function scopeProductReferenceReview(review: ReferenceReview & { dialDeta
     ? identity.details.filter(detail => !/\b(?:gold|silver|diamond|gemstone|sapphire|ruby|emerald|platinum|carat|karat)\b/i.test(detail))
     : identity.details;
   return { ...identity, view: "detail", details };
+}
+
+/** D1 whole-view authority is separate from the unchanged C1 side-only contract. */
+export function scopeD1ProductReferenceReview(review: ReferenceReview & { dialDetailVisible?: unknown }, purpose: string): ReferenceReview {
+  if (purpose === "side-profile" || purpose === "other-product-view") {
+    const { wholeSideVisible, wholeViewVisible } = review;
+    const identity: ReferenceReview = { index: review.index, status: review.status, view: review.view, reason: review.reason, details: review.details };
+    if (identity.status !== "matched") return identity;
+    const creativeSafeSide = isCreativeSafeD1Side(review, purpose);
+    if (purpose === "side-profile" && identity.view === "side" && wholeSideVisible === true) return { ...identity, wholeSideVisible: true, creativeSafeSide };
+    if (purpose === "other-product-view" && ["front", "back", "side"].includes(identity.view ?? "") && wholeViewVisible === true) return { ...identity, wholeViewVisible: true, creativeSafeSide };
+    return { ...identity, view: "detail", creativeSafeSide: false };
+  }
+  return scopeProductReferenceReview(review, purpose);
 }
 
 export function productReferencePolicy(profile: ProductProfile | null): ProductReferencePolicy | undefined {

@@ -140,7 +140,12 @@ test("C1 reference-only adapter scopes a whole side and leaves a cropped profile
   assert.equal(crop.view, "detail");
   assert.equal(crop.wholeSideVisible, undefined);
   wholeSideVisible = true;
-  const [legacy] = await api.createOpenAIReferenceReviews({ ...input, draft: { ...input.draft, durationSeconds: 5 } }, pixels);
-  assert.equal(legacy.view, "detail");
-  assert.equal(legacy.wholeSideVisible, undefined);
+  const [d1] = await api.createOpenAIReferenceReviews({ ...input, draft: { ...input.draft, durationSeconds: 5 } }, pixels);
+  assert.equal(d1.view, "side");
+  assert.equal(d1.wholeSideVisible, true);
+  assert.equal(d1.creativeSafeSide, false); // An older completeness review is not creative-safety authority.
+  const creativeApi = offlineAdapter(() => ({ referenceReviews: { r0: { status: "matched", view: "side",
+    wholeSideVisible: true, creativeSafeSide: true, reason: "Complete upright side", details: [] } } }));
+  const [creativeSide] = await creativeApi.createOpenAIReferenceReviews({ ...input, draft: { ...input.draft, durationSeconds: 5 } }, pixels);
+  assert.equal(creativeSide.creativeSafeSide, true);
 });

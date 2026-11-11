@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { usesD1FiveSecondMulti } from "../src/lib/video-director/five-second-multi";
 import { assertPresetOutputFingerprints, historicalPresetOutputPlan, presetOutputGroup } from "./fixtures/preset-output-fingerprint";
 import { fallbackDirectorPlan, compileDirectorPlan, parseDirectorOutput } from "../src/lib/video-director/core";
 import { compileKlingShot } from "../src/lib/video-director/kling-compiler";
@@ -27,6 +28,11 @@ test("lighting physical staging reaches each Kling shot without changing the thr
         assert.ok(prompt.length <= (shotMode === "multi" ? 512 : 2500));
         if (isGoldenTenSecondMulti(input)) {
           assertGoldenPhysicalPrompt(input, plan.shots[index], prompt);
+        } else if (usesD1FiveSecondMulti(input)) {
+          assert.match(prompt, /Exact (?:source )?form\/colors\/material\/marks\/parts/);
+          assert.match(prompt, /pattern\/text\/logos\/layout(?: exact)?; keep support\/contact\/shadows/);
+          assert.match(prompt, /Product pose fixed/);
+          assert.match(prompt, /no rotation\/interpolation/);
         } else {
           assert.match(prompt, /Keep source pose\/orientation\/support\/contact\/shadows & gravity/);
           assert.match(prompt, /No new floating\/flat-lay\/stands\/props/);

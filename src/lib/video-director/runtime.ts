@@ -5,6 +5,7 @@ import { compileDirectorPlan, directVideoWithClient, fallbackDirectorPlan, type 
 import { createOpenAIReferenceReviews, createOpenAIVideoPlan, createOpenAICameraRepairs, createOpenAIActionRepairs } from "./openai-director";
 import { directorCacheKey, DirectorPlanCache, openDirectorPlan, sealDirectorPlan } from "./receipt";
 import { logVideoDiagnostic, safeOpenAIStatus } from "@/lib/video-generation/diagnostics";
+import { isCurrentD1FiveSecondPlan, usesD1FiveSecondMulti } from "./five-second-multi";
 
 const cache = new DirectorPlanCache();
 const goldenPresetIds = new Set(["minimal-studio", "metallic-light-sweep", "macro-detail-reveal", "floating-accessory",
@@ -43,15 +44,20 @@ export async function prepareVideoDirectorPlan(ownerId: string, source: Buffer, 
     return { plan, receipt: sealDirectorPlan(key, plan, secret, Date.now(), input.profile) };
   }
   const existing = openDirectorPlan(existingReceipt, key, input, secret);
-  if (isGoldenTenSecondMulti(input)) {
+  const d1 = usesD1FiveSecondMulti(input);
+  if (isGoldenTenSecondMulti(input) || d1) {
     let plan: VideoDirectorPlan;
     const references = input.draft.productReferences?.length ?? 0;
     const editorialReview = input.presetId === "minimal-studio" || input.presetId === "metallic-light-sweep";
     if (!references) {
       plan = fallbackDirectorPlan(input);
       log("director_creative_plan", "skipped", { code: "golden_local_plan" });
-    } else if (allowAI && existing?.referenceReviews?.length && (!editorialReview || existing.editorialStoryboard)) {
-      plan = fallbackDirectorPlan(input, existing.referenceReviews);
+    } else if (allowAI && existing?.referenceReviews?.length && (!editorialReview || existing.editorialStoryboard || d1)) {
+      // Prior D1 reviews attest identity, not the new creative-safety contract.
+      // Reuse that identity without another paid review; fail closed to primary views.
+      const reviews = d1 && !isCurrentD1FiveSecondPlan(existing)
+        ? existing.referenceReviews.map(review => ({ ...review, creativeSafeSide: false })) : existing.referenceReviews;
+      plan = fallbackDirectorPlan(input, reviews);
       log("director_reference_review", "cache_hit");
     } else {
       if (!allowAI || !isVideoDirectorAIAvailable(ownerId)) {
@@ -66,7 +72,10 @@ export async function prepareVideoDirectorPlan(ownerId: string, source: Buffer, 
             : reviews.some(review => review.status === "uncertain") ? "uncertain" : "invalid_review";
           throw Object.assign(new Error("references_not_verified"), { referenceFailure: reason });
         }
-        plan = fallbackDirectorPlan(input, reviews);
+        // A second asset containing the primary image cannot establish a new view.
+        const scoped = d1 ? reviews.map(review => input.draft.productReferences?.[review.index]?.sha256 === sourceSha256
+          ? { ...review, wholeSideVisible: false, wholeViewVisible: false, creativeSafeSide: false } : review) : reviews;
+        plan = fallbackDirectorPlan(input, scoped);
       } catch (error) {
         if (error && typeof error === "object" && "message" in error && error.message === "references_not_verified") throw error;
         const diagnostic = safeOpenAIStatus(error);

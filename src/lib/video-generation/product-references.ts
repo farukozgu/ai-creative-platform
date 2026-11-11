@@ -1,9 +1,10 @@
 import type { VideoPresetProduct } from "../video-director/preset-recommendations";
 import { videoDirectorPresets, type VideoPresetId } from "../video-director/presets";
 import type { VideoDirectorPlan } from "../video-director/core";
+import { d1AlternateShotIndex, isD1FiveSecondPlan } from "../video-director/five-second-multi";
 export const referenceViews = ["front", "back", "side", "detail", "unknown"] as const;
 export type ReferenceView = typeof referenceViews[number];
-export type ReferenceReview = { index: number; status: "matched" | "conflict" | "uncertain"; reason: string; details: string[]; view?: ReferenceView; wholeSideVisible?: boolean };
+export type ReferenceReview = { index: number; status: "matched" | "conflict" | "uncertain"; reason: string; details: string[]; view?: ReferenceView; wholeSideVisible?: boolean; wholeViewVisible?: boolean; creativeSafeSide?: boolean };
 export const supportsReferenceDeclaredText = (purpose: string) => /\b(?:logo|text|label|detail)\b/i.test(purpose);
 export function parseReferenceDeclaredText(value: unknown): string | null {
   if (typeof value !== "string" || /[\p{Cc}\p{Zl}\p{Zp}]/u.test(value)) return null;
@@ -33,6 +34,7 @@ export function klingElementReferences(reviews: ReferenceReview[], references: r
 }
 export function directorElementReferences(plan: VideoDirectorPlan | undefined, references: readonly { purpose: string }[] = []) {
   const matched = klingElementReferences(plan?.referenceReviews ?? [], references);
+  if (plan && isD1FiveSecondPlan(plan)) return matched.filter(review => review.index === plan.shots[d1AlternateShotIndex(plan)]?.referenceIndex);
   if (!plan?.editorialStoryboard) return matched;
   return matched.filter(review => review.index === plan.shots[1]?.referenceIndex);
 }

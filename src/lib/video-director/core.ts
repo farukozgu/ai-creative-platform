@@ -16,6 +16,8 @@ export { DIRECTOR_GENERIC_FOCUS_VALUES, shotFields } from "./plan-contract";
 
 import { backViewTerms, directorElementReferences, elementShotPrefix, klingElementReferences, parseReferenceReviews, referenceClaimDetails, referenceTextPreservation, type ReferenceReview } from "../video-generation/product-references";
 import { isEditorialSideRole, productReferencePolicy, usesEditorialStoryboard } from "../video-generation/product-reference-policy";
+import { compileD1FiveSecondShot, d1FiveSecondShots, isD1FiveSecondPlan, usesD1FiveSecondMulti } from "./five-second-multi";
+import { compileLegacyD1FiveSecondShot, legacyD1FiveSecondShots } from "./five-second-multi-legacy";
 
 export type VideoDirectorSelection = ({ presetId: VideoPresetId; creativeMode?: "preset" } | { creativeMode: "custom"; presetId?: never }) & { shotMode: VideoShotMode; receipt: string };
 export type VideoDirectionId = VideoPresetId | "custom";
@@ -831,7 +833,11 @@ export function parseDirectorOutput(value: unknown, input: VideoDirectorInput, o
     return reject("$.editorialStoryboard", "invalid_editorial_storyboard", "Signature Studio or Light Sweep 10s Multi");
   }
   const beats = custom && input.shotMode === "multi" ? numberedCreativeBeats(input.draft.prompt) : [];
-  const contractBounds = directorShotContract(input.shotMode, input.draft.durationSeconds, input.presetId, input.draft.prompt);
+  const historicalD1 = usesD1FiveSecondMulti(input) && record(value) && Array.isArray(value.shots) && value.shots.length === 2;
+  const earlierD1Edit = usesD1FiveSecondMulti(input) && record(value) && Array.isArray(value.shots) && [4, 5].includes(value.shots.length);
+  // Earlier signed edits retain their original bounds only during verification.
+  const contractBounds = directorShotContract(input.shotMode, input.draft.durationSeconds,
+    historicalD1 ? undefined : earlierD1Edit ? "cinematic-hero" : input.presetId, input.draft.prompt);
   if (input.draft.cameraMovement === "orbit" || !record(value) || !text(value.summary, DIRECTOR_TEXT_LIMIT) || !text(value.intent, DIRECTOR_TEXT_LIMIT) || !Array.isArray(value.shots)
     || value.shots.length < contractBounds.minShots || value.shots.length > contractBounds.maxShots
 ) return reject("$", "invalid_plan_envelope", "summary/intent <= 240 chars and shot count matching shotMode and duration");
@@ -842,6 +848,13 @@ export function parseDirectorOutput(value: unknown, input: VideoDirectorInput, o
   const referenceReviews = parseReferenceReviews(value.referenceReviews, count, (path, reason) => { referenceFailure = { path, reason }; });
   if (!referenceReviews) return reject(referenceFailure?.path ?? "$.referenceReviews", "invalid_reference_reviews", referenceFailure?.reason ?? `exactly ${count} ordered reviews`);
   if (referenceReviews.some(review => review.status !== "matched")) return reject("$.referenceReviews", "references_not_verified", "every uploaded reference verified before generation");
+  if (usesD1FiveSecondMulti(input) && referenceReviews.some(review => review.wholeViewVisible !== undefined && typeof review.wholeViewVisible !== "boolean")) {
+    return reject("$.referenceReviews", "invalid_reference_reviews", "D1 whole-view completeness must be boolean");
+  }
+  const d1Storyboard = usesD1FiveSecondMulti(input) && value.shots.length !== 2;
+  if (d1Storyboard && !earlierD1Edit && referenceReviews.some(review => review.creativeSafeSide !== undefined && typeof review.creativeSafeSide !== "boolean")) {
+    return reject("$.referenceReviews", "invalid_reference_reviews", "D1 creative-side safety must be boolean");
+  }
   const baseEvidence = directorProductContext(input.profile).evidence;
   const additionsWithSource = (referenceReviews ?? []).filter(r => r.status === "matched").flatMap(review => review.details.map(detail => ({ detail, review })));
   const additions = additionsWithSource.map(item => item.detail);
@@ -866,7 +879,7 @@ export function parseDirectorOutput(value: unknown, input: VideoDirectorInput, o
     ? interpretCreativeIntent(input.draft.prompt, baseEvidence, input.shotMode, input.draft.cameraMovement) : null;
   const expectedIntent = legacyIntent ?? currentIntent;
   if (!matchesCreativeIntent(value.intentContract, expectedIntent)) return reject("$.intentContract", "intent_contract_mismatch", "exact supplied camera/focus/sequence contract");
-  const effectiveLegacyPlan = legacyIntent ? null : fixedLegacyDirectorPlan(input);
+  const effectiveLegacyPlan = legacyIntent || d1Storyboard ? null : fixedLegacyDirectorPlan(input);
   const shots: VideoDirectorShot[] = [];
   const failingCameraPaths: string[] = [];
   const coherencePaths: string[] = [];
@@ -970,7 +983,7 @@ export function parseDirectorOutput(value: unknown, input: VideoDirectorInput, o
       ...Object.fromEntries(shotFields.map(field => [field, field === "focus" ? focus
         : field === "camera" && custom && staticCustomFraming(shot.camera as string) && !/\b(?:locked|static|fixed)\b/i.test(shot.camera as string)
           ? `Locked ${shot.camera}` : shot[field]])) } as VideoDirectorShot,
-      goldenStoryboard || effectiveLegacyPlan ? "auto" : input.draft.cameraMovement);
+      goldenStoryboard || effectiveLegacyPlan || d1Storyboard ? "auto" : input.draft.cameraMovement);
     const movements = new Set(cameraKinds(resolved.camera, custom));
     for (const field of ["composition", "motion", "pace", "lighting", "focus"] as const) {
       if (custom && coherencePaths.includes(`$.shots[${shots.length}].${field}`)) continue;
@@ -996,6 +1009,15 @@ export function parseDirectorOutput(value: unknown, input: VideoDirectorInput, o
     return null;
   }
   if (shots.reduce((sum, shot) => sum + shot.durationSeconds, 0) !== input.draft.durationSeconds) return reject("$.shots[*].durationSeconds", "total_duration_mismatch", `sum exactly ${input.draft.durationSeconds} seconds`);
+  if (d1Storyboard) {
+    const expected = earlierD1Edit ? legacyD1FiveSecondShots(input, referenceReviews) : d1FiveSecondShots(input, referenceReviews);
+    if (shots.length !== expected.length || shots.some((shot, index) => {
+      const authored = expected[index];
+      return shot.referenceIndex !== authored.referenceIndex || shot.durationSeconds !== authored.durationSeconds
+        || shot.purpose !== authored.purpose || shotFields.some(field => shot[field] !== authored[field])
+        || JSON.stringify(shot.evidenceRefs) !== JSON.stringify(authored.evidenceRefs);
+    })) return reject("$.shots", "d1_storyboard_mismatch", "exact D1 5s shots and deterministic inspection binding");
+  }
   const editorial = value.editorialStoryboard === true ? editorialStoryboard(input, referenceReviews) : null;
   if (editorial && (value.origin !== "fallback" || shots.length !== editorial.shots.length || !editorial.shots.every((expected, index) => {
     const shot = shots[index];
@@ -1068,7 +1090,7 @@ export function parseDirectorOutput(value: unknown, input: VideoDirectorInput, o
     return reject("$.shots", "fixed_macro_template_mismatch", "the effective legacy preset shots in order");
   }
   // The historical matcher remains available for persisted plans and golden compatibility.
-  if (!editorial && !effectiveMatches && !signatureMatches && !lightSweepMatches && !macroMatches && !floatingMatches && !darkRevealMatches && !materialStudyMatches && !windowDisplayMatches && fixedTemplate && (shots.length !== fixedTemplate.shots.length || shots.some((shot, index) => shot.durationSeconds !== fixedTemplate.durations[index]
+  if (!d1Storyboard && !editorial && !effectiveMatches && !signatureMatches && !lightSweepMatches && !macroMatches && !floatingMatches && !darkRevealMatches && !materialStudyMatches && !windowDisplayMatches && fixedTemplate && (shots.length !== fixedTemplate.shots.length || shots.some((shot, index) => shot.durationSeconds !== fixedTemplate.durations[index]
     || (safeFixedShots?.[index].evidenceRefs.length === 0 ? shot.focus !== "Source-visible product form" || shot.evidenceRefs.length > 0
       : (input.presetId === "luxury-fashion-film" ? input.shotMode === "multi" && index === 2 : index === 0 || input.shotMode === "multi" && input.draft.durationSeconds === 10 && index === 1)
       ? !shot.evidenceRefs.length || !fixedTemplate.patterns[index].test(shot.focus)
@@ -1092,7 +1114,7 @@ export function parseDirectorOutput(value: unknown, input: VideoDirectorInput, o
       }
     }
   }
-  const fixedGolden = editorial || signatureMatches || lightSweepMatches || macroMatches || floatingMatches || darkRevealMatches || materialStudyMatches || windowDisplayMatches
+  const fixedGolden = d1Storyboard || editorial || signatureMatches || lightSweepMatches || macroMatches || floatingMatches || darkRevealMatches || materialStudyMatches || windowDisplayMatches
     || goldenStoryboard && fixedQuickCutsDirectorPlan(input)?.shots.every((expected, index, fixed) => fixed.length === shots.length
       && expected.durationSeconds === shots[index].durationSeconds && expected.purpose === shots[index].purpose
       && shotFields.every(field => expected[field] === shots[index][field]));
@@ -1130,6 +1152,13 @@ function fallbackMark(detail: string) {
 export function fallbackDirectorPlan(input: VideoDirectorInput, referenceReviews: ReferenceReview[] = []): VideoDirectorPlan {
   // Custom direction must never silently become a preset when planning fails.
   if (input.presetId === "custom") throw new DirectorStructuredOutputError("custom_director_unavailable");
+  if (usesD1FiveSecondMulti(input)) {
+    const shots = d1FiveSecondShots(input, referenceReviews);
+    return { version: VIDEO_DIRECTOR_VERSION, presetId: input.presetId, presetVersion: directorPresetVersion(input.presetId),
+      shotMode: input.shotMode, origin: "fallback", ...directorPlanDescriptions(input, shots.length),
+      intentContract: presetCreativeIntent(input, directorProductContext(input.profile).evidence), shots,
+      ...(referenceReviews.length ? { referenceReviews } : {}) };
+  }
   const editorial = editorialStoryboard(input, referenceReviews);
   if (editorial) return editorial;
   const quickCuts = fixedQuickCutsDirectorPlan(input);
@@ -1330,6 +1359,14 @@ export function compileDirectorPlan(plan: VideoDirectorPlan, input: VideoDirecto
       && backShot && review.index === shot.referenceIndex
       && review.details.some(detail => /\b(?:text|letter\w*|logo|symbol|label|pattern|print|emblem|embroider\w*)\b/i.test(detail)));
     const editorialSignature = validated.editorialStoryboard && input.presetId === "minimal-studio";
+    if (isD1FiveSecondPlan(validated)) {
+      const alternate = shot.referenceIndex !== undefined;
+      const alternateView = validated.referenceReviews?.find(review => review.index === shot.referenceIndex)?.view;
+      const watch = (!alternate || alternateView === "front") && productReferencePolicy(input.profile) === "watch";
+      const text = alternate ? "" : referenceTextPreservation(validated.referenceReviews ?? [], input.draft.productReferences, true);
+      const compile = validated.shots.length === 3 ? compileD1FiveSecondShot : compileLegacyD1FiveSecondShot;
+      return compile(shot, prefix, watch, alternate ? "" : declaredTextPreservation, text, limit);
+    }
     if ((signatureStoryboard || editorialSignature) && (shot.camera === "Straight axial long-lens push-in" || shot.camera === "Locked static hero framing")) {
       const establish = shot.purpose === "hero-reveal";
       const discipline = establish

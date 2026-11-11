@@ -7,6 +7,7 @@ import { isVideoPresetId, videoPresetIds } from "../src/lib/video-director/prese
 import { openDirectorPlan, sealDirectorPlan } from "../src/lib/video-director/receipt";
 import { buildFalVideoRequestInput } from "../src/lib/video-generation/fal-request";
 import { directorFixtureInput, directorProducts } from "./fixtures/video-director-fixtures";
+import { historicalPresetOutputPlan } from "./fixtures/preset-output-fingerprint";
 
 test("hidden legacy preset IDs still compile and open existing receipts", () => {
   const input = { ...directorFixtureInput(directorProducts[0]), presetId: "luxury-fashion-film" as const };
@@ -27,7 +28,7 @@ test("unaffected preset modes retain director and Kling output outside Signature
       assert.ok(isVideoPresetId(presetId));
       const base = directorFixtureInput(directorProducts[0]);
       const input = { ...base, presetId, shotMode, draft: { ...base.draft, shotMode, durationSeconds } };
-      const plan = fallbackDirectorPlan(input);
+      const plan = historicalPresetOutputPlan(input);
       let output;
       try {
         const compiled = compileDirectorPlan(plan, input);

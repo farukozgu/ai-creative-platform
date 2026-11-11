@@ -3,6 +3,7 @@ import { qualityPresetDirection } from "./preset-quality-directions";
 import type { VideoGenerationDraft } from "../video-generation/types";
 import type { VideoShotMode } from "./presets";
 import { numberedCreativeBeats } from "./custom-brief";
+import { usesD1FiveSecondMulti } from "./five-second-multi";
 
 export const DIRECTOR_TEXT_LIMIT = 240;
 export const DIRECTOR_CONTRACT_VERSION = "director-contract-reference-views-v4";
@@ -29,13 +30,14 @@ export function directorShotContract(shotMode: VideoShotMode, durationSeconds: V
   if (![5, 10].includes(durationSeconds)) throw new Error("unsupported_director_duration");
   const directed = presetId ? durationStrategy(presetId, shotMode, durationSeconds) ?? qualityPresetDirection(presetId, shotMode, durationSeconds) : null;
   const multi = shotMode === "multi";
+  const d1 = usesD1FiveSecondMulti({ presetId, shotMode, draft: { durationSeconds } });
   const customTen = presetId === "custom" && multi && durationSeconds === 10;
   const requestedCount = customTen ? numberedCreativeBeats(userRequest).length : 0;
   return {
-    minShots: requestedCount || (multi ? 2 : 1),
-    maxShots: requestedCount || (multi ? customTen || directed ? 5 : durationSeconds === 5 ? 2 : 3 : 1),
-    minDuration: multi ? customTen || directed ? 1 : 2 : durationSeconds,
-    maxDuration: multi ? durationSeconds - (customTen || directed ? 1 : 2) : durationSeconds,
+    minShots: requestedCount || (d1 ? 3 : multi ? 2 : 1),
+    maxShots: requestedCount || (d1 ? 3 : multi ? customTen || directed ? 5 : durationSeconds === 5 ? 2 : 3 : 1),
+    minDuration: multi ? customTen || directed || d1 ? 1 : 2 : durationSeconds,
+    maxDuration: d1 ? 2 : multi ? durationSeconds - (customTen || directed ? 1 : 2) : durationSeconds,
     fieldLimits: multi ? { camera: 60, composition: 55, motion: 45, lighting: 50, pace: 28, focus: 100 }
       : { camera: 140, composition: 140, motion: 120, lighting: 120, pace: 80, focus: 120 },
   };

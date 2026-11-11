@@ -10,6 +10,7 @@ const fixtures = libraryFixtures.filter((fixture, index, all) => fixture.categor
 const batch = ["glass-reflection", "dramatic-backlight", "metallic-light-sweep"] as const;
 for (const presetId of batch) for (const { category, profile } of fixtures) for (const durationSeconds of [5, 10] as const) for (const shotMode of ["single", "multi"] as const) {
   if (presetId === "metallic-light-sweep" && durationSeconds === 10 && shotMode === "multi") continue; // Covered by the Light Sweep golden suite.
+  if (presetId === "metallic-light-sweep" && durationSeconds === 5 && shotMode === "multi") continue; // Covered by D1, including every category.
   if (presetId === "dramatic-backlight" && durationSeconds === 10 && shotMode === "multi") continue; // Covered by the Dark Reveal golden suite.
   test(`fixed lighting ${presetId}/${category}/${durationSeconds}/${shotMode}`, async () => {
     const base = directorFixtureInput(profile!);

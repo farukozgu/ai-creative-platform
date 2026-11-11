@@ -4,6 +4,7 @@ import { fallbackDirectorPlan, type VideoDirectorInput, type VideoDirectorPlan, 
 import { directorProductContext } from "../../src/lib/video-director/product-context";
 import { hasUnsupportedProductClaims } from "../../src/lib/video-director/creative-request";
 import { directorShotContract } from "../../src/lib/video-director/plan-contract";
+import { usesD1FiveSecondMulti } from "../../src/lib/video-director/five-second-multi";
 import type { IntentContract, BenchmarkProduct } from "./dataset";
 
 export type Failure = "invented-detail" | "unjustified-intent-loss" | "shot-mode-conflict" | "repeated-scene" | "payload-limit" | "signed-preview-payload-mismatch" | "unseen-surface" | "unexplained-risk" | "five-second-overload";
@@ -135,10 +136,10 @@ export function assessPlan(plan: VideoDirectorPlan, input: VideoDirectorInput, p
   const orderSatisfied = intent.camera !== "in-out" || scale(plan.shots[0].camera + " " + plan.shots[0].composition) === "close"
     && scale(plan.shots.at(-1)!.composition) === "full";
   const executed = cameraSatisfied && detailSatisfied && orderSatisfied;
-  // Public 10s multi keeps the server-owned storyboard, so a matching fallback can leave the brief unapplied.
+  // Public 10s and D1 5s multi keep the server-owned storyboard.
   const fixedStoryboard = !executed && intent.kind !== "empty" && plan.origin === "fallback"
-    && input.shotMode === "multi" && input.draft.durationSeconds === 10
-    && videoStudioPresetIds.some(id => id === input.presetId)
+    && (input.shotMode === "multi" && input.draft.durationSeconds === 10
+      && videoStudioPresetIds.some(id => id === input.presetId) || usesD1FiveSecondMulti(input))
     && isDeepStrictEqual(plan.shots, fallbackDirectorPlan(input).shots);
   const explained = fixedStoryboard || plan.origin === "fallback" && /not been interpreted/i.test(plan.intent) && notices.length > 0;
   if (!executed && intent.kind !== "empty") {

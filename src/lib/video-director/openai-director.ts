@@ -13,7 +13,8 @@ import { safePresetStrategy, cinematicHeroSingleFiveSeconds } from "./preset-lib
 import { customCreativeIntent, numberedCreativeBeats } from "./custom-brief";
 import { logVideoDiagnostic, safeOpenAIErrorCode, safeOpenAIStatus } from "@/lib/video-generation/diagnostics";
 import { parseReferenceReviews, type ReferenceReview } from "../video-generation/product-references";
-import { isAdditionalProductReferenceRole, isEditorialSideRole, scopeProductReferenceReview, usesEditorialStoryboard } from "../video-generation/product-reference-policy";
+import { isAdditionalProductReferenceRole, isEditorialSideRole, scopeD1ProductReferenceReview, scopeProductReferenceReview, usesEditorialStoryboard } from "../video-generation/product-reference-policy";
+import { usesD1FiveSecondMulti } from "./five-second-multi";
 
 const referenceInstructions = [
   "Reference orientation is verified from pixels, never from purpose/slot labels. Return view=front/back/side/detail/unknown for each review; unmatched views must be unknown. Match the same physical product conservatively using consistent visible identity. Different sides may legitimately have different visible features. A matched back view verifies only its pictured surface, not interiors or intermediate turn angles.",
@@ -215,6 +216,7 @@ export function buildDirectorRequest(input: VideoDirectorInput, repair?: Directo
   // Identical planning contract with or without accuracy references.
   const refs = referenceOnly ? input.draft.productReferences ?? [] : [];
   const editorial = usesEditorialStoryboard(input);
+  const d1 = usesD1FiveSecondMulti(input);
   const modeInstructions = input.presetId === "custom"
     ? instructions.split("\n").filter(line => !["The selected preset brief", "Use the structured preset strategy", "Understand the category", "Every shot needs", "Allow controlled product", "Single-shot:"].some(prefix => line.startsWith(prefix)))
       .join("\n").replace("Empty text means direct from product and preset.", "")
@@ -227,6 +229,7 @@ export function buildDirectorRequest(input: VideoDirectorInput, repair?: Directo
   if (editorial && refs.some(ref => isEditorialSideRole(ref.purpose))) {
     roleInstructions.push("For side-profile and other-product-view, set wholeSideVisible=true only for a matched, complete usable side view of the same product that differs from the primary view. Set false for any crop, obscured or uncertain profile, duplicate view, or other orientation. Never infer missing geometry.");
   }
+  if (d1) roleInstructions.push("For side-profile, wholeSideVisible=true requires a complete matched usable side view, different from the primary. For other-product-view, wholeViewVisible=true requires a complete matched usable view, different from the primary. Independently set creativeSafeSide=true ONLY for a clear, complete, commercially usable side/profile: unrolled, naturally presented, without rear/clasp dominance or wearable reinterpretation. A matched or complete view is not automatically creative-safe. Back/rear, clasp-focused, rolled/inverted, obscured, ambiguous or duplicate views must have creativeSafeSide=false and remain fidelity evidence only. Do not infer safety from the upload role. State the visible positive orientation in reason; do not infer intermediate angles or hidden surfaces.");
   const creativeInstructions = referenceOnly ? [referenceInstructions, ...roleInstructions].join("\n") : multi && !custom
     ? `${modeInstructions}\nMulti-shot: each dedicated detail/mark/surface/region appears once, including explicit focus requests. New camera/light/purpose wording is not a new task. Whole-product context may naturally show it. ${input.presetId === "custom" ? "Preserve user direction" : "Preserve preset direction"}; use another verified detail.`
     : modeInstructions;
@@ -266,13 +269,17 @@ export function buildDirectorRequest(input: VideoDirectorInput, repair?: Directo
         required: refs.map((_, index) => "r" + index),
         properties: Object.fromEntries(refs.map((ref, index) => ["r" + index, {
           type: "object", additionalProperties: false, required: ["status", "view", "reason", "details", ...(ref.purpose === "dial-detail" ? ["dialDetailVisible"] : []),
-            ...(editorial && isEditorialSideRole(ref.purpose) ? ["wholeSideVisible"] : [])], properties: {
+            ...(editorial && isEditorialSideRole(ref.purpose) || d1 && ref.purpose === "side-profile" ? ["wholeSideVisible"] : []),
+            ...(d1 && ref.purpose === "other-product-view" ? ["wholeViewVisible"] : []),
+            ...(d1 && isEditorialSideRole(ref.purpose) ? ["creativeSafeSide"] : [])], properties: {
             status: { type: "string", enum: ["matched", "conflict", "uncertain"] },
             view: { type: "string", enum: ["front", "back", "side", "detail", "unknown"] },
             reason: { type: "string", minLength: 1, maxLength: 120 },
             details: { type: "array", maxItems: 2, items: { type: "string", minLength: 1, maxLength: 70 } },
             ...(ref.purpose === "dial-detail" ? { dialDetailVisible: { type: "boolean" } } : {}),
-            ...(editorial && isEditorialSideRole(ref.purpose) ? { wholeSideVisible: { type: "boolean" } } : {}),
+            ...(editorial && isEditorialSideRole(ref.purpose) || d1 && ref.purpose === "side-profile" ? { wholeSideVisible: { type: "boolean" } } : {}),
+            ...(d1 && ref.purpose === "other-product-view" ? { wholeViewVisible: { type: "boolean" } } : {}),
+            ...(d1 && isEditorialSideRole(ref.purpose) ? { creativeSafeSide: { type: "boolean" } } : {}),
           },
         }])),
       } } : {}),
@@ -292,7 +299,7 @@ export function buildDirectorRequest(input: VideoDirectorInput, repair?: Directo
         } },
     },
   };
-  const legacyFixed = referenceOnly ? null : fixedLegacyDirectorPlan(input);
+  const legacyFixed = referenceOnly ? null : d1 ? fallbackDirectorPlan(input) : fixedLegacyDirectorPlan(input);
   let fixedMacro = legacyFixed ? {
     shots: legacyFixed.shots, durations: legacyFixed.shots.map(shot => shot.durationSeconds),
   } : null;
@@ -425,7 +432,7 @@ async function requestVideoDirector(input: VideoDirectorInput, source: Buffer, c
   if (referenceOnly && referenceContent.length !== (input.draft.productReferences?.length ?? 0)) throw new Error("Missing reference pixels.");
   const model = getPromptEnhancementModel();
   const maxOutputTokens = input.shotMode === "multi" && (input.draft.durationSeconds === 10
-    || directorShotContract(input.shotMode, input.draft.durationSeconds, input.presetId).maxShots > 3)
+    || !usesD1FiveSecondMulti(input) && directorShotContract(input.shotMode, input.draft.durationSeconds, input.presetId).maxShots > 3)
     ? DIRECTOR_MULTI_OUTPUT_TOKENS : DIRECTOR_DEFAULT_OUTPUT_TOKENS;
   const textFormat = structuredResponseText({ type: "json_schema", name: "video_director_plan", description: "Product-grounded English commercial direction.", strict: true, schema });
   const startedAt = Date.now();
@@ -516,7 +523,9 @@ async function requestVideoDirector(input: VideoDirectorInput, source: Buffer, c
     const shots = !referenceOnly && "shots" in plan && Array.isArray(plan.shots) ? plan.shots : [];
     const reviewedReferences = referenceOnly ? parseReferenceReviews(referenceReviews, references.length) : null;
     const result = { ...(!referenceOnly ? plan : {}), shots,
-      referenceReviews: reviewedReferences?.map(review => scopeProductReferenceReview(review, references[review.index].purpose, usesEditorialStoryboard(input))),
+      referenceReviews: reviewedReferences?.map(review => usesD1FiveSecondMulti(input)
+        ? scopeD1ProductReferenceReview(review, references[review.index].purpose)
+        : scopeProductReferenceReview(review, references[review.index].purpose, usesEditorialStoryboard(input))),
       ...directorPlanDescriptions(input, shots.length), intentContract };
     if (correlationId) logVideoDiagnostic(correlationId, "structured_output_parsed", "success", {
       model, schemaFieldsPresent: schema.required.filter(key => Object.hasOwn(plan, key)).join(","),

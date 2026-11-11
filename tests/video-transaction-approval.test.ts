@@ -13,6 +13,8 @@ import { shouldRestoreApprovedVideoJob } from "../src/lib/video-generation/progr
 import { summarizeVideoPayload } from "../src/lib/video-generation/payload-summary";
 import { validateKlingMultiPrompt } from "../src/lib/video-generation/fal-request";
 import { directorSelectionId } from "../src/lib/video-director/core";
+import type { VideoDirectorInput } from "../src/lib/video-director/core";
+import { usesD1FiveSecondMulti } from "../src/lib/video-director/five-second-multi";
 import type { VideoGenerationDraft } from "../src/lib/video-generation/types";
 import type * as actions from "../src/app/[locale]/dashboard/video/generation-actions";
 import type { VideoBetaBudget } from "../src/lib/video-generation/beta-runtime";
@@ -58,8 +60,12 @@ function fixture() {
     "@/lib/video-fidelity/availability": { getVideoFidelityAnalysisAvailability: () => ({ enabled: false }) },
     "@/lib/video-fidelity/pricing": { quoteVideoFidelity: () => null },
     "@/lib/video-fidelity/reviews": { videoFidelitySchemaReady: async () => false },
-    "@/lib/video-director/runtime": { readVerifiedDirectorPlan: (_owner: string, _source: string, input: { shotMode: string }) => planValid ? ({ version: "fixture", shotMode: input.shotMode, shots: [{ camera: "locked" }, { camera: "detail" }] }) : null },
-    "@/lib/video-director/core": { directorSelectionId, compileDirectorPlan: (_plan: unknown, input: { shotMode: string; draft: VideoGenerationDraft }) => ({ prompt: "safe", negativePrompt: "safe", cfgScale: 0.5, ...(input.shotMode === "multi" ? { multiPrompt: [{ prompt: "hero", duration: input.draft.durationSeconds === 10 ? "4" : "2" }, { prompt: detailPrompt, duration: input.draft.durationSeconds === 10 ? "6" : "3" }] } : {}) }) },
+    "@/lib/video-director/runtime": { readVerifiedDirectorPlan: (_owner: string, _source: string, input: VideoDirectorInput) => planValid ? ({ version: "fixture", shotMode: input.shotMode,
+      shots: [{ camera: "locked" }, { camera: "detail" }, ...(usesD1FiveSecondMulti(input) ? [{ camera: "hero" }] : [])] }) : null },
+    "@/lib/video-director/core": { directorSelectionId, compileDirectorPlan: (_plan: unknown, input: VideoDirectorInput) => ({ prompt: "safe", negativePrompt: "safe", cfgScale: 0.5,
+      ...(input.shotMode === "multi" ? { multiPrompt: usesD1FiveSecondMulti(input)
+        ? [{ prompt: "hero", duration: input.presetId === "minimal-studio" ? "2" : "1" }, { prompt: detailPrompt, duration: "2" }, { prompt: "resolve", duration: input.presetId === "minimal-studio" ? "1" : "2" }]
+        : [{ prompt: "hero", duration: input.draft.durationSeconds === 10 ? "4" : "2" }, { prompt: detailPrompt, duration: input.draft.durationSeconds === 10 ? "6" : "3" }] } : {}) }) },
   };
   const exports = {};
   const source = readFileSync("src/app/[locale]/dashboard/video/generation-actions.ts", "utf8");
@@ -115,7 +121,7 @@ test("multi-shot requires the same verified plan for quote, preview and submissi
   f.plan(true); const quote = await f.api.quoteVideoSubmissionAction(multi);
   assert.equal(quote.status, "success"); if (quote.status !== "success") throw new Error("Missing quote");
   assert.equal(quote.preview.mode, "multi"); assert.equal(quote.preview.shotType, "customize");
-  assert.deepEqual(quote.preview.shots.map(shot => shot.duration), [2, 3]);
+  assert.deepEqual(quote.preview.shots.map(shot => shot.duration), [2, 2, 1]);
   f.plan(false); assert.equal((await f.api.submitVideoGenerationAction(multi, quote.cost, quote.receipt, true)).ok, false);
   f.plan(true);
   f.detail("changed compiled prompt");
@@ -126,8 +132,8 @@ test("multi-shot requires the same verified plan for quote, preview and submissi
   assert.equal(f.getCalls(), 0);
   assert.equal((await f.api.submitVideoGenerationAction(multi, quote.cost, quote.receipt, true)).ok, true);
   const saved = f.submitted()?.preservation; assert.ok(saved?.payloadSummary);
-  assert.equal(saved.payloadSummary.mode, "multi"); assert.deepEqual(saved.payloadSummary.durations, [2, 3]);
-  assert.equal(saved.payloadSummary.promptHashes.length, 2); assert.equal(JSON.stringify(saved.payloadSummary).includes("hero"), false);
+  assert.equal(saved.payloadSummary.mode, "multi"); assert.deepEqual(saved.payloadSummary.durations, [2, 2, 1]);
+  assert.equal(saved.payloadSummary.promptHashes.length, 3); assert.equal(JSON.stringify(saved.payloadSummary).includes("hero"), false);
   assert.deepEqual(saved.director?.multiPrompt?.map(shot => shot.prompt), quote.preview.shots.map(shot => shot.prompt));
   f.previous({ id: "job", status: "succeeded", clientSubmissionId: draft.clientSubmissionId });
   f.plan(false);

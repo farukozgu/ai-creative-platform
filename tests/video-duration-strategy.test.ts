@@ -24,8 +24,8 @@ test("18 creative cells have exact timing, different duration language and hones
     assert.equal(signatures.size, 3);
   }
   assert.equal(durationStrategy("minimal-studio", "multi", 5), null);
-  assert.equal(directorShotContract("multi", 5, "minimal-studio").minDuration, 2);
-  assert.equal(directorShotContract("multi", 5, "minimal-studio").maxShots, 2);
+  assert.equal(directorShotContract("multi", 5, "minimal-studio").minDuration, 1);
+  assert.equal(directorShotContract("multi", 5, "minimal-studio").maxShots, 3);
 });
 
 test("pilot fallback survives sparse evidence, camera selection, marking and both Kling tiers", () => {

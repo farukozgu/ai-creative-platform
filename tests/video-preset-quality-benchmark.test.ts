@@ -69,7 +69,8 @@ test("trajectory, lighting event, subject action and ordered rhythm distinguish 
 });
 test("benchmark preserves explicit intent in legacy cells and keeps golden storyboards fixed", () => {
   for (const row of result.cases) {
-    const golden = row.duration === 10 && row.mode === "multi" && videoStudioPresetIds.some(id => id === row.presetId);
+    const golden = row.mode === "multi" && (row.duration === 10 && videoStudioPresetIds.some(id => id === row.presetId)
+      || row.duration === 5 && ["minimal-studio", "metallic-light-sweep"].includes(row.presetId));
     if (!golden) {
       assert.equal(row.weaknesses.includes("intent-not-executed"), false, row.id);
       continue;

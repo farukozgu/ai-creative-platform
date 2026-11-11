@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { klingElementReferences, parseReferenceReviews } from "../src/lib/video-generation/product-references";
 import * as referencePolicy from "../src/lib/video-generation/product-reference-policy";
+import * as d1 from "../src/lib/video-director/five-second-multi";
 import { safeOpenAIErrorCode } from "../src/lib/video-generation/diagnostics";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -38,6 +39,7 @@ function isolated<T>(file: string, overrides: Record<string, unknown>, env: Reco
   runInNewContext(code, { exports, Buffer, process: { env }, require: (name: string) => {
     if (name === "server-only") return {};
     if (name in overrides) return overrides[name];
+    if (name === "./five-second-multi") return d1;
     if (name.startsWith("@/") || name.startsWith("./")) throw new Error(`Unmocked dependency: ${name}`);
     return requirePackage(name);
   } });

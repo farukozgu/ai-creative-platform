@@ -44,6 +44,11 @@ async function verifiedVideoSnapshot(ownerId: string, draft: VideoGenerationDraf
   if (input && input.shotMode !== draft.shotMode) throw new Error("Shot mode mismatch.");
   const plan = input ? readVerifiedDirectorPlan(ownerId, context.sourceSha256, input, draft.director?.receipt) : null;
   if (input && !plan) throw new Error("Director plan is invalid or expired.");
+  // Historical receipts still decode, but new D1 submissions must use the current three-scene edit.
+  if (input?.draft.durationSeconds === 5 && input.shotMode === "multi"
+    && (input.presetId === "minimal-studio" || input.presetId === "metallic-light-sweep") && plan?.shots.length !== 3) {
+    throw new Error("D1 requires a current three-scene plan.");
+  }
   const directed = input && plan ? compileDirectorPlan(plan, input) : null;
   if (draft.shotMode === "multi" && (!directed?.multiPrompt || !validateKlingMultiPrompt(directed.multiPrompt, draft.durationSeconds))) throw new Error("Invalid multi-shot plan.");
   const compiled = directed ?? compileProductVideoPrompt({ ...draft, profile: context.profile });

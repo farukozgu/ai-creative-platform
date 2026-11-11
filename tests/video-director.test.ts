@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import * as d1 from "../src/lib/video-director/five-second-multi";
 import test from "node:test";
 import { parseReferenceReviews } from "../src/lib/video-generation/product-references";
 import { assertGoldenPhysicalPrompt, assertSourceMarksPreserved, isGoldenTenSecondMulti } from "./fixtures/video-fidelity-expectations";
@@ -78,14 +79,17 @@ test("leather jacket matrix has distinct role-based scenes, preservation and val
       if (shotMode === "multi") {
         const execution = getVideoDirectorPreset(presetId, shotMode, durationSeconds).execution;
         const durations = durationSeconds === 10 && presetId === "minimal-studio" ? ["4", "3", "3"]
+          : d1.usesD1FiveSecondMulti(selected) ? ["2", "2", "1"]
           : durationSeconds === 10 && presetId === "macro-detail-reveal" ? ["3", "4", "3"]
           : execution?.durations.map(String) ?? ["2", "3"];
         assert.deepEqual(prompts.map(shot => shot.duration), durations);
         assert.equal(new Set(prompts.map(shot => shot.prompt)).size, prompts.length);
         const detailShots = plan.shots.filter(shot => shot.evidenceRefs.length);
         if (presetId === "minimal-studio" && durationSeconds === 5) {
-          assert.deepEqual(detailShots, []);
-          assert.deepEqual(plan.shots.map(shot => shot.focus), ["Source-visible product form", "Source-visible product form"]);
+          assert.equal(detailShots.length, 1);
+          assert.equal(detailShots[0], plan.shots[1]);
+          assert.equal(detailShots[0].purpose, "material-study");
+          assert.ok(plan.shots.filter((_, index) => index !== 1).every(shot => shot.focus === "Source-visible product form"));
         } else {
           assert.equal(detailShots.length, 1);
           const [detail] = detailShots;
@@ -467,6 +471,7 @@ function loadIsolated<T>(file: string, overrides: Record<string, unknown>, env: 
     if (name === "server-only") return {};
     if (name === "@/lib/video-generation/diagnostics") return { createVideoCorrelationId: () => "test-correlation", logVideoDiagnostic: () => undefined };
     if (name in overrides) return overrides[name];
+    if (name === "./five-second-multi") return d1;
     if (name.startsWith("@/") || name.startsWith("./")) throw new Error(`Unmocked dependency: ${name}`);
     return requirePackage(name);
   } });
